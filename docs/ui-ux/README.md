@@ -4,6 +4,7 @@ Cập nhật 03/10/2026 theo yêu cầu chủ dự án: phân tích flow, nội 
 
 ## Tài liệu dùng để review
 
+- [Đăng ký và liên kết Google — ma trận nghiệp vụ](ACCOUNT-REGISTRATION-LINK-REVIEW.md): same/different email, duplicate, identity ownership, unverified recovery và các policy còn mở. Google-only không cần password theo xác nhận trực tiếp.
 - [Cụm 01 — Điều hướng, Home, Workspace Projects](clusters/CLUSTER-01-NAVIGATION-HOME-WORKSPACE.md): phân tích từng cụm theo mục đích, bố cục, trạng thái và luồng trước khi suy ra nhu cầu API; layout còn đề xuất.
 - [Cụm 02 — Board, My Tasks, Task Detail, Comments](clusters/CLUSTER-02-BOARD-MY-TASKS-TASK-COMMENTS.md): màn làm việc, mobile, form/editor, quyền, conflict và nhu cầu identity/picker.
 - [Cụm 03 — Thành viên, Lời mời, Quản lý Workspace](clusters/CLUSTER-03-MEMBERS-INVITATIONS-WORKSPACE-SETTINGS.md): membership lifecycle, invitations Owner/recipient, settings nhóm và own email; desktop/mobile trong phạm vi đã đồng ý.

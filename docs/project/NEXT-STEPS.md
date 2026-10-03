@@ -13,6 +13,8 @@ Cập nhật 03/10/2026. [Nhật ký cũ](../archive/project/PROJECT-HISTORY-202
 
 ## Tiếp theo
 
+Ưu tiên mới theo câu hỏi chủ dự án: [review nghiệp vụ đăng ký và Google link](../ui-ux/ACCOUNT-REGISTRATION-LINK-REVIEW.md). User B email b@gmail.com link Google a@gmail.com bị từ chối theo BE hiện hành; cần chốt unverified recovery/link và email drift trước Account FE. Google-only không cần password riêng đã được chủ dự án xác nhận; chưa đổi code từ review.
+
 Đã phân tích [cụm 05 — Personal Settings](../ui-ux/clusters/CLUSTER-05-PERSONAL-SETTINGS.md). Tiếp theo Notifications. Các bố cục/policy locale mới vẫn là đề xuất, chưa code FE hoặc thêm tính năng ngoài contract.
 
 Đã phân tích [cụm 04 — Auth/verification/recovery và Home sau login](../ui-ux/clusters/CLUSTER-04-AUTH-VERIFICATION-RECOVERY.md). Đăng nhập bình thường về Home danh sách Workspace, đích Task/Invitation hợp lệ được giữ; chưa triển khai FE từ các layout đề xuất.

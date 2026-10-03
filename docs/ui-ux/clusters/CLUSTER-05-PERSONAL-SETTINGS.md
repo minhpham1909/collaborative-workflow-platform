@@ -28,6 +28,8 @@ User chưa verified có lời nhắc và link tới verification gate; nút rese
 
 ## 3. Tài khoản — cách đăng nhập và mật khẩu
 
+Review bổ sung theo câu hỏi chủ dự án: [ma trận đăng ký/liên kết](../ACCOUNT-REGISTRATION-LINK-REVIEW.md). Google-only không cần password riêng theo xác nhận trực tiếp; same-email, recovery account chưa verified và email drift cần xem đúng trạng thái implementation/proposal trong ma trận.
+
 Hai khối “Phương thức đăng nhập” và “Mật khẩu”. Khối methods chỉ hiển thị sau khi own account capabilities tải thành công; lỗi có Thử lại, không đoán từ avatar hoặc lỗi thử gọi change-password.
 
 | Trạng thái account | Nội dung/actions |
