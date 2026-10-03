@@ -10,6 +10,9 @@ import { createGoogleVerifier } from './auth/google.js';
 import { assertAuthIndexes } from './auth/index-check.js';
 import { createMongoUsersStore } from './users/mongo-store.js';
 import { createUsersService } from './users/service.js';
+import { createWorkspaceService } from './workspaces/service.js';
+import { createMongoWorkspaceStore } from './workspaces/mongo-store.js';
+import { assertWorkspaceIndexes } from './workspaces/index-check.js';
 
 let server;
 let stopping = false;
@@ -30,11 +33,13 @@ try {
   const authConfig = readAuthConfig();
   await connectDatabase(config.mongoUri);
   await assertAuthIndexes();
+  await assertWorkspaceIndexes();
   const store = createMongoAccountStore();
   const authService = await createAuthService({ store, config: authConfig });
   const accountsService = createAccountsService({ store, config: authConfig, verifyGoogle: createGoogleVerifier(authConfig.googleClientId) });
   const usersService = createUsersService({ store: createMongoUsersStore() });
-  const app = createApp({ isReady: () => !stopping && mongoose.connection.readyState === 1, authService, authConfig, accountsService, usersService });
+  const workspaceService = createWorkspaceService({ store: createMongoWorkspaceStore({ config: authConfig }) });
+  const app = createApp({ isReady: () => !stopping && mongoose.connection.readyState === 1, authService, authConfig, accountsService, usersService, workspaceService });
   if (!stopping) {
     server = app.listen(config.port, config.host, () => {
       console.info(`API listening at http://${config.host}:${config.port}`);

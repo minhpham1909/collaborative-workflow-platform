@@ -24,10 +24,11 @@ export function createMailProvider(env = process.env) {
     disableFileAccess: true, disableUrlAccess: true, connectionTimeout: 10_000, greetingTimeout: 10_000, socketTimeout: 15_000,
   });
   return async (mail) => {
+    const label = mail.purpose === 'verify_email' ? 'Xác minh email / Verify email' : mail.purpose === 'invitation' ? 'Lời mời Workspace / Workspace invitation' : 'Đặt lại mật khẩu / Reset password';
     const result = await transport.sendMail({ from: env.SMTP_FROM, to: mail.to,
       messageId: `<${mail.eventId}@workflow.local>`,
-      subject: mail.purpose === 'verify_email' ? 'Xác minh email / Verify your email' : 'Đặt lại mật khẩu / Reset password',
-      text: `${mail.purpose === 'verify_email' ? 'Xác minh email / Verify email' : 'Đặt lại mật khẩu / Reset password'}: ${mail.url}`,
+      subject: label,
+      text: `${label}: ${mail.url}`,
     });
     if (!result.accepted?.length) throw new Error('SMTP recipient not accepted');
     return String(result.messageId);

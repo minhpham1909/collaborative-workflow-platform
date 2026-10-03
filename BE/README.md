@@ -27,7 +27,7 @@ Server 127.0.0.1:4000 kiểm keys/DB topology/unique indexes trước startup. d
 
 ## Auth/email
 
-GET /auth/capabilities,/auth/me,/auth/csrf. POST login,refresh,logout,register,verify-email,verify-email/resend,password/recovery,password/reset,password/change,google/challenge,google/link/challenge,google,google/link dưới /auth. Fields/điều kiện theo Accounts contract. /health/live và /health/ready. Workspace/Task routes chưa mở.
+GET /auth/capabilities,/auth/me,/auth/csrf. POST login,refresh,logout,register,verify-email,verify-email/resend,password/recovery,password/reset,password/change,google/challenge,google/link/challenge,google,google/link dưới /auth. Fields/điều kiện theo Accounts contract. /health/live và /health/ready. Workspace/Invitations routes đã mở; Project/Task routes chưa có.
 
 BE/.env.example không secrets. WEB_ORIGIN chính xác; JWT_ACCESS_KEY_HEX,JWT_REFRESH_KEY_HEX,MAIL_OUTBOX_KEY_HEX riêng mỗi key 32 bytes lowercase hex. TERMS_VERSION draft chỉ dev; production cần nội dung/version thực. GOOGLE_CLIENT_ID trống làm Google unavailable; cần OAuth Web client/audience/origins để kiểm thực tế.
 
@@ -41,4 +41,6 @@ Generic query/bulk writes chặn; adapters dùng transaction/driver mutations, k
 
 Kiểm Google/SMTP thật khi FE chưa có: [hướng dẫn cấu hình](../docs/project/GOOGLE-SMTP-LOCAL-SETUP.md), chạy pnpm auth:test-page tại BE rồi mở http://localhost:5173. Trang development hỗ trợ signup/login/recovery/verify/reset và GIS login; có Google link với proof mật khẩu, logout và kiểm /auth/me. Không mount trang test vào server sản phẩm.
 
-BE Profile/global settings đã có: GET /users/me, PATCH /users/me/profile, PATCH /users/me/preferences; Bearer, exact Origin khi PATCH, expectedVersion và DTO strict. [Hợp đồng Users](../docs/sds/PROFILE-SETTINGS-API-v0.1.md), [QA mới](../docs/qa/PROFILE-SETTINGS-CHECK.md): 33 tests thông thường/14 tích hợp đạt. Workspace overrides sẽ nối sau membership APIs. src/http/policy.js dùng chung Origin/CORS và response lỗi cho Auth/Users.
+BE Profile/global settings đã có: GET /users/me, PATCH /users/me/profile, PATCH /users/me/preferences; Bearer, exact Origin khi PATCH, expectedVersion và DTO strict. [Hợp đồng Users](../docs/sds/PROFILE-SETTINGS-API-v0.1.md), [QA mới](../docs/qa/PROFILE-SETTINGS-CHECK.md): 33 tests thông thường/14 tích hợp đạt. Workspace overrides đã nối với membership APIs ở increment Workspace. src/http/policy.js dùng chung Origin/CORS và response lỗi cho Auth/Users.
+
+Workspace/Invitations đã triển khai theo [API contract](../docs/sds/WORKSPACE-INVITATIONS-API-v0.1.md), [QA](../docs/qa/WORKSPACE-INVITATIONS-CHECK.md): 35 tests thường và 24 tích hợp đạt. src/workspaces chứa DTO/service/repository/routes. mail:once xử lý Auth trước, invitation nếu Auth idle. Trang local hỗ trợ /invite token fragment để preview/accept; chưa FE sản phẩm. db:indexes phải có unique membership/invitation/notification indexes trước startup.

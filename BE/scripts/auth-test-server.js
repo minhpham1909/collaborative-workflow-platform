@@ -9,7 +9,7 @@ const server = createServer((req, res) => {
   if (req.headers.host !== 'localhost:5173') { res.writeHead(403).end(); return; }
   const path = req.url?.split('?')[0];
   const javascript = path === '/auth-test.js';
-  if (req.method !== 'GET' || (!javascript && !['/', '/verify-email', '/reset-password'].includes(path))) { res.writeHead(404).end(); return; }
+  if (req.method !== 'GET' || (!javascript && !['/', '/verify-email', '/reset-password', '/invite'].includes(path))) { res.writeHead(404).end(); return; }
   res.writeHead(200, { 'Content-Type': javascript ? 'text/javascript; charset=utf-8' : 'text/html; charset=utf-8',
     'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff',
     'Referrer-Policy': 'no-referrer-when-downgrade', 'Cross-Origin-Opener-Policy': 'same-origin-allow-popups',

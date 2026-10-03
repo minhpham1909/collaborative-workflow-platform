@@ -13,3 +13,5 @@ Cập nhật 03/10/2026: [backend foundation check](BACKEND-FOUNDATION-CHECK.md)
 Ưu tiên kế hoạch sau baseline: quyền xuyên Workspace; vòng đời membership và tái gia nhập; accept/revoke và transfer/leave đồng thời; archive/write và stale edits; recipients/email preferences; token/session lifecycle; sau cùng nghiệm thu NFR trong môi trường ghi nhận cụ thể.
 
 Hiện hành sau increment Users: [Profile/Personal Settings check](PROFILE-SETTINGS-CHECK.md) — 33 tests thông thường, 14 tests tích hợp đạt, gồm Auth regression. Các số liệu phía trên là mốc trước increment.
+
+Hiện hành sau Workspace: [Workspace/Invitations QA](WORKSPACE-INVITATIONS-CHECK.md) — 35 tests thường, 24 tích hợp đạt; Auth/Users vẫn được chạy regression.

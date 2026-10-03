@@ -86,6 +86,19 @@ async function prepare(linking) {
 }
 prepareGoogle.addEventListener('click', () => run(() => prepare(false)));
 prepareLink.addEventListener('click', () => run(() => prepare(true)));
+async function invitationRequest(accepting) {
+  if (accepting && !accessToken) throw new Error('Đăng nhập trên trang này trước rồi nhận lời mời.');
+  const response = await fetch(`http://localhost:4000/invitations/${accepting ? 'accept' : 'preview'}`, { method: 'POST', credentials: 'include',
+    headers: { 'Content-Type': 'application/json', ...(accepting ? { Authorization: `Bearer ${accessToken}` } : {}) }, body: JSON.stringify({ token: linkToken }) });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error?.code ?? `HTTP_${response.status}`);
+  show(data);
+}
+if (linkToken && location.pathname === '/invite') {
+  document.querySelector('#invitation').hidden = false;
+  document.querySelector('#invitePreview').addEventListener('click', () => run(() => invitationRequest(false)));
+  document.querySelector('#inviteAccept').addEventListener('click', () => run(() => invitationRequest(true)));
+}
 if (linkToken && ['/verify-email', '/reset-password'].includes(location.pathname)) {
   document.querySelector('#emailLink').hidden = false;
   const verifying = location.pathname === '/verify-email';

@@ -200,3 +200,5 @@ Tiếp theo: triển khai Auth/User API contracts và services, kết nối repl
 ## Auth challenge increment
 
 Collection auth_challenges hỗ trợ nonce Google login/link 5 phút, dùng một lần, hash unique, userId nullable theo intent. Fields/indexes/transaction theo [Auth/accounts](AUTH-ACCOUNTS-v0.1.md); layout JSON và index plan đã đồng bộ. Đây là chi tiết implementation, không thêm quyền nghiệp vụ mới.
+
+Increment Workspace/Invitations đã triển khai trên 13 collection hiện có: ownership/membership guards, invitation lifecycle, cleanup unfinished assignee, overrides và encrypted invitation outbox. [API](WORKSPACE-INVITATIONS-API-v0.1.md), [QA](../qa/WORKSPACE-INVITATIONS-CHECK.md). Project/Task writers cần cùng guard khi triển khai tiếp; không ghi nghiệm thu nghiệp vụ công việc từ schema/cleanup fixtures.
