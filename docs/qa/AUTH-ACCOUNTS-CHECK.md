@@ -14,3 +14,5 @@ Ngày 03/10/2026, Windows, Node 24.19.0 / pnpm 11.19.0. [Hợp đồng](../sds/A
 Frontend, Google Web client, SMTP thật, workspace permissions, multi-instance limiter và production NFR chưa nghiệm thu. Các báo cáo foundation/session là mốc lịch sử; dùng báo cáo này cho trạng thái mới.
 
 Bổ sung công cụ test local: auth:test-page phục vụ HTML/JS tại localhost:5173, /verify-email và /reset-password; HTTP smoke 200 và JavaScript syntax checks đạt. Browser tool không khởi tạo được ở môi trường này; chưa kiểm UI qua browser hoặc OAuth/SMTP thật. Dev page không mount trong server sản phẩm.
+
+Live smoke 03/10/2026: cấu hình Google Client ID và Gmail SMTP ở BE/.env (ignored). SMTP STARTTLS 587 xác thực thành công; một email kiểm thử được provider accepted. Chưa xác nhận Inbox/Spam hoặc luồng auth outbox qua email thật. Google capabilities khớp Client ID, challenge tạo thành công; chưa có user sign-in/ID token thật nên chưa nghiệm thu Google login. Client Secret không sử dụng/lưu trong luồng GIS hiện tại. Không ghi credentials vào báo cáo.
