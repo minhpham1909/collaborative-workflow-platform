@@ -1,5 +1,12 @@
 # Decision register
 
+## Quyết định trực tiếp 03/10/2026 — đăng nhập và Google link
+
+- **Approved:** giữ email/password và Google optional, không chuyển sang username. Google-only không cần password riêng.
+- **Approved:** một email account chỉ thuộc một User; một Google identity chỉ thuộc một User; một User tối đa một Google identity. BE đã có unique index plan cho emailCanonical, provider+providerSubject và userId+provider, cùng transaction guards; uniqueness phải bảo vệ ở DB, không chỉ FE.
+- **Hiện trạng được giữ:** link Google cùng email account, có local password proof/session/challenge. Sau link, password login và Google login cùng User và dữ liệu; không auto-link/gộp account. Verified-before-link gate và Google email drift vẫn là chi tiết review riêng, chưa đổi code từ câu hỏi này.
+- Ma trận và nhánh còn mở: [registration/link review](../ui-ux/ACCOUNT-REGISTRATION-LINK-REVIEW.md). Live Google login đã có bằng chứng trước; chưa suy thành nghiệm thu live link toàn bộ nhánh.
+
 ## Implementation 03/10/2026 — lát cắt Auth/session
 
 Main đã nhận commit sắp xếp tài liệu; Auth mới tiếp tục trên dev. Đã triển khai password login, Argon2id, JWT signing/verify, refresh rotation/reuse revocation, logout, /me và verified middleware. Signing HS256/hai key riêng, access 15 phút, refresh/session tuyệt đối 7 ngày, strict single-use/no grace, cookie Strict/CSRF và rate limits là implementation-selected; không coi là chủ dự án duyệt mọi tham số hoặc production topology.

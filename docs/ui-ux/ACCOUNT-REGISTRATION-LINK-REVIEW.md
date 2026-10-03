@@ -6,7 +6,7 @@
 
 User ID là chủ thể sở hữu membership/Task/Comments. Email account là địa chỉ đăng ký/đăng nhập local. Google identity được nhận diện bằng provider=google và sub đã xác thực, không chỉ bằng email/ảnh/tên. Link thêm phương thức đăng nhập vào User hiện tại, không tạo hoặc gộp User, không chuyển dữ liệu giữa hai User.
 
-Đã chốt trực tiếp trong chat: account tạo bằng Google không cần password riêng; không mở chức năng Google-only tạo password trong bản đầu. Email/password vẫn là luồng đăng ký độc lập, không bắt buộc Gmail. Các giới hạn same-email/one-Google là implementation hiện hành cần review, chưa gọi là quyết định mới đã duyệt.
+Đã chốt trực tiếp trong chat: account tạo bằng Google không cần password riêng; không mở chức năng Google-only tạo password trong bản đầu. Chủ dự án chọn giữ mô hình email/password + Google optional, không chuyển sang username, và yêu cầu một email chỉ thuộc một account, một Google chỉ liên kết một account, một account tối đa một Google. Email/password không bắt buộc Gmail; same-email khi link giữ theo implementation hiện tại. Các chi tiết về email drift và gate link chưa verified vẫn review riêng.
 
 ## 2. Quy tắc hiện hành và hướng giữ cho bản đầu
 
@@ -52,7 +52,7 @@ Nếu phục hồi qua reset, không giả reset tự verified email: code hiệ
 
 ## 5. Những quyết định đề xuất cần chốt trước hoàn thiện Account FE
 
-1. Giữ same-email và tối đa một Google cho một User ở bản đầu; link khác email/merge/replace/unlink chưa mở.
+1. Đã duyệt giữ mô hình hiện tại và ràng buộc một email/một account, một Google/một account, account tối đa một Google. Same-email link giữ hiện trạng; link khác email/merge/replace/unlink chưa mở. Unique indexes ở DB đã có trong index plan; không thay bằng client filter.
 2. Link local cần email app verified trước, hoặc chốt rõ Google same-email authority thay thế và policy revoke sessions khi nâng verified. Chưa quyết định bằng câu trả lời trước về password/Google-only.
 3. Email provider drift: đề xuất giữ identity bằng sub và email app không tự đổi, hiển thị thông tin thích hợp chỉ cho chủ account; Google đổi email không được tự nối sang User khác đang dùng email mới. Cần chính sách trước nghiệm thu nhánh enterprise/external email này.
 4. UX khôi phục account local chưa verified giữ email và vòng đời unverified account.
