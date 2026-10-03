@@ -1,6 +1,6 @@
 # Phạm vi wireframe sau screen review
 
-03/10/2026. Review đầu vào ở [screen spec v0.2](SCREEN-SPEC-v0.2.md), [flow v0.2](SCREEN-FLOWS-v0.2.md) và [UI/API gaps](UI-API-GAPS-v0.1.md). Chưa có wireframe hoàn chỉnh; BE core/contracts đã triển khai nên không cần viết lại contract từ đầu sau wireframe.
+03/10/2026. Review đầu vào ở [screen spec v0.2](SCREEN-SPEC-v0.2.md), [flow v0.2](SCREEN-FLOWS-v0.2.md) và [UI/API gaps](UI-API-GAPS-v0.1.md). Đã có [wireframe tương tác batch lõi](wireframes/core.html), chưa đủ mọi batch/states; BE core/contracts đã triển khai nên không cần viết lại contract từ đầu sau wireframe.
 
 ## Thứ tự và bố cục đề xuất
 

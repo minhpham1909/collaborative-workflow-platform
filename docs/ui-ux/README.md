@@ -4,6 +4,8 @@ Cập nhật 03/10/2026 theo yêu cầu chủ dự án: phân tích flow, nội 
 
 ## Tài liệu dùng để review
 
+- [Tổng hợp bảy cụm / bước wireframe](SCREEN-REVIEW-SUMMARY.md): vòng phân tích đã hoàn thành, cấu trúc lõi và policy/data gaps chưa chốt.
+- [Wireframe tương tác lõi](wireframes/core.html), [phạm vi/giới hạn mẫu](wireframes/README.md): Home → Workspace → Board → Task, My Tasks và mobile bằng dữ liệu giả; chưa nối API, editor tạm và frames lỗi/conflict ở batch sau.
 - [Đăng ký và liên kết Google — ma trận nghiệp vụ](ACCOUNT-REGISTRATION-LINK-REVIEW.md): same/different email, duplicate, identity ownership, unverified recovery và các policy còn mở. Google-only không cần password theo xác nhận trực tiếp.
 - [Cụm 01 — Điều hướng, Home, Workspace Projects](clusters/CLUSTER-01-NAVIGATION-HOME-WORKSPACE.md): phân tích từng cụm theo mục đích, bố cục, trạng thái và luồng trước khi suy ra nhu cầu API; layout còn đề xuất.
 - [Cụm 02 — Board, My Tasks, Task Detail, Comments](clusters/CLUSTER-02-BOARD-MY-TASKS-TASK-COMMENTS.md): màn làm việc, mobile, form/editor, quyền, conflict và nhu cầu identity/picker.
@@ -11,6 +13,7 @@ Cập nhật 03/10/2026 theo yêu cầu chủ dự án: phân tích flow, nội 
 - [Cụm 04 — Auth, xác minh, khôi phục](clusters/CLUSTER-04-AUTH-VERIFICATION-RECOVERY.md): login/register/Google, verified gate, reset và đích Home/Task/Invitation sau đăng nhập.
 - [Cụm 05 — Cài đặt cá nhân](clusters/CLUSTER-05-PERSONAL-SETTINGS.md): Profile/Account/Email/Language, credential capabilities, phạm vi setting và shared-version/conflict.
 - [Cụm 06 — Notifications](clusters/CLUSTER-06-NOTIFICATIONS.md): inbox/badge, read-all cutoff, Task/invitation targets và nội dung theo quyền hiện tại.
+- [Cụm 07 — Public, Policies, Announcements](clusters/CLUSTER-07-PUBLIC-POLICIES-ANNOUNCEMENTS.md): Landing/Home, template Policies và thông báo ghim phase riêng.
 - [Screen spec v0.2](SCREEN-SPEC-v0.2.md): 21 nhóm màn/form, nội dung, bố cục desktop/mobile, actions/quyền, states; phủ 35 UC và phân biệt BE đã có với phần dự kiến.
 - [Screen flows v0.2](SCREEN-FLOWS-v0.2.md): sitemap/routes FE đề xuất, auth/invitation/Task/ownership/settings và nhánh lỗi.
 - [UI/API gaps](UI-API-GAPS-v0.1.md): account capabilities, historical names/avatar, picker/search/time và các phần chưa thể nối FE như đã hoàn thiện.

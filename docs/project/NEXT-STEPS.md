@@ -13,17 +13,9 @@ Cập nhật 03/10/2026. [Nhật ký cũ](../archive/project/PROJECT-HISTORY-202
 
 ## Tiếp theo
 
-Đã tiếp tục thiết kế [cụm 06 — Notifications](../ui-ux/clusters/CLUSTER-06-NOTIFICATIONS.md). Tiếp theo Landing/Policies và announcements phase riêng, rồi tổng hợp trước wireframe desktop/mobile. Cụm 06 chưa code FE; search/time inbox cần server scope/cutoff đúng quyền.
+Đã hoàn thành vòng phân tích [bảy cụm](../ui-ux/SCREEN-REVIEW-SUMMARY.md), gồm [cụm cuối Public/Policies/Announcements](../ui-ux/clusters/CLUSTER-07-PUBLIC-POLICIES-ANNOUNCEMENTS.md). Đã dựng [wireframe lõi tương tác](../ui-ux/wireframes/core.html) bằng dữ liệu giả desktop/mobile. Tiếp theo bổ sung Auth/Invitations/Members/Settings/Notifications/Public và frames lỗi/conflict/loading; chưa production FE hoặc rich-text editor hoàn chỉnh.
 
-Ưu tiên mới theo câu hỏi chủ dự án: [review nghiệp vụ đăng ký và Google link](../ui-ux/ACCOUNT-REGISTRATION-LINK-REVIEW.md). User B email b@gmail.com link Google a@gmail.com bị từ chối theo BE hiện hành; cần chốt unverified recovery/link và email drift trước Account FE. Google-only không cần password riêng đã được chủ dự án xác nhận; chưa đổi code từ review.
-
-Đã phân tích [cụm 05 — Personal Settings](../ui-ux/clusters/CLUSTER-05-PERSONAL-SETTINGS.md). Tiếp theo Notifications. Các bố cục/policy locale mới vẫn là đề xuất, chưa code FE hoặc thêm tính năng ngoài contract.
-
-Đã phân tích [cụm 04 — Auth/verification/recovery và Home sau login](../ui-ux/clusters/CLUSTER-04-AUTH-VERIFICATION-RECOVERY.md). Đăng nhập bình thường về Home danh sách Workspace, đích Task/Invitation hợp lệ được giữ; chưa triển khai FE từ các layout đề xuất.
-
-Đã phân tích [cụm 03 — Members/Invitations/Workspace Settings](../ui-ux/clusters/CLUSTER-03-MEMBERS-INVITATIONS-WORKSPACE-SETTINGS.md). Chủ dự án đồng ý thêm mobile responsive vào phạm vi website; không mở dự án native app.
-
-Review đang đi theo từng cụm: [cụm 01 — điều hướng, Home, Workspace Projects](../ui-ux/clusters/CLUSTER-01-NAVIGATION-HOME-WORKSPACE.md), [cụm 02 — Board/My Tasks/Task Detail/Comments](../ui-ux/clusters/CLUSTER-02-BOARD-MY-TASKS-TASK-COMMENTS.md). Chưa coi các đề xuất bố cục là đã duyệt hoặc triển khai các gap chỉ từ inventory. Chủ dự án đang dùng phone và cho phép tiếp tục phân tích, không cần xác nhận từng bước lúc này.
+Auth giữ email/password + Google optional, Google-only không cần password riêng; uniqueness email/Google/User đã được chủ dự án xác nhận. [Ma trận link](../ui-ux/ACCOUNT-REGISTRATION-LINK-REVIEW.md) giữ các nhánh unverified recovery và provider email drift còn review. [UI/API gaps](../ui-ux/UI-API-GAPS-v0.1.md) vẫn cần trước nối controls vào FE thật.
 
 1. Theo yêu cầu chủ dự án: bám requirement, triển khai BE theo module và kiểm API/quyền/transactions trước; Profile/Personal Settings và Workspace/Invitations đã triển khai; Project/Task/Comment, Board/My Tasks đã triển khai; Notifications/work-email dispatcher đã triển khai; tiếp theo review UI/UX chung và FE theo module.
 2. Google login thật đã đạt cho tài khoản kiểm thử. Tiếp tục kiểm email auth outbox tới Inbox/Spam, hoàn thiện Terms và worker nền; [hướng dẫn local](GOOGLE-SMTP-LOCAL-SETUP.md).
