@@ -21,3 +21,5 @@ Cập nhật 03/10/2026. [Nhật ký cũ](../archive/project/PROJECT-HISTORY-202
 ## Tài liệu
 
 [Docs index](../README.md), [SRS](../srs/SRS-v0.2.md), [quyết định](../decisions/DECISION-REGISTER.md), [DB](../sds/DATABASE-DESIGN-v0.2.md), [BE setup](../../BE/README.md), [Git workflow](../decisions/GIT-WORKFLOW.md), [file hygiene](REPOSITORY-HYGIENE.md).
+
+Chuẩn bị increment sau Auth: [Profile/Settings API draft](../sds/PROFILE-SETTINGS-API-v0.1.md). Google live đã tới ACCOUNT_LINK_REQUIRED theo kết quả người dùng; còn chốt link/login/me qua trang test mới trước ghi hoàn tất end-to-end.

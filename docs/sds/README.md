@@ -31,3 +31,5 @@ Sau baseline: chọn framework backend; JavaScript hay TypeScript; workspace man
 Storage, reminder và browser push cần boundaries trong thiết kế và đặc tả riêng trước khi triển khai increment.
 
 Implementation hiện hành: [Auth/accounts](AUTH-ACCOUNTS-v0.1.md) và [Auth/session](AUTH-SESSION-v0.1.md). Các đoạn chuẩn bị/baseline ở trên là lịch sử kế hoạch; trạng thái mới tại docs/project/NEXT-STEPS.md.
+
+Increment BE tiếp theo: [Profile/Personal Settings API draft](PROFILE-SETTINGS-API-v0.1.md), trước Workspace/Invitations.

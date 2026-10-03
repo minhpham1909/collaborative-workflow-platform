@@ -164,6 +164,30 @@ test('Account flows on a real replica set', { skip: !process.env.TEST_MONGODB_UR
         assert.ok(body.accessToken);
         assert.equal(Object.hasOwn(body, 'refreshToken'), false);
         assert.equal(Object.hasOwn(body.user, 'passwordHash'), false);
+        const me = await fetch(base + '/me', { headers: { Authorization: `Bearer ${body.accessToken}` } });
+        assert.equal(me.status, 200);
+        assert.equal((await me.json()).user.email, email);
+        const bearerHeaders = { Authorization: `Bearer ${body.accessToken}` };
+        assert.equal((await post('/google/link/challenge', {})).status, 401);
+        const linking = await post('/google/link/challenge', {}, bearerHeaders);
+        assert.equal(linking.status, 200);
+        nonces.push((await linking.json()).nonce);
+        const linkCookie = linking.headers.get('set-cookie').split(';')[0];
+        const linkHeaders = { ...bearerHeaders, Cookie: linkCookie };
+        assert.equal((await post('/google/link', { credential: 'local-google', currentPassword: 'incorrect account password' }, linkHeaders)).status, 401);
+        const linked = await post('/google/link', { credential: 'local-google', currentPassword: 'final account password' }, linkHeaders);
+        assert.equal(linked.status, 200); assert.equal((await linked.json()).code, 'GOOGLE_LINKED');
+        assert.equal((await post('/google/link', { credential: 'local-google', currentPassword: 'final account password' }, linkHeaders)).status, 401);
+        const refreshCookie = google.headers.getSetCookie().find((cookie) => cookie.startsWith('workflow_refresh=')).split(';')[0];
+        const logout = await post('/logout', {}, { Cookie: refreshCookie, 'X-CSRF-Token': body.csrfToken });
+        assert.equal(logout.status, 204);
+        assert.equal((await fetch(base + '/me', { headers: bearerHeaders })).status, 401);
+        const retryChallenge = await post('/google/challenge', {});
+        nonces.push((await retryChallenge.json()).nonce);
+        const relogin = await post('/google', { credential: 'local-google' }, { Cookie: retryChallenge.headers.get('set-cookie').split(';')[0] });
+        assert.equal(relogin.status, 200);
+        const reloginBody = await relogin.json();
+        assert.equal((await fetch(base + '/me', { headers: { Authorization: `Bearer ${reloginBody.accessToken}` } })).status, 200);
       } finally { await new Promise((resolve) => server.close(resolve)); }
     });
   } finally {

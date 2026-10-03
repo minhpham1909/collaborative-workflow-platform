@@ -64,9 +64,9 @@ Mở http://localhost:5173 bằng browser thường; không dùng 127.0.0.1/file
 
 ## 5. Kiểm Google
 
-Dùng email Google chưa đăng ký mật khẩu trong DB dev để kiểm tạo account Google mới. Tick Terms draft; bấm Chuẩn bị đăng nhập Google rồi nút Google hiện ra. Nonce hết hạn sau 5 phút: reload và chuẩn bị lại. Kết quả LOGIN_OK kèm emailVerified chứng minh frontend GIS gửi credential về BE và BE cấp session sau verify.
+Dùng email Google chưa đăng ký mật khẩu trong DB dev để kiểm tạo account Google mới. Tick Terms draft; bấm Chuẩn bị đăng nhập Google rồi nút Google hiện ra. Nonce hết hạn sau 5 phút: reload và chuẩn bị lại. Kết quả GOOGLE_LOGIN_SESSION_OK kèm meStatus:200 chứng minh GIS gửi credential về BE, BE cấp session và /auth/me xác thực phiên mới.
 
-Nếu Google email đã là account mật khẩu, ACCOUNT_LINK_REQUIRED là đúng policy chống auto-link; trang test chưa có UI link Google. Flow link có backend/tests nhưng cần local login+mật khẩu proof và user-bound challenge. Gmail verified từ Google; email ngoài Google không mặc nhiên verified, có thể phải xác minh app email.
+Nếu Google email đã là account mật khẩu, ACCOUNT_LINK_REQUIRED là đúng policy chống auto-link; trang test đã có nút Liên kết Google: đăng nhập mật khẩu, nhập mật khẩu hiện tại ở ô liên kết, chọn đúng Google; thành công GOOGLE_LINKED_SESSION_OK. Đăng xuất/tải lại, chuẩn bị đăng nhập Google và thử lại; kết quả GOOGLE_LOGIN_SESSION_OK gồm /auth/me 200. Flow link có backend/tests nhưng cần local login+mật khẩu proof và user-bound challenge. Gmail verified từ Google; email ngoài Google không mặc nhiên verified, có thể phải xác minh app email.
 
 ## 6. Troubleshooting
 
@@ -74,7 +74,7 @@ Nếu Google email đã là account mật khẩu, ACCOUNT_LINK_REQUIRED là đú
 |---|---|
 | Google chưa cấu hình / GOOGLE_NOT_CONFIGURED | Client ID đã đặt và restart BE |
 | Origin không được Google cho phép | OAuth Web client origins đúng localhost:5173, không có path |
-| ACCOUNT_LINK_REQUIRED | Email có account local; dùng email Google test khác hoặc triển khai link UI sau |
+| ACCOUNT_LINK_REQUIRED | Email có account local; đăng nhập mật khẩu rồi dùng nút Liên kết Google |
 | GOOGLE_CHALLENGE_INVALID | Reload lấy nonce mới; không test cùng lúc nhiều tabs |
 | ORIGIN_REJECTED / cookie missing | Dùng localhost cho cả trang/API, đúng WEB_ORIGIN, credentials include |
 | SMTP retry_or_failed | App password đúng, 2SV, user/from cùng sender, port 587/TLS; kiểm mạng/tài khoản |

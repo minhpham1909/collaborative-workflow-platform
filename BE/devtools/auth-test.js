@@ -1,6 +1,7 @@
 const api = 'http://localhost:4000/auth';
 const result = document.querySelector('#result');
 let accessToken = null;
+let csrfToken = null;
 let capabilities;
 const linkToken = new URLSearchParams(location.hash.slice(1)).get('token');
 if (linkToken) history.replaceState(null, '', location.pathname);
@@ -15,11 +16,26 @@ async function request(path, body, authenticated = false) {
   const data = await response.json();
   if (!response.ok) throw new Error(data.error?.code ?? `HTTP_${response.status}`);
   if (data.accessToken) accessToken = data.accessToken;
+  if (data.csrfToken) csrfToken = data.csrfToken;
   show(data.user ? { email: data.user.email, emailVerified: data.user.emailVerified, code: 'LOGIN_OK' } : data);
   return data;
 }
 function run(operation) { Promise.resolve().then(operation).catch((error) => show({ error: error.message })); }
 function terms() { return { termsAccepted: document.querySelector('#terms').checked, termsVersion: capabilities.termsVersion }; }
+async function checkMe(code = 'SESSION_OK') {
+  if (!accessToken) throw new Error('Cần đăng nhập trên trang này trước.');
+  const response = await fetch(api + '/me', { credentials: 'include', headers: { Authorization: `Bearer ${accessToken}` } });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error?.code ?? `HTTP_${response.status}`);
+  show({ code, meStatus: response.status, user: data.user });
+}
+document.querySelector('#me').addEventListener('click', () => run(() => checkMe()));
+document.querySelector('#logout').addEventListener('click', () => run(async () => {
+  if (!csrfToken) throw new Error('Cần đăng nhập trên trang này trước.');
+  const response = await fetch(api + '/logout', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken }, body: '{}' });
+  if (response.status !== 204) throw new Error('LOGOUT_FAILED');
+  accessToken = null; csrfToken = null; location.reload();
+}));
 document.querySelector('#account').addEventListener('submit', (event) => {
   event.preventDefault();
   const fields = new FormData(event.currentTarget);
@@ -49,14 +65,27 @@ function loadGoogle() {
   return googleLoaded;
 }
 const prepareGoogle = document.querySelector('#prepareGoogle');
-prepareGoogle.addEventListener('click', () => run(async () => {
-  await loadGoogle(); const { nonce } = await request('/google/challenge', {});
+const prepareLink = document.querySelector('#prepareLink');
+async function prepare(linking) {
+  const passwordInput = document.querySelector('#linkPassword');
+  let currentPassword = linking ? passwordInput.value : null;
+  if (linking && (!accessToken || !currentPassword)) throw new Error('Đăng nhập mật khẩu trước, rồi nhập mật khẩu hiện tại để liên kết.');
+  await loadGoogle();
+  const { nonce } = await request(linking ? '/google/link/challenge' : '/google/challenge', {}, linking);
+  passwordInput.value = '';
   google.accounts.id.initialize({ client_id: capabilities.googleClientId, nonce, auto_select: false,
-    callback: ({ credential }) => run(() => request('/google', { credential, ...terms() })) });
+    callback: ({ credential }) => run(async () => {
+      try {
+        await request(linking ? '/google/link' : '/google', linking ? { credential, currentPassword } : { credential, ...terms() }, linking);
+        await checkMe(linking ? 'GOOGLE_LINKED_SESSION_OK' : 'GOOGLE_LOGIN_SESSION_OK');
+      } finally { currentPassword = null; }
+    }) });
   google.accounts.id.renderButton(document.querySelector('#googleButton'), { type: 'standard', theme: 'outline', size: 'large' });
-  prepareGoogle.disabled = true;
-  show({ code: 'GOOGLE_READY', message: 'Nhấn nút Google bên dưới trong 5 phút. Hết hạn thì tải lại trang.' });
-}));
+  prepareGoogle.disabled = true; prepareLink.disabled = true;
+  show({ code: linking ? 'GOOGLE_LINK_READY' : 'GOOGLE_READY', message: 'Chọn đúng tài khoản Google trong 5 phút. Sau liên kết, đăng xuất rồi thử đăng nhập Google. Hết hạn/lỗi thì tải lại trang.' });
+}
+prepareGoogle.addEventListener('click', () => run(() => prepare(false)));
+prepareLink.addEventListener('click', () => run(() => prepare(true)));
 if (linkToken && ['/verify-email', '/reset-password'].includes(location.pathname)) {
   document.querySelector('#emailLink').hidden = false;
   const verifying = location.pathname === '/verify-email';
@@ -69,4 +98,5 @@ run(async () => {
   capabilities = await response.json();
   document.querySelector('#configuration').textContent = `Backend sẵn sàng; Terms: ${capabilities.termsVersion}; Google: ${capabilities.googleClientId ? 'đã cấu hình' : 'chưa cấu hình'}.`;
   prepareGoogle.disabled = !capabilities.googleClientId;
+  prepareLink.disabled = !capabilities.googleClientId;
 });
