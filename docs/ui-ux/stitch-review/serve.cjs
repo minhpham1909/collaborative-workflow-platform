@@ -2,7 +2,7 @@
 const http = require('node:http');
 const fs = require('node:fs/promises');
 const path = require('node:path');
-const allowed = new Set(['index.html', 'theme.css', 'core.js', 'visual.js', 'review.js', 'jakarta-400.ttf', 'jakarta-600.ttf', 'jakarta-700.ttf', 'home-desktop.png', 'board-desktop.png', 'task-desktop.png']);
+const allowed = new Set(['index.html', 'theme.css', 'core.js', 'visual.js', 'review.js', 'detail.js', 'jakarta-400.ttf', 'jakarta-600.ttf', 'jakarta-700.ttf', 'home-desktop.png', 'mine-desktop.png', 'states-desktop.png', 'task-desktop.png']);
 const mime = { '.ttf': 'font/ttf', '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.png': 'image/png' };
 const previewPort = Number(process.env.VISUAL_PREVIEW_PORT ?? 4175);
 if (!Number.isInteger(previewPort) || previewPort < 1024 || previewPort > 65535) throw new Error('Invalid preview port');

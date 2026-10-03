@@ -4,6 +4,8 @@ Cập nhật 03/10/2026. [Nhật ký cũ](../archive/project/PROJECT-HISTORY-202
 
 ## Hiện tại
 
+Increment thiết kế tiếp theo đã bổ sung Task toàn trang, comment edit/delete, Task delete xác nhận, draft guard và Unicode counters tại [prototype](../ui-ux/stitch-review/README.md). Đã kiểm headless Edge quyền/luồng/escaping/overflow; chưa FE production hoặc CAS/API thật. Figma kiểm lại vẫn hết lượt gọi; các pending trong ledger giữ nguyên.
+
 Chủ dự án đã import Stitch vào Figma và yêu cầu chuẩn hóa. [Review mới](../ui-ux/FIGMA-STITCH-REVIEW-v0.1.md), [prototype kem/tím + My Tasks/states](../ui-ux/stitch-review/README.md) là hướng hiện hành thay teal. Figma đã ghi foundations/components/navigation/Home trên trang mới; bị giới hạn lượt gọi Starter trước 3 màn còn lại. Ledger lưu IDs; canvas mới chưa visual QA. Tiếp tục từ ledger khi có lượt gọi, không tạo duplicate hoặc coi FE đã triển khai.
 
 - Repo GitHub private minhpham1909/collaborative-workflow-platform; main giữ mốc nền, phát triển trên dev.

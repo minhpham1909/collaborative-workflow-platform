@@ -9,6 +9,7 @@ Chạy `node docs/ui-ux/stitch-review/serve.cjs`, mở `http://127.0.0.1:4175/`.
 | #home | Greeting, Workspace cards, search/lọc ngày tạo |
 | #workspace:w1 | Project list, Active/Archived, Owner/Member |
 | #board:p1 | Ba cột cố định, search/time/overdue, Task Detail |
+| #detail:t1 | Task toàn trang; Mở toàn trang từ panel; quay về nguồn Board/My Tasks |
 | #mine | Danh sách phẳng xuyên Workspace; default Active/open, mới tạo trước; cùng Task Detail với Board |
 | #states | Owner/Creator, Assignee, Member, Archived; loading, no-results, retry, conflict, save/validation/dirty-close, unavailable, departed |
 
@@ -16,7 +17,7 @@ Khung sidebar chung; nền kem/tím, accents lavender/mint/coral. Plus Jakarta S
 
 ## Giới hạn
 
-Dữ liệu giả, thay đổi trong bộ nhớ tab. Không API/auth/mail/storage/autosave/realtime. Role selector là công cụ review. Search/time của Workspace/Project vẫn cần server contract. VI/EN là nhãn hướng thiết kế, chưa dịch toàn bộ mẫu. Editor còn placeholder/textarea, chưa nghiệm thu toolbar/IME/JSON/grapheme. Comment edit và các màn Auth/Members/Invitations/Settings/Notifications chưa hoàn chỉnh. Gallery minh họa trạng thái; các nút quyền không kết nối mutation thật. Không thêm billing/sprint/report/tags/favorite/Project deadline/template/archive Workspace.
+Dữ liệu giả, thay đổi trong bộ nhớ tab. Không API/auth/mail/storage/autosave/realtime. Role selector là công cụ review. Search/time của Workspace/Project vẫn cần server contract. VI/EN là nhãn hướng thiết kế, chưa dịch toàn bộ mẫu. Editor còn textarea, chưa nghiệm thu rich-text toolbar/IME/JSON. Đã thêm đếm grapheme/từ, comment edit/delete và Task delete với xác nhận; chưa nối CAS/API. Các màn Auth/Members/Invitations/Settings/Notifications chưa hoàn chỉnh. Gallery minh họa trạng thái; các nút quyền không kết nối mutation thật. Không thêm billing/sprint/report/tags/favorite/Project deadline/template/archive Workspace.
 
 ## Figma đã ghi và phần còn lại
 
@@ -28,4 +29,8 @@ Công cụ hết lượt gọi Figma MCP Starter trước bước Workspace. Can
 
 Headless Edge context riêng đã kiểm My Tasks default/filter/search không dấu, invalid date giữ kết quả cũ, Ctrl+K, Task Archived chỉ đọc, Assignee status-only, Archived khóa status, conflict giữ draft, title validation, saving và retry. Không page error hoặc tràn ngang tại 1440/1280/390px trên Home/Workspace/Board/My Tasks/states. Đã xem ảnh Home/My Tasks/states và sửa greeting xuống dòng riêng emoji. Không tuyên bố kiểm toàn bộ accessibility hoặc BE/auth thật.
 
-Ảnh local: [Home](home-desktop.png), [My Tasks](mine-desktop.png), [States](states-desktop.png); không phải ảnh canvas Figma.
+Tiếp tục cùng ngày: kiểm panel → full page → nguồn My Tasks, direct Task link, tác giả-only comment edit/delete, text escaping, emoji gia đình tính một grapheme, vượt quota khóa gửi, cancel giữ draft khi đổi status/mở full page/đổi hash. Assignee không có edit/delete; Archived không composer hoặc comment mutations. Xóa Task có cancel/confirm. Full page không tràn ngang 1440/1280/390px, không page errors. Sửa duplicate controls khi rerender Task toàn trang. Nền sau modal được inert, full page dùng region.
+
+Figma vẫn hết lượt gọi Starter khi kiểm lại; canvas không nhận thêm thay đổi trong increment Task Detail này.
+
+Ảnh local: [Home](home-desktop.png), [My Tasks](mine-desktop.png), [States](states-desktop.png), [Task toàn trang](task-desktop.png); không phải ảnh canvas Figma.
