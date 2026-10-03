@@ -202,3 +202,6 @@ Tiếp theo: triển khai Auth/User API contracts và services, kết nối repl
 Collection auth_challenges hỗ trợ nonce Google login/link 5 phút, dùng một lần, hash unique, userId nullable theo intent. Fields/indexes/transaction theo [Auth/accounts](AUTH-ACCOUNTS-v0.1.md); layout JSON và index plan đã đồng bộ. Đây là chi tiết implementation, không thêm quyền nghiệp vụ mới.
 
 Increment Workspace/Invitations đã triển khai trên 13 collection hiện có: ownership/membership guards, invitation lifecycle, cleanup unfinished assignee, overrides và encrypted invitation outbox. [API](WORKSPACE-INVITATIONS-API-v0.1.md), [QA](../qa/WORKSPACE-INVITATIONS-CHECK.md). Project/Task writers cần cùng guard khi triển khai tiếp; không ghi nghiệm thu nghiệp vụ công việc từ schema/cleanup fixtures.
+
+
+Cập nhật triển khai 03/10/2026: [Project/Task/Comment API](PROJECT-TASK-COMMENT-API-v0.1.md) đã dùng cùng Workspace guard cho child mutations; soft delete parent gate và atomic work events. Search hiện mở rộng literal nhóm dấu Việt trên searchText NFC thay vì đổi dữ liệu dẫn xuất/migration. Inbox/work-email dispatcher và NFR vẫn tiếp theo.

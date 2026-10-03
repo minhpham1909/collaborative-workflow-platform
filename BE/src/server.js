@@ -13,6 +13,8 @@ import { createUsersService } from './users/service.js';
 import { createWorkspaceService } from './workspaces/service.js';
 import { createMongoWorkspaceStore } from './workspaces/mongo-store.js';
 import { assertWorkspaceIndexes } from './workspaces/index-check.js';
+import { createWorkService } from './work/service.js';
+import { createMongoWorkStore } from './work/mongo-store.js';
 
 let server;
 let stopping = false;
@@ -39,7 +41,8 @@ try {
   const accountsService = createAccountsService({ store, config: authConfig, verifyGoogle: createGoogleVerifier(authConfig.googleClientId) });
   const usersService = createUsersService({ store: createMongoUsersStore() });
   const workspaceService = createWorkspaceService({ store: createMongoWorkspaceStore({ config: authConfig }) });
-  const app = createApp({ isReady: () => !stopping && mongoose.connection.readyState === 1, authService, authConfig, accountsService, usersService, workspaceService });
+  const workService = createWorkService({ store: createMongoWorkStore() });
+  const app = createApp({ isReady: () => !stopping && mongoose.connection.readyState === 1, authService, authConfig, accountsService, usersService, workspaceService, workService });
   if (!stopping) {
     server = app.listen(config.port, config.host, () => {
       console.info(`API listening at http://${config.host}:${config.port}`);

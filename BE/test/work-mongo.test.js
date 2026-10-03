@@ -1,0 +1,198 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { randomBytes } from 'node:crypto';
+import { once } from 'node:events';
+import mongoose from 'mongoose';
+import { connectDatabase } from '../src/database.js';
+import { models, User, Session, Workspace, WorkspaceMembership, WorkspaceInvitation, Project, Task, TaskComment, Notification, EmailOutbox } from '../src/models/index.js';
+import { createAuthService } from '../src/auth/service.js';
+import { createMongoAuthStore } from '../src/auth/mongo-store.js';
+import { hashPassword } from '../src/auth/passwords.js';
+import { createWorkspaceService } from '../src/workspaces/service.js';
+import { createMongoWorkspaceStore } from '../src/workspaces/mongo-store.js';
+import { createWorkService } from '../src/work/service.js';
+import { createMongoWorkStore } from '../src/work/mongo-store.js';
+import { createUsersService } from '../src/users/service.js';
+import { createMongoUsersStore } from '../src/users/mongo-store.js';
+import { createApp } from '../src/app.js';
+import { testConfig } from '../test-support/auth-store.js';
+
+const content = (text) => ({ format: 'prosemirror-json', schemaVersion: 1, document: { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text }] }] } });
+test('Project, Task, Comment and scoped queries on real MongoDB/HTTP', { skip: !process.env.TEST_MONGODB_URI && 'Dedicated Mongo test database not configured', timeout: 90_000 }, async (t) => {
+  assert.equal(new URL(process.env.TEST_MONGODB_URI).pathname.slice(1), 'workflow_auth_test');
+  await connectDatabase(process.env.TEST_MONGODB_URI);
+  const config = testConfig(); const prefix = `work-${randomBytes(8).toString('hex')}`;
+  const password = 'work integration password'; const encoded = await hashPassword(password);
+  const auth = await createAuthService({ store: createMongoAuthStore(), config });
+  const workspaces = createWorkspaceService({ store: createMongoWorkspaceStore({ config }) });
+  const service = createWorkService({ store: createMongoWorkStore() });
+  const users = []; const claims = []; const logins = []; const workspaceIds = [];
+  let server, workspace, project, task, comment;
+  const O = (value) => new mongoose.Types.ObjectId(value);
+  const membership = (index) => WorkspaceMembership.collection.findOne({ workspaceId: O(workspace.id), userId: users[index]._id });
+  const createTask = async (fields = {}, index = 1, projectId = project.id) => (await service.createTask(claims[index], projectId, { title: 'Task Việt', ...fields })).task;
+  try {
+    for (const model of Object.values(models)) await model.createIndexes();
+    for (let index = 0; index < 5; index++) {
+      const user = new User({ displayName: `Test User ${index}`, email: `${prefix}-${index}@example.com`, passwordHash: encoded, emailVerifiedAt: index === 4 ? null : new Date(), termsAcceptance: { version: 'test-only', acceptedAt: new Date() } });
+      await user.save(); users.push(user.toObject());
+      const login = await auth.login({ email: user.email, password }); logins.push(login); claims.push(await auth.authenticate(login.accessToken));
+    }
+    workspace = (await workspaces.create(claims[0], { name: 'Nhóm Việt' })).workspace; workspaceIds.push(O(workspace.id));
+    const invite = await workspaces.invite(claims[0], workspace.id, { type: 'LINK' });
+    const token = new URLSearchParams(new URL(invite.url).hash.slice(1)).get('token');
+    for (const index of [1, 2, 3]) await workspaces.accept(claims[index], { token });
+    server = createApp({ authService: auth, authConfig: config, workspaceService: workspaces, workService: service, usersService: createUsersService({ store: createMongoUsersStore() }) }).listen(0, '127.0.0.1'); await once(server, 'listening');
+    const base = `http://127.0.0.1:${server.address().port}`;
+    const http = (index, path, method = 'GET', body) => fetch(base + path, { method, headers: { Origin: config.webOrigin, 'Content-Type': 'application/json', ...(index !== null ? { Authorization: `Bearer ${logins[index].accessToken}` } : {}) }, ...(body === undefined ? {} : { body: JSON.stringify(body) }) });
+    await t.test('Verified gate, Owner Project rights, archive/reopen and scope privacy', async () => {
+      assert.equal((await http(null, '/my-tasks')).status, 401);
+      assert.equal((await http(4, '/my-tasks')).status, 403);
+      assert.equal((await http(4, '/users/me')).status, 200); // Root Work router must not capture Profile/Auth.
+      assert.equal((await http(0, '/auth/me')).status, 200);
+      await assert.rejects(service.createProject(claims[1], workspace.id, { name: 'No' }), /OWNER_REQUIRED/u);
+      const result = await http(0, `/workspaces/${workspace.id}/projects`, 'POST', { name: 'Dự án', description: content('Mô tả') });
+      assert.equal(result.status, 201); project = (await result.json()).project;
+      const blockedOrigin = await fetch(base + `/projects/${project.id}`, { headers: { Origin: 'https://attacker.example', Authorization: `Bearer ${logins[0].accessToken}` } }); assert.equal(blockedOrigin.status, 403);
+      const preflight = await fetch(base + '/my-tasks', { method: 'OPTIONS', headers: { Origin: config.webOrigin, 'Access-Control-Request-Method': 'GET' } }); assert.equal(preflight.status, 204);
+      const nonJson = await fetch(base + `/projects/${project.id}`, { method: 'PATCH', headers: { Origin: config.webOrigin, Authorization: `Bearer ${logins[0].accessToken}`, 'Content-Type': 'text/plain' }, body: '{}' }); assert.equal(nonJson.status, 415);
+      assert.equal((await service.projects(claims[1], workspace.id, {})).total, 1);
+      await assert.rejects(service.updateProject(claims[1], project.id, { expectedVersion: 0, name: 'No' }), /OWNER_REQUIRED/u);
+      await assert.rejects(service.getProject(claims[4], project.id), /EMAIL_VERIFICATION_REQUIRED/u);
+      project = (await service.state(claims[0], project.id, { expectedVersion: 0, state: 'archived' })).project;
+      assert.equal((await service.projects(claims[1], workspace.id, {})).total, 0);
+      await assert.rejects(createTask(), /PROJECT_ARCHIVED/u);
+      await assert.rejects(service.updateProject(claims[0], project.id, { expectedVersion: project.version, name: 'Archived edit' }), /PROJECT_ARCHIVED/u);
+      project = (await service.state(claims[0], project.id, { expectedVersion: project.version, state: 'active' })).project;
+      assert.equal(project.archivedAt, null);
+      const outsiders = (await workspaces.create(claims[3], { name: 'Other' })).workspace; workspaceIds.push(O(outsiders.id));
+      const outsiderProject = (await service.createProject(claims[3], outsiders.id, { name: 'Secret' })).project;
+      const response = await http(1, `/projects/${outsiderProject.id}`); assert.equal(response.status, 404);
+      assert.ok(!JSON.stringify(await response.json()).includes('Secret'));
+    });
+    await t.test('Task matrix, derived content, assignee membership, no-op and stale writes', async () => {
+      task = await createTask({ title: 'Đề xuất dự án', description: content('Nội dung 👋'), assigneeId: String(users[2]._id), dueAt: '2020-01-01T00:00:00.000Z' });
+      assert.equal(task.overdue, true); assert.equal(task.description.plainText, 'Nội dung 👋'); assert.equal(task.permissions.edit, true);
+      const assigned = (await service.getTask(claims[2], task.id)).task; assert.equal(assigned.permissions.edit, false); assert.equal(assigned.permissions.status, true);
+      await assert.rejects(service.updateTask(claims[2], task.id, { expectedVersion: 0, title: 'No' }), /TASK_EDIT_FORBIDDEN/u);
+      await assert.rejects(service.deleteTask(claims[2], task.id, { expectedVersion: 0 }), /TASK_EDIT_FORBIDDEN/u);
+      await assert.rejects(service.status(claims[3], task.id, { expectedVersion: 0, status: 'done' }), /TASK_STATUS_FORBIDDEN/u);
+      const before = await Notification.collection.countDocuments({ taskId: O(task.id) });
+      task = (await service.status(claims[2], task.id, { expectedVersion: 0, status: 'in_progress' })).task;
+      const noop = (await service.status(claims[2], task.id, { expectedVersion: task.version, status: task.status })).task;
+      assert.equal(noop.version, task.version); assert.equal(await Notification.collection.countDocuments({ taskId: O(task.id) }), before + 1);
+      await assert.rejects(service.updateTask(claims[1], task.id, { expectedVersion: 0, title: 'Stale' }), /VERSION_CONFLICT/u);
+      const other = new mongoose.Types.ObjectId(); await assert.rejects(service.updateTask(claims[0], task.id, { expectedVersion: task.version, assigneeId: String(other) }), /ASSIGNEE_NOT_MEMBER/u);
+      const r = await http(1, `/tasks/${task.id}`, 'PATCH', { expectedVersion: task.version, title: 'Task', createdBy: String(users[0]._id) }); assert.equal(r.status, 400);
+      assert.ok(!Object.hasOwn((await service.getTask(claims[0], task.id)).task, 'searchText'));
+    });
+    await t.test('Author-only comments, CAS, child scoping and atomic event rollback', async () => {
+      comment = (await service.createComment(claims[3], task.id, { content: content('Bình luận') })).comment;
+      for (const index of [0, 1, 2]) await assert.rejects(service.updateComment(claims[index], task.id, comment.id, { expectedVersion: 0, content: content('No') }), /COMMENT_AUTHOR_REQUIRED/u);
+      await assert.rejects(service.deleteComment(claims[0], task.id, comment.id, { expectedVersion: 0 }), /COMMENT_AUTHOR_REQUIRED/u);
+      comment = (await service.updateComment(claims[3], task.id, comment.id, { expectedVersion: 0, content: content('Updated') })).comment;
+      await assert.rejects(service.updateComment(claims[3], task.id, comment.id, { expectedVersion: 0, content: content('Stale') }), /VERSION_CONFLICT/u);
+      const other = await createTask(); await assert.rejects(service.updateComment(claims[3], other.id, comment.id, { expectedVersion: 1, content: content('Wrong task') }), /RESOURCE_UNAVAILABLE/u);
+      const count = await TaskComment.collection.countDocuments({ taskId: O(task.id) });
+      const original = Notification.prototype.save;
+      try { Notification.prototype.save = async function() { throw new Error('INJECTED_EVENT_FAILURE'); }; await assert.rejects(service.createComment(claims[3], task.id, { content: content('Must roll back') }), /INJECTED_EVENT_FAILURE/u); }
+      finally { Notification.prototype.save = original; }
+      assert.equal(await TaskComment.collection.countDocuments({ taskId: O(task.id) }), count);
+      await service.deleteComment(claims[3], task.id, comment.id, { expectedVersion: comment.version });
+      assert.equal((await service.comments(claims[1], task.id, {})).total, 0);
+    });
+    await t.test('Grouped recipients, self exclusion, overrides and no events for no-op/stale', async () => {
+      let value = await createTask({ assigneeId: String(users[2]._id) });
+      const notes = await Notification.collection.find({ taskId: O(value.id) }).toArray(); assert.equal(notes.length, 1); assert.equal(String(notes[0].recipientId), String(users[2]._id));
+      const member3 = await membership(3); await workspaces.overrides(claims[3], workspace.id, { expectedVersion: member3.version, emailOverrides: { content: 'on' } });
+      value = (await service.updateTask(claims[0], value.id, { expectedVersion: value.version, assigneeId: String(users[3]._id), title: 'New title' })).task;
+      const latest = await Notification.collection.find({ taskId: O(value.id), 'payload.taskTitle': 'New title' }).toArray(); assert.equal(latest.length, 3);
+      const creator = latest.find((note) => String(note.recipientId) === String(users[1]._id)); assert.deepEqual(creator.changes.sort(), ['assignment', 'content']);
+      const old = latest.find((note) => String(note.recipientId) === String(users[2]._id)); assert.deepEqual(old.changes, ['assignment']);
+      const mail = await EmailOutbox.collection.findOne({ taskId: O(value.id), userId: users[3]._id }); assert.deepEqual(mail.eventTypes.sort(), ['assignment', 'content']);
+      const count = await Notification.collection.countDocuments({ taskId: O(value.id) });
+      const noop = (await service.updateTask(claims[1], value.id, { expectedVersion: value.version, title: value.title })).task; assert.equal(noop.version, value.version);
+      await assert.rejects(service.updateTask(claims[1], value.id, { expectedVersion: value.version - 1, title: 'Stale' }), /VERSION_CONFLICT/u);
+      assert.equal(await Notification.collection.countDocuments({ taskId: O(value.id) }), count);
+      const self = await createTask({ assigneeId: String(users[1]._id) }); assert.equal(await Notification.collection.countDocuments({ taskId: O(self.id) }), 0);
+      await service.createComment(claims[3], self.id, { content: content('One recipient') }); assert.equal(await Notification.collection.countDocuments({ taskId: O(self.id) }), 1);
+    });
+    await t.test('Board/My Tasks full-set search, time boundaries, counts and pagination', async () => {
+      const a = await createTask({ title: 'ĐỀ XUẤT alpha', description: content('Dự án'), assigneeId: String(users[2]._id), dueAt: '2026-10-02T17:00:00.000Z' });
+      const b = await createTask({ title: 'Đề xuất beta', description: content('Dự án'), assigneeId: String(users[2]._id), dueAt: '2026-10-03T16:59:00.000Z' });
+      await createTask({ title: 'Đề xuất outside', assigneeId: String(users[2]._id), dueAt: '2026-10-03T17:00:00.000Z' });
+      await createTask({ title: 'Deadline missing', assigneeId: String(users[2]._id) });
+      assert.equal((await service.tasks(claims[1], project.id, { q: 'Deadline missing', timeField: 'dueAt', to: '2026-10-03' })).total, 0);
+      assert.equal((await service.tasks(claims[1], project.id, { q: 'Deadline missing', timeField: 'createdAt' })).total, 1);
+      const edited = (await service.updateTask(claims[1], a.id, { expectedVersion: a.version, description: content('Dự án cập nhật') })).task;
+      assert.equal((await service.tasks(claims[1], project.id, { q: 'cap nhat' })).items[0].id, a.id);
+      const query = { q: 'de DU an', timeField: 'dueAt', from: '2026-10-03', to: '2026-10-03', limit: '1' };
+      const first = await service.tasks(claims[1], project.id, query); assert.equal(first.total, 2); assert.equal(first.items[0].id, b.id); assert.ok(first.nextCursor);
+      const second = await service.tasks(claims[1], project.id, { ...query, cursor: first.nextCursor }); assert.equal(second.items[0].id, a.id); assert.equal(second.nextCursor, null);
+      const board = await service.board(claims[2], project.id, query); assert.equal(board.columns.todo.total, 2); assert.equal(board.columns.in_progress.total, 0);
+      const mine = await service.mine(claims[2], query); assert.equal(mine.total, 2); assert.equal(mine.items[0].workspaceName, 'Nhóm Việt');
+      assert.equal((await service.mine(claims[1], { q: 'alpha' })).total, 0);
+      const done = (await service.status(claims[1], b.id, { expectedVersion: b.version, status: 'done' })).task; assert.equal(done.overdue, false);
+      assert.equal((await service.mine(claims[2], { q: 'beta' })).total, 0);
+      assert.equal((await service.mine(claims[2], { q: 'beta', status: 'done' })).total, 1);
+      const archived = (await service.state(claims[0], project.id, { expectedVersion: project.version, state: 'archived' })).project;
+      assert.equal((await service.mine(claims[2], { q: 'alpha' })).total, 0);
+      assert.equal((await service.mine(claims[2], { q: 'alpha', state: 'archived' })).total, 1);
+      await assert.rejects(service.status(claims[0], a.id, { expectedVersion: edited.version, status: 'done' }), /PROJECT_ARCHIVED/u);
+      await assert.rejects(service.createComment(claims[0], a.id, { content: content('No') }), /PROJECT_ARCHIVED/u);
+      project = (await service.state(claims[0], project.id, { expectedVersion: archived.version, state: 'active' })).project;
+      assert.equal((await service.tasks(claims[1], project.id, { q: '.*' })).total, 0);
+    });
+    await t.test('Leave cleanup, Done history, rejoin and reopen with current membership', async () => {
+      let done = await createTask({ assigneeId: String(users[2]._id) }); done = (await service.status(claims[1], done.id, { expectedVersion: done.version, status: 'done' })).task;
+      const todo = await createTask({ assigneeId: String(users[2]._id) });
+      await workspaces.leave(claims[2], workspace.id, { expectedVersion: (await membership(2)).version });
+      assert.equal((await service.getTask(claims[1], todo.id)).task.assigneeId, null);
+      done = (await service.updateTask(claims[1], done.id, { expectedVersion: done.version, title: 'Done edit preserves history' })).task;
+      assert.equal(done.assigneeId, String(users[2]._id)); assert.equal(done.assigneeLeft, true);
+      await assert.rejects(service.getTask(claims[2], done.id), /RESOURCE_UNAVAILABLE/u); assert.equal((await service.mine(claims[2], { state: 'all', status: 'all' })).total, 0);
+      done = (await service.status(claims[1], done.id, { expectedVersion: done.version, status: 'todo' })).task; assert.equal(done.assigneeId, null);
+      await workspaces.accept(claims[2], { token }); assert.equal((await service.getTask(claims[2], todo.id)).task.assigneeId, null);
+      done = (await service.updateTask(claims[1], done.id, { expectedVersion: done.version, assigneeId: String(users[2]._id) })).task;
+      done = (await service.status(claims[1], done.id, { expectedVersion: done.version, status: 'done' })).task;
+      done = (await service.status(claims[1], done.id, { expectedVersion: done.version, status: 'todo' })).task; assert.equal(done.assigneeId, String(users[2]._id));
+    });
+    await t.test('Concurrent saves/archive/leave serialize and deleted parent hides Comments', async () => {
+      let value = await createTask({ assigneeId: String(users[2]._id) });
+      const results = await Promise.allSettled([service.updateTask(claims[1], value.id, { expectedVersion: 0, title: 'A' }), service.updateTask(claims[0], value.id, { expectedVersion: 0, title: 'B' })]);
+      assert.equal(results.filter((r) => r.status === 'fulfilled').length, 1);
+      value = (await service.getTask(claims[1], value.id)).task;
+      const race = await Promise.allSettled([service.updateTask(claims[1], value.id, { expectedVersion: value.version, title: 'Race' }), workspaces.leave(claims[2], workspace.id, { expectedVersion: (await membership(2)).version })]);
+      assert.equal(race[1].status, 'fulfilled'); assert.equal((await service.getTask(claims[1], value.id)).task.assigneeId, null);
+      await workspaces.accept(claims[2], { token });
+      const p = (await service.createProject(claims[0], workspace.id, { name: 'Race archive' })).project;
+      const child = await createTask({}, 1, p.id);
+      await Promise.allSettled([service.updateTask(claims[1], child.id, { expectedVersion: child.version, title: 'Concurrent edit' }), service.state(claims[0], p.id, { expectedVersion: 0, state: 'archived' })]);
+      assert.equal((await service.getProject(claims[1], p.id)).project.state, 'archived');
+      await assert.rejects(service.updateTask(claims[0], child.id, { expectedVersion: 0, title: 'After archive' }), /PROJECT_ARCHIVED/u);
+      const c = (await service.createComment(claims[3], value.id, { content: content('Deleted parent') })).comment;
+      value = (await service.getTask(claims[1], value.id)).task;
+      await service.deleteTask(claims[1], value.id, { expectedVersion: value.version });
+      await assert.rejects(service.comments(claims[1], value.id, {}), /RESOURCE_UNAVAILABLE/u);
+      await assert.rejects(service.updateComment(claims[3], value.id, c.id, { expectedVersion: 0, content: content('Hidden') }), /RESOURCE_UNAVAILABLE/u);
+      assert.equal((await service.tasks(claims[1], project.id, { q: 'Race' })).total, 0);
+      const ownershipTask = await createTask();
+      await workspaces.transfer(claims[0], workspace.id, { expectedVersion: (await workspaces.get(claims[0], workspace.id)).workspace.version, memberId: String(users[3]._id) });
+      await assert.rejects(service.updateTask(claims[0], ownershipTask.id, { expectedVersion: ownershipTask.version, title: 'Former owner' }), /TASK_EDIT_FORBIDDEN/u);
+      assert.equal((await service.updateTask(claims[3], ownershipTask.id, { expectedVersion: ownershipTask.version, title: 'New owner' })).task.title, 'New owner');
+      await workspaces.leave(claims[1], workspace.id, { expectedVersion: (await membership(1)).version });
+      await assert.rejects(service.updateTask(claims[1], ownershipTask.id, { expectedVersion: ownershipTask.version, title: 'Creator has left' }), /RESOURCE_UNAVAILABLE/u);
+    });
+    await t.test('Revoked session rechecked inside repository transaction', async () => {
+      await Session.collection.updateOne({ _id: O(claims[3].claims.sid) }, { $set: { revokedAt: new Date() } });
+      await assert.rejects(service.createTask(claims[3], project.id, { title: 'No stale session' }), /UNAUTHENTICATED/u);
+    });
+  } finally {
+    if (server) await new Promise((resolve) => server.close(resolve));
+    for (const model of [TaskComment, Task, Project, WorkspaceMembership, WorkspaceInvitation, Notification, EmailOutbox]) await model.collection.deleteMany({ workspaceId: { $in: workspaceIds } });
+    await Workspace.collection.deleteMany({ _id: { $in: workspaceIds } });
+    await Session.collection.deleteMany({ userId: { $in: users.map((user) => user._id) } });
+    await User.collection.deleteMany({ _id: { $in: users.map((user) => user._id) } });
+    await mongoose.disconnect();
+  }
+});

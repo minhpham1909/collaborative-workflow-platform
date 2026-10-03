@@ -2,8 +2,9 @@ import express from 'express';
 import { createAuthRouter } from './auth/http.js';
 import { createUsersRouter } from './users/http.js';
 import { createWorkspaceRouter, createInvitationRouter } from './workspaces/http.js';
+import { createWorkRouter } from './work/http.js';
 
-export function createApp({ isReady = () => false, authService, authConfig, accountsService, usersService, workspaceService } = {}) {
+export function createApp({ isReady = () => false, authService, authConfig, accountsService, usersService, workspaceService, workService } = {}) {
   const app = express();
   app.disable('x-powered-by');
   app.set('trust proxy', false);
@@ -19,6 +20,7 @@ export function createApp({ isReady = () => false, authService, authConfig, acco
   });
   if (authService && authConfig) app.use('/auth', createAuthRouter({ service: authService, config: authConfig, accounts: accountsService }));
   if (authService && authConfig && usersService) app.use('/users', createUsersRouter({ service: usersService, authService, config: authConfig }));
+  if (authService && authConfig && workService) app.use(createWorkRouter({ service: workService, authService, config: authConfig }));
   if (authService && authConfig && workspaceService) {
     app.use('/workspaces', createWorkspaceRouter({ service: workspaceService, authService, config: authConfig }));
     app.use('/invitations', createInvitationRouter({ service: workspaceService, authService, config: authConfig }));

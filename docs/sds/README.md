@@ -37,3 +37,6 @@ Increment BE tiếp theo: [Profile/Personal Settings API draft](PROFILE-SETTINGS
 Profile/global settings đã triển khai theo [API v0.1](PROFILE-SETTINGS-API-v0.1.md), [QA](../qa/PROFILE-SETTINGS-CHECK.md); Workspace/Invitations là increment BE kế tiếp.
 
 Increment hiện hành: [Workspace/Invitations API](WORKSPACE-INVITATIONS-API-v0.1.md), [QA](../qa/WORKSPACE-INVITATIONS-CHECK.md); Project/Task/Comment là phần tiếp theo.
+
+
+[Project/Task/Comment API v0.1](PROJECT-TASK-COMMENT-API-v0.1.md): quyền, lifecycle, queries, soft delete và atomic work events đã triển khai; inbox/work-email dispatcher tiếp theo.

@@ -2,13 +2,13 @@
 
 Dự án portfolio cộng tác nhóm nhỏ: User → Workspace → Project → Task.
 
-Trạng thái 03/10/2026: BE JavaScript/Express/Mongoose có 13 models, health/editor validation, JWT sessions và account flows (signup, verify/reset/change password, Google login/link, encrypted email outbox). 35 tests thông thường và 24 integration tests đạt trên MongoDB replica set local. Google login thật đã có kết quả /auth/me 200 do chủ dự án kiểm; SMTP accepted email thử, Inbox còn xác nhận. Profile/global settings và Workspace/Invitations BE đã triển khai; frontend và Project/Task/Comment tiếp theo. Repo GitHub private minhpham1909/collaborative-workflow-platform, phát triển trên dev; SRS chưa baseline v1.0. Xem [Accounts/QA](docs/qa/AUTH-ACCOUNTS-CHECK.md).
+Trạng thái 03/10/2026: BE JavaScript/Express/Mongoose có 13 models, health/editor validation, JWT sessions và account flows (signup, verify/reset/change password, Google login/link, encrypted email outbox). 37 tests thông thường và 33 integration tests đạt trên MongoDB replica set local. Google login thật đã có kết quả /auth/me 200 do chủ dự án kiểm; SMTP accepted email thử, Inbox còn xác nhận. Profile/global settings và Workspace/Invitations BE đã triển khai; Project/Task/Comment, Board và My Tasks đã có API; Notifications và frontend tiếp theo. Repo GitHub private minhpham1909/collaborative-workflow-platform, phát triển trên dev; SRS chưa baseline v1.0. Xem [Accounts/QA](docs/qa/AUTH-ACCOUNTS-CHECK.md).
 
 ## Tài liệu chính
 
 [Danh mục tài liệu](docs/README.md) phân chia trạng thái dự án, yêu cầu, thiết kế, quyết định, QA và archive. [Quy tắc file Git](docs/project/REPOSITORY-HYGIENE.md) mô tả những gì nên/không nên commit.
 
-Thiết kế DB hiện hành: [DB v0.2](docs/sds/DATABASE-DESIGN-v0.2.md), [layout dữ liệu](docs/sds/DATABASE-LAYOUT-v0.2.json), [ERD lõi](docs/sds/DATABASE-ERD-v0.2.md). Có 13 Mongoose models; indexes/Auth transactions đã kiểm trên MongoDB local. Các nghiệp vụ công việc chưa có API. Storage là Upcoming, announcement/idempotency giữ riêng theo phase/policy còn mở.
+Thiết kế DB hiện hành: [DB v0.2](docs/sds/DATABASE-DESIGN-v0.2.md), [layout dữ liệu](docs/sds/DATABASE-LAYOUT-v0.2.json), [ERD lõi](docs/sds/DATABASE-ERD-v0.2.md). Có 13 Mongoose models; indexes/Auth transactions đã kiểm trên MongoDB local. Project/Task/Comment có API, query và durable work events; inbox/work-email dispatcher tiếp theo. Storage là Upcoming, announcement/idempotency giữ riêng theo phase/policy còn mở.
 
 Mở rộng scope 03/10/2026: SRS hiện 35 UC/29 FR sau Google sign-in/avatar và Workspace announcements/pin. [Nghiên cứu avatar/storage/resources](docs/sds/AVATAR-STORAGE-RESOURCES-REVIEW.md) giữ rõ provider/quota/phase còn đề xuất. Các ghi nhận 33 UC bên dưới là số trước mở rộng.
 

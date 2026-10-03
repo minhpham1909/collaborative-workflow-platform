@@ -15,3 +15,6 @@ Cập nhật 03/10/2026: [backend foundation check](BACKEND-FOUNDATION-CHECK.md)
 Hiện hành sau increment Users: [Profile/Personal Settings check](PROFILE-SETTINGS-CHECK.md) — 33 tests thông thường, 14 tests tích hợp đạt, gồm Auth regression. Các số liệu phía trên là mốc trước increment.
 
 Hiện hành sau Workspace: [Workspace/Invitations QA](WORKSPACE-INVITATIONS-CHECK.md) — 35 tests thường, 24 tích hợp đạt; Auth/Users vẫn được chạy regression.
+
+
+[Project/Task/Comment check](PROJECT-TASK-COMMENT-CHECK.md): 37 tests thường, 33 tích hợp; quyền, concurrency, search/time và event rollback.
