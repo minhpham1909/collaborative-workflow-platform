@@ -13,6 +13,8 @@ Cập nhật 03/10/2026. [Nhật ký cũ](../archive/project/PROJECT-HISTORY-202
 
 ## Tiếp theo
 
+Đã rà [UI trước visual design](../ui-ux/PRE-VISUAL-REVIEW.md): state matrix/tương tác/components và các mốc design/FE/release. Chủ dự án đã về desktop, không cần gửi preview mobile mỗi lượt; responsive vẫn giữ. Bước tiếp theo là visual direction desktop Home/Board/Task, shared tokens/components và mở rộng frames/states, chưa chốt brand hoặc library.
+
 Đã hoàn thành vòng phân tích [bảy cụm](../ui-ux/SCREEN-REVIEW-SUMMARY.md), gồm [cụm cuối Public/Policies/Announcements](../ui-ux/clusters/CLUSTER-07-PUBLIC-POLICIES-ANNOUNCEMENTS.md). Đã dựng [wireframe lõi tương tác](../ui-ux/wireframes/core.html) bằng dữ liệu giả desktop/mobile. Tiếp theo bổ sung Auth/Invitations/Members/Settings/Notifications/Public và frames lỗi/conflict/loading; chưa production FE hoặc rich-text editor hoàn chỉnh.
 
 Auth giữ email/password + Google optional, Google-only không cần password riêng; uniqueness email/Google/User đã được chủ dự án xác nhận. [Ma trận link](../ui-ux/ACCOUNT-REGISTRATION-LINK-REVIEW.md) giữ các nhánh unverified recovery và provider email drift còn review. [UI/API gaps](../ui-ux/UI-API-GAPS-v0.1.md) vẫn cần trước nối controls vào FE thật.

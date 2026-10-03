@@ -45,6 +45,8 @@ Không cần đợi mọi gap để vẽ wireframe dữ liệu mẫu, nhưng FE 
 
 ## 5. Đầu ra wireframe và thứ tự
 
+Đã bổ sung [rà trạng thái/tương tác trước visual](PRE-VISUAL-REVIEW.md). Chủ dự án thấy bố cục lõi cơ bản ổn và đã về desktop; không cần preview phone từng lượt. Có thể bắt đầu visual design lõi, các frames/state còn thiếu dựng cùng component library; vẫn chưa coi mọi layout/brand đã duyệt.
+
 Batch đầu: shell, Home, Workspace Projects, Board, My Tasks, Task Detail/Comments. Mẫu local có dữ liệu giả, desktop/mobile; chứng minh chọn nhóm → mở Project → Task và quay lại. Sau đó Auth/Invitations, Members/Settings, Notifications, Public/Policies. Màn Announcement ghi phase riêng, không nút chức năng giả trong core prototype.
 
 Đã có [mẫu HTML tương tác batch lõi](wireframes/core.html); [README mẫu](wireframes/README.md) ghi rõ controls được minh họa và giới hạn (editor text thuần, chưa loading/conflict/CAS/API). Chưa coi một prototype happy-path là toàn bộ frames nghiệm thu.
