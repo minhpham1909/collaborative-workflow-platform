@@ -1,0 +1,31 @@
+# Workflow — Stitch/Figma review v1
+
+Ngày 03/10/2026. Nguồn visual là [Figma của chủ dự án](https://www.figma.com/design/TQpGbJPdfs7CFMYBUKpvNE/collaborative-webapp?node-id=0-1). Đây là prototype bổ sung My Tasks/states và chuẩn hóa nghiệp vụ, không phải bản sao pixel-perfect hoặc FE production.
+
+Chạy `node docs/ui-ux/stitch-review/serve.cjs`, mở `http://127.0.0.1:4175/`.
+
+| Route | Nội dung |
+|---|---|
+| #home | Greeting, Workspace cards, search/lọc ngày tạo |
+| #workspace:w1 | Project list, Active/Archived, Owner/Member |
+| #board:p1 | Ba cột cố định, search/time/overdue, Task Detail |
+| #mine | Danh sách phẳng xuyên Workspace; default Active/open, mới tạo trước; cùng Task Detail với Board |
+| #states | Owner/Creator, Assignee, Member, Archived; loading, no-results, retry, conflict, save/validation/dirty-close, unavailable, departed |
+
+Khung sidebar chung; nền kem/tím, accents lavender/mint/coral. Plus Jakarta Sans 400/600/700 phục vụ local từ Google Fonts, có tiếng Việt; [OFL](OFL.txt). Không cần gọi CDN khi xem.
+
+## Giới hạn
+
+Dữ liệu giả, thay đổi trong bộ nhớ tab. Không API/auth/mail/storage/autosave/realtime. Role selector là công cụ review. Search/time của Workspace/Project vẫn cần server contract. VI/EN là nhãn hướng thiết kế, chưa dịch toàn bộ mẫu. Editor còn placeholder/textarea, chưa nghiệm thu toolbar/IME/JSON/grapheme. Comment edit và các màn Auth/Members/Invitations/Settings/Notifications chưa hoàn chỉnh. Gallery minh họa trạng thái; các nút quyền không kết nối mutation thật. Không thêm billing/sprint/report/tags/favorite/Project deadline/template/archive Workspace.
+
+## Figma đã ghi và phần còn lại
+
+Trang mới [Workflow / UI v1](https://www.figma.com/design/TQpGbJPdfs7CFMYBUKpvNE/collaborative-webapp?node-id=3-2), giữ bản import gốc Page 1. Tool trả về 2 collections, 37 variables (14 primitives + 23 theme), 5 text styles, 3 sets Button/Badge/Input với 16 variants, Sidebar/Header và Home clone 1440px. [Foundation sheet](https://www.figma.com/design/TQpGbJPdfs7CFMYBUKpvNE/collaborative-webapp?node-id=4-2), [Home](https://www.figma.com/design/TQpGbJPdfs7CFMYBUKpvNE/collaborative-webapp?node-id=8-18), [ledger IDs](figma-state.json).
+
+Công cụ hết lượt gọi Figma MCP Starter trước bước Workspace. Canvas mới chưa có screenshot nghiệm thu. Cần kiểm Home clipping/height/nav/KPI còn sót, áp text/effect styles và focus treatment vào component, audit bindings; rồi sửa 3 màn còn lại, thêm My Tasks/states. Chưa coi Figma đã hoàn thành. Không chạy lại mutation thành công hoặc tạo duplicate; dùng ledger để tiếp tục. Không thao tác browser để vượt giới hạn.
+
+## Kiểm tra local
+
+Headless Edge context riêng đã kiểm My Tasks default/filter/search không dấu, invalid date giữ kết quả cũ, Ctrl+K, Task Archived chỉ đọc, Assignee status-only, Archived khóa status, conflict giữ draft, title validation, saving và retry. Không page error hoặc tràn ngang tại 1440/1280/390px trên Home/Workspace/Board/My Tasks/states. Đã xem ảnh Home/My Tasks/states và sửa greeting xuống dòng riêng emoji. Không tuyên bố kiểm toàn bộ accessibility hoặc BE/auth thật.
+
+Ảnh local: [Home](home-desktop.png), [My Tasks](mine-desktop.png), [States](states-desktop.png); không phải ảnh canvas Figma.

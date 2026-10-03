@@ -4,6 +4,8 @@ Cập nhật 03/10/2026. [Nhật ký cũ](../archive/project/PROJECT-HISTORY-202
 
 ## Hiện tại
 
+Chủ dự án đã import Stitch vào Figma và yêu cầu chuẩn hóa. [Review mới](../ui-ux/FIGMA-STITCH-REVIEW-v0.1.md), [prototype kem/tím + My Tasks/states](../ui-ux/stitch-review/README.md) là hướng hiện hành thay teal. Figma đã ghi foundations/components/navigation/Home trên trang mới; bị giới hạn lượt gọi Starter trước 3 màn còn lại. Ledger lưu IDs; canvas mới chưa visual QA. Tiếp tục từ ledger khi có lượt gọi, không tạo duplicate hoặc coi FE đã triển khai.
+
 - Repo GitHub private minhpham1909/collaborative-workflow-platform; main giữ mốc nền, phát triển trên dev.
 - BE: Node 24.x, JavaScript ESM, Express 5.2.1, Mongoose 9.10.4, pnpm 11.19.0, lockfile; 13 models, editor validation, health.
 - JWT access/refresh, Argon2id login, rotation/reuse revocation, logout/me và verified middleware. Đã có signup/Terms, verify/resend, reset/change password, Google login/link và encrypted email outbox. [Accounts contract](../sds/AUTH-ACCOUNTS-v0.1.md), [session contract](../sds/AUTH-SESSION-v0.1.md).
