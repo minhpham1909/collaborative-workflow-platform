@@ -11,3 +11,5 @@ Cập nhật 03/10/2026: [backend foundation check](BACKEND-FOUNDATION-CHECK.md)
 Đã kiểm các luồng Auth theo báo cáo mới; chưa nghiệm thu toàn bộ AC-01 đến AC-33, AC-X01 đến AC-X20 hoặc đo NFR. Các kiểm tra nghiệp vụ phải thực hiện sau khi yêu cầu liên quan được duyệt và có lát cắt chạy thật.
 
 Ưu tiên kế hoạch sau baseline: quyền xuyên Workspace; vòng đời membership và tái gia nhập; accept/revoke và transfer/leave đồng thời; archive/write và stale edits; recipients/email preferences; token/session lifecycle; sau cùng nghiệm thu NFR trong môi trường ghi nhận cụ thể.
+
+Hiện hành sau increment Users: [Profile/Personal Settings check](PROFILE-SETTINGS-CHECK.md) — 33 tests thông thường, 14 tests tích hợp đạt, gồm Auth regression. Các số liệu phía trên là mốc trước increment.

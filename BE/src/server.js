@@ -8,6 +8,8 @@ import { createMongoAccountStore } from './auth/mongo-accounts.js';
 import { createAccountsService } from './auth/accounts-service.js';
 import { createGoogleVerifier } from './auth/google.js';
 import { assertAuthIndexes } from './auth/index-check.js';
+import { createMongoUsersStore } from './users/mongo-store.js';
+import { createUsersService } from './users/service.js';
 
 let server;
 let stopping = false;
@@ -31,7 +33,8 @@ try {
   const store = createMongoAccountStore();
   const authService = await createAuthService({ store, config: authConfig });
   const accountsService = createAccountsService({ store, config: authConfig, verifyGoogle: createGoogleVerifier(authConfig.googleClientId) });
-  const app = createApp({ isReady: () => !stopping && mongoose.connection.readyState === 1, authService, authConfig, accountsService });
+  const usersService = createUsersService({ store: createMongoUsersStore() });
+  const app = createApp({ isReady: () => !stopping && mongoose.connection.readyState === 1, authService, authConfig, accountsService, usersService });
   if (!stopping) {
     server = app.listen(config.port, config.host, () => {
       console.info(`API listening at http://${config.host}:${config.port}`);

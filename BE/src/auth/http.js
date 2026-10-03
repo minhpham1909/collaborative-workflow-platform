@@ -1,6 +1,7 @@
 import express from 'express';
 import { AuthError } from './errors.js';
 import { userResponse } from './service.js';
+import { originPolicy, requestError } from '../http/policy.js';
 
 const COOKIE = 'workflow_refresh';
 function cookieValue(req, name = COOKIE) {
@@ -49,23 +50,7 @@ export function createRateLimiter({ limit = 60, windowMs = 60_000, maxEntries = 
 export function createAuthRouter({ service, config, accounts }) {
   const router = express.Router({ caseSensitive: true, strict: true });
   const cookieOptions = { httpOnly: true, secure: config.secureCookies, sameSite: 'strict', path: '/auth' };
-  router.use((req, res, next) => {
-    const origin = req.headers.origin;
-    if (origin && origin !== config.webOrigin) return next(new AuthError('ORIGIN_REJECTED', 403));
-    // Cookie-dependent reads and mutations require an exact frontend Origin.
-    if ((req.method === 'POST' || req.path === '/csrf') && origin !== config.webOrigin) return next(new AuthError('ORIGIN_REJECTED', 403));
-    if (origin) {
-      res.set('Access-Control-Allow-Origin', config.webOrigin);
-      res.set('Access-Control-Allow-Credentials', 'true');
-      res.vary('Origin');
-    }
-    if (req.method === 'OPTIONS') {
-      res.set('Access-Control-Allow-Methods', 'GET, POST');
-      res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-CSRF-Token');
-      return res.sendStatus(204);
-    }
-    next();
-  });
+  router.use(originPolicy({ webOrigin: config.webOrigin, methods: ['GET', 'POST'], cookieReads: ['/csrf'] }));
   router.use(createRateLimiter());
   router.use(express.json({ limit: '16kb', strict: true }));
   router.use((req, _res, next) => {
@@ -127,12 +112,8 @@ export function createAuthRouter({ service, config, accounts }) {
   router.use((error, req, res, next) => {
     if (error instanceof AuthError) {
       if (error.status === 401 && ['/refresh', '/csrf', '/logout'].includes(req.path)) res.clearCookie(COOKIE, cookieOptions);
-      return res.status(error.status).json({ error: { code: error.code } });
     }
-    if (['entity.parse.failed', 'entity.too.large'].includes(error.type)) {
-      return res.status(error.type === 'entity.too.large' ? 413 : 400).json({ error: { code: 'INVALID_INPUT' } });
-    }
-    next(error);
+    requestError(error, req, res, next);
   });
   return router;
 }

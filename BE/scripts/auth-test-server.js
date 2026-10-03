@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
 if (process.env.NODE_ENV !== 'development') throw new Error('Auth test page requires NODE_ENV=development');
 if (process.env.WEB_ORIGIN !== 'http://localhost:5173') throw new Error('Auth test page requires WEB_ORIGIN=http://localhost:5173');
 const page = await readFile(new URL('../devtools/auth-test.html', import.meta.url));
-const script = await readFile(new URL('../devtools/auth-test.js', import.meta.url));
+const script = await readFile(new URL('../devtools/auth-harness.js', import.meta.url));
 const server = createServer((req, res) => {
   if (req.headers.host !== 'localhost:5173') { res.writeHead(403).end(); return; }
   const path = req.url?.split('?')[0];

@@ -2,7 +2,7 @@
 
 Dự án portfolio cộng tác nhóm nhỏ: User → Workspace → Project → Task.
 
-Trạng thái 03/10/2026: BE JavaScript/Express/Mongoose có 13 models, health/editor validation, JWT sessions và account flows (signup, verify/reset/change password, Google login/link, encrypted email outbox). 31 tests thông thường và 8 integration tests đạt trên MongoDB replica set local. Google/SMTP thật và frontend còn tiếp theo. Repo GitHub private minhpham1909/collaborative-workflow-platform, phát triển trên dev; SRS chưa baseline v1.0. Xem [Accounts/QA](docs/qa/AUTH-ACCOUNTS-CHECK.md).
+Trạng thái 03/10/2026: BE JavaScript/Express/Mongoose có 13 models, health/editor validation, JWT sessions và account flows (signup, verify/reset/change password, Google login/link, encrypted email outbox). 33 tests thông thường và 14 integration tests đạt trên MongoDB replica set local. Google login thật đã có kết quả /auth/me 200 do chủ dự án kiểm; SMTP accepted email thử, Inbox còn xác nhận. Profile/global settings BE đã triển khai; frontend và Workspace/Invitations tiếp theo. Repo GitHub private minhpham1909/collaborative-workflow-platform, phát triển trên dev; SRS chưa baseline v1.0. Xem [Accounts/QA](docs/qa/AUTH-ACCOUNTS-CHECK.md).
 
 ## Tài liệu chính
 

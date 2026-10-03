@@ -1,7 +1,8 @@
 import express from 'express';
 import { createAuthRouter } from './auth/http.js';
+import { createUsersRouter } from './users/http.js';
 
-export function createApp({ isReady = () => false, authService, authConfig, accountsService } = {}) {
+export function createApp({ isReady = () => false, authService, authConfig, accountsService, usersService } = {}) {
   const app = express();
   app.disable('x-powered-by');
   app.set('trust proxy', false);
@@ -16,6 +17,7 @@ export function createApp({ isReady = () => false, authService, authConfig, acco
     res.status(ready ? 200 : 503).json({ status: ready ? 'ready' : 'not_ready' });
   });
   if (authService && authConfig) app.use('/auth', createAuthRouter({ service: authService, config: authConfig, accounts: accountsService }));
+  if (authService && authConfig && usersService) app.use('/users', createUsersRouter({ service: usersService, authService, config: authConfig }));
   app.use((_req, res) => res.status(404).json({ error: { code: 'NOT_FOUND' } }));
   app.use((_error, _req, res, _next) => {
     res.status(500).json({ error: { code: 'INTERNAL_ERROR' } });

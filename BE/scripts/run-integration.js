@@ -11,7 +11,7 @@ const repl = await MongoMemoryReplSet.create({
 });
 try {
   const files = process.argv.slice(2);
-  const child = spawn(process.execPath, ['--test', ...(files.length ? files : ['test/auth-mongo.test.js', 'test/accounts-mongo.test.js'])], {
+  const child = spawn(process.execPath, ['--test', ...(files.length ? files : ['test/auth-mongo.test.js', 'test/accounts-mongo.test.js', 'test/users-mongo.test.js'])], {
     cwd: fileURLToPath(new URL('../', import.meta.url)), stdio: 'inherit',
     env: { ...process.env, TEST_MONGODB_URI: repl.getUri('workflow_auth_test') },
   });
