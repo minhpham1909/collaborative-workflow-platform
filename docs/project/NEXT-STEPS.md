@@ -13,7 +13,9 @@ Cập nhật 03/10/2026. [Nhật ký cũ](../archive/project/PROJECT-HISTORY-202
 
 ## Tiếp theo
 
-Đã phân tích [cụm 03 — Members/Invitations/Workspace Settings](../ui-ux/clusters/CLUSTER-03-MEMBERS-INVITATIONS-WORKSPACE-SETTINGS.md). Tiếp theo cụm Auth/Google/verification/recovery. Chủ dự án đồng ý thêm mobile responsive vào phạm vi website; không mở dự án native app.
+Đã phân tích [cụm 04 — Auth/verification/recovery và Home sau login](../ui-ux/clusters/CLUSTER-04-AUTH-VERIFICATION-RECOVERY.md). Tiếp theo Personal Settings. Đăng nhập bình thường về Home danh sách Workspace, đích Task/Invitation hợp lệ được giữ; chưa triển khai FE từ các layout đề xuất.
+
+Đã phân tích [cụm 03 — Members/Invitations/Workspace Settings](../ui-ux/clusters/CLUSTER-03-MEMBERS-INVITATIONS-WORKSPACE-SETTINGS.md). Chủ dự án đồng ý thêm mobile responsive vào phạm vi website; không mở dự án native app.
 
 Review đang đi theo từng cụm: [cụm 01 — điều hướng, Home, Workspace Projects](../ui-ux/clusters/CLUSTER-01-NAVIGATION-HOME-WORKSPACE.md), [cụm 02 — Board/My Tasks/Task Detail/Comments](../ui-ux/clusters/CLUSTER-02-BOARD-MY-TASKS-TASK-COMMENTS.md). Chưa coi các đề xuất bố cục là đã duyệt hoặc triển khai các gap chỉ từ inventory. Chủ dự án đang dùng phone và cho phép tiếp tục phân tích, không cần xác nhận từng bước lúc này.
 

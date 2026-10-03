@@ -33,6 +33,8 @@ Create/edit/confirm dialogs không cần route riêng trừ khi mobile/history y
 
 ## 2. Journey đăng nhập và first use
 
+Home `/app` là “Workspace của bạn”, tách khỏi Landing `/` và màn bên trong Workspace. Login bình thường về Home kể cả chỉ có một Workspace; có Task/Invitation intent hợp lệ thì tiếp tục đích đó sau kiểm verified/quyền, không auto-accept lời mời. Chi tiết [cụm Auth](clusters/CLUSTER-04-AUTH-VERIFICATION-RECOVERY.md).
+
 ```mermaid
 flowchart TD
   Entry[Landing hoặc deep link] --> Session{Có phiên hợp lệ?}
