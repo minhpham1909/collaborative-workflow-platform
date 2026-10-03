@@ -6,6 +6,7 @@ Cập nhật 03/10/2026 theo yêu cầu chủ dự án: phân tích flow, nội 
 
 - [Cụm 01 — Điều hướng, Home, Workspace Projects](clusters/CLUSTER-01-NAVIGATION-HOME-WORKSPACE.md): phân tích từng cụm theo mục đích, bố cục, trạng thái và luồng trước khi suy ra nhu cầu API; layout còn đề xuất.
 - [Cụm 02 — Board, My Tasks, Task Detail, Comments](clusters/CLUSTER-02-BOARD-MY-TASKS-TASK-COMMENTS.md): màn làm việc, mobile, form/editor, quyền, conflict và nhu cầu identity/picker.
+- [Cụm 03 — Thành viên, Lời mời, Quản lý Workspace](clusters/CLUSTER-03-MEMBERS-INVITATIONS-WORKSPACE-SETTINGS.md): membership lifecycle, invitations Owner/recipient, settings nhóm và own email; desktop/mobile trong phạm vi đã đồng ý.
 - [Screen spec v0.2](SCREEN-SPEC-v0.2.md): 21 nhóm màn/form, nội dung, bố cục desktop/mobile, actions/quyền, states; phủ 35 UC và phân biệt BE đã có với phần dự kiến.
 - [Screen flows v0.2](SCREEN-FLOWS-v0.2.md): sitemap/routes FE đề xuất, auth/invitation/Task/ownership/settings và nhánh lỗi.
 - [UI/API gaps](UI-API-GAPS-v0.1.md): account capabilities, historical names/avatar, picker/search/time và các phần chưa thể nối FE như đã hoàn thiện.

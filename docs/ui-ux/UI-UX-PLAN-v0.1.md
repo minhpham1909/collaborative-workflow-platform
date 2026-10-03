@@ -4,6 +4,8 @@
 
 ## Các bước
 
+Chủ dự án đồng ý bổ sung mobile UI ngày 03/10/2026: thiết kế website responsive cho desktop/mobile, cùng nghiệp vụ và dữ liệu, bố cục/thao tác thích ứng. Không mở scope native app hoặc offline/PWA từ quyết định này. Layout cụ thể vẫn review theo từng cụm.
+
 1. Review kiến trúc thông tin, mục đích từng màn, field/actions/quyền, entry/back/deep link và states. Giữ quyết định nghiệp vụ đã duyệt; review riêng layout mới đề xuất.
 2. Wireframe local shell/Home/Workspace/Board/Task/My Tasks, rồi Auth/Invitation/Settings/Notifications; desktop/mobile, Việt/English, dữ liệu giả. Wireframe có nhánh lỗi và quyền, không chỉ happy path.
 3. Rà gaps Account capabilities/identity/Member picker/search-time với BE trước nối các control. Search/time mọi list cần server scope đúng, không lọc trang đầu.

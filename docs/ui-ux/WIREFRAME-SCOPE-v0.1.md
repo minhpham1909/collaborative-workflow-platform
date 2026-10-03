@@ -17,4 +17,6 @@ Thiết kế shared editor viewer/toolbar/counting dùng schema BE thật. Khôn
 
 ## Đầu ra
 
+Desktop và mobile responsive đã được chủ dự án đồng ý trong phạm vi thiết kế ngày 03/10/2026. Kiểm màn hẹp khoảng 360px, màn hình ngang/tablet, safe area và bàn phím mở; không coi đây là dự án app native riêng. Breakpoint/pixel cuối cùng chọn khi wireframe và kiểm nội dung.
+
 Wireframe desktop/mobile + screen/action/state mapping và critical-flow prototype bằng dữ liệu giả. Chọn visual/UI/editor/router/query libraries sau khi biết nhu cầu từ màn; không implementation production FE trong lượt screen review. Figma sau khi nội dung/bố cục đã review rõ, không mua/nâng cấp tool trong bước này.

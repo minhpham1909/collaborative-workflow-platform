@@ -13,7 +13,9 @@ Cập nhật 03/10/2026. [Nhật ký cũ](../archive/project/PROJECT-HISTORY-202
 
 ## Tiếp theo
 
-Review đang đi theo từng cụm: [cụm 01 — điều hướng, Home, Workspace Projects](../ui-ux/clusters/CLUSTER-01-NAVIGATION-HOME-WORKSPACE.md), [cụm 02 — Board/My Tasks/Task Detail/Comments](../ui-ux/clusters/CLUSTER-02-BOARD-MY-TASKS-TASK-COMMENTS.md). Tiếp theo là Members/Invitations/quản lý Workspace; chưa coi các đề xuất bố cục là đã duyệt hoặc triển khai các gap chỉ từ inventory. Chủ dự án đang dùng phone và cho phép tiếp tục phân tích, không cần xác nhận từng bước lúc này.
+Đã phân tích [cụm 03 — Members/Invitations/Workspace Settings](../ui-ux/clusters/CLUSTER-03-MEMBERS-INVITATIONS-WORKSPACE-SETTINGS.md). Tiếp theo cụm Auth/Google/verification/recovery. Chủ dự án đồng ý thêm mobile responsive vào phạm vi website; không mở dự án native app.
+
+Review đang đi theo từng cụm: [cụm 01 — điều hướng, Home, Workspace Projects](../ui-ux/clusters/CLUSTER-01-NAVIGATION-HOME-WORKSPACE.md), [cụm 02 — Board/My Tasks/Task Detail/Comments](../ui-ux/clusters/CLUSTER-02-BOARD-MY-TASKS-TASK-COMMENTS.md). Chưa coi các đề xuất bố cục là đã duyệt hoặc triển khai các gap chỉ từ inventory. Chủ dự án đang dùng phone và cho phép tiếp tục phân tích, không cần xác nhận từng bước lúc này.
 
 1. Theo yêu cầu chủ dự án: bám requirement, triển khai BE theo module và kiểm API/quyền/transactions trước; Profile/Personal Settings và Workspace/Invitations đã triển khai; Project/Task/Comment, Board/My Tasks đã triển khai; Notifications/work-email dispatcher đã triển khai; tiếp theo review UI/UX chung và FE theo module.
 2. Google login thật đã đạt cho tài khoản kiểm thử. Tiếp tục kiểm email auth outbox tới Inbox/Spam, hoàn thiện Terms và worker nền; [hướng dẫn local](GOOGLE-SMTP-LOCAL-SETUP.md).
