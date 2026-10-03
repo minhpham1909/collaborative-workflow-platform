@@ -1,0 +1,2 @@
+minimumReleaseAgeExclude:
+  - mongoose@9.10.4

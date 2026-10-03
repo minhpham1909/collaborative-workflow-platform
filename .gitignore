@@ -1,0 +1,25 @@
+# Dependencies and build outputs
+node_modules/
+dist/
+build/
+coverage/
+.vite/
+.cache/
+
+# Local settings and secrets
+.env
+.env.*
+!.env.example
+*.log
+*.pem
+*.key
+
+# OS and editor temporary files
+.DS_Store
+Thumbs.db
+*.swp
+*.tmp
+
+# Local runtime data
+.local/
+uploads/

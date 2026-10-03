@@ -1,0 +1,224 @@
+{
+  "users": [
+    {
+      "name": "users_email_unique",
+      "keys": {
+        "emailCanonical": 1
+      },
+      "unique": true
+    }
+  ],
+  "auth_identities": [
+    {
+      "name": "identity_subject_unique",
+      "keys": {
+        "provider": 1,
+        "providerSubject": 1
+      },
+      "unique": true
+    },
+    {
+      "name": "identity_user_provider_unique",
+      "keys": {
+        "userId": 1,
+        "provider": 1
+      },
+      "unique": true,
+      "status": "design-selected-one-Google-identity-per-user"
+    }
+  ],
+  "sessions": [
+    {
+      "name": "sessions_user_revoke",
+      "keys": {
+        "userId": 1,
+        "revokedAt": 1,
+        "expiresAt": 1
+      }
+    },
+    {
+      "name": "session_refresh_unique",
+      "keys": {
+        "refreshTokenHash": 1
+      },
+      "unique": true,
+      "partialFilter": {
+        "refreshTokenHash": {
+          "$type": "string"
+        }
+      }
+    }
+  ],
+  "auth_tokens": [
+    {
+      "name": "auth_token_hash_unique",
+      "keys": {
+        "tokenHash": 1
+      },
+      "unique": true
+    },
+    {
+      "name": "auth_token_user_purpose",
+      "keys": {
+        "userId": 1,
+        "purpose": 1,
+        "createdAt": -1
+      }
+    }
+  ],
+  "workspaces": [],
+  "workspace_memberships": [
+    {
+      "name": "membership_pair_unique",
+      "keys": {
+        "workspaceId": 1,
+        "userId": 1
+      },
+      "unique": true
+    },
+    {
+      "name": "membership_user_access",
+      "keys": {
+        "userId": 1,
+        "state": 1,
+        "workspaceId": 1
+      }
+    },
+    {
+      "name": "membership_workspace_list",
+      "keys": {
+        "workspaceId": 1,
+        "state": 1,
+        "joinedAt": -1,
+        "_id": -1
+      }
+    }
+  ],
+  "workspace_invitations": [
+    {
+      "name": "invitation_token_unique",
+      "keys": {
+        "tokenHash": 1
+      },
+      "unique": true
+    },
+    {
+      "name": "invitation_workspace_list",
+      "keys": {
+        "workspaceId": 1,
+        "createdAt": -1,
+        "_id": -1
+      }
+    }
+  ],
+  "projects": [
+    {
+      "name": "project_workspace_state",
+      "keys": {
+        "workspaceId": 1,
+        "state": 1,
+        "createdAt": -1,
+        "_id": -1
+      }
+    }
+  ],
+  "tasks": [
+    {
+      "name": "task_board_column",
+      "keys": {
+        "projectId": 1,
+        "status": 1,
+        "createdAt": -1,
+        "_id": -1
+      },
+      "partialFilter": {
+        "deletedAt": null
+      }
+    },
+    {
+      "name": "task_assignee_list",
+      "keys": {
+        "assigneeId": 1,
+        "createdAt": -1,
+        "_id": -1
+      },
+      "partialFilter": {
+        "deletedAt": null
+      }
+    },
+    {
+      "name": "task_membership_cleanup",
+      "keys": {
+        "workspaceId": 1,
+        "assigneeId": 1,
+        "status": 1
+      },
+      "partialFilter": {
+        "deletedAt": null
+      }
+    }
+  ],
+  "task_comments": [
+    {
+      "name": "comment_task_list",
+      "keys": {
+        "taskId": 1,
+        "createdAt": -1,
+        "_id": -1
+      },
+      "partialFilter": {
+        "deletedAt": null
+      }
+    }
+  ],
+  "notifications": [
+    {
+      "name": "notification_event_recipient_unique",
+      "keys": {
+        "eventId": 1,
+        "recipientId": 1
+      },
+      "unique": true
+    },
+    {
+      "name": "notification_recipient_list",
+      "keys": {
+        "recipientId": 1,
+        "createdAt": -1,
+        "_id": -1
+      }
+    },
+    {
+      "name": "notification_unread",
+      "keys": {
+        "recipientId": 1,
+        "readAt": 1
+      }
+    }
+  ],
+  "email_outbox": [
+    {
+      "name": "email_event_recipient_unique",
+      "keys": {
+        "eventId": 1,
+        "recipientKey": 1
+      },
+      "unique": true
+    },
+    {
+      "name": "email_pending",
+      "keys": {
+        "state": 1,
+        "nextAttemptAt": 1,
+        "_id": 1
+      }
+    },
+    {
+      "name": "email_expired_lease",
+      "keys": {
+        "state": 1,
+        "leaseUntil": 1
+      }
+    }
+  ]
+}

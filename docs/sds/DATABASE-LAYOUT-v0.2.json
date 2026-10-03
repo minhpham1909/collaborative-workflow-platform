@@ -1,0 +1,661 @@
+{
+  "designVersion": "0.2",
+  "status": "schemas-implemented-database-not-deployed",
+  "date": "2026-10-03",
+  "commonFields": {
+    "_id": "ObjectId",
+    "createdAt": "Date"
+  },
+  "privateFieldPolicy": "Never expose credential, hash, encrypted delivery or internal revisions through generic serialization.",
+  "authMode": "jwt-refresh-owner-selected",
+  "coreCollections": [
+    {
+      "name": "users",
+      "fields": {
+        "displayName": "String",
+        "email": "String",
+        "emailCanonical": "String",
+        "passwordHash": "String|null",
+        "avatar": "Avatar",
+        "emailVerifiedAt": "Date|null",
+        "locale": "vi|en|null",
+        "emailPreferences": "EmailPreferences",
+        "termsAcceptance": "TermsAcceptance",
+        "authVersion": "Integer",
+        "authMutationRevision": "Integer",
+        "version": "Integer",
+        "updatedAt": "Date"
+      },
+      "privateFields": [
+        "passwordHash",
+        "authMutationRevision"
+      ],
+      "references": {},
+      "indexes": [
+        {
+          "name": "users_email_unique",
+          "keys": {
+            "emailCanonical": 1
+          },
+          "unique": true
+        }
+      ],
+      "constraints": [
+        "Google-only passwordHash is null",
+        "Account creation completes Terms",
+        "No account auto-link based solely on email"
+      ]
+    },
+    {
+      "name": "auth_identities",
+      "fields": {
+        "userId": "ObjectId",
+        "provider": "google",
+        "providerSubject": "String",
+        "lastLoginAt": "Date"
+      },
+      "privateFields": [
+        "providerSubject"
+      ],
+      "references": {
+        "userId": "users"
+      },
+      "indexes": [
+        {
+          "name": "identity_subject_unique",
+          "keys": {
+            "provider": 1,
+            "providerSubject": 1
+          },
+          "unique": true
+        },
+        {
+          "name": "identity_user_provider_unique",
+          "keys": {
+            "userId": 1,
+            "provider": 1
+          },
+          "unique": true,
+          "status": "design-selected-one-Google-identity-per-user"
+        }
+      ],
+      "constraints": [
+        "Verify Google credential on BE",
+        "Do not persist raw Google credentials"
+      ]
+    },
+    {
+      "name": "sessions",
+      "fields": {
+        "userId": "ObjectId",
+        "authVersionAtIssue": "Integer",
+        "expiresAt": "Date",
+        "lastSeenAt": "Date",
+        "revokedAt": "Date|null",
+        "revokeReason": "String|null"
+      },
+      "privateFields": [],
+      "references": {
+        "userId": "users"
+      },
+      "indexes": [
+        {
+          "name": "sessions_user_revoke",
+          "keys": {
+            "userId": 1,
+            "revokedAt": 1,
+            "expiresAt": 1
+          }
+        }
+      ],
+      "variants": [
+        {
+          "mode": "opaque-cookie",
+          "status": "historical-not-implemented",
+          "fields": {
+            "credentialHash": "String"
+          },
+          "privateFields": [
+            "credentialHash"
+          ],
+          "indexes": [
+            {
+              "name": "session_credential_unique",
+              "keys": {
+                "credentialHash": 1
+              },
+              "unique": true,
+              "partialFilter": {
+                "credentialHash": {
+                  "$type": "string"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "mode": "jwt-refresh",
+          "status": "selected-by-project-owner-2026-10-03",
+          "fields": {
+            "refreshTokenHash": "String",
+            "refreshGeneration": "Integer"
+          },
+          "privateFields": [
+            "refreshTokenHash"
+          ],
+          "indexes": [
+            {
+              "name": "session_refresh_unique",
+              "keys": {
+                "refreshTokenHash": 1
+              },
+              "unique": true,
+              "partialFilter": {
+                "refreshTokenHash": {
+                  "$type": "string"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "constraints": [
+        "JWT access plus refresh selected; signing/expiry/rotation API contract pending",
+        "Revocation and expiry checked on protected requests",
+        "No TTL until purge policy chosen"
+      ]
+    },
+    {
+      "name": "auth_tokens",
+      "fields": {
+        "userId": "ObjectId",
+        "purpose": "verify_email|reset_password",
+        "tokenHash": "String",
+        "expiresAt": "Date",
+        "usedAt": "Date|null",
+        "revokedAt": "Date|null"
+      },
+      "privateFields": [
+        "tokenHash"
+      ],
+      "references": {
+        "userId": "users"
+      },
+      "indexes": [
+        {
+          "name": "auth_token_hash_unique",
+          "keys": {
+            "tokenHash": 1
+          },
+          "unique": true
+        },
+        {
+          "name": "auth_token_user_purpose",
+          "keys": {
+            "userId": 1,
+            "purpose": 1,
+            "createdAt": -1
+          }
+        }
+      ],
+      "constraints": [
+        "Purpose, expiry and single-use enforced at consume",
+        "Resend revokes older same-purpose tokens"
+      ]
+    },
+    {
+      "name": "workspaces",
+      "fields": {
+        "ownerId": "ObjectId",
+        "name": "String",
+        "description": "RichText",
+        "version": "Integer",
+        "mutationRevision": "Integer",
+        "updatedAt": "Date"
+      },
+      "privateFields": [
+        "mutationRevision"
+      ],
+      "references": {
+        "ownerId": "users"
+      },
+      "indexes": [],
+      "constraints": [
+        "Exactly one ownerId and active membership for owner",
+        "Role derived; not duplicated on membership",
+        "Description proposed maximum 20000 visible characters"
+      ]
+    },
+    {
+      "name": "workspace_memberships",
+      "fields": {
+        "workspaceId": "ObjectId",
+        "userId": "ObjectId",
+        "state": "active|inactive",
+        "joinedAt": "Date",
+        "leftAt": "Date|null",
+        "exitReason": "left|removed|null",
+        "membershipGeneration": "Integer",
+        "emailOverrides": "EmailOverrides",
+        "version": "Integer",
+        "updatedAt": "Date"
+      },
+      "privateFields": [],
+      "references": {
+        "workspaceId": "workspaces",
+        "userId": "users"
+      },
+      "indexes": [
+        {
+          "name": "membership_pair_unique",
+          "keys": {
+            "workspaceId": 1,
+            "userId": 1
+          },
+          "unique": true
+        },
+        {
+          "name": "membership_user_access",
+          "keys": {
+            "userId": 1,
+            "state": 1,
+            "workspaceId": 1
+          }
+        },
+        {
+          "name": "membership_workspace_list",
+          "keys": {
+            "workspaceId": 1,
+            "state": 1,
+            "joinedAt": -1,
+            "_id": -1
+          }
+        }
+      ],
+      "constraints": [
+        "One retained document per pair",
+        "Inactive cannot access",
+        "Rejoin does not restore assignments or overrides"
+      ]
+    },
+    {
+      "name": "workspace_invitations",
+      "fields": {
+        "workspaceId": "ObjectId",
+        "createdBy": "ObjectId",
+        "type": "EMAIL|LINK",
+        "email": "String|null",
+        "emailCanonical": "String|null",
+        "tokenHash": "String",
+        "expiresAt": "Date",
+        "revokedAt": "Date|null",
+        "acceptedAt": "Date|null",
+        "acceptedBy": "ObjectId|null",
+        "version": "Integer",
+        "updatedAt": "Date"
+      },
+      "privateFields": [
+        "tokenHash",
+        "email",
+        "emailCanonical"
+      ],
+      "references": {
+        "workspaceId": "workspaces",
+        "createdBy": "users",
+        "acceptedBy": "users"
+      },
+      "indexes": [
+        {
+          "name": "invitation_token_unique",
+          "keys": {
+            "tokenHash": 1
+          },
+          "unique": true
+        },
+        {
+          "name": "invitation_workspace_list",
+          "keys": {
+            "workspaceId": 1,
+            "createdAt": -1,
+            "_id": -1
+          }
+        }
+      ],
+      "constraints": [
+        "EMAIL requires canonical email; LINK recipient and accepted fields null",
+        "Owner-only management",
+        "Expiry checked at accept; seven-day validity",
+        "Transfer owner retains invitations"
+      ]
+    },
+    {
+      "name": "projects",
+      "fields": {
+        "workspaceId": "ObjectId",
+        "createdBy": "ObjectId",
+        "name": "String",
+        "description": "RichText",
+        "state": "active|archived",
+        "archivedAt": "Date|null",
+        "archivedBy": "ObjectId|null",
+        "version": "Integer",
+        "updatedAt": "Date"
+      },
+      "privateFields": [],
+      "references": {
+        "workspaceId": "workspaces",
+        "createdBy": "users",
+        "archivedBy": "users"
+      },
+      "indexes": [
+        {
+          "name": "project_workspace_state",
+          "keys": {
+            "workspaceId": 1,
+            "state": 1,
+            "createdAt": -1,
+            "_id": -1
+          }
+        }
+      ],
+      "constraints": [
+        "No project membership",
+        "Archived user writes blocked",
+        "Description proposed maximum 10000 visible characters"
+      ]
+    },
+    {
+      "name": "tasks",
+      "fields": {
+        "workspaceId": "ObjectId",
+        "projectId": "ObjectId",
+        "createdBy": "ObjectId",
+        "title": "String",
+        "description": "RichText",
+        "searchText": "String",
+        "status": "todo|in_progress|done",
+        "assigneeId": "ObjectId|null",
+        "dueAt": "Date|null",
+        "deletedAt": "Date|null",
+        "deletedBy": "ObjectId|null",
+        "version": "Integer",
+        "updatedAt": "Date"
+      },
+      "privateFields": [
+        "searchText"
+      ],
+      "references": {
+        "workspaceId": "workspaces",
+        "projectId": "projects",
+        "createdBy": "users",
+        "assigneeId": "users",
+        "deletedBy": "users"
+      },
+      "indexes": [
+        {
+          "name": "task_board_column",
+          "keys": {
+            "projectId": 1,
+            "status": 1,
+            "createdAt": -1,
+            "_id": -1
+          },
+          "partialFilter": {
+            "deletedAt": null
+          }
+        },
+        {
+          "name": "task_assignee_list",
+          "keys": {
+            "assigneeId": 1,
+            "createdAt": -1,
+            "_id": -1
+          },
+          "partialFilter": {
+            "deletedAt": null
+          }
+        },
+        {
+          "name": "task_membership_cleanup",
+          "keys": {
+            "workspaceId": 1,
+            "assigneeId": 1,
+            "status": 1
+          },
+          "partialFilter": {
+            "deletedAt": null
+          }
+        }
+      ],
+      "constraints": [
+        "Workspace matches project and is server-derived",
+        "Assignee optional, historic Done preserves User ID",
+        "Cleanup increments version",
+        "No stored overdue or attachments"
+      ]
+    },
+    {
+      "name": "task_comments",
+      "fields": {
+        "workspaceId": "ObjectId",
+        "taskId": "ObjectId",
+        "authorId": "ObjectId",
+        "content": "RichText",
+        "deletedAt": "Date|null",
+        "deletedBy": "ObjectId|null",
+        "version": "Integer",
+        "updatedAt": "Date"
+      },
+      "privateFields": [],
+      "references": {
+        "workspaceId": "workspaces",
+        "taskId": "tasks",
+        "authorId": "users",
+        "deletedBy": "users"
+      },
+      "indexes": [
+        {
+          "name": "comment_task_list",
+          "keys": {
+            "taskId": 1,
+            "createdAt": -1,
+            "_id": -1
+          },
+          "partialFilter": {
+            "deletedAt": null
+          }
+        }
+      ],
+      "constraints": [
+        "Resolve live parent before read/write",
+        "Only Author edits/deletes in Active",
+        "Nonblank visible content"
+      ]
+    },
+    {
+      "name": "notifications",
+      "fields": {
+        "recipientId": "ObjectId",
+        "eventId": "String",
+        "category": "work|invitation",
+        "workspaceId": "ObjectId",
+        "taskId": "ObjectId|null",
+        "invitationId": "ObjectId|null",
+        "actorId": "ObjectId|null",
+        "changes": "BoundedChangeArray",
+        "payloadVersion": "Integer",
+        "payload": "NotificationPayload",
+        "readAt": "Date|null"
+      },
+      "privateFields": [
+        "payload"
+      ],
+      "references": {
+        "recipientId": "users",
+        "workspaceId": "workspaces",
+        "taskId": "tasks",
+        "invitationId": "workspace_invitations",
+        "actorId": "users"
+      },
+      "indexes": [
+        {
+          "name": "notification_event_recipient_unique",
+          "keys": {
+            "eventId": 1,
+            "recipientId": 1
+          },
+          "unique": true
+        },
+        {
+          "name": "notification_recipient_list",
+          "keys": {
+            "recipientId": 1,
+            "createdAt": -1,
+            "_id": -1
+          }
+        },
+        {
+          "name": "notification_unread",
+          "keys": {
+            "recipientId": 1,
+            "readAt": 1
+          }
+        }
+      ],
+      "constraints": [
+        "Payload mapped to authorized response, never raw serialization",
+        "Recipient-only read state",
+        "No personal pin field"
+      ]
+    },
+    {
+      "name": "email_outbox",
+      "fields": {
+        "eventId": "String",
+        "recipientKey": "String",
+        "userId": "ObjectId|null",
+        "workspaceId": "ObjectId|null",
+        "taskId": "ObjectId|null",
+        "invitationId": "ObjectId|null",
+        "authTokenId": "ObjectId|null",
+        "category": "work|invitation|auth",
+        "templateKey": "String",
+        "payloadVersion": "Integer",
+        "eventTypes": "BoundedEventArray",
+        "payload": "EmailPayload",
+        "encryptedDeliveryData": "Ciphertext|null",
+        "state": "pending|processing|sent|cancelled|failed",
+        "attempts": "Integer",
+        "nextAttemptAt": "Date",
+        "leaseUntil": "Date|null",
+        "leaseToken": "String|null",
+        "providerMessageId": "String|null",
+        "lastErrorCode": "String|null",
+        "sentAt": "Date|null",
+        "updatedAt": "Date"
+      },
+      "privateFields": [
+        "recipientKey",
+        "payload",
+        "encryptedDeliveryData",
+        "leaseToken"
+      ],
+      "references": {
+        "userId": "users",
+        "workspaceId": "workspaces",
+        "taskId": "tasks",
+        "invitationId": "workspace_invitations",
+        "authTokenId": "auth_tokens"
+      },
+      "indexes": [
+        {
+          "name": "email_event_recipient_unique",
+          "keys": {
+            "eventId": 1,
+            "recipientKey": 1
+          },
+          "unique": true
+        },
+        {
+          "name": "email_pending",
+          "keys": {
+            "state": 1,
+            "nextAttemptAt": 1,
+            "_id": 1
+          }
+        },
+        {
+          "name": "email_expired_lease",
+          "keys": {
+            "state": 1,
+            "leaseUntil": 1
+          }
+        }
+      ],
+      "constraints": [
+        "Commit outbox with business mutation, send outside transaction",
+        "Recheck work permissions and effective preferences",
+        "Use lease token when completing or rescheduling",
+        "No provider exactly-once claim"
+      ]
+    }
+  ],
+  "sharedTypes": {
+    "Avatar": {
+      "source": "google|initials",
+      "googlePictureUrl": "String|null",
+      "refreshedAt": "Date|null"
+    },
+    "EmailPreferences": {
+      "assignment": "Boolean:true",
+      "comment": "Boolean:false",
+      "content": "Boolean:false",
+      "status": "Boolean:false"
+    },
+    "EmailOverrides": {
+      "assignment": "inherit|on|off",
+      "comment": "inherit|on|off",
+      "content": "inherit|on|off",
+      "status": "inherit|on|off"
+    },
+    "TermsAcceptance": {
+      "version": "String",
+      "acceptedAt": "Date"
+    },
+    "RichText": {
+      "format": "prosemirror-json",
+      "schemaVersion": "Integer:1",
+      "document": "AllowlistedTree:backend-foundation-v1",
+      "plainText": "String:server-derived"
+    },
+    "NotificationPayload": {
+      "contract": "bounded-allowlist-v1-in-model; authorized-API-mapper-pending"
+    },
+    "EmailPayload": {
+      "contract": "bounded-allowlist-v1-in-model; templates-pending"
+    },
+    "Ciphertext": {
+      "contract": "keyId/nonce/ciphertext/tag; encryption-design-pending"
+    }
+  },
+  "extensionsPendingPhase": [
+    "workspace_announcements",
+    "operation_keys"
+  ],
+  "upcomingCollections": [
+    "files",
+    "workspace_resources",
+    "storage_usage"
+  ],
+  "openChoices": [
+    "JWT-signing-expiry-rotation-CSRF",
+    "email-canonicalization",
+    "rich-text-limits-UI-IME-and-viewer-review",
+    "locale-email-policy",
+    "retention-and-purge",
+    "invitation-link-copy-policy",
+    "notification-after-rejoin",
+    "NFR-page-size-idempotency",
+    "database-email-provider-and-backup"
+  ]
+}
