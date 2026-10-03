@@ -13,7 +13,9 @@ Cập nhật 03/10/2026. [Nhật ký cũ](../archive/project/PROJECT-HISTORY-202
 
 ## Tiếp theo
 
-Đã phân tích [cụm 04 — Auth/verification/recovery và Home sau login](../ui-ux/clusters/CLUSTER-04-AUTH-VERIFICATION-RECOVERY.md). Tiếp theo Personal Settings. Đăng nhập bình thường về Home danh sách Workspace, đích Task/Invitation hợp lệ được giữ; chưa triển khai FE từ các layout đề xuất.
+Đã phân tích [cụm 05 — Personal Settings](../ui-ux/clusters/CLUSTER-05-PERSONAL-SETTINGS.md). Tiếp theo Notifications. Các bố cục/policy locale mới vẫn là đề xuất, chưa code FE hoặc thêm tính năng ngoài contract.
+
+Đã phân tích [cụm 04 — Auth/verification/recovery và Home sau login](../ui-ux/clusters/CLUSTER-04-AUTH-VERIFICATION-RECOVERY.md). Đăng nhập bình thường về Home danh sách Workspace, đích Task/Invitation hợp lệ được giữ; chưa triển khai FE từ các layout đề xuất.
 
 Đã phân tích [cụm 03 — Members/Invitations/Workspace Settings](../ui-ux/clusters/CLUSTER-03-MEMBERS-INVITATIONS-WORKSPACE-SETTINGS.md). Chủ dự án đồng ý thêm mobile responsive vào phạm vi website; không mở dự án native app.
 
