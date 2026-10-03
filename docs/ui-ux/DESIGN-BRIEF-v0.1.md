@@ -1,5 +1,7 @@
 # Brief dùng chung cho Figma / Stitch
 
+Ưu tiên mới của chủ dự án 03/10/2026: chưa chi trả, phân tích flow/nội dung/bố cục trước, Figma sau. Đầu vào hiện hành: [screen spec v0.2](SCREEN-SPEC-v0.2.md), [flow v0.2](SCREEN-FLOWS-v0.2.md), [gaps](UI-API-GAPS-v0.1.md). Brief/visual bên dưới chưa phải quyết định layout được duyệt.
+
 03/10/2026. Dùng requirements/API đã có; visual direction bên dưới là đề xuất, chưa chốt branding/library. [Screen flows](SCREEN-FLOWS-v0.1.md), [editor](CONTENT-EDITOR-v0.1.md), [search/thời gian](TASK-SEARCH-TIME-FILTERS.md), [công cụ](DESIGN-TOOLS-v0.1.md).
 
 ## Bối cảnh và foundations

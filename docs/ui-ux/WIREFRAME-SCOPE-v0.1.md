@@ -1,24 +1,20 @@
-# Phạm vi wireframe đợt đầu
+# Phạm vi wireframe sau screen review
 
-Ngày 03/10/2026. Đầu vào đã rõ đủ để bắt đầu wireframe; tài liệu này là brief, chưa phải wireframe hoàn chỉnh.
+03/10/2026. Review đầu vào ở [screen spec v0.2](SCREEN-SPEC-v0.2.md), [flow v0.2](SCREEN-FLOWS-v0.2.md) và [UI/API gaps](UI-API-GAPS-v0.1.md). Chưa có wireframe hoàn chỉnh; BE core/contracts đã triển khai nên không cần viết lại contract từ đầu sau wireframe.
 
-## Luồng chính
+## Thứ tự và bố cục đề xuất
 
-Personal Home/Welcome → Workspace overview → Project Board → Task Detail/editor/Comments. My Tasks và Notifications là lối vào khác tới Task Detail với cùng kiểm tra quyền. Auth/invitation được nối tiếp để kiểm chứng first-use, không triển khai trước khi thiết kế auth.
+| Đợt | Cần vẽ | Cần chứng minh trong prototype |
+|---|---|---|
+| A | Shell, Home/Welcome, Workspace Projects | Navigation cá nhân/context, zero-workspace, Member vs Owner |
+| B | Board, My Tasks, Task Detail và shared forms | Sort/search/time, Task panel desktop/page mobile, quyền tách edit/status, Comments Author |
+| C | Login/Register/Verify/Recovery/Google/Invitation | Register chưa có session, verified gate đúng scope, intent, wrong email/Terms/link |
+| D | Members/Invitations/Workspace Settings | Leave/transfer/remove confirmations, URL copy một lần, override own Member |
+| E | Profile/Account/Email/Notifications | Credential capabilities gap, identity gap, unavailable/read-all/rejoin |
+| F | Landing/Policies và audit toàn luồng | Public content, draft policy chưa release, keyboard/mobile/Việt/English |
 
-## Màn hình đầu tiên cần vẽ
+Thiết kế shared editor viewer/toolbar/counting dùng schema BE thật. Không font/shape/table/upload hoặc màn Files hoạt động giả. Announcements giữ inventory UC-35, chưa tích hợp trước phase tương ứng.
 
-| Màn hình | Nội dung và state trọng tâm |
-|---|---|
-| App shell | Điều hướng cá nhân/Workspace, breadcrumb, switch Việt/English và user menu |
-| Personal Home | Workspace đang tham gia, vai trò, tạo Workspace; welcome khi chưa có nhóm |
-| Workspace overview | Project Active/Archived, tìm/lọc theo phạm vi đã thiết kế; Owner tạo/quản lý, Member xem |
-| Project Board | Ba cột, sort/search/time đã chốt; loading/empty/error/read-only; tải thêm còn là đề xuất nhóm 6 |
-| Task Detail | Title, assignee, deadline/status, editor chung, quyền Owner/Creator/Assignee/Author, conflict và Comments |
-| My Tasks | Assigned-to-me, default Active/chưa Done, filter Done/Archived, context Workspace → Project, sort/search/time chung |
+## Đầu ra
 
-Desktop/mobile và cả hai ngôn ngữ; editor states, missing permissions, target deleted và mất membership sau tải. Nút hiển thị không thay backend authorization. Luồng thao tác và dữ liệu cần thống nhất với DATA-MODEL-v0.1.md trước chọn thư viện UI.
-
-## Đầu ra review
-
-Wireframes desktop/mobile cùng action/state mapping. Sau đó chọn component/editor/router/query libraries cần thiết và viết API contract. Không khóa thư viện FE trước khi có yêu cầu sử dụng cụ thể; không mở rộng file upload/storage increment từ wireframe editor.
+Wireframe desktop/mobile + screen/action/state mapping và critical-flow prototype bằng dữ liệu giả. Chọn visual/UI/editor/router/query libraries sau khi biết nhu cầu từ màn; không implementation production FE trong lượt screen review. Figma sau khi nội dung/bố cục đã review rõ, không mua/nâng cấp tool trong bước này.

@@ -1,20 +1,16 @@
-# Chuẩn bị UI/UX
+# Phân tích UI/UX hiện hành
 
-Có [kế hoạch UI/UX v0.1](UI-UX-PLAN-v0.1.md) để chuyển từ mock Task sang kiến trúc thông tin, wireframes và prototype toàn ứng dụng theo dependencies SRS.
+Cập nhật 03/10/2026 theo yêu cầu chủ dự án: phân tích flow, nội dung và bố cục trước; chưa chi trả hoặc tạo Figma canvas. FE còn skeleton; trang Auth devtools chỉ phục vụ kiểm thử.
 
-Nguồn screen inventory: SRS v0.2 mục 7.2. Chưa có wireframe hoàn chỉnh.
+## Tài liệu dùng để review
 
-Đã có [luồng màn hình v0.1](SCREEN-FLOWS-v0.1.md), mapping đủ 33 UC và các trạng thái chính. Đây là dự thảo phân tích; các lựa chọn chưa được duyệt vẫn được đánh dấu rõ.
+- [Screen spec v0.2](SCREEN-SPEC-v0.2.md): 21 nhóm màn/form, nội dung, bố cục desktop/mobile, actions/quyền, states; phủ 35 UC và phân biệt BE đã có với phần dự kiến.
+- [Screen flows v0.2](SCREEN-FLOWS-v0.2.md): sitemap/routes FE đề xuất, auth/invitation/Task/ownership/settings và nhánh lỗi.
+- [UI/API gaps](UI-API-GAPS-v0.1.md): account capabilities, historical names/avatar, picker/search/time và các phần chưa thể nối FE như đã hoàn thiện.
+- [Kế hoạch UI/UX](UI-UX-PLAN-v0.1.md), [phạm vi wireframe](WIREFRAME-SCOPE-v0.1.md): thứ tự review và đầu ra.
 
-Đã phân tích sâu [Kanban và My Tasks](KANBAN-MY-TASKS-DESIGN-v0.1.md), gồm mục đích, quyền, bố cục, sắp xếp, tải thêm, filters và các tình huống dễ hiểu nhầm. Chờ chủ dự án chốt OD-04/05; chưa có UI hoặc wireframe hoàn chỉnh.
+## Nguồn thiết kế dùng chung
 
-Theo yêu cầu mới, có [đặc tả search động/bộ lọc thời gian dùng chung](TASK-SEARCH-TIME-FILTERS.md) cho Kanban/My Tasks; không đổi sort mới tạo trước. OD-04 đã chốt status/thứ tự, OD-05 mới chốt sort/bố cục và yêu cầu search/time; defaults còn review riêng.
+[Search/time](TASK-SEARCH-TIME-FILTERS.md), [Kanban/My Tasks](KANBAN-MY-TASKS-DESIGN-v0.1.md), [editor](CONTENT-EDITOR-v0.1.md), [Việt/English](LANGUAGE-v0.1.md), [brief](DESIGN-BRIEF-v0.1.md), [đánh giá công cụ](DESIGN-TOOLS-v0.1.md). Các layout/branding vẫn là đề xuất; quyền, status, sort, defaults My Tasks và concurrency đã được chốt trong SRS.
 
-Luồng cần vẽ sau khi duyệt yêu cầu: đăng ký/xác minh và tiếp tục invitation; Welcome/Personal Home; Workspace và quản lý thành viên; Project Active/Archived; Task/Board/My Tasks; Comments/Notifications; Personal Settings/Profile/Account; Landing/Terms/Privacy.
-
-Mỗi luồng cần trạng thái loading, empty, lỗi form, mất quyền, dữ liệu đã xóa, conflict và thao tác bằng bàn phím. Việc lập danh mục chưa chứng minh UI đáp ứng NFR.
-
-Thứ tự 03/10/2026: requirement → BE/contracts đã kiểm → thiết kế FE toàn bộ hoặc theo module. Đề xuất giữ nền navigation/design system chung, sau đó thiết kế module; kế hoạch ưu tiên tại [NEXT-STEPS](../project/NEXT-STEPS.md). Trang Auth devtools là công cụ kiểm thử, không phải UI sản phẩm.
-
-
-[Đánh giá Figma/Stitch](DESIGN-TOOLS-v0.1.md) và [brief design chung](DESIGN-BRIEF-v0.1.md) soạn ngày 03/10/2026; recommendation, chưa chốt công cụ/branding hoặc tạo file design.
+[Screen flows v0.1](SCREEN-FLOWS-v0.1.md) giữ làm lịch sử, không dùng các dòng pending cũ làm trạng thái hiện hành. Backend contracts và QA hiện tại ở [NEXT-STEPS](../project/NEXT-STEPS.md).

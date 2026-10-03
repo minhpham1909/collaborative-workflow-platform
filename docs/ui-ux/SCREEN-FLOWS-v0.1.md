@@ -1,5 +1,7 @@
 # Luồng màn hình v0.1
 
+Nguồn lịch sử. Review hiện hành ngày 03/10/2026 nằm ở [flow v0.2](SCREEN-FLOWS-v0.2.md) và [screen spec](SCREEN-SPEC-v0.2.md), đã đối chiếu 35 UC với BE core. Các trạng thái pending phía dưới không được dùng để mở lại quyết định đã duyệt.
+
 Cập nhật 03/10/2026: thêm UC-34 Google sign-in/linking/Terms completion/verified gate/avatar fallback; UC-35 Workspace announcements do Owner đăng/ghim. Nguồn hiện tại có 35 UC/29 FR; các tham chiếu 33 UC phía dưới là danh mục ban đầu. Kho resources/files, quotas và provider còn proposal tại docs/sds/AVATAR-STORAGE-RESOURCES-REVIEW.md. Google login giữ invitation intent; không auto-link email.
 
 Ngày: 01/10/2026. Trạng thái: dự thảo UI/UX để review; chưa có wireframe hoặc UI chạy được. Nguồn: SRS v0.2 mục 7.2 và UC-01 đến UC-33. Đây là danh mục màn hình và trạng thái, chưa chọn URL/router hoặc thư viện UI.

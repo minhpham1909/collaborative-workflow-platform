@@ -6,6 +6,8 @@ Trạng thái 03/10/2026: BE JavaScript/Express/Mongoose có 13 models, health/e
 
 ## Tài liệu chính
 
+UI/UX đang review trước Figma, chưa chi trả hoặc tạo canvas: [nội dung/bố cục từng màn](docs/ui-ux/SCREEN-SPEC-v0.2.md), [screen flow](docs/ui-ux/SCREEN-FLOWS-v0.2.md), [gaps với BE](docs/ui-ux/UI-API-GAPS-v0.1.md). Layout là đề xuất để review, không phải UI đã nghiệm thu.
+
 [Danh mục tài liệu](docs/README.md) phân chia trạng thái dự án, yêu cầu, thiết kế, quyết định, QA và archive. [Quy tắc file Git](docs/project/REPOSITORY-HYGIENE.md) mô tả những gì nên/không nên commit.
 
 Thiết kế DB hiện hành: [DB v0.2](docs/sds/DATABASE-DESIGN-v0.2.md), [layout dữ liệu](docs/sds/DATABASE-LAYOUT-v0.2.json), [ERD lõi](docs/sds/DATABASE-ERD-v0.2.md). Có 13 Mongoose models; indexes/Auth transactions đã kiểm trên MongoDB local. Project/Task/Comment có API, query và durable work events; inbox/work-email dispatcher đã triển khai; worker chạy riêng và FE tiếp theo. Storage là Upcoming, announcement/idempotency giữ riêng theo phase/policy còn mở.

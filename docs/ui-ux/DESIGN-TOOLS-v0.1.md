@@ -1,5 +1,7 @@
 # Công cụ thiết kế UI/UX — đề xuất
 
+Cập nhật yêu cầu chủ dự án 03/10/2026: không dự định trả phí; ưu tiên review screen flow/nội dung/bố cục, dùng Figma sau khi cấu trúc rõ. Không nâng cấp seat/mua gói/tạo canvas trong lượt này. Kiểm kết nối ở trao đổi trước cho thấy Starter/View; tài liệu [write to canvas](https://developers.figma.com/docs/figma-mcp-server/write-to-canvas/) yêu cầu Full seat và edit permission cho agent writes. Vì vậy recommendation Figma phía dưới không có nghĩa quyền hiện tại đã cho Codex ghi canvas. Review hiện hành ở [screen spec](SCREEN-SPEC-v0.2.md).
+
 Nghiên cứu 03/10/2026. Đây là đề xuất theo yêu cầu xem xét Stitch/Figma, chưa phải quyết định chọn công cụ của chủ dự án và chưa tạo file thiết kế trên dịch vụ bên ngoài.
 
 ## Khuyến nghị cho dự án

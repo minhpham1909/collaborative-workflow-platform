@@ -15,7 +15,7 @@ Cập nhật 03/10/2026. [Nhật ký cũ](../archive/project/PROJECT-HISTORY-202
 
 1. Theo yêu cầu chủ dự án: bám requirement, triển khai BE theo module và kiểm API/quyền/transactions trước; Profile/Personal Settings và Workspace/Invitations đã triển khai; Project/Task/Comment, Board/My Tasks đã triển khai; Notifications/work-email dispatcher đã triển khai; tiếp theo review UI/UX chung và FE theo module.
 2. Google login thật đã đạt cho tài khoản kiểm thử. Tiếp tục kiểm email auth outbox tới Inbox/Spam, hoàn thiện Terms và worker nền; [hướng dẫn local](GOOGLE-SMTP-LOCAL-SETUP.md).
-3. Giữ screen inventory, navigation và design system chung; sau BE/contracts rõ, thiết kế FE theo module (khuyến nghị) hoặc gom toàn bộ màn. Mỗi module cần trạng thái loading/empty/error/mất quyền/conflict, Việt/English và editor chung; rồi triển khai FE.
+3. Theo yêu cầu mới: chưa chi trả, rà screen flow/nội dung/bố cục trước Figma. Review [screen spec v0.2](../ui-ux/SCREEN-SPEC-v0.2.md), [flows v0.2](../ui-ux/SCREEN-FLOWS-v0.2.md) và [UI/API gaps](../ui-ux/UI-API-GAPS-v0.1.md); rồi wireframe local/navigation/components chung, Figma sau khi cấu trúc rõ. Giữ loading/empty/error/mất quyền/conflict, Việt/English và editor chung.
 4. Review production provider/secrets/rotation, shared limiter/proxy/cookie topology, retention/purge/backup và NFR. Local DB không thay production.
 
 ## Tài liệu
