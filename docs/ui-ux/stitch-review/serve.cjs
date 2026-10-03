@@ -26,5 +26,3 @@ server.on('error', error => { console.error('Preview could not start:', error.co
 server.listen(previewPort, '127.0.0.1', () => console.log(`Visual preview: http://127.0.0.1:${previewPort}/`));
 process.on('SIGINT', () => server.close());
 process.on('SIGTERM', () => server.close());
-
-
