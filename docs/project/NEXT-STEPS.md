@@ -13,6 +13,8 @@ Cập nhật 03/10/2026. [Nhật ký cũ](../archive/project/PROJECT-HISTORY-202
 
 ## Tiếp theo
 
+Đã triển khai [visual design v0.1](../ui-ux/visual/index.html), [README](../ui-ux/visual/README.md): Home/Board/Task và các màn lõi cùng teal styles, desktop ưu tiên. Tiếp theo review hướng visual rồi mở rộng Auth/Members/Settings/Notifications và frames loading/error/conflict; chưa khóa brand hoặc production FE.
+
 Đã rà [UI trước visual design](../ui-ux/PRE-VISUAL-REVIEW.md): state matrix/tương tác/components và các mốc design/FE/release. Chủ dự án đã về desktop, không cần gửi preview mobile mỗi lượt; responsive vẫn giữ. Bước tiếp theo là visual direction desktop Home/Board/Task, shared tokens/components và mở rộng frames/states, chưa chốt brand hoặc library.
 
 Đã hoàn thành vòng phân tích [bảy cụm](../ui-ux/SCREEN-REVIEW-SUMMARY.md), gồm [cụm cuối Public/Policies/Announcements](../ui-ux/clusters/CLUSTER-07-PUBLIC-POLICIES-ANNOUNCEMENTS.md). Đã dựng [wireframe lõi tương tác](../ui-ux/wireframes/core.html) bằng dữ liệu giả desktop/mobile. Tiếp theo bổ sung Auth/Invitations/Members/Settings/Notifications/Public và frames lỗi/conflict/loading; chưa production FE hoặc rich-text editor hoàn chỉnh.

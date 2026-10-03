@@ -4,6 +4,7 @@ Cập nhật 03/10/2026 theo yêu cầu chủ dự án: phân tích flow, nội 
 
 ## Tài liệu dùng để review
 
+- [Visual design v0.1](visual/index.html), [hướng visual và kiểm tra](visual/README.md): mẫu desktop Home/Board/Task, teal accent và shared styles; dữ liệu giả, chưa production FE.
 - [Rà UI trước visual design](PRE-VISUAL-REVIEW.md): ma trận trạng thái, tương tác, component inventory và phân biệt điều kiện design/FE/release; ưu tiên review desktop.
 - [Tổng hợp bảy cụm / bước wireframe](SCREEN-REVIEW-SUMMARY.md): vòng phân tích đã hoàn thành, cấu trúc lõi và policy/data gaps chưa chốt.
 - [Wireframe tương tác lõi](wireframes/core.html), [phạm vi/giới hạn mẫu](wireframes/README.md): Home → Workspace → Board → Task, My Tasks và mobile bằng dữ liệu giả; chưa nối API, editor tạm và frames lỗi/conflict ở batch sau.
