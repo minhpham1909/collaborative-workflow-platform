@@ -38,3 +38,5 @@ EMAIL_MODE=disabled mặc định: chỉ queue. capture để đọc link local:
 src/auth chứa DTO/service/JWT/Google/scoped Mongo adapters; src/mail dispatcher/provider; src/models schemas/index plan; src/content editor contract. scripts: DB local/env/indexes/integration/mail-once.
 
 Generic query/bulk writes chặn; adapters dùng transaction/driver mutations, kiểm lại credential/quyền. Schemas không thay DTO/authorization. lean/toObject không phải public response; routes dùng mapper. Argon2id; refresh strict single-use, FE cần phối hợp giữa tabs. Profile/Settings APIs, frontend và nghiệp vụ công việc tiếp theo. Production provider/limiter/proxy/retention còn review. Storage Upcoming.
+
+Kiểm Google/SMTP thật khi FE chưa có: [hướng dẫn cấu hình](../docs/project/GOOGLE-SMTP-LOCAL-SETUP.md), chạy pnpm auth:test-page tại BE rồi mở http://localhost:5173. Trang development hỗ trợ signup/login/recovery/verify/reset và GIS login; không có UI Google link. Không mount trang test vào server sản phẩm.

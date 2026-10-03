@@ -147,3 +147,5 @@ Cập nhật thứ tự Kanban cùng ngày: chủ dự án chọn “mới tạo
 Cập nhật tiếp cùng ngày: chủ dự án trả lời “đúng” cho ba trạng thái cố định và chuyển trực tiếp, gồm Chưa làm → Hoàn thành và Hoàn thành → Chưa làm. Đóng OD-04 về status/thứ tự; không suy rộng sang My Tasks, conflict hoặc pagination.
 
 Cập nhật My Tasks cùng ngày: chủ dự án yêu cầu sort tương đồng hai màn hình và giao assistant xem xét bố cục dễ nhìn/hợp cấu trúc. Chốt cùng thứ tự thời gian tạo mới nhất trước; chọn danh sách phẳng có Workspace → Project từng Task. Không tự duyệt các business filters/default từ yêu cầu bố cục.
+
+Cập nhật 03/10/2026 theo yêu cầu trực tiếp chủ dự án: bám requirements → triển khai BE → thiết kế FE tổng thể hoặc theo module. Điều chỉnh ưu tiên khỏi FE Auth trước. Khuyến nghị design system/navigation chung rồi thiết kế module theo contracts đã kiểm; cách chia toàn bộ/theo module chưa coi là quyết định duyệt riêng. Google/SMTP thật được hướng dẫn để kiểm Auth local trước; không chốt SMTP provider production.

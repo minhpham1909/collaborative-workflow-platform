@@ -13,3 +13,5 @@ Theo yêu cầu mới, có [đặc tả search động/bộ lọc thời gian d�
 Luồng cần vẽ sau khi duyệt yêu cầu: đăng ký/xác minh và tiếp tục invitation; Welcome/Personal Home; Workspace và quản lý thành viên; Project Active/Archived; Task/Board/My Tasks; Comments/Notifications; Personal Settings/Profile/Account; Landing/Terms/Privacy.
 
 Mỗi luồng cần trạng thái loading, empty, lỗi form, mất quyền, dữ liệu đã xóa, conflict và thao tác bằng bàn phím. Việc lập danh mục chưa chứng minh UI đáp ứng NFR.
+
+Thứ tự 03/10/2026: requirement → BE/contracts đã kiểm → thiết kế FE toàn bộ hoặc theo module. Đề xuất giữ nền navigation/design system chung, sau đó thiết kế module; kế hoạch ưu tiên tại [NEXT-STEPS](../project/NEXT-STEPS.md). Trang Auth devtools là công cụ kiểm thử, không phải UI sản phẩm.

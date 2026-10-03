@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="vi">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Kiểm thử Auth local</title><script src="/auth-test.js" defer></script></head>
+<body>
+<h1>Kiểm thử Auth local</h1>
+<p>Development tool — chưa phải giao diện sản phẩm. Dùng tài khoản kiểm thử của bạn. Token chỉ giữ trong bộ nhớ trang.</p>
+<p id="configuration" role="status">Đang kiểm tra backend…</p>
+<form id="account">
+  <p><label>Tên <input name="displayName" maxlength="100" autocomplete="name"></label></p>
+  <p><label>Email <input name="email" type="email" required autocomplete="email"></label></p>
+  <p><label>Mật khẩu <input name="password" type="password" minlength="12" maxlength="128" autocomplete="new-password"></label> (12–128 ký tự)</p>
+  <p><label><input id="terms" type="checkbox"> Chấp nhận Terms bản draft chỉ để kiểm thử; chưa phải Terms sản phẩm.</label></p>
+  <button type="submit" value="register">Đăng ký email</button>
+  <button type="submit" value="login">Đăng nhập mật khẩu</button>
+  <button type="submit" value="recovery">Yêu cầu đặt lại mật khẩu</button>
+</form>
+<p><button id="resend" type="button">Gửi lại xác minh (cần đăng nhập)</button></p>
+<p><button id="prepareGoogle" type="button" disabled>Chuẩn bị đăng nhập Google</button></p>
+<div id="googleButton"></div>
+<section id="emailLink" hidden>
+  <h2>Link nhận từ email</h2>
+  <p id="linkPurpose"></p>
+  <button id="verify" type="button" hidden>Xác minh email</button>
+  <form id="reset" hidden><label>Mật khẩu mới <input name="password" type="password" required minlength="12" maxlength="128" autocomplete="new-password"></label> <button type="submit">Đặt lại mật khẩu</button></form>
+</section>
+<h2>Kết quả</h2><pre id="result" role="status" aria-live="polite">Chưa thực hiện.</pre>
+</body></html>

@@ -13,9 +13,9 @@ Cập nhật 03/10/2026. [Nhật ký cũ](../archive/project/PROJECT-HISTORY-202
 
 ## Tiếp theo
 
-1. Dựng FE Auth với validation, Việt/English, login/signup/Terms, verify/reset và unverified gate; access token memory, refresh single-flight/coordination giữa tabs.
-2. Cấu hình OAuth Web client và SMTP, kiểm credential/email delivery thật. Hoàn thiện nội dung Terms, worker nền, Profile/Personal Settings APIs.
-3. Triển khai Workspace/Invitations: Owner-only invites, verified gate, membership lifecycle và quyền DB; rồi Project/Task/Comment, Notifications/Settings.
+1. Theo yêu cầu chủ dự án: bám requirement, triển khai BE theo module và kiểm API/quyền/transactions trước; ưu tiên Profile/Personal Settings, Workspace/Invitations → Project/Task/Comment → Notifications/Settings.
+2. Cấu hình Google/SMTP thật ngay để kiểm Auth; [hướng dẫn local](GOOGLE-SMTP-LOCAL-SETUP.md) và pnpm auth:test-page hỗ trợ khi chưa có FE sản phẩm. Hoàn thiện Terms và worker nền.
+3. Giữ screen inventory, navigation và design system chung; sau BE/contracts rõ, thiết kế FE theo module (khuyến nghị) hoặc gom toàn bộ màn. Mỗi module cần trạng thái loading/empty/error/mất quyền/conflict, Việt/English và editor chung; rồi triển khai FE.
 4. Review production provider/secrets/rotation, shared limiter/proxy/cookie topology, retention/purge/backup và NFR. Local DB không thay production.
 
 ## Tài liệu

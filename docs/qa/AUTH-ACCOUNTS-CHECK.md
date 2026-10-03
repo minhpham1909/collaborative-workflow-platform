@@ -12,3 +12,5 @@ Ngày 03/10/2026, Windows, Node 24.19.0 / pnpm 11.19.0. [Hợp đồng](../sds/A
 - pnpm audit --prod: không phát hiện vulnerability đã biết tại thời điểm kiểm tra; không thay security review.
 
 Frontend, Google Web client, SMTP thật, workspace permissions, multi-instance limiter và production NFR chưa nghiệm thu. Các báo cáo foundation/session là mốc lịch sử; dùng báo cáo này cho trạng thái mới.
+
+Bổ sung công cụ test local: auth:test-page phục vụ HTML/JS tại localhost:5173, /verify-email và /reset-password; HTTP smoke 200 và JavaScript syntax checks đạt. Browser tool không khởi tạo được ở môi trường này; chưa kiểm UI qua browser hoặc OAuth/SMTP thật. Dev page không mount trong server sản phẩm.

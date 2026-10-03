@@ -56,6 +56,6 @@ Không cần cài dependencies cho công cụ tài liệu. Chạy backend/tests 
 
 ## Quy trình tiếp tục
 
-Tiếp tục FE Auth/User và cấu hình Google/SMTP thật, sau đó Workspace/Invitations → Project/Task/Comment → Notifications/Settings/outbox. SDS/UI/UX tiếp tục hoàn thiện cùng các lát cắt; không ghi nghiệm thu nghiệp vụ từ schema tests.
+Theo requirement, hoàn thiện BE/contracts theo module trước, rồi thiết kế FE tổng thể hoặc từng module trên nền navigation/design system chung. Google/SMTP thật kiểm qua [hướng dẫn local](docs/project/GOOGLE-SMTP-LOCAL-SETUP.md); ưu tiên Workspace/Invitations → Project/Task/Comment → Notifications/Settings. Không ghi nghiệm thu từ schema tests.
 
 File dự án lưu trực tiếp tại thư mục local này. Cấu hình chạy backend ở BE/.env.example; file .env thật không theo dõi trong Git. Tài nguyên tham khảo phải ghi nguồn; không lưu secret trong Git.
