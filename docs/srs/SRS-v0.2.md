@@ -1400,3 +1400,6 @@ Nguồn quyết định là nội dung trao đổi của chủ dự án được
 Cập nhật 03/10/2026: chủ dự án tạm chốt nhóm 4–5 theo trao đổi: preview/accept invitation, in-app invitation, giữ lời mời khi chuyển Owner; recipients cũ/mới/Creator, event gộp, queued settings và che notification sau mất quyền/xóa Task. Xóa Task làm Comments không truy cập; chưa có thùng rác ở bản đầu. OD-09/14 và RD-04 provisionally-approved; OD-11 tạm chốt hiệu lực xóa, retention/purge còn mở. Nhóm 6/NFR, email delivery guarantee và backup vẫn cần review; chưa baseline v1.0.
 
 Cập nhật 03/10/2026: mở rộng lên 35 UC và 29 FR với Google sign-in/avatar (ngay bản đầu) và Workspace announcements/pin (Owner capability đã chốt, phase/quota cần review). Avatar chữ cái chỉ fallback; file/resource/provider/quota và giới hạn mô tả mới là đề xuất tại docs/sds/AVATAR-STORAGE-RESOURCES-REVIEW.md. Không tạo cloud storage từ nghiên cứu này.
+
+
+Bổ sung quyết định Notifications 03/10/2026: chủ dự án duyệt sau tái gia nhập Workspace, notification công việc cũ hiển thị lại theo quyền hiện tại nếu Task vẫn khả dụng. Khi không còn membership hoặc Task đã xóa, list/detail giữ time/read state nhưng che payload và link. Không thêm quyền ghi hoặc phục hồi Task/assignment/email job đã cancelled từ quyết định này.

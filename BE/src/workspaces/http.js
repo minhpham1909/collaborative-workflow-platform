@@ -39,5 +39,6 @@ export function createInvitationRouter({ service, authService, config }) {
   const value = router(config);
   value.post('/preview', async (req, res) => res.json(await service.preview(req.body)));
   value.post('/accept', requireAuthentication(authService, { verified: true }), async (req, res) => res.json(await service.accept(req.auth, req.body)));
+  value.post('/:invitationId/accept', requireAuthentication(authService, { verified: true }), async (req, res) => res.json(await service.acceptById(req.auth, req.params.invitationId, req.body)));
   value.use(requestError); return value;
 }

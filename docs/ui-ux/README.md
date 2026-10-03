@@ -15,3 +15,6 @@ Luồng cần vẽ sau khi duyệt yêu cầu: đăng ký/xác minh và tiếp t
 Mỗi luồng cần trạng thái loading, empty, lỗi form, mất quyền, dữ liệu đã xóa, conflict và thao tác bằng bàn phím. Việc lập danh mục chưa chứng minh UI đáp ứng NFR.
 
 Thứ tự 03/10/2026: requirement → BE/contracts đã kiểm → thiết kế FE toàn bộ hoặc theo module. Đề xuất giữ nền navigation/design system chung, sau đó thiết kế module; kế hoạch ưu tiên tại [NEXT-STEPS](../project/NEXT-STEPS.md). Trang Auth devtools là công cụ kiểm thử, không phải UI sản phẩm.
+
+
+[Đánh giá Figma/Stitch](DESIGN-TOOLS-v0.1.md) và [brief design chung](DESIGN-BRIEF-v0.1.md) soạn ngày 03/10/2026; recommendation, chưa chốt công cụ/branding hoặc tạo file design.

@@ -54,3 +54,6 @@ URL /invite#token=... do FE xử lý sau; trang development tại localhost:5173
 ## Tiếp theo
 
 Project Active/Archived và Task/Comment APIs dùng cùng guard. Notifications inbox/settings effective eligibility, worker nền và email locale triển khai sau. FE vẫn theo requirement → BE/contracts → thiết kế module, không lấy devtools làm UI sản phẩm. Idempotency operation keys/retention/storage chưa mở ở increment này.
+
+
+Cập nhật Notifications 03/10/2026: EMAIL in-app có thể accept qua POST /invitations/:invitationId/accept {} với verified exact recipient email; LINK không dùng đường này. Không trả token; cùng transaction guard/lifecycle với token accept. [Contract](NOTIFICATIONS-EMAIL-API-v0.1.md).

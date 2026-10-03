@@ -11,7 +11,8 @@ const repl = await MongoMemoryReplSet.create({
 });
 try {
   const files = process.argv.slice(2);
-  const child = spawn(process.execPath, ['--test', ...(files.length ? files : ['test/auth-mongo.test.js', 'test/accounts-mongo.test.js', 'test/users-mongo.test.js', 'test/workspaces-mongo.test.js', 'test/work-mongo.test.js'])], {
+  // Dispatchers claim the shared test outbox; file isolation prevents cross-suite deliveries.
+  const child = spawn(process.execPath, ['--test', '--test-concurrency=1', ...(files.length ? files : ['test/auth-mongo.test.js', 'test/accounts-mongo.test.js', 'test/users-mongo.test.js', 'test/workspaces-mongo.test.js', 'test/work-mongo.test.js', 'test/notifications-mongo.test.js'])], {
     cwd: fileURLToPath(new URL('../', import.meta.url)), stdio: 'inherit',
     env: { ...process.env, TEST_MONGODB_URI: repl.getUri('workflow_auth_test') },
   });

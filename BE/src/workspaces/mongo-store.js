@@ -44,6 +44,24 @@ export function createMongoWorkspaceStore({ config, now = () => new Date() }) {
     await WorkspaceMembership.collection.updateOne({ _id: membership._id, version: membership.version }, { $set: { state: 'inactive', leftAt: time, exitReason: reason, emailOverrides: inherited(), updatedAt: time }, $inc: { version: 1 } }, { session: tx });
     await Task.collection.updateMany({ workspaceId: workspace._id, assigneeId: membership.userId, deletedAt: null, status: { $ne: 'done' } }, { $set: { assigneeId: null, updatedAt: time }, $inc: { version: 1 } }, { session: tx });
   }
+  async function acceptInvitation(user, tx, lookup) {
+      let value = await WorkspaceInvitation.collection.findOne({ ...lookup }, { session: tx });
+      if (!value) throw new AuthError('INVITATION_UNAVAILABLE', 404);
+      const workspace = await guard(String(value.workspaceId), tx);
+      // Re-read after the guard so accept/revoke/transfer serialize on the Workspace.
+      value = await WorkspaceInvitation.collection.findOne({ _id: value._id }, { session: tx });
+      if (value.revokedAt || value.expiresAt <= now()) throw new AuthError('INVITATION_UNAVAILABLE', 404);
+      if (value.type === 'EMAIL' && value.emailCanonical !== user.emailCanonical) throw new AuthError('INVITATION_EMAIL_MISMATCH', 403);
+      let membership = await WorkspaceMembership.collection.findOne({ workspaceId: workspace._id, userId: user._id }, { session: tx });
+      if (value.acceptedAt && !(membership?.state === 'active' && sameId(value.acceptedBy, user._id))) throw new AuthError('INVITATION_UNAVAILABLE', 404);
+      const existing = membership?.state === 'active';
+      if (!existing) {
+        if (membership) membership = await WorkspaceMembership.collection.findOneAndUpdate({ _id: membership._id }, { $set: { state: 'active', joinedAt: now(), leftAt: null, exitReason: null, emailOverrides: inherited(), updatedAt: now() }, $inc: { membershipGeneration: 1, version: 1 } }, { session: tx, returnDocument: 'after' });
+        else { const document = new WorkspaceMembership({ workspaceId: workspace._id, userId: user._id, joinedAt: now() }); await document.save({ session: tx }); membership = document.toObject(); }
+      }
+      if (value.type === 'EMAIL' && !value.acceptedAt) await WorkspaceInvitation.collection.updateOne({ _id: value._id }, { $set: { acceptedAt: now(), acceptedBy: user._id, updatedAt: now() }, $inc: { version: 1 } }, { session: tx });
+      return { code: existing ? 'ALREADY_MEMBER' : 'WORKSPACE_JOINED', workspace: workspaceResponse(workspace, membership) };
+  }
   return {
     list: (claims, page) => run(claims, async (user, tx) => {
       const records = await Workspace.collection.aggregate([
@@ -164,23 +182,7 @@ export function createMongoWorkspaceStore({ config, now = () => new Date() }) {
       const inviter = await User.collection.findOne({ _id: value.createdBy }, { session: tx, projection: { displayName: 1 } });
       return { preview: { workspaceName: workspace.name, inviterDisplayName: inviter?.displayName ?? 'Unavailable User', type: value.type, expiresAt: value.expiresAt } };
     }),
-    accept: (claims, token) => run(claims, async (user, tx) => {
-      let value = await WorkspaceInvitation.collection.findOne({ tokenHash: tokenHash(token) }, { session: tx });
-      if (!value) throw new AuthError('INVITATION_UNAVAILABLE', 404);
-      const workspace = await guard(String(value.workspaceId), tx);
-      // Re-read after the guard so accept/revoke/transfer serialize on the Workspace.
-      value = await WorkspaceInvitation.collection.findOne({ _id: value._id }, { session: tx });
-      if (value.revokedAt || value.expiresAt <= now()) throw new AuthError('INVITATION_UNAVAILABLE', 404);
-      if (value.type === 'EMAIL' && value.emailCanonical !== user.emailCanonical) throw new AuthError('INVITATION_EMAIL_MISMATCH', 403);
-      let membership = await WorkspaceMembership.collection.findOne({ workspaceId: workspace._id, userId: user._id }, { session: tx });
-      if (value.acceptedAt && !(membership?.state === 'active' && sameId(value.acceptedBy, user._id))) throw new AuthError('INVITATION_UNAVAILABLE', 404);
-      const existing = membership?.state === 'active';
-      if (!existing) {
-        if (membership) membership = await WorkspaceMembership.collection.findOneAndUpdate({ _id: membership._id }, { $set: { state: 'active', joinedAt: now(), leftAt: null, exitReason: null, emailOverrides: inherited(), updatedAt: now() }, $inc: { membershipGeneration: 1, version: 1 } }, { session: tx, returnDocument: 'after' });
-        else { const document = new WorkspaceMembership({ workspaceId: workspace._id, userId: user._id, joinedAt: now() }); await document.save({ session: tx }); membership = document.toObject(); }
-      }
-      if (value.type === 'EMAIL' && !value.acceptedAt) await WorkspaceInvitation.collection.updateOne({ _id: value._id }, { $set: { acceptedAt: now(), acceptedBy: user._id, updatedAt: now() }, $inc: { version: 1 } }, { session: tx });
-      return { code: existing ? 'ALREADY_MEMBER' : 'WORKSPACE_JOINED', workspace: workspaceResponse(workspace, membership) };
-    }),
+    accept: (claims, token) => run(claims, (user, tx) => acceptInvitation(user, tx, { tokenHash: tokenHash(token) })),
+    acceptById: (claims, invitationId) => run(claims, (user, tx) => acceptInvitation(user, tx, { _id: id(invitationId), type: 'EMAIL', emailCanonical: user.emailCanonical })),
   };
 }

@@ -40,3 +40,6 @@ Increment hiện hành: [Workspace/Invitations API](WORKSPACE-INVITATIONS-API-v0
 
 
 [Project/Task/Comment API v0.1](PROJECT-TASK-COMMENT-API-v0.1.md): quyền, lifecycle, queries, soft delete và atomic work events đã triển khai; inbox/work-email dispatcher tiếp theo.
+
+
+[Notifications/email API v0.1](NOTIFICATIONS-EMAIL-API-v0.1.md): inbox, cutoff, current-rights masking/rejoin, work-mail eligibility và worker riêng đã triển khai.

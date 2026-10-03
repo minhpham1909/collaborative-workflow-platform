@@ -1,4 +1,5 @@
 import { workspaceFields, versionInput, transferInput, invitationInput, invitationToken, overridesInput, pageInput, objectId } from './input.js';
+import { inputObject } from '../auth/account-input.js';
 
 export function createWorkspaceService({ store }) {
   return {
@@ -18,5 +19,6 @@ export function createWorkspaceService({ store }) {
     retryMail: (auth, workspaceId, invitationId, input) => store.retryMail(auth.claims, objectId(workspaceId), objectId(invitationId), versionInput(input)),
     preview: (input) => store.preview(invitationToken(input)),
     accept: (auth, input) => store.accept(auth.claims, invitationToken(input)),
+    acceptById: (auth, invitationId, input) => { inputObject(input, []); return store.acceptById(auth.claims, objectId(invitationId)); },
   };
 }

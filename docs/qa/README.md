@@ -18,3 +18,6 @@ Hiện hành sau Workspace: [Workspace/Invitations QA](WORKSPACE-INVITATIONS-CHE
 
 
 [Project/Task/Comment check](PROJECT-TASK-COMMENT-CHECK.md): 37 tests thường, 33 tích hợp; quyền, concurrency, search/time và event rollback.
+
+
+[Notifications/email check](NOTIFICATIONS-EMAIL-CHECK.md): 40 tests thường/40 tích hợp; own inbox, che dữ liệu, settings, lease và retry; chưa gửi work SMTP thật.

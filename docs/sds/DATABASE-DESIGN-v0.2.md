@@ -205,3 +205,6 @@ Increment Workspace/Invitations đã triển khai trên 13 collection hiện có
 
 
 Cập nhật triển khai 03/10/2026: [Project/Task/Comment API](PROJECT-TASK-COMMENT-API-v0.1.md) đã dùng cùng Workspace guard cho child mutations; soft delete parent gate và atomic work events. Search hiện mở rộng literal nhóm dấu Việt trên searchText NFC thay vì đổi dữ liệu dẫn xuất/migration. Inbox/work-email dispatcher và NFR vẫn tiếp theo.
+
+
+Cập nhật 03/10/2026: chủ dự án duyệt notification sau rejoin hiển thị theo quyền hiện tại nếu target vẫn có. [Notifications/email API](NOTIFICATIONS-EMAIL-API-v0.1.md) đã triển khai inbox current-rights mapper và worker email kiểm settings/quyền trước gửi, không thêm schema/index; retention/reminders vẫn riêng.

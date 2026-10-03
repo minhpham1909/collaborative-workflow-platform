@@ -54,3 +54,6 @@ Assignment thực sự đổi gửi Creator/assignee cũ/mới hợp lệ; conte
 Đã có durable work events, chưa API inbox hoặc work-email dispatcher. mail:once hiện chỉ Auth/Invitation; không gửi work jobs. Increment Notifications kế tiếp phải kiểm lại membership, Task availability, settings trước gửi và che payload khi đọc sau mất quyền/xóa Task. Không công bố đã hoàn thiện delivery hoặc reminders. Tạo Task/Comment hiện không có idempotency key; đề xuất chống duplicate retry ở nhóm 6 cần thiết kế riêng, không tự suy từ transaction.
 
 [QA](../qa/PROJECT-TASK-COMMENT-CHECK.md) ghi bằng chứng và giới hạn kiểm thử.
+
+
+Cập nhật increment tiếp theo 03/10/2026: [Notifications/email API](NOTIFICATIONS-EMAIL-API-v0.1.md) đã nối inbox/work-email dispatcher và mail:worker. Những câu chưa có inbox/dispatcher ở trên mô tả ranh giới lúc triển khai Work, không phải trạng thái mới nhất.

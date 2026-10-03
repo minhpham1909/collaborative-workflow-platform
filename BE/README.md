@@ -37,7 +37,7 @@ EMAIL_MODE=disabled mặc định: chỉ queue. capture để đọc link local:
 
 src/auth chứa DTO/service/JWT/Google/scoped Mongo adapters; src/mail dispatcher/provider; src/models schemas/index plan; src/content editor contract. scripts: DB local/env/indexes/integration/mail-once.
 
-Generic query/bulk writes chặn; adapters dùng transaction/driver mutations, kiểm lại credential/quyền. Schemas không thay DTO/authorization. lean/toObject không phải public response; routes dùng mapper. Argon2id; refresh strict single-use, FE cần phối hợp giữa tabs. Profile/Settings, Workspace/Invitations và nghiệp vụ Project/Task/Comment đã có API; inbox/work-email dispatcher và frontend tiếp theo. Production provider/limiter/proxy/retention còn review. Storage Upcoming.
+Generic query/bulk writes chặn; adapters dùng transaction/driver mutations, kiểm lại credential/quyền. Schemas không thay DTO/authorization. lean/toObject không phải public response; routes dùng mapper. Argon2id; refresh strict single-use, FE cần phối hợp giữa tabs. Profile/Settings, Workspace/Invitations và nghiệp vụ Project/Task/Comment đã có API; inbox/work-email dispatcher đã có, frontend và production operations tiếp theo. Production provider/limiter/proxy/retention còn review. Storage Upcoming.
 
 Kiểm Google/SMTP thật khi FE chưa có: [hướng dẫn cấu hình](../docs/project/GOOGLE-SMTP-LOCAL-SETUP.md), chạy pnpm auth:test-page tại BE rồi mở http://localhost:5173. Trang development hỗ trợ signup/login/recovery/verify/reset và GIS login; có Google link với proof mật khẩu, logout và kiểm /auth/me. Không mount trang test vào server sản phẩm.
 
@@ -46,4 +46,7 @@ BE Profile/global settings đã có: GET /users/me, PATCH /users/me/profile, PAT
 Workspace/Invitations đã triển khai theo [API contract](../docs/sds/WORKSPACE-INVITATIONS-API-v0.1.md), [QA](../docs/qa/WORKSPACE-INVITATIONS-CHECK.md): 35 tests thường và 24 tích hợp đạt. src/workspaces chứa DTO/service/repository/routes. mail:once xử lý Auth trước, invitation nếu Auth idle. Trang local hỗ trợ /invite token fragment để preview/accept; chưa FE sản phẩm. db:indexes phải có unique membership/invitation/notification indexes trước startup.
 
 
-Project/Task/Comment, Board và My Tasks đã triển khai: [API](../docs/sds/PROJECT-TASK-COMMENT-API-v0.1.md), [QA](../docs/qa/PROJECT-TASK-COMMENT-CHECK.md). src/work dùng Workspace guard chung; 37 tests thường/33 tích hợp đạt. Work events lưu atomic; mail:once chưa gửi work jobs, inbox/work-email dispatcher là increment kế tiếp.
+Project/Task/Comment, Board và My Tasks đã triển khai: [API](../docs/sds/PROJECT-TASK-COMMENT-API-v0.1.md), [QA](../docs/qa/PROJECT-TASK-COMMENT-CHECK.md). src/work dùng Workspace guard chung; 37 tests thường/33 tích hợp đạt. Work events lưu atomic; mail:once đã nối work jobs ở increment Notifications; mail:worker chạy process riêng.
+
+
+Notifications và work email: [API](../docs/sds/NOTIFICATIONS-EMAIL-API-v0.1.md), [QA](../docs/qa/NOTIFICATIONS-EMAIL-CHECK.md), 40 tests thường/40 tích hợp. src/notifications own inbox, unavailable masking và signed cutoff; pnpm mail:worker process riêng chạy Auth/Invitation/Work round-robin. EMAIL_MODE smtp sẽ gửi các job đủ điều kiện; chưa chạy SMTP work mail thật trong increment này.

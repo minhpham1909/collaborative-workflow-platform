@@ -15,6 +15,9 @@ import { createMongoWorkspaceStore } from './workspaces/mongo-store.js';
 import { assertWorkspaceIndexes } from './workspaces/index-check.js';
 import { createWorkService } from './work/service.js';
 import { createMongoWorkStore } from './work/mongo-store.js';
+import { cutoffCodec } from './notifications/input.js';
+import { createMongoNotificationsStore } from './notifications/mongo-store.js';
+import { createNotificationsService } from './notifications/service.js';
 
 let server;
 let stopping = false;
@@ -42,7 +45,9 @@ try {
   const usersService = createUsersService({ store: createMongoUsersStore() });
   const workspaceService = createWorkspaceService({ store: createMongoWorkspaceStore({ config: authConfig }) });
   const workService = createWorkService({ store: createMongoWorkStore() });
-  const app = createApp({ isReady: () => !stopping && mongoose.connection.readyState === 1, authService, authConfig, accountsService, usersService, workspaceService, workService });
+  const cutoff = cutoffCodec(authConfig.accessKeyHex);
+  const notificationsService = createNotificationsService({ store: createMongoNotificationsStore({ cutoff }), cutoff });
+  const app = createApp({ isReady: () => !stopping && mongoose.connection.readyState === 1, authService, authConfig, accountsService, usersService, workspaceService, workService, notificationsService });
   if (!stopping) {
     server = app.listen(config.port, config.host, () => {
       console.info(`API listening at http://${config.host}:${config.port}`);
