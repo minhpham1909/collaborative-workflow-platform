@@ -12,11 +12,21 @@ export function userResponse(user) {
     emailPreferences: { ...user.emailPreferences }, version: user.version,
   };
 }
+export async function prepareSession(store, tokens, config, now, user) {
+  const session = store.newSession({ userId: user._id, authVersionAtIssue: user.authVersion, refreshGeneration: 0,
+    expiresAt: new Date(Math.floor(now().getTime() / 1000) * 1000 + config.refreshTtlSeconds * 1000), lastSeenAt: now(), revokedAt: null, revokeReason: null });
+  const refreshToken = await tokens.refresh(session);
+  session.refreshTokenHash = tokenHash(refreshToken);
+  return { session, refreshToken };
+}
+export async function sessionResponse(tokens, session, user, refreshToken) {
+  return { accessToken: await tokens.access(session), refreshToken, csrfToken: tokens.csrf(refreshToken), expiresAt: session.expiresAt, user: userResponse(user) };
+}
 export async function createAuthService({ store, config, now = () => new Date() }) {
   const tokens = createTokenCodec(config, now);
   const dummyHash = await hashPassword(randomBytes(32).toString('hex'));
   async function response(session, user, refreshToken) {
-    return { accessToken: await tokens.access(session), refreshToken, csrfToken: tokens.csrf(refreshToken), expiresAt: session.expiresAt, user: userResponse(user) };
+    return sessionResponse(tokens, session, user, refreshToken);
   }
   async function refreshClaims(raw) { return tokens.verifyRefresh(raw); }
   return {
@@ -27,10 +37,7 @@ export async function createAuthService({ store, config, now = () => new Date() 
       const user = await store.findUserByEmail(email);
       const valid = await verifyPassword(user?.passwordHash ?? dummyHash, input.password);
       if (!user?.passwordHash || !valid) throw new AuthError('INVALID_CREDENTIALS');
-      const expiresAt = new Date(Math.floor(now().getTime() / 1000) * 1000 + config.refreshTtlSeconds * 1000);
-      const session = store.newSession({ userId: user._id, authVersionAtIssue: user.authVersion, refreshGeneration: 0, expiresAt, lastSeenAt: now(), revokedAt: null, revokeReason: null });
-      const refreshToken = await tokens.refresh(session);
-      session.refreshTokenHash = tokenHash(refreshToken);
+      const { session, refreshToken } = await prepareSession(store, tokens, config, now, user);
       const currentUser = await store.issueSession(user, session);
       return response(session, currentUser, refreshToken);
     },

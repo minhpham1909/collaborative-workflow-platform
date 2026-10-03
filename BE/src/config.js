@@ -24,8 +24,12 @@ export function readAuthConfig(env = process.env) {
   const accessKeyHex = env.JWT_ACCESS_KEY_HEX;
   const refreshKeyHex = env.JWT_REFRESH_KEY_HEX;
   if (!/^[a-f0-9]{64}$/u.test(accessKeyHex ?? '') || !/^[a-f0-9]{64}$/u.test(refreshKeyHex ?? '') || accessKeyHex === refreshKeyHex) throw new Error('Distinct random JWT keys required');
+  const mailKeyHex = env.MAIL_OUTBOX_KEY_HEX;
+  if (!/^[a-f0-9]{64}$/u.test(mailKeyHex ?? '') || [accessKeyHex, refreshKeyHex].includes(mailKeyHex)) throw new Error('Distinct mail encryption key required');
+  const termsVersion = env.TERMS_VERSION ?? (env.NODE_ENV === 'production' ? '' : 'draft-2026-10-03');
+  if (!termsVersion || termsVersion.length > 100 || (env.NODE_ENV === 'production' && termsVersion.startsWith('draft-'))) throw new Error('Valid Terms version required');
   return {
-    webOrigin, accessKeyHex, refreshKeyHex, secureCookies: env.NODE_ENV === 'production',
+    webOrigin, accessKeyHex, refreshKeyHex, mailKeyHex, termsVersion, googleClientId: env.GOOGLE_CLIENT_ID ?? '', secureCookies: env.NODE_ENV === 'production',
     issuer: 'workflow-api', audience: 'workflow-web', accessTtlSeconds: 900, refreshTtlSeconds: 7 * 24 * 60 * 60,
   };
 }

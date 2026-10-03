@@ -27,7 +27,7 @@ test('Argon2id salts hashes, preserves password whitespace/Unicode and enforces 
 });
 test('JWT configuration rejects missing/reused keys, malformed origin and HTTP production origin', () => {
   const config = testConfig();
-  const env = { WEB_ORIGIN: config.webOrigin, JWT_ACCESS_KEY_HEX: config.accessKeyHex, JWT_REFRESH_KEY_HEX: config.refreshKeyHex };
+  const env = { WEB_ORIGIN: config.webOrigin, JWT_ACCESS_KEY_HEX: config.accessKeyHex, JWT_REFRESH_KEY_HEX: config.refreshKeyHex, MAIL_OUTBOX_KEY_HEX: config.mailKeyHex };
   assert.equal(readAuthConfig(env).accessTtlSeconds, 900);
   assert.throws(() => readAuthConfig({ ...env, JWT_REFRESH_KEY_HEX: env.JWT_ACCESS_KEY_HEX }));
   assert.throws(() => readAuthConfig({ ...env, WEB_ORIGIN: `${env.WEB_ORIGIN}/path` }));

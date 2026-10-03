@@ -29,3 +29,5 @@ Trạng thái: chưa thông qua thiết kế kỹ thuật. Stack ứng viên: Re
 Sau baseline: chọn framework backend; JavaScript hay TypeScript; workspace manager nếu cần; auth/session; embed/reference, index và transaction; event/email pipeline; API contracts và routes. Không biến các lựa chọn này thành quyết định đã duyệt trước review.
 
 Storage, reminder và browser push cần boundaries trong thiết kế và đặc tả riêng trước khi triển khai increment.
+
+Implementation hiện hành: [Auth/accounts](AUTH-ACCOUNTS-v0.1.md) và [Auth/session](AUTH-SESSION-v0.1.md). Các đoạn chuẩn bị/baseline ở trên là lịch sử kế hoạch; trạng thái mới tại docs/project/NEXT-STEPS.md.

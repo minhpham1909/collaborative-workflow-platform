@@ -3,10 +3,10 @@ import { AuthError } from './errors.js';
 import { userResponse } from './service.js';
 
 const COOKIE = 'workflow_refresh';
-function cookieValue(req) {
-  const matches = (req.headers.cookie ?? '').split(';').map((part) => part.trim()).filter((part) => part.startsWith(`${COOKIE}=`));
+function cookieValue(req, name = COOKIE) {
+  const matches = (req.headers.cookie ?? '').split(';').map((part) => part.trim()).filter((part) => part.startsWith(`${name}=`));
   if (matches.length !== 1) throw new AuthError('UNAUTHENTICATED');
-  return matches[0].slice(COOKIE.length + 1);
+  return matches[0].slice(name.length + 1);
 }
 function bearer(req) {
   const value = req.headers.authorization;
@@ -46,7 +46,7 @@ export function createRateLimiter({ limit = 60, windowMs = 60_000, maxEntries = 
     next();
   };
 }
-export function createAuthRouter({ service, config }) {
+export function createAuthRouter({ service, config, accounts }) {
   const router = express.Router({ caseSensitive: true, strict: true });
   const cookieOptions = { httpOnly: true, secure: config.secureCookies, sameSite: 'strict', path: '/auth' };
   router.use((req, res, next) => {
@@ -70,7 +70,7 @@ export function createAuthRouter({ service, config }) {
   router.use(express.json({ limit: '16kb', strict: true }));
   router.use((req, _res, next) => {
     if (req.method === 'POST' && !req.is('application/json')) return next(new AuthError('JSON_REQUIRED', 415));
-    if (req.method === 'POST' && req.path !== '/login' && (!req.body || typeof req.body !== 'object' || Array.isArray(req.body) || Object.keys(req.body).length)) return next(new AuthError('INVALID_INPUT', 400));
+    if (req.method === 'POST' && ['/refresh', '/logout', '/verify-email/resend', '/google/challenge', '/google/link/challenge'].includes(req.path) && (!req.body || typeof req.body !== 'object' || Array.isArray(req.body) || Object.keys(req.body).length)) return next(new AuthError('INVALID_INPUT', 400));
     next();
   });
   function sendSession(res, data) {
@@ -93,6 +93,37 @@ export function createAuthRouter({ service, config }) {
     res.clearCookie(COOKIE, cookieOptions).sendStatus(204);
   });
   router.get('/me', requireAuthentication(service), (req, res) => res.json({ user: userResponse(req.auth.user) }));
+  if (accounts) {
+    const limited = () => createRateLimiter({ limit: 10 });
+    router.get('/capabilities', (_req, res) => res.json(accounts.capabilities()));
+    router.post('/register', limited(), async (req, res) => res.status(202).json(await accounts.register(req.body)));
+    router.post('/verify-email', limited(), async (req, res) => res.json(await accounts.verifyEmail(req.body)));
+    router.post('/verify-email/resend', limited(), requireAuthentication(service), async (req, res) => res.status(202).json(await accounts.resendVerification(req.auth, req.body)));
+    router.post('/password/recovery', limited(), async (req, res) => res.status(202).json(await accounts.requestRecovery(req.body)));
+    router.post('/password/reset', limited(), async (req, res) => {
+      const result = await accounts.resetPassword(req.body);
+      res.clearCookie(COOKIE, cookieOptions).json(result);
+    });
+    router.post('/password/change', limited(), requireAuthentication(service), async (req, res) => {
+      const refresh = cookieValue(req); service.checkCsrf(refresh, req.headers['x-csrf-token']);
+      sendSession(res, await accounts.changePassword(req.auth, refresh, req.body));
+    });
+    const nonceName = 'workflow_google_nonce';
+    const nonceOptions = { httpOnly: true, secure: config.secureCookies, sameSite: 'strict', path: '/auth/google' };
+    function challenge(res, result) {
+      res.cookie(nonceName, result.nonce, { ...nonceOptions, expires: new Date(result.expiresAt) }).json(result);
+    }
+    router.post('/google/challenge', limited(), async (_req, res) => challenge(res, await accounts.googleChallenge({ intent: 'login' })));
+    router.post('/google/link/challenge', limited(), requireAuthentication(service), async (req, res) => challenge(res, await accounts.googleChallenge({ intent: 'link' }, req.auth)));
+    router.post('/google', limited(), async (req, res) => {
+      const result = await accounts.googleLogin(cookieValue(req, nonceName), req.body);
+      res.clearCookie(nonceName, nonceOptions); sendSession(res, result);
+    });
+    router.post('/google/link', limited(), requireAuthentication(service), async (req, res) => {
+      const result = await accounts.googleLink(req.auth, cookieValue(req, nonceName), req.body);
+      res.clearCookie(nonceName, nonceOptions).json(result);
+    });
+  }
   router.use((error, req, res, next) => {
     if (error instanceof AuthError) {
       if (error.status === 401 && ['/refresh', '/csrf', '/logout'].includes(req.path)) res.clearCookie(COOKIE, cookieOptions);

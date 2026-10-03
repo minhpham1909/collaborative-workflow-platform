@@ -598,6 +598,43 @@
         "Use lease token when completing or rescheduling",
         "No provider exactly-once claim"
       ]
+    },
+    {
+      "name": "auth_challenges",
+      "fields": {
+        "userId": "ObjectId|null",
+        "purpose": "google_login|google_link",
+        "tokenHash": "String",
+        "expiresAt": "Date",
+        "usedAt": "Date|null",
+        "revokedAt": "Date|null"
+      },
+      "privateFields": [
+        "tokenHash"
+      ],
+      "references": {
+        "userId": "users"
+      },
+      "indexes": [
+        {
+          "name": "auth_challenge_hash_unique",
+          "keys": {
+            "tokenHash": 1
+          },
+          "unique": true
+        },
+        {
+          "keys": {
+            "userId": 1,
+            "expiresAt": 1
+          },
+          "name": "auth_challenge_user_expiry"
+        }
+      ],
+      "constraints": [
+        "Google nonce is cookie-bound, purpose/user-bound and single-use",
+        "Five-minute expiry checked in transaction; no TTL purge yet"
+      ]
     }
   ],
   "sharedTypes": {

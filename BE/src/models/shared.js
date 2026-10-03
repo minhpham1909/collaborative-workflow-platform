@@ -16,7 +16,7 @@ export const singleLine = (max) => ({
   type: String, required: true, maxlength: max,
   validate: (value) => Boolean(value.trim()) && !/[\u0000-\u001f\u007f\u2028\u2029]/u.test(value),
 });
-export const nested = (fields) => new Schema(fields, { _id: false, strict: 'throw' });
+export const nested = (fields) => new Schema(fields, { _id: false, versionKey: false, strict: 'throw' });
 export const emailPreferences = nested({
   assignment: { type: Boolean, default: true }, comment: { type: Boolean, default: false },
   content: { type: Boolean, default: false }, status: { type: Boolean, default: false },

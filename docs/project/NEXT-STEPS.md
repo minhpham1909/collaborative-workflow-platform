@@ -1,28 +1,23 @@
 # Trạng thái và bước tiếp theo
 
-Cập nhật 03/10/2026. File này là trạng thái hiện hành; nhật ký trước đây nằm trong [archive](../archive/project/PROJECT-HISTORY-2026-10-03.md).
+Cập nhật 03/10/2026. [Nhật ký cũ](../archive/project/PROJECT-HISTORY-2026-10-03.md) là lịch sử, yêu cầu trực tiếp mới của chủ dự án có ưu tiên.
 
 ## Hiện tại
 
-- Repo GitHub private `minhpham1909/collaborative-workflow-platform`; `main` giữ mốc khởi đầu, làm việc trên `dev`.
-- `BE/`: Node 24.x, JavaScript ESM, Express 5.2.1, Mongoose 9.10.4, pnpm 11.19.0 và lockfile. Có 12 models lõi, rich-text validation, text/counters server và health endpoints.
-- JWT access + refresh đã có signing/verification, Argon2id login, rotation/reuse revocation, logout, /me và verified middleware. Google/signup/verification/reset/change-password và các API công việc chưa triển khai; xem [Auth/session](../sds/AUTH-SESSION-v0.1.md).
-- `FE/` còn skeleton; hướng React JS/JSX, thư viện UI/editor chọn trong quá trình thiết kế/code.
-- 28 tests schema/editor/auth/HTTP đạt; live Mongo integration test đã có nhưng skipped do chưa có TEST_MONGODB_URI. SRS checker đạt 35 UC/29 FR. Mongo adapter transactions/indexes chưa chạy thực tế.
-- Storage/resources Upcoming; announcements và idempotency theo phase riêng. Giới hạn editor/name vẫn là guardrails kỹ thuật đề xuất, chưa suy thành duyệt toàn bộ NFR.
-- Đã rà file Git, bổ sung ignore rules và phân chia tài liệu hiện hành/lịch sử; xem [quy tắc file](REPOSITORY-HYGIENE.md).
+- Repo GitHub private minhpham1909/collaborative-workflow-platform; main giữ mốc nền, phát triển trên dev.
+- BE: Node 24.x, JavaScript ESM, Express 5.2.1, Mongoose 9.10.4, pnpm 11.19.0, lockfile; 13 models, editor validation, health.
+- JWT access/refresh, Argon2id login, rotation/reuse revocation, logout/me và verified middleware. Đã có signup/Terms, verify/resend, reset/change password, Google login/link và encrypted email outbox. [Accounts contract](../sds/AUTH-ACCOUNTS-v0.1.md), [session contract](../sds/AUTH-SESSION-v0.1.md).
+- 31 unit/schema/HTTP tests đạt; 8 integration tests đạt, 0 skipped trên MongoDB 8.0.17 replica set local. Google verifier dùng SDK stub; mail sender giả lập, chưa Google/SMTP thật. [QA](../qa/AUTH-ACCOUNTS-CHECK.md).
+- MongoDB dev local đã chạy smoke, tạo index 13 collections; env:dev/db:dev/test:integration hỗ trợ setup. .env/binaries/data/mail previews ignored; không đẩy credentials/data lên Git.
+- FE còn skeleton React JS/JSX; chưa màn hình Auth. Storage/resources Upcoming, announcements phase riêng. NFR/retention/product limits còn review.
 
 ## Tiếp theo
 
-1. Cấu hình DB test để chạy integration session, review production key management/proxy/cookie topology/shared limiter; FE cần single-flight refresh giữa tabs.
-2. Triển khai signup/Terms, verification/reset/email outbox/provider, change password và Google identity login/linking; giữ verified gate và quyền server. Nối Profile/Personal Settings và frontend login.
-3. Cấu hình MongoDB replica set development/test để kiểm unique indexes, CAS và multi-document transactions.
-4. Tiếp tục Workspace/Invitations → Project/Task/Comment → Notifications/Settings/outbox; UI/UX phát triển theo flows hiện có.
+1. Dựng FE Auth với validation, Việt/English, login/signup/Terms, verify/reset và unverified gate; access token memory, refresh single-flight/coordination giữa tabs.
+2. Cấu hình OAuth Web client và SMTP, kiểm credential/email delivery thật. Hoàn thiện nội dung Terms, worker nền, Profile/Personal Settings APIs.
+3. Triển khai Workspace/Invitations: Owner-only invites, verified gate, membership lifecycle và quyền DB; rồi Project/Task/Comment, Notifications/Settings.
+4. Review production provider/secrets/rotation, shared limiter/proxy/cookie topology, retention/purge/backup và NFR. Local DB không thay production.
 
-Không cần chọn storage provider trước phần lõi. Database/email provider, retention/purge và NFR vẫn còn review.
+## Tài liệu
 
-## Điểm vào tài liệu
-
-- [Danh mục docs](../README.md), [SRS](../srs/SRS-v0.2.md), [quyết định](../decisions/DECISION-REGISTER.md).
-- [DB hiện hành](../sds/DATABASE-DESIGN-v0.2.md), [backend foundation](../sds/BACKEND-FOUNDATION-v0.1.md).
-- [Hướng dẫn chạy BE](../../BE/README.md), [QA backend](../qa/BACKEND-FOUNDATION-CHECK.md), [Git workflow](../decisions/GIT-WORKFLOW.md).
+[Docs index](../README.md), [SRS](../srs/SRS-v0.2.md), [quyết định](../decisions/DECISION-REGISTER.md), [DB](../sds/DATABASE-DESIGN-v0.2.md), [BE setup](../../BE/README.md), [Git workflow](../decisions/GIT-WORKFLOW.md), [file hygiene](REPOSITORY-HYGIENE.md).

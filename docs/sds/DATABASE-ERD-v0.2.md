@@ -1,12 +1,13 @@
 # Quan hệ dữ liệu v0.2 — phần lõi
 
-Ngày 03/10/2026. Đi cùng DATABASE-DESIGN-v0.2.md và DATABASE-LAYOUT-v0.2.json. References dưới đây phải được BE enforce, không phải MongoDB tự bảo đảm foreign keys. Đã có 12 models tại BE; chưa tạo database/index hoặc triển khai các giao dịch nghiệp vụ.
+Ngày 03/10/2026. Đi cùng DATABASE-DESIGN-v0.2.md và DATABASE-LAYOUT-v0.2.json. References dưới đây phải được BE enforce, không phải MongoDB tự bảo đảm foreign keys. Đã có 13 models tại BE; Auth transactions/indexes đã kiểm trên MongoDB local. Nghiệp vụ công việc chưa có API.
 
 ```mermaid
 erDiagram
     USERS ||--o{ AUTH_IDENTITIES : userId
     USERS ||--o{ SESSIONS : userId
     USERS ||--o{ AUTH_TOKENS : userId
+    USERS o|--o{ AUTH_CHALLENGES : nullable_userId
     USERS ||--o{ WORKSPACES : ownerId
     USERS ||--o{ WORKSPACE_MEMBERSHIPS : userId
     WORKSPACES ||--o{ WORKSPACE_MEMBERSHIPS : workspaceId

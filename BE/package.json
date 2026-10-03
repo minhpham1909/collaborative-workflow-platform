@@ -11,12 +11,21 @@
     "dev": "node --env-file-if-exists=.env --watch src/server.js",
     "start": "node --env-file-if-exists=.env src/server.js",
     "test": "node --test",
+    "test:integration": "node scripts/run-integration.js",
+    "mail:once": "node --env-file-if-exists=.env scripts/mail-once.js",
+    "env:dev": "node scripts/setup-dev-env.js",
+    "db:dev": "node scripts/dev-database.js",
     "db:indexes": "node --env-file-if-exists=.env scripts/create-indexes.js"
   },
   "dependencies": {
     "@node-rs/argon2": "2.2.1",
     "express": "5.2.1",
+    "google-auth-library": "11.1.0",
     "jose": "6.2.12",
-    "mongoose": "9.10.4"
+    "mongoose": "9.10.4",
+    "nodemailer": "10.0.13"
+  },
+  "devDependencies": {
+    "mongodb-memory-server-core": "11.3.0"
   }
 }

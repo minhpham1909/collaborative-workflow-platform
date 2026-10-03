@@ -4,7 +4,10 @@ import { connectDatabase } from './database.js';
 import { createApp } from './app.js';
 import './models/index.js';
 import { createAuthService } from './auth/service.js';
-import { createMongoAuthStore } from './auth/mongo-store.js';
+import { createMongoAccountStore } from './auth/mongo-accounts.js';
+import { createAccountsService } from './auth/accounts-service.js';
+import { createGoogleVerifier } from './auth/google.js';
+import { assertAuthIndexes } from './auth/index-check.js';
 
 let server;
 let stopping = false;
@@ -24,8 +27,11 @@ try {
   const config = readConfig();
   const authConfig = readAuthConfig();
   await connectDatabase(config.mongoUri);
-  const authService = await createAuthService({ store: createMongoAuthStore(), config: authConfig });
-  const app = createApp({ isReady: () => !stopping && mongoose.connection.readyState === 1, authService, authConfig });
+  await assertAuthIndexes();
+  const store = createMongoAccountStore();
+  const authService = await createAuthService({ store, config: authConfig });
+  const accountsService = createAccountsService({ store, config: authConfig, verifyGoogle: createGoogleVerifier(authConfig.googleClientId) });
+  const app = createApp({ isReady: () => !stopping && mongoose.connection.readyState === 1, authService, authConfig, accountsService });
   if (!stopping) {
     server = app.listen(config.port, config.host, () => {
       console.info(`API listening at http://${config.host}:${config.port}`);

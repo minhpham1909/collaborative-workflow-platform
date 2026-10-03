@@ -1,10 +1,10 @@
 # Thiết kế database v0.2 — phần lõi
 
-Ngày 03/10/2026. Bản hiện hành thay thế DATABASE-DESIGN-v0.1.md để thiết kế phần lõi theo yêu cầu chỉnh sửa của chủ dự án. Stack nền: MongoDB/Mongoose, backend JavaScript/Express. Đã chuyển thành 12 Mongoose models và backend health foundation tại BE; chưa triển khai database/index hoặc các giao dịch nghiệp vụ. Xem [Backend foundation](BACKEND-FOUNDATION-v0.1.md) để phân biệt code đã có và hợp đồng cần hoàn thiện. Việc yêu cầu chỉnh sửa không tự phê duyệt mọi thông số kỹ thuật.
+Ngày 03/10/2026. Bản hiện hành thay thế DATABASE-DESIGN-v0.1.md để thiết kế phần lõi theo yêu cầu chỉnh sửa của chủ dự án. Stack nền: MongoDB/Mongoose, backend JavaScript/Express. Đã có 13 Mongoose models tại BE; Auth transactions/indexes đã kiểm trên MongoDB local. Nghiệp vụ công việc chưa có API. Xem [Auth/accounts](AUTH-ACCOUNTS-v0.1.md). Xem [Backend foundation](BACKEND-FOUNDATION-v0.1.md) để phân biệt code đã có và hợp đồng cần hoàn thiện. Việc yêu cầu chỉnh sửa không tự phê duyệt mọi thông số kỹ thuật.
 
 ## 1. Phạm vi và cách bố trí
 
-**12 collection lõi:** users, auth_identities, sessions, auth_tokens, workspaces, workspace_memberships, workspace_invitations, projects, tasks, task_comments, notifications, email_outbox.
+**13 collection lõi:** users, auth_identities, sessions, auth_tokens, auth_challenges, workspaces, workspace_memberships, workspace_invitations, projects, tasks, task_comments, notifications, email_outbox.
 
 **Chờ chốt phase riêng:** workspace_announcements (Owner đăng/ghim đã chốt năng lực), operation_keys (idempotency phạm vi/thời hạn chưa duyệt nhóm 6).
 
@@ -196,3 +196,7 @@ Files/Workspace Resources/storage usage chỉ giữ ranh giới roadmap. Không 
 5. Gate/cleanup/index/search cần tests/explain/benchmark sau implementation; chưa có bằng chứng DB runtime.
 
 Tiếp theo: triển khai Auth/User API contracts và services, kết nối replica set phục vụ integration tests. Models/editor validation đã có; chưa đánh dấu nghiệp vụ đã nghiệm thu từ schema tests.
+
+## Auth challenge increment
+
+Collection auth_challenges hỗ trợ nonce Google login/link 5 phút, dùng một lần, hash unique, userId nullable theo intent. Fields/indexes/transaction theo [Auth/accounts](AUTH-ACCOUNTS-v0.1.md); layout JSON và index plan đã đồng bộ. Đây là chi tiết implementation, không thêm quyền nghiệp vụ mới.

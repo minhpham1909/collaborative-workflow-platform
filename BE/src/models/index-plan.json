@@ -220,5 +220,21 @@
         "leaseUntil": 1
       }
     }
+  ],
+  "auth_challenges": [
+    {
+      "name": "auth_challenge_hash_unique",
+      "keys": {
+        "tokenHash": 1
+      },
+      "unique": true
+    },
+    {
+      "keys": {
+        "userId": 1,
+        "expiresAt": 1
+      },
+      "name": "auth_challenge_user_expiry"
+    }
   ]
 }

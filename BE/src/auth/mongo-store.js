@@ -12,7 +12,7 @@ export function createMongoAuthStore() {
     return user;
   }
   return {
-    findUserByEmail: (emailCanonical) => User.findOne({ emailCanonical }).select('+passwordHash +authVersion').lean(),
+    findUserByEmail: (emailCanonical) => User.findOne({ emailCanonical }).select('+passwordHash +authVersion +emailCanonical').lean(),
     newSession: (fields) => ({ _id: new mongoose.Types.ObjectId(), ...fields }),
     async issueSession(expectedUser, data) {
       return mongoose.connection.transaction(async (transaction) => {

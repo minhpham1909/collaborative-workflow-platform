@@ -45,6 +45,7 @@ export function memoryAuthStore(user) {
 }
 export const testConfig = () => ({
   accessKeyHex: randomBytes(32).toString('hex'), refreshKeyHex: randomBytes(32).toString('hex'),
+  mailKeyHex: randomBytes(32).toString('hex'), termsVersion: 'test-v1', googleClientId: 'test-google-client.apps.googleusercontent.com',
   issuer: 'workflow-api', audience: 'workflow-web', accessTtlSeconds: 900, refreshTtlSeconds: 604_800,
   webOrigin: 'http://localhost:5173', secureCookies: true,
 });

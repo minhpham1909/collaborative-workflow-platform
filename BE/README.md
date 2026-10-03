@@ -1,52 +1,40 @@
 # Backend JavaScript
 
-Backend ngày 03/10/2026: Node 24.x, Express 5.2.1, Mongoose 9.10.4; pnpm 11.19.0. Có 12 models, health và lát cắt Auth đăng nhập mật khẩu/JWT/refresh/logout/me. Google/signup/verification/reset/change-password và APIs công việc chưa triển khai. Hợp đồng tại [Auth/session](../docs/sds/AUTH-SESSION-v0.1.md).
+Node 24.x, Express 5.2.1, Mongoose 9.10.4, pnpm 11.19.0. Có 13 models, editor validation, health, JWT sessions và account flows. [Session](../docs/sds/AUTH-SESSION-v0.1.md), [Accounts](../docs/sds/AUTH-ACCOUNTS-v0.1.md), [QA](../docs/qa/AUTH-ACCOUNTS-CHECK.md).
 
-## Chạy local
+## Local
 
-Từ thư mục `BE`, với Node 24.x và pnpm 11.19.0:
+Tại BE với Node 24.x/pnpm 11.19.0:
 
 ```powershell
 pnpm install --frozen-lockfile
-Copy-Item .env.example .env
+pnpm env:dev
 pnpm test
+pnpm test:integration
+pnpm db:dev
+```
+
+env:dev tạo .env từ template nếu chưa có, bổ sung ba key random còn trống, giữ keys đã có, không in keys; chỉ development. db:dev chạy replica set rs0 tại 127.0.0.1:27017, giữ dữ liệu .local/mongodb-dev. Ctrl+C dừng; không chạy hai instances cùng cổng. Lần đầu tải MongoDB 8.0.17 vào .local/mongodb-binaries (Windows khoảng 755 MiB). DB localhost development, không authentication.
+
+Giữ terminal DB; terminal khác tại BE:
+
+```powershell
+pnpm db:indexes
 pnpm dev
 ```
 
-Chỉ copy template khi chưa có `.env`. Cấu hình MONGODB_URI replica set, WEB_ORIGIN và hai JWT key khác nhau (32 bytes ngẫu nhiên, lowercase hex); template để trống key để startup fail closed. Server khởi động khi config/DB hợp lệ. Mặc định bind 127.0.0.1:4000. Tests unit/schema/HTTP không cần MongoDB; live integration chỉ bật khi TEST_MONGODB_URI trỏ database riêng workflow_auth_test.
+Server 127.0.0.1:4000 kiểm keys/DB topology/unique indexes trước startup. db:indexes tạo index plans của 13 models, không xóa index cũ. Có thể cấu hình replica set khác. Integration runner dùng workflow_auth_test riêng, chạy/dừng Mongo tạm, xóa fixtures của mình.
 
-| Endpoint | Kết quả |
-|---|---|
-| GET `/health/live` | 200 khi HTTP server đang chạy |
-| GET `/health/ready` | 200 khi connection sẵn sàng, 503 khi mất kết nối/đang dừng |
-| POST /auth/login, /auth/refresh, /auth/logout | Lát cắt session theo Auth/session contract |
-| GET /auth/csrf, /auth/me | CSRF cho refresh cookie và hồ sơ User hiện tại |
-| Signup/Google/email/reset/workspace/task routes | Chưa mở, trả 404 |
+## Auth/email
 
-`pnpm db:indexes` tạo các index đã khai báo trong DB được cấu hình, không xóa index cũ. Đây là thao tác riêng, không tự chạy khi start; chưa thực hiện trong phiên này. Unique index chỉ có hiệu lực sau khi tạo thật, schema tests không chứng minh uniqueness trong MongoDB.
+GET /auth/capabilities,/auth/me,/auth/csrf. POST login,refresh,logout,register,verify-email,verify-email/resend,password/recovery,password/reset,password/change,google/challenge,google/link/challenge,google,google/link dưới /auth. Fields/điều kiện theo Accounts contract. /health/live và /health/ready. Workspace/Task routes chưa mở.
 
-## Cấu trúc
+BE/.env.example không secrets. WEB_ORIGIN chính xác; JWT_ACCESS_KEY_HEX,JWT_REFRESH_KEY_HEX,MAIL_OUTBOX_KEY_HEX riêng mỗi key 32 bytes lowercase hex. TERMS_VERSION draft chỉ dev; production cần nội dung/version thực. GOOGLE_CLIENT_ID trống làm Google unavailable; cần OAuth Web client/audience/origins để kiểm thực tế.
 
-```text
-src/
-  app.js                # Express app; không kết nối DB khi import
-  server.js             # Startup/shutdown
-  config.js             # Cấu hình fail closed
-  database.js           # Kết nối và kiểm tra topology
-  content/rich-text.js  # Hợp đồng editor và text/counters server
-  auth/                # Password/JWT/service, scoped Mongo adapter, middleware/router
-  models/              # Shared schemas, accounts, workspace, task, events
-scripts/create-indexes.js
-test/                   # Node built-in runner, không cần DB
-```
+EMAIL_MODE=disabled mặc định: chỉ queue. capture để đọc link local: pnpm mail:once xử lý từng job, preview .local/mail chứa link nhạy cảm bị Git ignore. SMTP cần mode smtp và cấu hình TLS. Chưa worker nền, SMTP/Google live validation. Capture cấm production.
 
-## Ranh giới implementation
+## Boundaries
 
-- JWT access + refresh đã có signing/verification/rotation, cookie/CSRF và session revocation; jose 6.2.12, Argon2id qua @node-rs/argon2 2.2.1. Chưa Google/signup/reset endpoints hoặc kiểm chứng live DB/FE.
-- Các schema kiểm tra cấu trúc và một số invariant nội bộ document. Không thay validation DTO, authentication, authorization hoặc transaction bảo vệ quan hệ giữa collection.
-- `.save()` dùng version/optimistic concurrency; generic query/bulk writes vẫn chặn. Auth Mongo adapter dùng scoped driver writes và User guard trong transaction cho session issuance/rotation/revocation. Cleanup membership/outbox cần repositories riêng; không mở generic bypass.
-- Không dùng `req.body` tạo model/update trực tiếp. Fields server-owned vẫn cần DTO allowlist theo từng hành động. Mongoose có casting, không phải bộ kiểm tra kiểu đầu vào HTTP nghiêm ngặt.
-- JSON transform và default projections che credential/payload nội bộ; `lean()`/aggregation/`toObject()` không phải response công khai. Mỗi route phải có mapper kiểm quyền, nhất là notifications và invitation preview.
-- Storage, resources và announcement extension chưa có models/routes. Không có MongoDB instance/index thật hoặc integration tests giao dịch trong phiên này.
+src/auth chứa DTO/service/JWT/Google/scoped Mongo adapters; src/mail dispatcher/provider; src/models schemas/index plan; src/content editor contract. scripts: DB local/env/indexes/integration/mail-once.
 
-Chi tiết lựa chọn kỹ thuật và giới hạn editor: `docs/sds/BACKEND-FOUNDATION-v0.1.md` từ root.
+Generic query/bulk writes chặn; adapters dùng transaction/driver mutations, kiểm lại credential/quyền. Schemas không thay DTO/authorization. lean/toObject không phải public response; routes dùng mapper. Argon2id; refresh strict single-use, FE cần phối hợp giữa tabs. Profile/Settings APIs, frontend và nghiệp vụ công việc tiếp theo. Production provider/limiter/proxy/retention còn review. Storage Upcoming.

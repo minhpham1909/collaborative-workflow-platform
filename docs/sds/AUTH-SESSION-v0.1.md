@@ -1,6 +1,6 @@
 # Auth/session v0.1 — lát cắt đăng nhập
 
-Ngày 03/10/2026. Triển khai trên dev sau khi main nhận commit sắp xếp tài liệu. Phạm vi: đăng nhập mật khẩu cho account đã tồn tại, cấp/verify JWT, refresh rotation, logout, /me và middleware verified gate. Chưa có signup, Google endpoints, verification/reset/change-password hoặc cập nhật Profile/Settings. Không coi toàn bộ Auth/User đã hoàn thành.
+Ngày 03/10/2026. Triển khai trên dev sau khi main nhận commit sắp xếp tài liệu. Phạm vi: đăng nhập mật khẩu cho account đã tồn tại, cấp/verify JWT, refresh rotation, logout, /me và middleware verified gate. Increment accounts đã có signup/Google/verification/reset/change-password; xem [Auth/accounts](AUTH-ACCOUNTS-v0.1.md). Profile/Settings còn tiếp theo. Không coi toàn bộ Auth/User đã hoàn thành.
 
 ## Hợp đồng HTTP
 
@@ -26,7 +26,7 @@ Access TTL 15 phút; refresh/session TTL tuyệt đối 7 ngày, rotation không
 
 Policy refresh hiện tại là strict single use: hai request cùng credential → một rotate, request stale revoke session. Không grace window hoặc trả lại token mới cho retry. Frontend sau này cần single-flight/coordination giữa tabs; mất response refresh có thể buộc đăng nhập lại. Tradeoff này được ghi rõ, chưa suy thành UX đa tab đã nghiệm thu.
 
-Password dùng Argon2id qua @node-rs/argon2 2.2.1, memory 19 MiB, iterations 2, parallelism 1, random salt. Giới hạn 12–128 Unicode code points và tối đa 512 UTF-8 bytes; không trim/normalize hoặc áp composition rules. User không tồn tại/Google-only vẫn chạy dummy hash verification và trả cùng INVALID_CREDENTIALS. Google-only account chỉ đăng nhập được khi nối Google endpoint ở increment sau.
+Password dùng Argon2id qua @node-rs/argon2 2.2.1, memory 19 MiB, iterations 2, parallelism 1, random salt. Giới hạn 12–128 Unicode code points và tối đa 512 UTF-8 bytes; không trim/normalize hoặc áp composition rules. User không tồn tại/Google-only vẫn chạy dummy hash verification và trả cùng INVALID_CREDENTIALS. Google-only login đã nối trong increment accounts.
 
 Rate limits triển khai tạm: login 10/phút/IP, toàn auth 60/phút/IP, tối đa 10.000 entries; trust proxy tắt. Store limiter theo process, chưa giải quyết nhiều replica/shared limit. Trước deploy reverse proxy phải xác định topology, proxy trust chính xác và shared limiter. Securityheaders/request logs/observability production còn phải hoàn thiện.
 
@@ -40,6 +40,6 @@ Refresh check user/session generation, expiry/revocation, current token hash tr�
 
 Unit/service tests dùng storage test double có serialization; HTTP tests chạy server local thật với test double. Live Mongo test chỉ chạy khi TEST_MONGODB_URI trỏ tới database workflow_auth_test trên replica set; không drop DB, chỉ cleanup fixture-generated IDs. Không cấu hình URI trong phiên này nên live test skipped, không khẳng định transactions/indexes đã chạy thực tế.
 
-Tiếp theo: cấu hình DB development/test; signup/Terms + verification/reset/email outbox encryption/provider; change password giữ phiên hiện tại/revoke phiên khác; Google verify/linking; Profile/Settings; FE login và refresh coordination. Các endpoint chưa triển khai vẫn 404.
+DB local và account flows đã kiểm trong increment accounts. Tiếp theo: Profile/Settings, FE Auth/refresh coordination, cấu hình Google/SMTP thật và các routes công việc.
 
 Nguồn: [jose signing/verification](https://github.com/panva/jose), [OWASP password storage](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html). Google nối sau theo [server-side ID token verification](https://developers.google.com/identity/gsi/web/guides/verify-google-id-token).

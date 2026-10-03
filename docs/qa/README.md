@@ -1,6 +1,6 @@
 # Trạng thái kiểm tra
 
-Cập nhật: [Auth/session check](AUTH-SESSION-CHECK.md): 28 tests đạt, 1 Mongo integration test skipped; chưa có live DB, Google/signup/verification/reset hoặc FE nghiệm thu.
+Hiện hành: [Auth/accounts check](AUTH-ACCOUNTS-CHECK.md): 31 tests thông thường và 8 integration tests đạt trên MongoDB local; Google/SMTP thật và FE chưa nghiệm thu. [Auth/session check](AUTH-SESSION-CHECK.md) giữ mốc lịch sử.
 
 Cập nhật 03/10/2026: [backend foundation check](BACKEND-FOUNDATION-CHECK.md) ghi 16 tests schema/editor/HTTP đạt và dependency audit không báo vulnerability. Chưa kiểm thử database/index/transaction/auth nghiệp vụ hoặc FE thực tế.
 
@@ -8,6 +8,6 @@ Cập nhật 03/10/2026: [backend foundation check](BACKEND-FOUNDATION-CHECK.md)
 
 Đã kiểm tra [bản mẫu My Tasks](MY-TASKS-MOCKUP-CHECK.md): sort/filter và trạng thái local trên dữ liệu minh họa, giao diện desktop/360 px. Đây là kiểm tra bản mẫu, không phải kiểm thử ứng dụng thật.
 
-Chưa có code để chạy AC-01 đến AC-33, AC-X01 đến AC-X20, kiểm thử concurrency/auth hoặc đo NFR. Các kiểm tra nghiệp vụ phải thực hiện sau khi yêu cầu liên quan được duyệt và có lát cắt chạy thật.
+Đã kiểm các luồng Auth theo báo cáo mới; chưa nghiệm thu toàn bộ AC-01 đến AC-33, AC-X01 đến AC-X20 hoặc đo NFR. Các kiểm tra nghiệp vụ phải thực hiện sau khi yêu cầu liên quan được duyệt và có lát cắt chạy thật.
 
 Ưu tiên kế hoạch sau baseline: quyền xuyên Workspace; vòng đời membership và tái gia nhập; accept/revoke và transfer/leave đồng thời; archive/write và stale edits; recipients/email preferences; token/session lifecycle; sau cùng nghiệm thu NFR trong môi trường ghi nhận cụ thể.

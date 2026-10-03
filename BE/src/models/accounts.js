@@ -46,3 +46,11 @@ export const authTokenSchema = coreSchema({
   userId: { ...ref('User'), immutable: true }, purpose: choice(['verify_email', 'reset_password']),
   tokenHash: digest(), expiresAt: { type: Date, required: true }, usedAt: nullableDate(), revokedAt: nullableDate(),
 }, { editable: false, updated: false, privateFields: ['tokenHash'] });
+
+export const authChallengeSchema = coreSchema({
+  userId: ref('User', true), purpose: choice(['google_login', 'google_link']),
+  tokenHash: digest(), expiresAt: { type: Date, required: true }, usedAt: nullableDate(), revokedAt: nullableDate(),
+}, { editable: false, updated: false, privateFields: ['tokenHash'] });
+authChallengeSchema.pre('validate', function() {
+  if ((this.purpose === 'google_link') !== Boolean(this.userId)) this.invalidate('userId', 'Google link challenge requires current User; login challenge has no User');
+});
