@@ -1,6 +1,6 @@
 # Sơ đồ quan hệ DB v0.1
 
-Sơ đồ này là lịch sử trước khi tách phạm vi lõi; dùng [ERD v0.2](DATABASE-ERD-v0.2.md) và [layout v0.2](DATABASE-LAYOUT-v0.2.json) cho thiết kế hiện tại.
+Sơ đồ này là lịch sử trước khi tách phạm vi lõi; dùng [ERD v0.2](../../../sds/DATABASE-ERD-v0.2.md) và [layout v0.2](../../../sds/DATABASE-LAYOUT-v0.2.json) cho thiết kế hiện tại.
 
 Ngày 03/10/2026. Sơ đồ của DATABASE-DESIGN-v0.1.md; references là quan hệ service bảo đảm, không phải foreign-key enforcement tự động của MongoDB. Chưa tạo models/index/database.
 

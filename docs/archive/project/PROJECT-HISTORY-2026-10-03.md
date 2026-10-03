@@ -15,7 +15,7 @@ Cập nhật: 03/10/2026, sau khi triển khai backend foundation.
 
 Bước tiếp theo: Auth/User API contracts và triển khai password/verification/reset + JWT/session refresh/revocation + Google login/linking; nối MongoDB replica set development/test để kiểm tra index/concurrency/transaction thực tế. Sau đó Workspace/Invitations và các module công việc. FE React JS/JSX/UI wireframes tiếp tục theo flow đã có.
 
-Xem [Backend foundation](docs/sds/BACKEND-FOUNDATION-v0.1.md), [hướng dẫn chạy](BE/README.md), [QA](docs/qa/BACKEND-FOUNDATION-CHECK.md). Các đoạn phía dưới là **nhật ký trước foundation**, có thông tin skeleton/open choices đã được thay thế bởi trạng thái trên.
+Xem [Backend foundation](../../sds/BACKEND-FOUNDATION-v0.1.md), [hướng dẫn chạy](../../../BE/README.md), [QA](../../qa/BACKEND-FOUNDATION-CHECK.md). Các đoạn phía dưới là **nhật ký trước foundation**, có thông tin skeleton/open choices đã được thay thế bởi trạng thái trên.
 
 ## Nhật ký trước foundation
 
@@ -46,15 +46,15 @@ Nếu “lưu trữ bên thứ ba” là file storage: avatar/attachments/Docume
 ## Đã thực hiện
 
 - Đọc tài liệu bàn giao; xác nhận thư mục `D:\Code\Personal Project\collaborative-workflow-platform`.
-- Review SRS v0.2; lưu 12 vấn đề cần làm rõ trong [SRS-REVIEW-v0.2.md](docs/srs/SRS-REVIEW-v0.2.md).
-- Tạo [decision register](docs/decisions/DECISION-REGISTER.md), phân biệt đã duyệt, duyệt một phần và đề xuất.
+- Review SRS v0.2; lưu 12 vấn đề cần làm rõ trong [SRS-REVIEW-v0.2.md](../../srs/SRS-REVIEW-v0.2.md).
+- Tạo [decision register](../../decisions/DECISION-REGISTER.md), phân biệt đã duyệt, duyệt một phần và đề xuất.
 - Chủ dự án duyệt: Task chưa Done bỏ assignee khi thành viên rời; Done giữ người cũ/nhãn đã rời; reopen bỏ assignee không còn membership.
 - Chủ dự án duyệt: email chung toàn tài khoản + override từng Workspace ngay bản đầu, đặt tại Personal Settings.
 - Chủ dự án duyệt: deadline dạng ngày giờ, bản đầu hiển thị múi giờ Việt Nam. Những chi tiết overdue/lưu UTC/past-due chưa được suy rộng thành quyết định đã duyệt.
 - Đồng bộ các lựa chọn vào SRS/JSON, AC-X10 và changelog; chưa tạo baseline v1.0.
 - Tạo skeleton `docs/sds`, `docs/decisions`, `docs/ui-ux`, `docs/qa`, `assets/brand`, `assets/references`, `FE`, `BE`, `packages/contracts`, `scripts`, `infra`; có README và các file cấu hình cơ bản.
 - Khởi tạo Git local riêng, chưa có commit hoặc remote.
-- Công cụ PowerShell kiểm tra đủ 33 UC, 27 FR, 26 BR, 14 OD và 20 AC-X; kiểm tra tham chiếu FR ↔ UC và nội dung JSON/Markdown đồng nhất. Tạo [TRACEABILITY.md](docs/srs/TRACEABILITY.md).
+- Công cụ PowerShell kiểm tra đủ 33 UC, 27 FR, 26 BR, 14 OD và 20 AC-X; kiểm tra tham chiếu FR ↔ UC và nội dung JSON/Markdown đồng nhất. Tạo [TRACEABILITY.md](../../srs/TRACEABILITY.md).
 
 Đây là kết quả kiểm tra tài liệu. Chưa có test nghiệp vụ, phép đo NFR hoặc ứng dụng chạy thật.
 
@@ -68,11 +68,11 @@ Cập nhật kiểm tra tiếp theo: metadata file Node cài trên máy ghi `24.
 
 ## Phân tích bổ sung đang chờ trả lời
 
-- [Nhóm review 01](docs/srs/REVIEW-GROUP-01.md): chủ dự án đã duyệt cả ba nhóm chi tiết assignee/Archived/tái gia nhập, email override và deadline/overdue ngày 01/10/2026. Đã cập nhật SRS/JSON, AC-X08/X10/X14/X18, decision register và traceability; chưa chạy test nghiệp vụ.
-- [Luồng màn hình v0.1](docs/ui-ux/SCREEN-FLOWS-v0.1.md): mapping đủ 33 UC và trạng thái; chưa có wireframes hoặc UI chạy được.
-- [Nhóm review 02](docs/srs/REVIEW-GROUP-02.md): phương án cụ thể cho status/Board, My Tasks và conflict OD-04/05/06; chưa được duyệt.
-- Theo yêu cầu phân tích hai phần đầu, đã lưu [thiết kế Kanban/My Tasks v0.1](docs/ui-ux/KANBAN-MY-TASKS-DESIGN-v0.1.md), làm rõ quyền, chuyển trạng thái, thứ tự, tải thêm, filters và default. Chưa ghi nhận OD-04/05 hoặc các chi tiết mới là được duyệt.
-- Chủ dự án chốt [quyền Task/Comment](docs/srs/TASK-COMMENT-PERMISSIONS.md): Owner/Creator quản lý Task; “người được uỷ quyền” chính là Assignee, chỉ đổi status nếu không đồng thời là Owner/Creator; không có người thứ ba. Comment chỉ Author sửa/xóa. Đóng RD-03/06 về quyền; status/Board/My Tasks/conflict và retention còn review riêng.
+- [Nhóm review 01](../../srs/REVIEW-GROUP-01.md): chủ dự án đã duyệt cả ba nhóm chi tiết assignee/Archived/tái gia nhập, email override và deadline/overdue ngày 01/10/2026. Đã cập nhật SRS/JSON, AC-X08/X10/X14/X18, decision register và traceability; chưa chạy test nghiệp vụ.
+- [Luồng màn hình v0.1](../../ui-ux/SCREEN-FLOWS-v0.1.md): mapping đủ 33 UC và trạng thái; chưa có wireframes hoặc UI chạy được.
+- [Nhóm review 02](../../srs/REVIEW-GROUP-02.md): phương án cụ thể cho status/Board, My Tasks và conflict OD-04/05/06; chưa được duyệt.
+- Theo yêu cầu phân tích hai phần đầu, đã lưu [thiết kế Kanban/My Tasks v0.1](../../ui-ux/KANBAN-MY-TASKS-DESIGN-v0.1.md), làm rõ quyền, chuyển trạng thái, thứ tự, tải thêm, filters và default. Chưa ghi nhận OD-04/05 hoặc các chi tiết mới là được duyệt.
+- Chủ dự án chốt [quyền Task/Comment](../../srs/TASK-COMMENT-PERMISSIONS.md): Owner/Creator quản lý Task; “người được uỷ quyền” chính là Assignee, chỉ đổi status nếu không đồng thời là Owner/Creator; không có người thứ ba. Comment chỉ Author sửa/xóa. Đóng RD-03/06 về quyền; status/Board/My Tasks/conflict và retention còn review riêng.
 - Đã bổ sung ma trận chuyển trạng thái và so sánh tự sắp/thủ công trong nhóm review 02; đang chờ chốt OD-04, chưa cập nhật các phương án này thành yêu cầu đã duyệt.
 - Cập nhật mới: chủ dự án duyệt thứ tự Kanban theo thời gian tạo mới nhất trước trong mỗi cột, không sắp thủ công; đã đồng bộ FR-12/UC-21/AC-21. OD-04 duyệt một phần; status transitions, Tải thêm và My Tasks vẫn còn review riêng.
 - Kết quả tiếp theo: chủ dự án xác nhận ba trạng thái cố định và chuyển trực tiếp giữa chúng; OD-04 về status/thứ tự đã chốt. Đã đồng bộ BR-08/UC-19/21; tiếp tục My Tasks OD-05, conflict OD-06 và pagination/tải thêm riêng.

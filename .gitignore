@@ -5,6 +5,15 @@ build/
 coverage/
 .vite/
 .cache/
+.pnpm-store/
+.npm/
+.turbo/
+.parcel-cache/
+.eslintcache
+*.tsbuildinfo
+.nyc_output/
+playwright-report/
+test-results/
 
 # Local settings and secrets
 .env
@@ -13,13 +22,30 @@ coverage/
 *.log
 *.pem
 *.key
+*.p12
+*.pfx
+.npmrc.local
+credentials.local.json
 
 # OS and editor temporary files
 .DS_Store
 Thumbs.db
 *.swp
 *.tmp
+*.bak
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/launch.json
 
 # Local runtime data
 .local/
 uploads/
+logs/
+tmp/
+temp/
+/data/
+/backups/
+/dumps/
+/infra/mongodb/data/
+/infra/mongodb/logs/

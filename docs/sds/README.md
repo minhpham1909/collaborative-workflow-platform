@@ -7,6 +7,7 @@ Cập nhật 03/10/2026: đã dựng backend JS/Express/Mongoose, 12 models, edi
 - [Thiết kế DB v0.2](DATABASE-DESIGN-v0.2.md): bản hiện hành, 12 collection lõi, data dictionary và lifecycle.
 - [Layout dữ liệu v0.2](DATABASE-LAYOUT-v0.2.json): field/reference/index plan; executable models tại BE/src/models.
 - [Sơ đồ quan hệ DB v0.2](DATABASE-ERD-v0.2.md): phạm vi lõi; v0.1 giữ lịch sử.
+- Các bản DB v0.1 đã chuyển sang [archive](../archive/README.md); chỉ dùng v0.2 cho implementation hiện tại.
 - [Hướng stack](TECH-STACK-DIRECTION.md), [thiết kế bảo mật](SECURITY-DESIGN-v0.1.md): đầu vào implementation.
 
 Trạng thái: chưa thông qua thiết kế kỹ thuật. Stack ứng viên: React/Vite + NodeJS + MongoDB. Không ấn định phiên bản thư viện tại giai đoạn skeleton.

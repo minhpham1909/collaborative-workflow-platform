@@ -12,4 +12,4 @@ Repository: `minhpham1909/collaborative-workflow-platform`, private theo mặc �
 
 `BE/` chứa package Node/Express/Mongoose đã bootstrap; `FE/` hiện là skeleton React JS/JSX, chưa có frontend chạy được. `docs/`, `scripts/`, `packages/`, `assets/` và `infra/` giữ ở root. Dependency lockfile nằm tại `BE/pnpm-lock.yaml`; chạy backend/tests từ `BE/`.
 
-Nhánh `dev` bắt đầu từ commit khởi đầu trên `main`. Chưa cài branch protection, CI hoặc deploy. Các thay đổi tiếp theo ưu tiên Auth/User theo NEXT-STEPS.md.
+Nhánh `dev` bắt đầu từ commit khởi đầu trên `main`. Chưa cài branch protection, CI hoặc deploy. Các thay đổi tiếp theo ưu tiên Auth/User theo [trạng thái hiện hành](../project/NEXT-STEPS.md). Quy tắc file nằm tại [repository hygiene](../project/REPOSITORY-HYGIENE.md).

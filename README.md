@@ -6,26 +6,29 @@ Trạng thái 03/10/2026: đã dựng backend JavaScript/Express/Mongoose tại 
 
 ## Tài liệu chính
 
+[Danh mục tài liệu](docs/README.md) phân chia trạng thái dự án, yêu cầu, thiết kế, quyết định, QA và archive. [Quy tắc file Git](docs/project/REPOSITORY-HYGIENE.md) mô tả những gì nên/không nên commit.
+
 Thiết kế DB hiện hành: [DB v0.2](docs/sds/DATABASE-DESIGN-v0.2.md), [layout dữ liệu](docs/sds/DATABASE-LAYOUT-v0.2.json), [ERD lõi](docs/sds/DATABASE-ERD-v0.2.md). Có Mongoose models, chưa tạo MongoDB/index thật. Storage là Upcoming, announcement/idempotency giữ riêng theo phase/policy còn mở.
 
 Mở rộng scope 03/10/2026: SRS hiện 35 UC/29 FR sau Google sign-in/avatar và Workspace announcements/pin. [Nghiên cứu avatar/storage/resources](docs/sds/AVATAR-STORAGE-RESOURCES-REVIEW.md) giữ rõ provider/quota/phase còn đề xuất. Các ghi nhận 33 UC bên dưới là số trước mở rộng.
 
-Cập nhật 03/10/2026: nhóm nghiệp vụ 1–3 đã duyệt, nhóm 4–5 tạm chốt; Việt/English và editor chung đã bổ sung. BE dùng JS/Express/Mongoose; FE React JS/JSX, thư viện UI chọn trong quá trình thiết kế/code. Database/email providers, NFR/retention và giới hạn sản phẩm vẫn cần review. Trạng thái ưu tiên tại NEXT-STEPS.md.
+Cập nhật 03/10/2026: nhóm nghiệp vụ 1–3 đã duyệt, nhóm 4–5 tạm chốt; Việt/English và editor chung đã bổ sung. BE dùng JS/Express/Mongoose; FE React JS/JSX, thư viện UI chọn trong quá trình thiết kế/code. Database/email providers, NFR/retention và giới hạn sản phẩm vẫn cần review. Trạng thái ưu tiên tại [docs/project/NEXT-STEPS.md](docs/project/NEXT-STEPS.md).
 
 - [SRS v0.2](docs/srs/SRS-v0.2.md) và [35 Use Cases](docs/srs/use-cases.json): nguồn yêu cầu dự thảo.
 - [Báo cáo review](docs/srs/SRS-REVIEW-v0.2.md): vấn đề cần giải quyết trước baseline.
 - [Decision register](docs/decisions/DECISION-REGISTER.md): phân biệt quyết định đã ghi nhận, đang mở và đề xuất bổ sung.
 - [Traceability](docs/srs/TRACEABILITY.md): ánh xạ hai chiều FR ↔ UC và tham chiếu BR/AC.
 - [Chuẩn bị SDS](docs/sds/README.md), [UI/UX](docs/ui-ux/README.md), [QA](docs/qa/README.md).
-- [NEXT-STEPS.md](NEXT-STEPS.md): trạng thái hiện tại và bước tiếp theo.
+- [NEXT-STEPS.md](docs/project/NEXT-STEPS.md): trạng thái hiện tại và bước tiếp theo.
 - [Backend foundation](docs/sds/BACKEND-FOUNDATION-v0.1.md), [hướng dẫn chạy BE](BE/README.md), [bằng chứng kiểm tra](docs/qa/BACKEND-FOUNDATION-CHECK.md).
 
-HANDOFF-PROMPT.md được giữ làm bản bàn giao lịch sử từ phiên trước; các mục trạng thái/quyết định mới xem NEXT-STEPS.md và decision register.
+[HANDOFF-PROMPT gốc](docs/archive/project/HANDOFF-PROMPT.md) được giữ trong archive để đối chiếu lịch sử; trạng thái/quyết định mới xem docs/project/NEXT-STEPS.md và decision register.
 
 ## Cấu trúc
 
 | Thư mục | Vai trò |
 |---|---|
+| `docs/project`, `docs/archive` | Trạng thái hiện hành/quy tắc repo và tài liệu lịch sử |
 | `docs/srs` | Yêu cầu, Use Cases, review, traceability |
 | `docs/sds` | Thiết kế kỹ thuật sau khi duyệt yêu cầu |
 | `docs/decisions` | Quyết định và ADR |
@@ -44,6 +47,7 @@ Chạy từ root dự án trong PowerShell:
 ```powershell
 ./scripts/check-srs.ps1
 ./scripts/check-srs.ps1 -WriteTraceability
+./scripts/check-doc-links.ps1
 ```
 
 Lệnh đầu kiểm tra cấu trúc JSON, 35 UC liên tục, ID trùng, FR/BR/AC/OD bị thiếu, tham chiếu FR ↔ UC và nội dung UC giữa JSON/Markdown. Lệnh thứ hai tạo lại traceability sau khi kiểm tra thành công. Đây là kiểm tra tài liệu, không phải kiểm thử nghiệp vụ hay chứng nhận SRS đã được duyệt.

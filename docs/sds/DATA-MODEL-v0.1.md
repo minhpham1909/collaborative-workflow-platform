@@ -6,7 +6,7 @@ Ngày 03/10/2026. Bản thiết kế ban đầu từ SRS và các quyết địn
 
 Thiết kế hiện hành đã chỉnh sửa: DATABASE-DESIGN-v0.2.md, DATABASE-LAYOUT-v0.2.json và DATABASE-ERD-v0.2.md. Có 12 collection lõi; announcement/idempotency là mở rộng chờ phase/policy, storage Upcoming. Owner role derived, Google-only passwordHash nullable và membership history giữ định danh User. Các link v0.1 bên dưới là lần thiết kế trước.
 
-Đã triển khai bản thiết kế vật lý dự thảo tại [DATABASE-DESIGN-v0.1.md](DATABASE-DESIGN-v0.1.md) và [DATABASE-ERD-v0.1.md](DATABASE-ERD-v0.1.md), ngày 03/10/2026. Chọn Owner từ Workspace.ownerId, membership role được tính khi trả API; Task/Comment có workspaceId do server lấy từ parent. Đây là design draft, chưa có Mongoose models/index thật.
+Đã triển khai bản thiết kế vật lý dự thảo tại [DATABASE-DESIGN-v0.1.md](../archive/sds/v0.1/DATABASE-DESIGN-v0.1.md) và [DATABASE-ERD-v0.1.md](../archive/sds/v0.1/DATABASE-ERD-v0.1.md), ngày 03/10/2026. Chọn Owner từ Workspace.ownerId, membership role được tính khi trả API; Task/Comment có workspaceId do server lấy từ parent. Đây là design draft, chưa có Mongoose models/index thật.
 
 ```mermaid
 erDiagram

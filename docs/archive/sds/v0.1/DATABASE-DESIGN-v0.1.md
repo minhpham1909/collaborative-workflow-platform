@@ -1,6 +1,6 @@
 # Thiết kế MongoDB v0.1
 
-Bản này giữ làm lịch sử. Thiết kế hiện hành sau chỉnh sửa phạm vi: [DATABASE-DESIGN-v0.2.md](DATABASE-DESIGN-v0.2.md), [layout JSON](DATABASE-LAYOUT-v0.2.json) và [ERD v0.2](DATABASE-ERD-v0.2.md). Không dùng số collection/phần mở rộng xen kẽ ở v0.1 để bootstrap schema lõi.
+Bản này giữ làm lịch sử. Thiết kế hiện hành sau chỉnh sửa phạm vi: [DATABASE-DESIGN-v0.2.md](../../../sds/DATABASE-DESIGN-v0.2.md), [layout JSON](../../../sds/DATABASE-LAYOUT-v0.2.json) và [ERD v0.2](../../../sds/DATABASE-ERD-v0.2.md). Không dùng số collection/phần mở rộng xen kẽ ở v0.1 để bootstrap schema lõi.
 
 Ngày 03/10/2026. Trạng thái: bản thiết kế cụ thể để review, chưa triển khai Mongoose models, tạo database hoặc index thật. Nguồn nghiệp vụ: SRS, decision register và DATA-MODEL-v0.1.md. Các lựa chọn schema dưới đây do assistant đề xuất trong phạm vi thiết kế DB; không biến giới hạn/NFR/retention còn mở thành quyết định đã duyệt.
 
