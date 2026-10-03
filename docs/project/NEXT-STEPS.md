@@ -13,6 +13,8 @@ Cập nhật 03/10/2026. [Nhật ký cũ](../archive/project/PROJECT-HISTORY-202
 
 ## Tiếp theo
 
+Đã tiếp tục thiết kế [cụm 06 — Notifications](../ui-ux/clusters/CLUSTER-06-NOTIFICATIONS.md). Tiếp theo Landing/Policies và announcements phase riêng, rồi tổng hợp trước wireframe desktop/mobile. Cụm 06 chưa code FE; search/time inbox cần server scope/cutoff đúng quyền.
+
 Ưu tiên mới theo câu hỏi chủ dự án: [review nghiệp vụ đăng ký và Google link](../ui-ux/ACCOUNT-REGISTRATION-LINK-REVIEW.md). User B email b@gmail.com link Google a@gmail.com bị từ chối theo BE hiện hành; cần chốt unverified recovery/link và email drift trước Account FE. Google-only không cần password riêng đã được chủ dự án xác nhận; chưa đổi code từ review.
 
 Đã phân tích [cụm 05 — Personal Settings](../ui-ux/clusters/CLUSTER-05-PERSONAL-SETTINGS.md). Tiếp theo Notifications. Các bố cục/policy locale mới vẫn là đề xuất, chưa code FE hoặc thêm tính năng ngoài contract.
