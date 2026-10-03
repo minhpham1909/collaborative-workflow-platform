@@ -1,5 +1,11 @@
 # Decision register
 
+## Implementation 03/10/2026 — lát cắt Auth/session
+
+Main đã nhận commit sắp xếp tài liệu; Auth mới tiếp tục trên dev. Đã triển khai password login, Argon2id, JWT signing/verify, refresh rotation/reuse revocation, logout, /me và verified middleware. Signing HS256/hai key riêng, access 15 phút, refresh/session tuyệt đối 7 ngày, strict single-use/no grace, cookie Strict/CSRF và rate limits là implementation-selected; không coi là chủ dự án duyệt mọi tham số hoặc production topology.
+
+28 tests đạt, 1 live Mongo test skipped; chưa nghiệm thu DB transactions/indexes, signup/Google/email verification/reset/change password hoặc FE. Xem [Auth/session](../sds/AUTH-SESSION-v0.1.md) và [QA](../qa/AUTH-SESSION-CHECK.md). Các đoạn foundation bên dưới là lịch sử trước lát cắt này.
+
 ## Cập nhật 03/10/2026 — backend foundation và auth
 
 - **Approved, trực tiếp trong chat:** chủ dự án chọn “JWT access token + refresh token” khi được hỏi cơ chế đăng nhập. Thay thế trạng thái auth mode còn mở/khuyến nghị opaque session trước đây. Session model dùng refreshTokenHash + refreshGeneration; JWT signing/TTL/rotation/cookie/CSRF chưa được triển khai hoặc duyệt mọi tham số.

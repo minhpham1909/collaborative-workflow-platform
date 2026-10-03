@@ -1,5 +1,7 @@
 # Nền backend v0.1
 
+Mốc foundation lịch sử trong cùng ngày; implementation mới hơn ở [Auth/session v0.1](AUTH-SESSION-v0.1.md). Những câu "chưa có Auth endpoints" bên dưới mô tả mốc trước lát cắt đó.
+
 Ngày 03/10/2026. Bước triển khai sau DB v0.2. Những lựa chọn triển khai dưới đây do assistant quyết định trong phạm vi công việc; JWT access + refresh là lựa chọn trực tiếp của chủ dự án. Không coi bản này là duyệt toàn bộ SRS hoặc các giới hạn sản phẩm.
 
 ## 1. Kết quả và stack

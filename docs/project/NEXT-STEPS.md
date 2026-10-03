@@ -6,16 +6,16 @@ Cập nhật 03/10/2026. File này là trạng thái hiện hành; nhật ký tr
 
 - Repo GitHub private `minhpham1909/collaborative-workflow-platform`; `main` giữ mốc khởi đầu, làm việc trên `dev`.
 - `BE/`: Node 24.x, JavaScript ESM, Express 5.2.1, Mongoose 9.10.4, pnpm 11.19.0 và lockfile. Có 12 models lõi, rich-text validation, text/counters server và health endpoints.
-- Chủ dự án chọn JWT access + refresh. Session model đã có refreshTokenHash/refreshGeneration; JWT signing/rotation, Google login, password/verification/reset và API nghiệp vụ chưa triển khai.
+- JWT access + refresh đã có signing/verification, Argon2id login, rotation/reuse revocation, logout, /me và verified middleware. Google/signup/verification/reset/change-password và các API công việc chưa triển khai; xem [Auth/session](../sds/AUTH-SESSION-v0.1.md).
 - `FE/` còn skeleton; hướng React JS/JSX, thư viện UI/editor chọn trong quá trình thiết kế/code.
-- 16 tests schema/editor/HTTP đạt; SRS checker đạt 35 UC/29 FR. Chưa có MongoDB instance/index hoặc integration tests giao dịch/auth/phân quyền.
+- 28 tests schema/editor/auth/HTTP đạt; live Mongo integration test đã có nhưng skipped do chưa có TEST_MONGODB_URI. SRS checker đạt 35 UC/29 FR. Mongo adapter transactions/indexes chưa chạy thực tế.
 - Storage/resources Upcoming; announcements và idempotency theo phase riêng. Giới hạn editor/name vẫn là guardrails kỹ thuật đề xuất, chưa suy thành duyệt toàn bộ NFR.
 - Đã rà file Git, bổ sung ignore rules và phân chia tài liệu hiện hành/lịch sử; xem [quy tắc file](REPOSITORY-HYGIENE.md).
 
 ## Tiếp theo
 
-1. Hoàn thiện Auth/User API contracts, JWT signing/expiry/refresh concurrency/cookie/CSRF và response validation.
-2. Triển khai password/verification/reset, JWT sessions/revocation và Google identity login/linking; giữ verified gate và quyền server.
+1. Cấu hình DB test để chạy integration session, review production key management/proxy/cookie topology/shared limiter; FE cần single-flight refresh giữa tabs.
+2. Triển khai signup/Terms, verification/reset/email outbox/provider, change password và Google identity login/linking; giữ verified gate và quyền server. Nối Profile/Personal Settings và frontend login.
 3. Cấu hình MongoDB replica set development/test để kiểm unique indexes, CAS và multi-document transactions.
 4. Tiếp tục Workspace/Invitations → Project/Task/Comment → Notifications/Settings/outbox; UI/UX phát triển theo flows hiện có.
 

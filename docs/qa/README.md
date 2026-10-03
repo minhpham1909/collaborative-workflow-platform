@@ -1,5 +1,7 @@
 # Trạng thái kiểm tra
 
+Cập nhật: [Auth/session check](AUTH-SESSION-CHECK.md): 28 tests đạt, 1 Mongo integration test skipped; chưa có live DB, Google/signup/verification/reset hoặc FE nghiệm thu.
+
 Cập nhật 03/10/2026: [backend foundation check](BACKEND-FOUNDATION-CHECK.md) ghi 16 tests schema/editor/HTTP đạt và dependency audit không báo vulnerability. Chưa kiểm thử database/index/transaction/auth nghiệp vụ hoặc FE thực tế.
 
 Đã có công cụ kiểm tra tài liệu `scripts/check-srs.ps1`. Nó kiểm tra tham chiếu và đồng bộ UC; không xác nhận tính đúng đắn nghiệp vụ.

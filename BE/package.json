@@ -4,7 +4,9 @@
   "private": true,
   "type": "module",
   "packageManager": "pnpm@11.19.0",
-  "engines": { "node": ">=24 <25" },
+  "engines": {
+    "node": ">=24 <25"
+  },
   "scripts": {
     "dev": "node --env-file-if-exists=.env --watch src/server.js",
     "start": "node --env-file-if-exists=.env src/server.js",
@@ -12,7 +14,9 @@
     "db:indexes": "node --env-file-if-exists=.env scripts/create-indexes.js"
   },
   "dependencies": {
+    "@node-rs/argon2": "2.2.1",
     "express": "5.2.1",
+    "jose": "6.2.12",
     "mongoose": "9.10.4"
   }
 }

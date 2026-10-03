@@ -1,5 +1,7 @@
 # Chuẩn bị SDS
 
+Cập nhật tiếp 03/10/2026: [Auth/session v0.1](AUTH-SESSION-v0.1.md) đã triển khai login/JWT/refresh/logout/me và middleware; [QA](../qa/AUTH-SESSION-CHECK.md) ghi 28 pass/1 Mongo skip. Các ghi nhận foundation phía dưới là mốc trước lát cắt này.
+
 Cập nhật 03/10/2026: đã dựng backend JS/Express/Mongoose, 12 models, editor validation và health endpoints; 16 tests đạt. JWT access + refresh do chủ dự án chọn. Chưa có MongoDB/index hoặc Auth/Google API nghiệp vụ chạy thật. FE giữ React JS/JSX. Các đoạn trạng thái skeleton phía dưới là lịch sử.
 
 - [Backend foundation v0.1](BACKEND-FOUNDATION-v0.1.md): code đã có, hợp đồng JWT/editor, giới hạn và bước Auth/User tiếp theo.

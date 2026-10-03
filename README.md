@@ -2,7 +2,7 @@
 
 Dự án portfolio cộng tác nhóm nhỏ: User → Workspace → Project → Task.
 
-Trạng thái 03/10/2026: đã dựng backend JavaScript/Express/Mongoose tại BE với 12 models lõi, editor validation và health endpoints. JWT access + refresh do chủ dự án chọn. 16 tests đạt; chưa có Auth/Google API nghiệp vụ, frontend hoặc MongoDB instance/index được triển khai. Repo GitHub private minhpham1909/collaborative-workflow-platform, nhánh main/dev; SRS chưa thông qua baseline v1.0.
+Trạng thái 03/10/2026: đã dựng backend JavaScript/Express/Mongoose tại BE với 12 models lõi, editor validation và health endpoints. JWT access + refresh do chủ dự án chọn. 28 tests đạt và 1 Mongo test skipped; đã có login/JWT/refresh/logout/me trên dev, chưa signup/Google/email/reset, frontend hoặc MongoDB instance/index triển khai. Repo GitHub private minhpham1909/collaborative-workflow-platform, nhánh main/dev; SRS chưa thông qua baseline v1.0.
 
 ## Tài liệu chính
 

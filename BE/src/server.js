@@ -1,8 +1,10 @@
 import mongoose from 'mongoose';
-import { readConfig } from './config.js';
+import { readConfig, readAuthConfig } from './config.js';
 import { connectDatabase } from './database.js';
 import { createApp } from './app.js';
 import './models/index.js';
+import { createAuthService } from './auth/service.js';
+import { createMongoAuthStore } from './auth/mongo-store.js';
 
 let server;
 let stopping = false;
@@ -20,12 +22,16 @@ process.once('SIGINT', () => void stop());
 process.once('SIGTERM', () => void stop());
 try {
   const config = readConfig();
+  const authConfig = readAuthConfig();
   await connectDatabase(config.mongoUri);
-  const app = createApp({ isReady: () => !stopping && mongoose.connection.readyState === 1 });
-  server = app.listen(config.port, config.host, () => {
-    console.info(`API listening at http://${config.host}:${config.port}`);
-  });
-  server.on('error', () => { console.error('API_LISTEN_FAILED'); void stop(1); });
+  const authService = await createAuthService({ store: createMongoAuthStore(), config: authConfig });
+  const app = createApp({ isReady: () => !stopping && mongoose.connection.readyState === 1, authService, authConfig });
+  if (!stopping) {
+    server = app.listen(config.port, config.host, () => {
+      console.info(`API listening at http://${config.host}:${config.port}`);
+    });
+    server.on('error', () => { console.error('API_LISTEN_FAILED'); void stop(1); });
+  }
 } catch {
   // Never log connection strings, credentials or database exception text.
   console.error('API_STARTUP_FAILED: check configuration and MongoDB replica set availability');

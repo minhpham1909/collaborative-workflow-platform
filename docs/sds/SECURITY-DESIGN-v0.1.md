@@ -1,5 +1,7 @@
 # Thiết kế bảo mật v0.1
 
+Cập nhật implementation: [Auth/session](AUTH-SESSION-v0.1.md) có login/JWT/refresh/logout/me, Origin/CSRF và verified middleware; 28 tests đạt/1 Mongo skip. Chưa toàn bộ Auth/User hoặc production security; trạng thái foundation ở đoạn sau là mốc cũ.
+
 Ngày 03/10/2026. Chủ dự án yêu cầu bảo mật là yêu cầu thiết kế bắt buộc, gồm authentication, JWT/token và validation cả FE/BE. Stack JavaScript/Express/Mongoose và React JS/JSX. Cập nhật: chủ dự án đã chọn JWT access + refresh; schema/editor/health foundation đã có tests, authentication/authorization services chưa triển khai. Các yêu cầu bảo mật dưới đây vẫn phải kiểm chứng với API nghiệp vụ.
 
 ## 1. Yêu cầu bảo mật của sản phẩm
