@@ -1,3 +1,4 @@
+import { confirmDialog } from "../../components/NotificationProvider.jsx";
 import FilterPanel from "../../components/FilterPanel.jsx";
 import { useEffect, useRef, useState } from "react";
 import { messageFor } from "../../lib/messages.js";
@@ -161,9 +162,9 @@ export default function Notifications({ api, id, user }) {
     if (pending.current) return;
     if (
       kind === "all" &&
-      !confirm(
+      !(await confirmDialog(
         "Đánh dấu các thông báo chưa đọc theo loại, từ khóa và khoảng ngày hiện tại? Thông báo mới hơn lần tải này vẫn được giữ chưa đọc.",
-      )
+      ))
     )
       return;
     pending.current = true;
@@ -263,7 +264,7 @@ export default function Notifications({ api, id, user }) {
         <div className="buttons">
           <button
             disabled={busy || mutating}
-            onClick={() => {
+            onClick={async () => {
               setNotice("");
               setRevision((v) => v + 1);
               changed();
@@ -347,7 +348,7 @@ export default function Notifications({ api, id, user }) {
               />
             </label>
             <button
-              onClick={() => {
+              onClick={async () => {
                 setRead("all");
                 setCategory("all");
                 setQ("");

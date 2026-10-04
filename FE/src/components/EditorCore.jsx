@@ -1,3 +1,4 @@
+import { inputDialog } from "./NotificationProvider.jsx";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { useEffect, useRef, useState } from "react";
@@ -63,8 +64,8 @@ export default function RichEditor({
       ...new Intl.Segmenter("vi", { granularity: "word" }).segment(text),
     ].filter((s) => s.isWordLike).length;
   if (!editor) return null;
-  function link() {
-    const href = prompt(
+  async function link() {
+    const href = await inputDialog(
       "Đường dẫn https:// hoặc mailto: (để trống để bỏ liên kết)",
       editor.getAttributes("link").href ?? "",
     );

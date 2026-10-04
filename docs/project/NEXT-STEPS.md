@@ -4,6 +4,8 @@ Cập nhật 04/10/2026. Yêu cầu trực tiếp của chủ dự án có ưu t
 
 ## Hiện tại
 
+Increment mới: [tương tác và phản hồi hệ thống](../ui-ux/INTERACTION-FOUNDATION-v0.1.md). Toàn card Workspace mở được; mô tả Workspace hiển thị cùng CTA Owner; Project có editor mô tả/mục tiêu, quyền Owner hoặc Creator còn membership trong Active. NotificationProvider dùng chung confirm/input/toast, thay confirm/prompt native trong FE. Xóa Task vẫn soft delete và giữ Comments; chưa có restore/purge. 46 BE integration tests, 12 FE tests và các luồng UI/uncertain network đã kiểm; chưa chạy worker SMTP thật.
+
 Increment mới: [Stitch Kanban/Task](../ui-ux/stitch-board-task-2026-10-04/README.md), screen IDs 80a665c29de642a8899aa7af740c881f và bcb8d6af3741455ebd88c7d75de0a0de. Đã import HTML/full screenshots, review và nâng Project header/scope, Kanban columns/cards/progress, Task metadata/comments. Giữ top nav/Jakarta/API/quyền/CAS/uncertain writes; Task detail vẫn full page, drawer routing và drag/drop còn riêng. Build, 12 FE tests, Board/Task flow và network regression đạt; không overflow 1440/1280/390.
 
 Increment mới: [Home highlights/footer/icon Project/compact filters](../ui-ux/HOME-HIGHLIGHTS-FILTERS-v0.1.md). Home có ngày VN, số Task đến hạn hôm nay/Workspace liên quan, khối ưu tiên và thông báo chưa đọc; card Workspace có active members/projects từ BE aggregates. Owner chọn/lưu icon Project qua enum/CAS. Bộ lọc của các danh sách gọn hơn, mở chi tiết khi cần; footer chung đã có. Build, 12 FE tests và các fixture flows/network regression đạt; 45 BE integration tests đạt, gồm regression aggregates/icon mới. Chưa chạy SMTP worker thật.
@@ -35,7 +37,7 @@ Increment trước 04/10/2026: [Board/Task/Comments/My Tasks FE](../sds/FE-TASKS
 ## Thứ tự triển khai tiếp
 
 1. Workspace/Project/Board/Task/Comment/My Tasks đã nối, kiểm quyền/CAS. Tiếp tục routing/panel và phục hồi filters khi back, draft transitions trước release.
-2. Identity DTO G02 đã có creator/assignee/author kể cả lịch sử trong scope; G03 server search Members đã có; picker Task vẫn cần nối search. Editor chung Task/Comment đã chọn Tiptap 3.31.4; Workspace đã dùng editor chung; Project description tiếp theo.
+2. Identity DTO G02 đã có creator/assignee/author kể cả lịch sử trong scope; G03 server search Members đã có; picker Task vẫn cần nối search. Editor chung Task/Comment đã chọn Tiptap 3.31.4; Workspace đã dùng editor chung; Project description đã nối editor và quyền Creator theo yêu cầu 04/10/2026.
 3. Account/Settings và Notifications đã nối. Members/Invitations đã nối. Cài đặt nhóm/Workspace email overrides đã nối. Signup email/verify-link/recovery đã nối cho local. Tiếp tục policy thật/Google signup, English và routing polish. G01 capabilities đã có; không tự link Google trùng email. Terms/Privacy nội dung thật trước mở đăng ký/public release.
 4. Bổ sung English UI, shared error/validation mapping và server filters các danh sách còn thiếu theo [gap log](../ui-ux/UI-API-GAPS-v0.1.md). Workspace/Project filters đã có; Member/Invitation/Notification đã có query; time theo expiresAt Invitation còn đề xuất riêng.
 5. Google GIS mới và SMTP/outbox tới Inbox/Spam kiểm live riêng; production secrets/rotation, HTTPS/cookie topology, shared limiter/proxy, retention/purge/backup và NFR. Local replica set không thay production.

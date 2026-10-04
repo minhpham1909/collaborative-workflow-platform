@@ -189,7 +189,12 @@ export default function App() {
         ) : route.kind === "workspace" ? (
           <Workspace key={user.id + route.id} api={api} id={route.id} />
         ) : route.kind === "project" ? (
-          <Project key={user.id + route.id} api={api} id={route.id} />
+          <Project
+            key={user.id + route.id}
+            api={api}
+            id={route.id}
+            user={user}
+          />
         ) : (
           <Home key={user.id} api={api} user={user} />
         )}

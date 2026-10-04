@@ -105,7 +105,7 @@ Raw token chỉ xuất hiện khi tạo/gửi đúng quyền, không list/previe
 
 Fields: `_id, workspaceId, createdBy, name, description(RichText), state(active/archived), archivedAt(null), archivedBy(null), version(0), createdAt, updatedAt`.
 
-Owner quản lý; mọi active Member xem. Không Project Membership. Description đề xuất 10.000 ký tự hiển thị, số chưa duyệt. Archive/reopen không di chuyển Task hoặc sửa status/assignee; không thêm xóa Project/Workspace ngoài SRS.
+Owner quản lý; mọi active Member xem. Theo yêu cầu 04/10/2026, Project Creator còn membership được sửa riêng description trong Active; tên/icon/vòng đời vẫn Owner. Không Project Membership. Description có guardrail hiện hành 10.000 ký tự hiển thị; quota sản phẩm chưa baseline. Archive/reopen không di chuyển Task hoặc sửa status/assignee; không thêm xóa Project/Workspace ngoài SRS.
 
 ### 5.2 tasks
 

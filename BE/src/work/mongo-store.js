@@ -119,7 +119,9 @@ export function createMongoWorkStore({ now = () => new Date() } = {}) {
     }),
     getProject: (claims, projectId) => run(claims, async (context) => { context = await projectScope(context, projectId); return { project: projectResponse(context.project) }; }),
     updateProject: (claims, projectId, input) => run(claims, async (context) => {
-      context = await projectScope(context, projectId, true); if (!owner(context)) deny('OWNER_REQUIRED', 403);
+      context = await projectScope(context, projectId, true);
+      const descriptionOnly = Object.keys(input.fields).every(key => key === 'description');
+      if (!owner(context) && !(descriptionOnly && sameId(context.project.createdBy, context.user._id))) deny('OWNER_REQUIRED', 403);
       checkVersion(context.project, input.expectedVersion);
       return { project: projectResponse(await update(Project, context.project, input.fields, context.tx)) };
     }),

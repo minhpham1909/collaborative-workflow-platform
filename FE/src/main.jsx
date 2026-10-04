@@ -3,4 +3,9 @@ import { createRoot } from "react-dom/client";
 import App from "./app/App.jsx";
 import "./styles.css";
 import "./studio.css";
-createRoot(document.getElementById("root")).render(<App />);
+import NotificationProvider from "./components/NotificationProvider.jsx";
+createRoot(document.getElementById("root")).render(
+  <NotificationProvider>
+    <App />
+  </NotificationProvider>,
+);

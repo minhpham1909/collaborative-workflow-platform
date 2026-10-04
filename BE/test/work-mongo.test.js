@@ -70,6 +70,24 @@ test('Project, Task, Comment and scoped queries on real MongoDB/HTTP', { skip: !
       const response = await http(1, `/projects/${outsiderProject.id}`); assert.equal(response.status, 404);
       assert.ok(!JSON.stringify(await response.json()).includes('Secret'));
     });
+    await t.test('Project creator may edit description after transfer; outsiders, other fields and Archived stay protected', async () => {
+      const ws = (await workspaces.create(claims[0], { name: 'Description permissions' })).workspace; workspaceIds.push(O(ws.id));
+      const invite = await workspaces.invite(claims[0], ws.id, { type: 'LINK' });
+      const token = new URLSearchParams(new URL(invite.url).hash.slice(1)).get('token');
+      await workspaces.accept(claims[1], { token }); await workspaces.accept(claims[2], { token });
+      const p = (await service.createProject(claims[0], ws.id, { name: 'Goals' })).project;
+      await workspaces.transfer(claims[0], ws.id, { expectedVersion: ws.version, memberId: String(users[1]._id) });
+      const edited = (await service.updateProject(claims[0], p.id, { expectedVersion: p.version, description: content('Mục tiêu mới') })).project;
+      assert.equal(edited.description.plainText, 'Mục tiêu mới');
+      await assert.rejects(service.updateProject(claims[0], p.id, { expectedVersion: edited.version, name: 'No', description: content('No') }), /OWNER_REQUIRED/u);
+      await assert.rejects(service.updateProject(claims[2], p.id, { expectedVersion: edited.version, description: content('No') }), /OWNER_REQUIRED/u);
+      await assert.rejects(service.updateProject(claims[0], p.id, { expectedVersion: p.version, description: content('Stale') }), /VERSION_CONFLICT/u);
+      await service.state(claims[1], p.id, { expectedVersion: edited.version, state: 'archived' });
+      await assert.rejects(service.updateProject(claims[0], p.id, { expectedVersion: edited.version + 1, description: content('No') }), /PROJECT_ARCHIVED/u);
+      const membership = await WorkspaceMembership.collection.findOne({ workspaceId: O(ws.id), userId: users[0]._id });
+      await workspaces.leave(claims[0], ws.id, { expectedVersion: membership.version });
+      await assert.rejects(service.updateProject(claims[0], p.id, { expectedVersion: edited.version + 1, description: content('No') }), /RESOURCE_UNAVAILABLE/u);
+    });
     await t.test('Home aggregates and Project icons respect membership, lifecycle and complete query scope', async () => {
       const first = (await workspaces.create(claims[0], { name: 'Home metrics A' })).workspace;
       const second = (await workspaces.create(claims[0], { name: 'Home metrics B' })).workspace;
@@ -225,6 +243,11 @@ test('Project, Task, Comment and scoped queries on real MongoDB/HTTP', { skip: !
       const c = (await service.createComment(claims[3], value.id, { content: content('Deleted parent') })).comment;
       value = (await service.getTask(claims[1], value.id)).task;
       await service.deleteTask(claims[1], value.id, { expectedVersion: value.version });
+      const deleted = await Task.findById(value.id);
+      assert.ok(deleted.deletedAt instanceof Date);
+      assert.equal(String(deleted.deletedBy), String(users[1]._id));
+      assert.equal(deleted.version, value.version + 1);
+      assert.ok(await TaskComment.findById(c.id));
       await assert.rejects(service.comments(claims[1], value.id, {}), /RESOURCE_UNAVAILABLE/u);
       await assert.rejects(service.updateComment(claims[3], value.id, c.id, { expectedVersion: 0, content: content('Hidden') }), /RESOURCE_UNAVAILABLE/u);
       assert.equal((await service.tasks(claims[1], project.id, { q: 'Race' })).total, 0);

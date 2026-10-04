@@ -1,3 +1,8 @@
+import {
+  confirmDialog,
+  confirmNavigation,
+  notify,
+} from "../../components/NotificationProvider.jsx";
 import { isUncertainMutation } from "../../lib/mutation-outcome.js";
 import { useEffect, useRef, useState } from "react";
 import RichEditor from "../../components/RichEditor.jsx";
@@ -56,13 +61,7 @@ export default function TaskForm({
       e.returnValue = "";
     };
     const click = (e) => {
-      if (
-        e.target.closest("a[href]") &&
-        !confirm("Bỏ thay đổi Task chưa lưu?")
-      ) {
-        e.preventDefault();
-        e.stopPropagation();
-      }
+      confirmNavigation(e, "Bỏ nội dung chưa lưu và chuyển trang?");
     };
     window.addEventListener("beforeunload", unload);
     document.addEventListener("click", click, true);
@@ -100,6 +99,7 @@ export default function TaskForm({
         { method: task ? "PATCH" : "POST", body },
       );
       setDirty(false);
+      notify("Đã lưu Task.");
       onDone(result.task);
     } catch (e) {
       setUncertain(isUncertainMutation(e));
@@ -181,14 +181,14 @@ export default function TaskForm({
           <div className="buttons">
             <button
               type="button"
-              onClick={() => {
+              onClick={async () => {
                 if (
                   !dirty ||
-                  confirm(
+                  (await confirmDialog(
                     uncertain
                       ? "Đóng form và tải lại để kiểm tra Task đã lưu chưa?"
                       : "Bỏ thay đổi Task chưa lưu?",
-                  )
+                  ))
                 )
                   onCancel(uncertain);
               }}

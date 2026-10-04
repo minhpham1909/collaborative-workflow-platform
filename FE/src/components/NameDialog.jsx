@@ -1,3 +1,4 @@
+import { confirmDialog } from "./NotificationProvider.jsx";
 import { isUncertainMutation } from "../lib/mutation-outcome.js";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -19,11 +20,11 @@ export default function NameDialog({
     [error, setError] = useState("");
   const pending = useRef(false),
     close = useRef(null);
-  close.current = () => {
+  close.current = async () => {
     if (
       !pending.current &&
       ((name === initial && icon === initialIcon) ||
-        confirm("Bỏ nội dung chưa lưu?"))
+        (await confirmDialog("Bỏ nội dung chưa lưu?")))
     )
       onClose(uncertain);
   };

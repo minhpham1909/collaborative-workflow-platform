@@ -171,6 +171,10 @@ try {
   );
   await page.getByRole("button", { name: "Hủy", exact: true }).click();
   await page
+    .locator(".system-dialog")
+    .getByRole("button", { name: "Xác nhận", exact: true })
+    .click();
+  await page
     .getByRole("heading", { name: "Network committed workspace", exact: true })
     .waitFor();
   await page
@@ -195,6 +199,10 @@ try {
   );
   await page.getByRole("button", { name: "Hủy", exact: true }).click();
   await page
+    .locator(".system-dialog")
+    .getByRole("button", { name: "Xác nhận", exact: true })
+    .click();
+  await page
     .getByRole("heading", { name: "Network committed project", exact: true })
     .waitFor();
   await page.goto(feOrigin + "/#project/" + project.id);
@@ -217,6 +225,10 @@ try {
     tc,
   );
   await page.getByRole("button", { name: "Hủy", exact: true }).click();
+  await page
+    .locator(".system-dialog")
+    .getByRole("button", { name: "Xác nhận", exact: true })
+    .click();
   await page
     .getByRole("link", { name: "Network committed task", exact: true })
     .click();
@@ -249,6 +261,10 @@ try {
   );
   await page
     .getByRole("button", { name: "Hủy bình luận", exact: true })
+    .click();
+  await page
+    .locator(".system-dialog")
+    .getByRole("button", { name: "Xác nhận", exact: true })
     .click();
   await page.getByText("Network committed comment", { exact: true }).waitFor();
   assert.equal(await TaskComment.countDocuments({ taskId: task.id }), 1);

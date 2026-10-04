@@ -1,3 +1,8 @@
+import {
+  confirmDialog,
+  confirmNavigation,
+  notify,
+} from "../../components/NotificationProvider.jsx";
 import Avatar from "../../components/Avatar.jsx";
 import { isUncertainMutation } from "../../lib/mutation-outcome.js";
 import { useEffect, useRef, useState } from "react";
@@ -19,10 +24,7 @@ function Composer({ api, taskId, comment, onDone, onCancel }) {
     };
     window.addEventListener("beforeunload", unload);
     const click = (e) => {
-      if (e.target.closest("a[href]") && !confirm("Bỏ bình luận chưa lưu?")) {
-        e.preventDefault();
-        e.stopPropagation();
-      }
+      confirmNavigation(e, "Bỏ nội dung chưa lưu và chuyển trang?");
     };
     document.addEventListener("click", click, true);
     return () => {
@@ -53,6 +55,7 @@ function Composer({ api, taskId, comment, onDone, onCancel }) {
         },
       );
       setDirty(false);
+      notify("Đã lưu bình luận.");
       onDone();
     } catch (e) {
       setUncertain(isUncertainMutation(e));
@@ -90,14 +93,14 @@ function Composer({ api, taskId, comment, onDone, onCancel }) {
         <button
           type="button"
           disabled={busy}
-          onClick={() => {
+          onClick={async () => {
             if (
               !dirty ||
-              confirm(
+              (await confirmDialog(
                 uncertain
                   ? "Đóng form và tải lại để kiểm tra bình luận đã lưu chưa?"
                   : "Bỏ bình luận chưa lưu?",
-              )
+              ))
             )
               onCancel(uncertain);
           }}
@@ -153,7 +156,18 @@ export default function Comments({ api, taskId, readOnly, onComposing }) {
     };
   }, [taskId, revision]);
   async function remove(c) {
-    if (pending.current || !confirm("Xóa bình luận này?")) return;
+    if (
+      pending.current ||
+      !(await confirmDialog(
+        "Bình luận sẽ không còn hiển thị trong cuộc thảo luận.",
+        {
+          title: "Xóa bình luận?",
+          confirmLabel: "Xóa bình luận",
+          tone: "danger",
+        },
+      ))
+    )
+      return;
     pending.current = true;
     setBusy(true);
     try {

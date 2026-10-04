@@ -1,3 +1,7 @@
+import {
+  confirmDialog,
+  confirmNavigation,
+} from "../../components/NotificationProvider.jsx";
 import { useEffect, useRef, useState } from "react";
 import Avatar from "../../components/Avatar.jsx";
 import { messageFor } from "../../lib/messages.js";
@@ -50,13 +54,7 @@ export default function Settings({ api, onUser }) {
       e.returnValue = "";
     };
     const click = (e) => {
-      if (
-        e.target.closest("a[href]") &&
-        !confirm("Bỏ thay đổi cài đặt chưa lưu?")
-      ) {
-        e.preventDefault();
-        e.stopPropagation();
-      }
+      confirmNavigation(e, "Bỏ nội dung chưa lưu và chuyển trang?");
     };
     window.addEventListener("beforeunload", unload);
     document.addEventListener("click", click, true);
@@ -65,7 +63,8 @@ export default function Settings({ api, onUser }) {
       document.removeEventListener("click", click, true);
     };
   }, [dirty]);
-  const leave = () => !dirty || confirm("Bỏ thay đổi cài đặt chưa lưu?");
+  const leave = async () =>
+    !dirty || (await confirmDialog("Bỏ thay đổi cài đặt chưa lưu?"));
   function saved(user) {
     setData((old) => ({ ...old, user }));
     onUser(user);
@@ -81,8 +80,8 @@ export default function Settings({ api, onUser }) {
         </div>
         <button
           disabled={busy || saving}
-          onClick={() => {
-            if (leave()) {
+          onClick={async () => {
+            if (await leave()) {
               setDirty(false);
               setRevision((v) => v + 1);
             }
@@ -101,8 +100,8 @@ export default function Settings({ api, onUser }) {
             key={value}
             disabled={saving}
             aria-pressed={tab === value}
-            onClick={() => {
-              if (tab !== value && leave()) {
+            onClick={async () => {
+              if (tab !== value && (await leave())) {
                 setDirty(false);
                 setTab(value);
               }

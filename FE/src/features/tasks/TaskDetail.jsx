@@ -1,3 +1,4 @@
+import { confirmDialog } from "../../components/NotificationProvider.jsx";
 import Avatar from "../../components/Avatar.jsx";
 import { useEffect, useRef, useState } from "react";
 import TaskForm from "./TaskForm.jsx";
@@ -49,9 +50,10 @@ export default function TaskDetail({ api, id }) {
     if (pending.current) return;
     if (
       !status &&
-      !confirm(
-        "Xóa Task và ngừng truy cập các bình luận? Thao tác không có khôi phục trong ứng dụng.",
-      )
+      !(await confirmDialog(
+        "Xóa Task khỏi danh sách và ngừng truy cập các bình luận? Dữ liệu được giữ lại trong hệ thống, nhưng ứng dụng hiện chưa hỗ trợ khôi phục.",
+        { title: "Xóa Task?", confirmLabel: "Xóa Task", tone: "danger" },
+      ))
     )
       return;
     pending.current = true;
@@ -109,7 +111,7 @@ export default function TaskDetail({ api, id }) {
       {!editing && (
         <button
           disabled={busy || composing}
-          onClick={() => {
+          onClick={async () => {
             setNotice("");
             setRevision((v) => v + 1);
           }}

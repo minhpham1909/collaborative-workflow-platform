@@ -17,7 +17,7 @@ Mỗi mutation dùng User guard rồi Workspace mutationRevision guard, cùng c�
 | Method | Route | Quyền và input |
 |---|---|---|
 | GET/POST | /workspaces/:workspaceId/projects | Member xem; Owner tạo {name, description?} |
-| GET/PATCH | /projects/:projectId | Member xem; Owner sửa Active {expectedVersion, name?, description?} |
+| GET/PATCH | /projects/:projectId | Member xem; Owner sửa Active {expectedVersion, name?, icon?, description?}; Creator còn membership chỉ sửa description |
 | PATCH | /projects/:projectId/state | Owner {expectedVersion, state: active/archived}; cho mở lại |
 | GET/POST | /projects/:projectId/tasks | Member xem; Member tạo trong Active {title, description?, assigneeId?, dueAt?} |
 | GET | /projects/:projectId/board | Member; ba columns todo/in_progress/done, items/total/nextCursor riêng |

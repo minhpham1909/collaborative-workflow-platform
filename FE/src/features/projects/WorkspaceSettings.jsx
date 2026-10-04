@@ -1,3 +1,5 @@
+import { notify } from "../../components/NotificationProvider.jsx";
+import { confirmDialog } from "../../components/NotificationProvider.jsx";
 import { useEffect, useRef, useState } from "react";
 import RichEditor from "../../components/RichEditor.jsx";
 import { envelope, emptyDocument } from "../../lib/content.js";
@@ -69,8 +71,13 @@ export default function WorkspaceSettings({
     },
     [],
   );
-  function reload() {
-    if (!dirty || confirm("Bỏ thay đổi chưa lưu và tải lại cài đặt Workspace?"))
+  async function reload() {
+    if (
+      !dirty ||
+      (await confirmDialog(
+        "Bỏ thay đổi chưa lưu và tải lại cài đặt Workspace?",
+      ))
+    )
       setRevision((v) => v + 1);
   }
   async function submit(e, reset = false) {
@@ -94,7 +101,9 @@ export default function WorkspaceSettings({
     }
     if (
       reset &&
-      !confirm("Đưa cả bốn loại email về kế thừa cài đặt chung của bạn?")
+      !(await confirmDialog(
+        "Đưa cả bốn loại email về kế thừa cài đặt chung của bạn?",
+      ))
     )
       return;
     pending.current = true;
@@ -131,6 +140,7 @@ export default function WorkspaceSettings({
       setDirty(false);
       onDirty(false);
       setNote(reset ? "Đã trở về cài đặt chung." : "Đã lưu cài đặt.");
+      notify("Đã lưu cài đặt Workspace.");
     } catch (e) {
       setError(
         e.status

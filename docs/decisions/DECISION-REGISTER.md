@@ -159,3 +159,6 @@ Cập nhật 03/10/2026 theo yêu cầu trực tiếp chủ dự án: bám requi
 
 
 Cập nhật 03/10/2026 qua câu trả lời trực tiếp: chủ dự án chọn hiển thị lại nội dung notification công việc sau khi gia nhập lại Workspace, nếu Task còn và quyền hiện tại cho phép. API list/detail luôn kiểm membership/target tại lần đọc; Task đã xóa vẫn unavailable. Quyết định này không chốt retention/purge hoặc mở lại email job đã cancelled. Figma chính/Stitch khám phá mới là đề xuất, chưa được chủ dự án chọn.
+
+
+Cập nhật 04/10/2026 theo yêu cầu trực tiếp: Owner sửa mô tả Workspace; Owner hoặc Project Creator còn membership sửa mục tiêu/mô tả Project Active. Creator không được suy rộng quyền sửa tên/icon/archive; BE kiểm lại membership/version/lifecycle. Task giữ soft delete deletedAt/deletedBy, Comments còn trong DB nhưng parent gate chặn truy cập; restore/retention/purge chưa chốt. Dùng NotificationProvider cho phản hồi/confirm/input thay window dialogs trong app; cảnh báo đóng/reload tab vẫn theo browser beforeunload.

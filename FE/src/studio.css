@@ -1158,3 +1158,124 @@
 .detail-meta-grid strong.overdue {
   color: #a84435;
 }
+.system-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: #34263f66;
+  backdrop-filter: blur(5px);
+}
+.system-dialog {
+  width: min(460px, 100%);
+  max-height: calc(100dvh - 40px);
+  overflow-y: auto;
+  background: #fffaf7;
+  border: 1px solid #fff;
+  border-radius: 26px;
+  padding: 28px;
+  box-shadow: 0 24px 80px #30283f33;
+}
+.system-dialog h2 {
+  font-size: 22px;
+  margin: 16px 0 10px;
+}
+.system-dialog p {
+  color: #756b80;
+  line-height: 1.8;
+}
+.dialog-emblem {
+  display: inline-grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  background: #ece6ff;
+  border-radius: 16px;
+  color: #5143eb;
+  font-size: 26px;
+  font-weight: 700;
+}
+.system-dialog input {
+  width: 100%;
+}
+.system-dialog.danger .dialog-emblem {
+  color: #b83b4b;
+  background: #ffe9ed;
+}
+.system-dialog.danger .primary {
+  background: #b83b4b;
+  border-color: #b83b4b;
+}
+.toast-stack {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 1200;
+  width: min(380px, calc(100vw - 32px));
+  display: grid;
+  gap: 10px;
+}
+.system-toast {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  justify-content: space-between;
+  background: #fff;
+  border: 1px solid #d6e6db;
+  border-left: 4px solid #348363;
+  padding: 14px 18px;
+  border-radius: 16px;
+  box-shadow: 0 8px 28px #30283f16;
+  font-size: 13px;
+}
+.system-toast.error {
+  border-left-color: #b4415b;
+}
+.system-toast button {
+  background: transparent;
+  border: 0;
+  padding: 8px;
+  min-width: 40px;
+  min-height: 40px;
+}
+.workspace-card {
+  position: relative;
+}
+.workspace-card h2 a::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 24px;
+  z-index: 1;
+}
+.workspace-card .pill-link {
+  position: relative;
+  z-index: 2;
+}
+.workspace-card:focus-within {
+  outline: 3px solid #5143eb;
+  outline-offset: 3px;
+}
+.workspace-description {
+  margin-top: 20px;
+  max-width: 850px;
+}
+.workspace-description .rich-editor {
+  background: transparent;
+}
+.workspace-description .section-heading button {
+  font-size: 11px;
+  padding: 8px 12px;
+}
+.description-form {
+  background: #fffaf7;
+  padding: 16px;
+  border-radius: 18px;
+  margin-top: 16px;
+}
+.project-scope .section-heading h2 {
+  font-size: 17px;
+  margin: 0;
+}

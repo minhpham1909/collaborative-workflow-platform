@@ -1,3 +1,7 @@
+import {
+  confirmDialog,
+  notify,
+} from "../../components/NotificationProvider.jsx";
 import HomeHighlights, {
   HomeDay,
   useHomeHighlights,
@@ -77,15 +81,15 @@ export default function Home({ api, user }) {
     };
   }, [query, refresh, invalid]);
   const closeDialog = useRef(() => {});
-  closeDialog.current = () => {
+  closeDialog.current = async () => {
     if (
       !saving &&
       (!name ||
-        confirm(
+        (await confirmDialog(
           uncertain
             ? "Đóng form và tải lại để kiểm tra Workspace đã tạo chưa?"
             : "Bỏ tên Workspace chưa lưu?",
-        ))
+        )))
     ) {
       setCreating(false);
       if (uncertain) {
@@ -143,6 +147,7 @@ export default function Home({ api, user }) {
       await api.request("/workspaces", { method: "POST", body: { name } });
       setCreating(false);
       setName("");
+      notify("Đã tạo Workspace.");
       setRefresh((v) => v + 1);
     } catch (e) {
       setUncertain(isUncertainMutation(e));

@@ -1,3 +1,8 @@
+import {
+  confirmDialog,
+  notify,
+} from "../../components/NotificationProvider.jsx";
+import ProjectDescriptionEditor from "./ProjectDescriptionEditor.jsx";
 import RichEditor from "../../components/RichEditor.jsx";
 import Icon from "../../components/Icon.jsx";
 import { useEffect, useRef, useState } from "react";
@@ -5,7 +10,7 @@ import NameDialog from "../../components/NameDialog.jsx";
 import { messageFor } from "../../lib/messages.js";
 import TaskList from "../tasks/TaskList.jsx";
 
-export default function Project({ api, id }) {
+export default function Project({ api, id, user }) {
   const [project, setProject] = useState(null),
     [workspace, setWorkspace] = useState(null),
     [error, setError] = useState(""),
@@ -13,11 +18,13 @@ export default function Project({ api, id }) {
     [editing, setEditing] = useState(false),
     [revision, setRevision] = useState(0),
     [notice, setNotice] = useState("");
+  const [editingDescription, setEditingDescription] = useState(false);
   const pending = useRef(false);
   useEffect(() => {
     let live = true;
     setBusy(true);
     setError("");
+    setEditingDescription(false);
     setProject(null);
     setWorkspace(null);
     (async () => {
@@ -44,11 +51,11 @@ export default function Project({ api, id }) {
     if (pending.current) return;
     const state = project.state === "active" ? "archived" : "active";
     if (
-      !confirm(
+      !(await confirmDialog(
         state === "archived"
           ? "Lưu trữ Dự án? Mọi Task và bình luận sẽ chuyển sang chỉ đọc."
           : "Mở lại Dự án để tiếp tục làm việc?",
-      )
+      ))
     )
       return;
     pending.current = true;
@@ -60,6 +67,7 @@ export default function Project({ api, id }) {
         body: { expectedVersion: project.version, state },
       });
       setProject(result.project);
+      notify("Đã cập nhật trạng thái Dự án.");
       setNotice(
         state === "archived" ? "Đã lưu trữ Dự án." : "Đã mở lại Dự án.",
       );
@@ -91,7 +99,7 @@ export default function Project({ api, id }) {
         / Dự án
       </p>
       <button
-        disabled={busy}
+        disabled={busy || editingDescription}
         onClick={() => {
           setEditing(false);
           setNotice("");
@@ -137,11 +145,17 @@ export default function Project({ api, id }) {
             {workspace.role === "owner" && (
               <div className="buttons">
                 {project.state === "active" && (
-                  <button disabled={busy} onClick={() => setEditing(true)}>
+                  <button
+                    disabled={busy || editingDescription}
+                    onClick={() => setEditing(true)}
+                  >
                     Đổi tên
                   </button>
                 )}
-                <button disabled={busy} onClick={changeState}>
+                <button
+                  disabled={busy || editingDescription}
+                  onClick={changeState}
+                >
                   {project.state === "active"
                     ? "Lưu trữ Dự án"
                     : "Mở lại Dự án"}
@@ -155,19 +169,44 @@ export default function Project({ api, id }) {
             </p>
           )}
           <section className="project-info project-scope">
-            <details>
-              <summary>Mục tiêu & mô tả Dự án</summary>
-              {project.description?.plainText ? (
-                <RichEditor
-                  value={project.description}
-                  readOnly
-                  label="Mô tả Dự án"
-                  limit={20000}
-                />
-              ) : (
-                <p>Dự án chưa có mô tả.</p>
-              )}
-            </details>
+            <div className="section-heading">
+              <h2>Mục tiêu & mô tả Dự án</h2>
+              {project.state === "active" &&
+                (workspace.role === "owner" ||
+                  project.createdBy === user?.id) &&
+                !editingDescription && (
+                  <button onClick={() => setEditingDescription(true)}>
+                    Chỉnh sửa mô tả Dự án
+                  </button>
+                )}
+            </div>
+            {editingDescription ? (
+              <ProjectDescriptionEditor
+                api={api}
+                project={project}
+                onDone={(project) => {
+                  setProject(project);
+                  setEditingDescription(false);
+                }}
+                onCancel={(uncertain) => {
+                  setEditingDescription(false);
+                  if (uncertain) setRevision((value) => value + 1);
+                }}
+              />
+            ) : (
+              <div>
+                {project.description?.plainText ? (
+                  <RichEditor
+                    value={project.description}
+                    readOnly
+                    label="Mô tả Dự án"
+                    limit={10000}
+                  />
+                ) : (
+                  <p>Dự án chưa có mô tả.</p>
+                )}
+              </div>
+            )}
             <p className="muted">
               Tạo{" "}
               {new Date(project.createdAt).toLocaleDateString("vi-VN", {

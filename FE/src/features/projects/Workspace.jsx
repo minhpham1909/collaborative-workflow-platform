@@ -1,3 +1,7 @@
+import {
+  confirmDialog,
+  confirmNavigation,
+} from "../../components/NotificationProvider.jsx";
 import Icon from "../../components/Icon.jsx";
 import StudioCover from "../../components/StudioCover.jsx";
 import FilterPanel from "../../components/FilterPanel.jsx";
@@ -22,8 +26,11 @@ export default function Workspace({ api, id }) {
     [revision, setRevision] = useState(0),
     [dirty, setDirty] = useState(false),
     [saving, setSaving] = useState(false);
-  function changeTab(value) {
-    if (!saving && (!dirty || confirm("Bỏ thay đổi cài đặt chưa lưu?"))) {
+  async function changeTab(value) {
+    if (
+      !saving &&
+      (!dirty || (await confirmDialog("Bỏ thay đổi cài đặt chưa lưu?")))
+    ) {
       setDirty(false);
       setTab(value);
     }
@@ -35,13 +42,12 @@ export default function Workspace({ api, id }) {
       e.returnValue = "";
     };
     const click = (e) => {
-      if (
-        e.target.closest("a[href]") &&
-        (saving || !confirm("Bỏ thay đổi cài đặt chưa lưu?"))
-      ) {
+      if (saving && e.target.closest("a[href]")) {
         e.preventDefault();
-        e.stopPropagation();
+        e.stopImmediatePropagation();
+        return;
       }
+      confirmNavigation(e, "Bỏ thay đổi cài đặt chưa lưu?");
     };
     window.addEventListener("beforeunload", unload);
     document.addEventListener("click", click, true);
@@ -126,17 +132,34 @@ export default function Workspace({ api, id }) {
               <span className="badge">
                 {workspace.role === "owner" ? "Chủ sở hữu" : "Thành viên"}
               </span>
-              {workspace.description?.plainText && (
-                <details className="description">
-                  <summary>Mô tả Workspace</summary>
+              <div className="workspace-description">
+                <div className="section-heading">
+                  <strong>Mô tả Workspace</strong>
+                  {workspace.role === "owner" && tab !== "settings" && (
+                    <button
+                      disabled={saving}
+                      onClick={() => changeTab("settings")}
+                    >
+                      Chỉnh sửa mô tả Workspace
+                    </button>
+                  )}
+                </div>
+                {workspace.description?.plainText ? (
                   <RichEditor
                     readOnly
                     value={workspace.description}
                     label="Mô tả nhóm"
                     limit={20000}
                   />
-                </details>
-              )}
+                ) : (
+                  <p className="muted">
+                    Workspace chưa có mô tả.{" "}
+                    {workspace.role === "owner"
+                      ? "Thêm mục tiêu và cách làm việc của nhóm trong Cài đặt nhóm."
+                      : "Chủ sở hữu có thể bổ sung mô tả cho nhóm."}
+                  </p>
+                )}
+              </div>
             </div>
             {workspace.role === "owner" && tab === "projects" && (
               <button

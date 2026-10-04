@@ -90,7 +90,8 @@ Visitor chưa đăng nhập. Authenticated User đã đăng nhập. Workspace Me
 | Tạo Workspace hoặc nhận lời mời | Không | Có | Có | Có |
 | Xem Project, Task, Board và thành viên | Không | Không | Có | Có |
 | Sửa Workspace, quản lý lời mời và ownership | Không | Không | Không | Có |
-| Tạo, sửa, archive hoặc mở lại Project | Không | Không | Không | Có |
+| Tạo, sửa tên/icon, archive hoặc mở lại Project | Không | Không | Không | Có |
+| Sửa mô tả/mục tiêu Project Active | Không | Không | Nếu là Creator còn membership | Có |
 | Tạo Task trong Project Active | Không | Không | Có, đã duyệt 01/10/2026 | Có |
 | Đổi status Task trong Project Active | Không | Không | Nếu là Creator hoặc Assignee hiện tại | Có |
 | Sửa nội dung/phân công Task trong Project Active | Không | Không | Nếu là Creator | Có |
@@ -159,7 +160,7 @@ Mỗi FR trong bảng có tối thiểu một UC và tiêu chí nghiệm thu tư
 | FR-06 | Gia nhập theo điều kiện từng loại mời; bảo toàn ý định sau đăng nhập | UC-09 | Bản đầu |
 | FR-07 | Member rời nhóm; Owner loại Member | UC-10, UC-11 | Bản đầu |
 | FR-08 | Chuyển ownership cho Member hiện tại | UC-12 | Bản đầu |
-| FR-09 | Xem Project Active/Archived; Owner tạo, sửa và archive/mở lại | UC-13, UC-14, UC-15, UC-16 | Bản đầu |
+| FR-09 | Xem Project Active/Archived; Owner tạo, sửa và archive/mở lại; Creator còn membership được sửa riêng mô tả/mục tiêu trong Active | UC-13, UC-14, UC-15, UC-16 | Bản đầu |
 | FR-10 | Tạo, xem, sửa và xóa Task theo quyền | UC-17, UC-18, UC-19, UC-20 | Bản đầu |
 | FR-11 | Phân công Task, đặt/bỏ deadline và thay trạng thái | UC-17, UC-19 | Bản đầu |
 | FR-12 | Board nhóm Task theo status, mới tạo trước trong mỗi cột, không sắp thủ công; có search động và lọc thời gian dùng chung với My Tasks; cùng quyền cập nhật Task | UC-21 | Bản đầu |
@@ -630,17 +631,17 @@ Tiêu chí nghiệm thu: AC-14: Member bị từ chối; Owner tạo Project Act
 
 ### UC-15 Chỉnh sửa Project
 
-Actor: Owner.
+Actor: Owner hoặc Project Creator còn membership (Creator chỉ sửa mô tả/mục tiêu).
 
 FR: FR-09. BR: BR-04, BR-11, BR-26.
 
 Trigger: Lưu thông tin Project.
 
-Tiền điều kiện: Owner hiện tại, Project Active.
+Tiền điều kiện: Membership hiện tại, Project Active; Owner sửa mọi trường hợp lệ, Creator chỉ sửa description.
 
 Luồng chính:
 
-1. Xem và sửa name/description.
+1. Owner xem và sửa name/icon/description; Creator còn membership chỉ sửa description (mục tiêu và mô tả dùng chung trường nội dung).
 
 2. Backend kiểm tra quyền, status và phiên bản.
 
@@ -654,7 +655,7 @@ Luồng thay thế và ngoại lệ:
 
 Hậu điều kiện: Thông tin Project cập nhật.
 
-Tiêu chí nghiệm thu: AC-15: Project Archived không sửa thông tin; Member không sửa được. Mô tả hoặc Comment dùng editor chung; lưu/tải lại giữ định dạng, hyperlink, emoji và nội dung Việt/Anh; quyền ghi giữ nguyên.
+Tiêu chí nghiệm thu: AC-15: Project Archived không sửa thông tin; Member không phải Owner/Creator không sửa được; Creator sau chuyển ownership vẫn sửa mô tả nhưng không sửa tên/icon/vòng đời; rời Workspace mất quyền. Mô tả hoặc Comment dùng editor chung; lưu/tải lại giữ định dạng, hyperlink, emoji và nội dung Việt/Anh; quyền ghi giữ nguyên.
 
 ### UC-16 Archive hoặc mở lại Project
 

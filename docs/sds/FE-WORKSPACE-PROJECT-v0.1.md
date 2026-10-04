@@ -8,7 +8,7 @@ Home card → `#workspace/:id` → `#project/:id`; hash parser chỉ nhận Obje
 
 Workspace tải GET context trước list. Header tên/role, mô tả thu gọn; tab Dự án và Thành viên. Project list có state active/archived/all, search tên/mô tả, khoảng ngày tạo Việt Nam và cursor. Mặc định active, sort mới tạo trước. Member list chỉ đọc thành viên active, tên/vai trò/ngày tham gia và load more, không hiển thị email. Member search/time, invites/ownership/settings chưa nối.
 
-Owner tạo Project bằng tên qua NameDialog chung; chưa form editor mô tả. Chi tiết Project đọc context Workspace để phân quyền, Owner đổi tên Active và archive/reopen. Archived ẩn đổi tên, có banner chỉ đọc. Không có Project delete. Đây là màn tổng quan tạm trước nối Board vào route Project theo screen flow cuối cùng; chưa hoàn thành giao diện Project làm việc.
+Owner tạo Project bằng tên qua NameDialog chung; mô tả có thể thêm/sửa ngay trang Project. Chi tiết Project đọc context Workspace để phân quyền, Owner đổi tên/icon Active và archive/reopen; Owner hoặc Creator còn membership sửa riêng mô tả/mục tiêu bằng editor chung (cập nhật 04/10/2026). Archived chỉ đọc. Board đã nối route Project; Task detail hiện full page, drawer còn riêng. Không có Project delete. [Tương tác hiện hành](../ui-ux/INTERACTION-FOUNDATION-v0.1.md).
 
 Mutation gửi expectedVersion; conflict giữ draft, người dùng đóng form và Làm mới Dự án trước sửa tiếp. Không gộp dữ liệu hoặc auto retry mutation timeout. Role UI là hỗ trợ, BE recheck mỗi request. Lỗi mất quyền khi đọc/đổi state xóa context/data khỏi màn; không truy cập đối tượng chỉ từ ID route. Refresh không realtime.
 
