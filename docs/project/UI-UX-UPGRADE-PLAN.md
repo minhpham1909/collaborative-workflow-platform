@@ -18,7 +18,7 @@ Yêu cầu bổ sung: dùng skill ui-ux để rà và tối ưu trực tiếp m�
 | Bước | Kết quả cần có | Trạng thái ban đầu | Nền hiện có / khoảng trống |
 |---|---|---|---|
 | P1 — Audit luồng | Ma trận hành vi và danh sách lỗi có ưu tiên | Đạt gate audit | [Audit P1](../qa/UI-UX-FLOW-AUDIT.md) và [QA điều hướng](../qa/FE-DRAFT-NAVIGATION-CHECK.md): lỗi chặn đã sửa trong phạm vi fixture; giới hạn tương thích và provider live được ghi riêng |
-| P2 — Component dùng chung | Form/dialog/picker/feedback thống nhất | Chưa bắt đầu giai đoạn | Có NotificationProvider/editor/filter; dialog chuyên biệt và các form chưa được đánh giá đồng bộ |
+| P2 — Component dùng chung | Form/dialog/picker/feedback thống nhất | Đang làm | [Quy ước](../ui-ux/COMPONENT-INTERACTION-RULES.md) và [QA](../qa/FE-COMPONENTS-CHECK.md): FormField + MemberPicker áp dụng Task/NameDialog; còn Auth/Settings/Workspace/Team và Workspace picker |
 | P3 — Tương tác và nội dung dài | Vùng bấm, focus, thu gọn mô tả, bố cục dễ dùng | Chưa nghiệm thu giai đoạn | Đã có preview mô tả và click toàn thẻ Workspace/Project/Task; còn kiểm toàn hệ thống theo gate P3 |
 | P4 — Điều hướng và bản nháp | Back/Forward/hash/link giữ đúng dữ liệu và context | Chưa nghiệm thu giai đoạn | Guard chung đã triển khai để sửa NAV-01; còn quy ước filters/context và giới hạn fallback history |
 | P5 — Thiết kế khôi phục Task | Quy tắc và thiết kế restore được chốt | Chưa bắt đầu; có quyết định mới cần chốt | Soft delete đã có; chưa có thùng rác/restore/retention/purge |
@@ -125,4 +125,4 @@ Tiêu chí hoàn thành kế hoạch:
 | Quyết định | Quy tắc đã có hoặc câu hỏi mới thực sự cần chủ dự án chốt |
 | Chuyển bước | Có/Không và căn cứ theo tiêu chí bên trên |
 
-Bước kế tiếp: P2 — chuẩn hóa form, dialog, picker và phản hồi theo [audit](../qa/UI-UX-FLOW-AUDIT.md). P1 đạt gate audit sau regression NAV-01; P2 chưa nghiệm thu. Không coi guard bản nháp là autosave/backup hoặc nghiệm thu P4.
+Bước hiện tại: P2 — đã triển khai FormField/MemberPicker và kiểm tìm kiếm/error/retry/stale responses. Tiếp tục Auth/Settings/Workspace/Team, labels/dialogs và Workspace picker theo [quy ước](../ui-ux/COMPONENT-INTERACTION-RULES.md); chưa chuyển P3. P1 đạt gate audit; không coi guard bản nháp là autosave/backup hoặc nghiệm thu P4.

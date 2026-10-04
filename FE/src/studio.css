@@ -1596,6 +1596,53 @@ textarea:focus-visible {
 .board-progress p {
   font-size: 12px;
 }
+.form-field {
+  display: grid;
+  gap: 6px;
+  margin-block: 12px;
+  min-width: 0;
+}
+.form-field label {
+  margin: 0;
+  font-weight: 600;
+}
+.form-field input,
+.form-field select {
+  width: 100%;
+}
+.field-message {
+  margin: 0;
+  min-height: 20px;
+  font-size: 12px;
+  color: #706675;
+}
+.field-message.error {
+  color: #a52e48;
+}
+.form-field [aria-invalid="true"] {
+  border-color: #c94b63;
+}
+.member-picker {
+  min-width: 0;
+}
+.picker-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.picker-actions:empty {
+  display: none;
+}
+@media (max-width: 640px) {
+  .form-field input,
+  .form-field select {
+    font-size: 16px;
+    min-height: 44px;
+  }
+  .picker-actions button {
+    min-height: 44px;
+  }
+}
 @media (prefers-reduced-motion: reduce) {
   button {
     transition: none;

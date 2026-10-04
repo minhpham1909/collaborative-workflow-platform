@@ -261,6 +261,168 @@ try {
   await page
     .getByLabel("Người thực hiện", { exact: true })
     .selectOption(member.id);
+  // Server search must preserve an assignee outside the current result page.
+  const memberSearch = page.getByLabel("Tìm thành viên", { exact: true });
+  await memberSearch.fill("không có thành viên này");
+  await page
+    .getByText("Không có thành viên phù hợp. Thử tên khác hoặc xóa tìm kiếm.", {
+      exact: true,
+    })
+    .waitFor();
+  assert.equal(
+    await page.getByLabel("Người thực hiện", { exact: true }).inputValue(),
+    member.id,
+  );
+  await memberSearch.fill("Lan");
+  await page.waitForFunction(() =>
+    [...document.querySelectorAll(".member-picker option")].some(
+      (option) => option.textContent === "Lan kiểm thử",
+    ),
+  );
+  assert.equal(await page.locator(".member-picker option").count(), 2);
+  await page
+    .getByRole("button", { name: "Xóa tìm kiếm thành viên", exact: true })
+    .click();
+  await page.waitForFunction(
+    () => document.querySelectorAll(".member-picker option").length === 3,
+  );
+  const memberURL = `http://localhost:4000/workspaces/${workspace.id}/members*`;
+  let failMembers = true;
+  await page.route(memberURL, async (route) => {
+    if (!failMembers) return route.fallback();
+    failMembers = false;
+    const response = await route.fetch({
+      url: route.request().url().replace("http://localhost:4000", apiOrigin),
+    });
+    await route.fulfill({
+      response,
+      status: 503,
+      json: { error: "SERVICE_UNAVAILABLE" },
+    });
+  });
+  await memberSearch.fill("Lan");
+  await page
+    .getByRole("button", { name: "Thử tải thành viên lại", exact: true })
+    .waitFor();
+  assert.equal(
+    await page.getByLabel("Người thực hiện", { exact: true }).inputValue(),
+    member.id,
+  );
+  assert.equal(
+    await page.getByLabel("Người thực hiện", { exact: true }).isDisabled(),
+    true,
+  );
+  await page
+    .getByRole("button", { name: "Thử tải thành viên lại", exact: true })
+    .click();
+  await page.waitForFunction(
+    () => document.querySelector(".member-picker select")?.disabled === false,
+  );
+  await page.unroute(memberURL);
+  let releaseSearch;
+  const delayedSearch = new Promise((resolve) => {
+    releaseSearch = resolve;
+  });
+  let oldStarted;
+  const startedSearch = new Promise((resolve) => {
+    oldStarted = resolve;
+  });
+  let oldFinished;
+  const finishedSearch = new Promise((resolve) => {
+    oldFinished = resolve;
+  });
+  await page.route(memberURL, async (route) => {
+    if (new URL(route.request().url()).searchParams.get("q") !== "Minh")
+      return route.fallback();
+    const response = await route.fetch({
+      url: route.request().url().replace("http://localhost:4000", apiOrigin),
+    });
+    oldStarted();
+    await delayedSearch;
+    await route.fulfill({ response });
+    oldFinished();
+  });
+  await memberSearch.fill("Minh");
+  await startedSearch;
+  await memberSearch.fill("Lan");
+  await page.waitForFunction(
+    () => document.querySelector(".member-picker select")?.disabled === false,
+  );
+  releaseSearch();
+  await finishedSearch;
+  await page.waitForTimeout(100);
+  assert.equal(await page.locator(".member-picker option").count(), 2);
+  assert.equal(
+    await page.locator(".member-picker option").last().textContent(),
+    "Lan kiểm thử",
+  );
+  await page.unroute(memberURL);
+  await page
+    .getByRole("button", { name: "Xóa tìm kiếm thành viên", exact: true })
+    .click();
+  await page.waitForFunction(
+    () => document.querySelectorAll(".member-picker option").length === 3,
+  );
+  await page.getByLabel("Tiêu đề Task").fill("   ");
+  await page.getByRole("button", { name: "Lưu Task", exact: true }).click();
+  assert.equal(
+    await page.getByLabel("Tiêu đề Task").getAttribute("aria-invalid"),
+    "true",
+  );
+  await page.getByLabel("Tiêu đề Task").fill("Thiết kế landing page");
+  assert.equal(
+    await page.getByLabel("Tiêu đề Task").getAttribute("aria-invalid"),
+    "false",
+  );
+  const { mkdirSync } = await import("node:fs");
+  mkdirSync(".local/p2-components", { recursive: true });
+  // Remove short feedback before capturing the form's reading hierarchy.
+  while (
+    await page
+      .getByRole("button", { name: "Đóng thông báo", exact: true })
+      .count()
+  )
+    await page
+      .getByRole("button", { name: "Đóng thông báo", exact: true })
+      .first()
+      .click();
+  if (process.env.WORKFLOW_UI_PROBE_MODULE) {
+    const { measureInPage } = await import(
+      process.env.WORKFLOW_UI_PROBE_MODULE
+    );
+    const { writeFileSync } = await import("node:fs");
+    const reports = [];
+    for (const width of [1440, 375]) {
+      await page.setViewportSize({ width, height: 900 });
+      reports.push({
+        width,
+        ...(await page.evaluate(measureInPage, {
+          minTapSize: 32,
+          isMobile: width < 640,
+        })),
+      });
+    }
+    writeFileSync(
+      ".local/p2-components/probe-measurements.json",
+      JSON.stringify(reports, null, 2),
+    );
+    await page.setViewportSize({ width: 1440, height: 1000 });
+  }
+  await page.screenshot({
+    path: ".local/p2-components/task-form-desktop.png",
+    fullPage: true,
+  });
+  await page.setViewportSize({ width: 375, height: 900 });
+  assert.ok(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth + 1,
+    ),
+  );
+  await page.screenshot({
+    path: ".local/p2-components/task-form-mobile.png",
+    fullPage: true,
+  });
+  await page.setViewportSize({ width: 1440, height: 1000 });
   await page.getByLabel("Deadline · Giờ Việt Nam").fill("2020-01-01T09:30");
   await page
     .getByRole("textbox", { name: "Mô tả Task", exact: true })

@@ -1,10 +1,12 @@
 import { useDraftGuard } from "../../lib/draft-navigation.js";
+import FormField from "../../components/FormField.jsx";
+import MemberPicker from "../../components/MemberPicker.jsx";
 import {
   confirmDialog,
   notify,
 } from "../../components/NotificationProvider.jsx";
 import { isUncertainMutation } from "../../lib/mutation-outcome.js";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import RichEditor from "../../components/RichEditor.jsx";
 import { toVietnamInput, toUtc, validateContent } from "../../lib/content.js";
 import { messageFor } from "../../lib/messages.js";
@@ -20,40 +22,13 @@ export default function TaskForm({
     [description, setDescription] = useState(task?.description),
     [assigneeId, setAssignee] = useState(task?.assigneeId ?? ""),
     [due, setDue] = useState(toVietnamInput(task?.dueAt)),
-    [members, setMembers] = useState({ items: [] }),
+    [titleError, setTitleError] = useState(""),
+    [descriptionError, setDescriptionError] = useState(""),
     [busy, setBusy] = useState(false),
     [uncertain, setUncertain] = useState(false),
     [error, setError] = useState(""),
     [dirty, setDirty] = useState(false);
   const pending = useRef(false);
-  async function people(cursor) {
-    try {
-      const data = await api.request(
-        `/workspaces/${workspaceId}/members?limit=20` +
-          (cursor ? "&cursor=" + encodeURIComponent(cursor) : ""),
-      );
-      setMembers((old) => ({
-        ...data,
-        items: cursor ? [...old.items, ...data.items] : data.items,
-      }));
-    } catch (e) {
-      setError(messageFor(e));
-    }
-  }
-  useEffect(() => {
-    let live = true;
-    api
-      .request(`/workspaces/${workspaceId}/members?limit=20`)
-      .then((data) => {
-        if (live) setMembers(data);
-      })
-      .catch((e) => {
-        if (live) setError(messageFor(e));
-      });
-    return () => {
-      live = false;
-    };
-  }, [workspaceId]);
   useDraftGuard({
     dirty: dirty,
     busy: busy,
@@ -64,12 +39,17 @@ export default function TaskForm({
     e.preventDefault();
     if (pending.current || uncertain) return;
     const invalid = validateContent(description, 10000);
+    setTitleError("");
+    setDescriptionError("");
     if (invalid) {
-      setError(invalid);
+      setDescriptionError(invalid);
       return;
     }
     if (!title.trim() || /[\u0000-\u001f\u007f\u2028\u2029]/u.test(title)) {
-      setError("Tiêu đề chưa hợp lệ.");
+      setTitleError(
+        "Nhập tiêu đề có nội dung, không chứa ký tự xuống dòng hoặc điều khiển.",
+      );
+      e.currentTarget.querySelector("input")?.focus();
       return;
     }
     pending.current = true;
@@ -107,50 +87,56 @@ export default function TaskForm({
     <section className="project-info">
       <h2>{task ? "Sửa Task" : "Tạo Task"}</h2>
       <form onSubmit={save}>
-        <fieldset disabled={busy} onChange={() => setDirty(true)}>
-          <label>
-            Tiêu đề Task
-            <input
-              required
-              maxLength={300}
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-            />
-          </label>
-          <label>
-            Người thực hiện
-            <select
-              aria-label="Người thực hiện"
-              value={assigneeId}
-              onChange={(e) => setAssignee(e.target.value)}
-            >
-              <option value="">Chưa phân công</option>
-              {task?.assigneeId &&
-                !members.items.some((m) => m.userId === task.assigneeId) && (
-                  <option value={task.assigneeId}>
-                    {task.assignee?.displayName ?? "Người được giao"}
-                    {task.assigneeLeft ? " · Đã rời" : ""}
-                  </option>
-                )}
-              {members.items.map((m) => (
-                <option key={m.userId} value={m.userId}>
-                  {m.displayName}
-                </option>
-              ))}
-            </select>
-          </label>
-          {members.nextCursor && (
-            <button type="button" onClick={() => people(members.nextCursor)}>
-              Tải thêm thành viên
-            </button>
-          )}
+        <fieldset disabled={busy}>
+          <FormField
+            label="Tiêu đề Task"
+            error={titleError}
+            hint="Tối đa 300 ký tự."
+          >
+            {(props) => (
+              <input
+                {...props}
+                required
+                maxLength={300}
+                value={title}
+                onChange={(e) => {
+                  setTitle(e.target.value);
+                  setTitleError("");
+                  setDirty(true);
+                }}
+              />
+            )}
+          </FormField>
+          <MemberPicker
+            api={api}
+            workspaceId={workspaceId}
+            value={assigneeId}
+            selectedMember={
+              task?.assigneeId
+                ? {
+                    userId: task.assigneeId,
+                    displayName:
+                      task.assignee?.displayName ?? "Người được giao",
+                    left: task.assigneeLeft,
+                  }
+                : undefined
+            }
+            disabled={busy || uncertain}
+            onChange={(value) => {
+              setAssignee(value);
+              setDirty(true);
+            }}
+          />
           <label>
             Deadline · Giờ Việt Nam
             <input
               type="datetime-local"
               step="60"
               value={due}
-              onChange={(e) => setDue(e.target.value)}
+              onChange={(e) => {
+                setDue(e.target.value);
+                setDirty(true);
+              }}
             />
           </label>
           {due && new Date(toUtc(due)) < new Date() && (
@@ -163,11 +149,17 @@ export default function TaskForm({
             value={description}
             onChange={(value) => {
               setDescription(value);
+              setDescriptionError("");
               setDirty(true);
             }}
             label="Mô tả Task"
             readOnly={busy}
           />
+          {descriptionError && (
+            <p className="field-message error" role="alert">
+              {descriptionError}
+            </p>
+          )}
           <div className="buttons">
             <button
               type="button"

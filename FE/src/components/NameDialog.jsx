@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { messageFor } from "../lib/messages.js";
 import ProjectIconPicker from "./ProjectIconPicker.jsx";
+import FormField from "./FormField.jsx";
 import { useDraftGuard } from "../lib/draft-navigation.js";
 
 export default function NameDialog({
@@ -19,6 +20,7 @@ export default function NameDialog({
     [busy, setBusy] = useState(false),
     [uncertain, setUncertain] = useState(false),
     [error, setError] = useState("");
+  const [nameError, setNameError] = useState("");
   const pending = useRef(false),
     close = useRef(null);
   useDraftGuard({
@@ -72,7 +74,10 @@ export default function NameDialog({
     e.preventDefault();
     if (pending.current || uncertain) return;
     if (!name.trim() || /[\u0000-\u001f\u007f\u2028\u2029]/u.test(name)) {
-      setError("Tên chưa hợp lệ.");
+      setNameError(
+        "Nhập tên có nội dung, không chứa ký tự xuống dòng hoặc điều khiển.",
+      );
+      e.currentTarget.querySelector("input")?.focus();
       return;
     }
     pending.current = true;
@@ -103,17 +108,26 @@ export default function NameDialog({
       >
         <h2 id="name-title">{title}</h2>
         <form onSubmit={submit}>
-          <label>
-            Tên Dự án
-            <input
-              autoFocus
-              required
-              maxLength={200}
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              disabled={busy}
-            />
-          </label>
+          <FormField
+            label="Tên Dự án"
+            error={nameError}
+            hint="Tối đa 200 ký tự."
+          >
+            {(props) => (
+              <input
+                {...props}
+                autoFocus
+                required
+                maxLength={200}
+                value={name}
+                onChange={(e) => {
+                  setName(e.target.value);
+                  setNameError("");
+                }}
+                disabled={busy}
+              />
+            )}
+          </FormField>
           {withIcon && (
             <ProjectIconPicker
               value={icon}
