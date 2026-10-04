@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { messageFor } from "../../lib/messages.js";
 import NameDialog from "../../components/NameDialog.jsx";
 import Team from "./Team.jsx";
+import WorkspaceSettings from "./WorkspaceSettings.jsx";
+import RichEditor from "../../components/RichEditor.jsx";
 
 export default function Workspace({ api, id }) {
   const [workspace, setWorkspace] = useState(null),
@@ -14,7 +16,37 @@ export default function Workspace({ api, id }) {
     [busy, setBusy] = useState(true),
     [error, setError] = useState(""),
     [creating, setCreating] = useState(false),
-    [revision, setRevision] = useState(0);
+    [revision, setRevision] = useState(0),
+    [dirty, setDirty] = useState(false),
+    [saving, setSaving] = useState(false);
+  function changeTab(value) {
+    if (!saving && (!dirty || confirm("Bỏ thay đổi cài đặt chưa lưu?"))) {
+      setDirty(false);
+      setTab(value);
+    }
+  }
+  useEffect(() => {
+    if (!dirty && !saving) return;
+    const unload = (e) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    const click = (e) => {
+      if (
+        e.target.closest("a[href]") &&
+        (saving || !confirm("Bỏ thay đổi cài đặt chưa lưu?"))
+      ) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    };
+    window.addEventListener("beforeunload", unload);
+    document.addEventListener("click", click, true);
+    return () => {
+      window.removeEventListener("beforeunload", unload);
+      document.removeEventListener("click", click, true);
+    };
+  }, [dirty, saving]);
   const generation = useRef(0),
     invalid = from && to && from > to;
   const query = new URLSearchParams({
@@ -94,7 +126,12 @@ export default function Workspace({ api, id }) {
               {workspace.description?.plainText && (
                 <details className="description">
                   <summary>Mô tả Workspace</summary>
-                  <p>{workspace.description.plainText}</p>
+                  <RichEditor
+                    readOnly
+                    value={workspace.description}
+                    label="Mô tả nhóm"
+                    limit={20000}
+                  />
                 </details>
               )}
             </div>
@@ -107,34 +144,64 @@ export default function Workspace({ api, id }) {
           <div className="tabs" aria-label="Nội dung Workspace">
             <button
               aria-pressed={tab === "projects"}
-              onClick={() => setTab("projects")}
+              disabled={saving}
+              onClick={() => changeTab("projects")}
             >
               Dự án
             </button>
             <button
               aria-pressed={tab === "members"}
-              onClick={() => setTab("members")}
+              disabled={saving}
+              onClick={() => changeTab("members")}
             >
               Thành viên
             </button>
             {workspace.role === "owner" && (
               <button
                 aria-pressed={tab === "invitations"}
-                onClick={() => setTab("invitations")}
+                disabled={saving}
+                onClick={() => changeTab("invitations")}
               >
                 Lời mời
               </button>
             )}
+            {workspace.role === "owner" && (
+              <button
+                disabled={saving}
+                aria-pressed={tab === "settings"}
+                onClick={() => changeTab("settings")}
+              >
+                Cài đặt nhóm
+              </button>
+            )}
+            <button
+              disabled={saving}
+              aria-pressed={tab === "email"}
+              onClick={() => changeTab("email")}
+            >
+              Email của tôi trong nhóm
+            </button>
           </div>
         </>
       )}
-      {tab !== "projects" && workspace && (
+      {["members", "invitations"].includes(tab) && workspace && (
         <Team
           key={id + tab}
           api={api}
           id={id}
           invitations={tab === "invitations"}
           onContext={setWorkspace}
+        />
+      )}
+      {["settings", "email"].includes(tab) && workspace && (
+        <WorkspaceSettings
+          key={id + tab}
+          api={api}
+          id={id}
+          emailOnly={tab === "email"}
+          onContext={setWorkspace}
+          onDirty={setDirty}
+          onSaving={setSaving}
         />
       )}
       {tab === "projects" && (

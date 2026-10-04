@@ -48,7 +48,7 @@ export default function RichEditor({
     onCreate: ({ editor }) => setText(visibleText(editor.getJSON())),
   });
   useEffect(() => {
-    editor?.setEditable(!readOnly);
+    editor?.setEditable(!readOnly, false);
   }, [readOnly, editor]);
   useEffect(() => {
     if (editor && readOnly)

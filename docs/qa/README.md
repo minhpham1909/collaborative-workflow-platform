@@ -33,3 +33,5 @@ Hiện hành sau Workspace: [Workspace/Invitations QA](WORKSPACE-INVITATIONS-CHE
 [Account / Personal Settings FE QA](FE-ACCOUNT-SETTINGS-CHECK.md): 8 FE tests, 13 Accounts/Users integration tests và browser fixture flows; không gửi SMTP/Google thật.
 
 [Team / Invitations FE QA](FE-TEAM-INVITATIONS-CHECK.md): 12 Workspace integration + 8 FE tests, browser lifecycle fixture; không gửi SMTP thật.
+
+[Cài đặt Workspace / own email overrides QA](FE-WORKSPACE-SETTINGS-CHECK.md): 18 Users/Workspace integration + 8 FE tests, browser settings và Task/editor regression, không gửi SMTP thật.

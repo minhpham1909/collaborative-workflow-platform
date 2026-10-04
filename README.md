@@ -2,6 +2,8 @@
 
 Dự án portfolio cộng tác nhóm nhỏ: User → Workspace → Project → Task.
 
+Cài đặt Workspace/Email riêng FE đã nối 04/10/2026: Owner tên/mô tả rich text, own overrides/reset/giá trị hiệu lực và CAS. [QA](docs/qa/FE-WORKSPACE-SETTINGS-CHECK.md). Signup/verify/recovery và UI polish tiếp theo.
+
 Thành viên/Lời mời FE đã nối 04/10/2026: search/time, Owner invite/remove/transfer/revoke/retry, Member leave và nhận LINK sau đăng nhập. [QA](docs/qa/FE-TEAM-INVITATIONS-CHECK.md). Cài đặt nhóm và Workspace email overrides tiếp theo.
 
 Account/Personal Settings FE đã nối 04/10/2026: hồ sơ, email settings, đổi mật khẩu và Google link. [QA](docs/qa/FE-ACCOUNT-SETTINGS-CHECK.md). Quản lý Members/Invitations tiếp theo.
