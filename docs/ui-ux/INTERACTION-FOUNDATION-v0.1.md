@@ -14,6 +14,8 @@ Ngày 04/10/2026. Theo yêu cầu trực tiếp của chủ dự án; thiết k�
 
 ## Hướng nâng cấp UI/UX tiếp theo
 
+Chủ dự án yêu cầu thực hiện theo từng bước và đánh giá trước khi chuyển bước: [kế hoạch triển khai và bảng theo dõi](../project/UI-UX-UPGRADE-PLAN.md). Sáu hướng dưới đây được chia thành P1–P6 với tiêu chí hoàn thành; phần đã có nền chưa được coi là nghiệm thu toàn giai đoạn.
+
 1. Rà từng luồng tạo → xem → sửa → hủy → mất quyền → lỗi mạng, ghi nhận các trạng thái loading/empty/error/read-only/success nhất quán. Không coi một màn đẹp là luồng hoàn chỉnh.
 2. Thống nhất component cho form, dialog, picker và thông báo; action labels nói đúng tác động, lỗi chỉ rõ cách tiếp tục. Toast dành cho phản hồi ngắn; lỗi cần xử lý nằm cạnh dữ liệu liên quan.
 3. Giữ vùng bấm đủ lớn, focus rõ; mô tả dài cần bố cục thu gọn/mở rộng để Board không bị đẩy xuống quá xa. Không ẩn hoàn toàn nội dung hoặc CTA cần dùng.

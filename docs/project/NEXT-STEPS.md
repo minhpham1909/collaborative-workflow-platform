@@ -36,6 +36,8 @@ Increment trước 04/10/2026: [Board/Task/Comments/My Tasks FE](../sds/FE-TASKS
 
 ## Thứ tự triển khai tiếp
 
+Theo yêu cầu 04/10/2026, nâng cấp UI/UX đi theo [kế hoạch có tiêu chí chuyển bước](UI-UX-UPGRADE-PLAN.md): P1 audit → P2 component → P3 tương tác/nội dung dài → P4 navigation/draft → P5 thiết kế restore → P6 visual. Bước hiện tại là lập kế hoạch, tiếp theo audit P1; chưa đánh dấu giai đoạn nào Đạt từ các increment cũ. Các ưu tiên bên dưới là backlog kỹ thuật, không thay thứ tự và tiêu chí của kế hoạch này.
+
 1. Workspace/Project/Board/Task/Comment/My Tasks đã nối, kiểm quyền/CAS. Tiếp tục routing/panel và phục hồi filters khi back, draft transitions trước release.
 2. Identity DTO G02 đã có creator/assignee/author kể cả lịch sử trong scope; G03 server search Members đã có; picker Task vẫn cần nối search. Editor chung Task/Comment đã chọn Tiptap 3.31.4; Workspace đã dùng editor chung; Project description đã nối editor và quyền Creator theo yêu cầu 04/10/2026.
 3. Account/Settings và Notifications đã nối. Members/Invitations đã nối. Cài đặt nhóm/Workspace email overrides đã nối. Signup email/verify-link/recovery đã nối cho local. Tiếp tục policy thật/Google signup, English và routing polish. G01 capabilities đã có; không tự link Google trùng email. Terms/Privacy nội dung thật trước mở đăng ký/public release.
