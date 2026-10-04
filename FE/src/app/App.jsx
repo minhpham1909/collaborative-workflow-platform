@@ -8,6 +8,8 @@ import Project from "../features/projects/Project.jsx";
 import TaskList from "../features/tasks/TaskList.jsx";
 import TaskDetail from "../features/tasks/TaskDetail.jsx";
 import { readRoute } from "./routes.js";
+import Settings from "../features/settings/Settings.jsx";
+import Avatar from "../components/Avatar.jsx";
 import Notifications, {
   InboxBadge,
 } from "../features/notifications/Notifications.jsx";
@@ -23,7 +25,7 @@ const channel =
   typeof BroadcastChannel === "function"
     ? new BroadcastChannel("workflow-session")
     : null;
-for (const method of ["login", "google", "logout"]) {
+for (const method of ["login", "google", "logout", "changePassword"]) {
   const original = api[method];
   api[method] = async (...args) => {
     const result = await original(...args);
@@ -115,6 +117,14 @@ export default function App() {
             ♧ Thông báo <InboxBadge key={user.id} api={api} userId={user.id} />
           </a>
         </nav>
+        <nav>
+          <a
+            className={route.kind === "settings" ? "active" : ""}
+            href="#settings"
+          >
+            ⚙ Tài khoản & Cài đặt
+          </a>
+        </nav>
         <p className="aside-note">
           Không gian cho những ý tưởng trở thành công việc.
         </p>
@@ -123,7 +133,7 @@ export default function App() {
         <header>
           <span>Không gian cá nhân</span>
           <div className="profile">
-            <span className="avatar">{user.displayName?.slice(0, 1)}</span>
+            <Avatar user={user} />
             <strong>{user.displayName}</strong>
             <button disabled={busy} onClick={logout}>
               {busy ? "Đang đăng xuất…" : "Đăng xuất"}
@@ -135,7 +145,15 @@ export default function App() {
             {error}
           </p>
         )}
-        {["notifications", "notification"].includes(route.kind) ? (
+        {route.kind === "settings" ? (
+          <Settings
+            key={user.id}
+            api={api}
+            onUser={(value) =>
+              setUser((old) => (old?.id === value.id ? value : old))
+            }
+          />
+        ) : ["notifications", "notification"].includes(route.kind) ? (
           <Notifications
             key={user.id + (route.id ?? "inbox")}
             api={api}

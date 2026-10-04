@@ -1,23 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { messageFor } from "../../lib/messages.js";
-let googleScript;
-function loadGoogle() {
-  if (window.google?.accounts) return Promise.resolve();
-  if (!googleScript)
-    googleScript = new Promise((resolve, reject) => {
-      const s = document.createElement("script");
-      s.src = "https://accounts.google.com/gsi/client";
-      s.async = true;
-      s.onload = resolve;
-      s.onerror = () => {
-        googleScript = null;
-        s.remove();
-        reject(new Error("Google unavailable"));
-      };
-      document.head.append(s);
-    });
-  return googleScript;
-}
+import { loadGoogle } from "../../lib/google.js";
 export default function Login({ api, connectionError, retry }) {
   const [email, setEmail] = useState(""),
     [password, setPassword] = useState(""),

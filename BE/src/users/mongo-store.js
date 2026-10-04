@@ -1,10 +1,21 @@
 import mongoose from 'mongoose';
-import { User, Session } from '../models/index.js';
+import { User, Session, AuthIdentity } from '../models/index.js';
 import { AuthError } from '../auth/errors.js';
 
 const id = (value) => new mongoose.Types.ObjectId(value);
 export function createMongoUsersStore() {
   return {
+    async ownAccount(claims, now) {
+      return mongoose.connection.transaction(async (tx) => {
+        // The same guard as account mutations keeps capabilities and session checks consistent.
+        const user = await User.collection.findOneAndUpdate({ _id: id(claims.sub) }, { $inc: { authMutationRevision: 1 } }, { session: tx, returnDocument: 'after' });
+        if (!user || user.authVersion !== claims.av) throw new AuthError('UNAUTHENTICATED');
+        const session = await Session.collection.findOne({ _id: id(claims.sid), userId: user._id, authVersionAtIssue: claims.av, revokedAt: null, expiresAt: { $gt: now } }, { session: tx });
+        if (!session) throw new AuthError('UNAUTHENTICATED');
+        const google = await AuthIdentity.collection.findOne({ userId: user._id, provider: 'google' }, { session: tx, projection: { _id: 1 } });
+        return { user, account: { hasLocalPassword: Boolean(user.passwordHash), googleLinked: Boolean(google) } };
+      });
+    },
     async updateOwn(claims, expectedVersion, fields, now) {
       return mongoose.connection.transaction(async (tx) => {
         // Shared User guard serializes profile writes with password/reset/revoke mutations.

@@ -38,7 +38,7 @@ test('Own Profile/Settings HTTP and concurrency on MongoDB replica set', { skip:
     await t.test('Unverified Users may view/edit themselves; response and immutable identity fields remain safe', async () => {
       const initial = await own(); const googleIdentity = await AuthIdentity.collection.findOne({ userId: userIds[0] });
       const viewed = await get(); assert.equal(viewed.status, 200);
-      assert.equal((await viewed.json()).user.emailVerified, false);
+      const view=await viewed.json();assert.equal(view.user.emailVerified,false);assert.deepEqual(view.account,{hasLocalPassword:true,googleLinked:true});assert.ok(!JSON.stringify(view).includes('providerSubject'));
       const changed = await patch('/me/profile', { expectedVersion: 0, displayName: 'Nguyễn An 👋' });
       assert.equal(changed.status, 200); const body = await changed.json();
       assert.equal(body.user.version, 1); assert.equal(body.user.displayName, 'Nguyễn An 👋');

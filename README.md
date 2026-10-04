@@ -2,7 +2,9 @@
 
 Dự án portfolio cộng tác nhóm nhỏ: User → Workspace → Project → Task.
 
-Notifications FE đã nối 04/10/2026: inbox/detail/badge/read-all/search/time và EMAIL invitation accept. [QA](docs/qa/FE-NOTIFICATIONS-CHECK.md). Account/Settings và quản lý nhóm tiếp theo.
+Account/Personal Settings FE đã nối 04/10/2026: hồ sơ, email settings, đổi mật khẩu và Google link. [QA](docs/qa/FE-ACCOUNT-SETTINGS-CHECK.md). Quản lý Members/Invitations tiếp theo.
+
+Increment trước — Notifications FE đã nối 04/10/2026: inbox/detail/badge/read-all/search/time và EMAIL invitation accept. [QA](docs/qa/FE-NOTIFICATIONS-CHECK.md). Quản lý nhóm tiếp theo.
 
 FE mới nhất 04/10/2026: **Board/Task/Comments/My Tasks đã nối API**, editor chung và quyền/CAS; [thiết kế](docs/sds/FE-TASKS-v0.1.md), [QA](docs/qa/FE-TASKS-CHECK.md). Những ghi nhận chưa Board phía dưới là mốc increment trước.
 

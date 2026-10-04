@@ -7,7 +7,10 @@ export function createUsersService({ store, now = () => new Date() }) {
     return { user: userResponse(user) };
   }
   return {
-    me: (auth) => ({ user: userResponse(auth.user) }),
+    me: async (auth) => {
+      const data = await store.ownAccount(auth.claims, now());
+      return { user: userResponse(data.user), account: data.account };
+    },
     profile: (auth, input) => update(auth, profileInput(input)),
     preferences: (auth, input) => update(auth, preferencesInput(input)),
   };

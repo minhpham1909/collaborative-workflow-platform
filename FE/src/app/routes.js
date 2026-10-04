@@ -7,6 +7,8 @@ export function readRoute(hash) {
   )
     return { kind: parts[0], id: parts[1] };
   return {
-    kind: ["mine", "notifications"].includes(parts[0]) ? parts[0] : "home",
+    kind: ["mine", "notifications", "settings"].includes(parts[0])
+      ? parts[0]
+      : "home",
   };
 }

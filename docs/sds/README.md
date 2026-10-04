@@ -51,3 +51,5 @@ Increment hiện hành: [Workspace/Invitations API](WORKSPACE-INVITATIONS-API-v0
 
 
 [Notifications/email API v0.1](NOTIFICATIONS-EMAIL-API-v0.1.md): inbox, cutoff, current-rights masking/rejoin, work-mail eligibility và worker riêng đã triển khai.
+
+[Account / Personal Settings FE](FE-ACCOUNT-SETTINGS-v0.1.md): own capabilities, hồ sơ/preferences, password rotation và Google link UI.

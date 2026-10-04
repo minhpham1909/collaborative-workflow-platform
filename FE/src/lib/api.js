@@ -93,6 +93,27 @@ export function createApi({
     request,
     restore,
     clear,
+    async changePassword(body) {
+      if (!access) await restore();
+      const generation = epoch;
+      return lock(async () => {
+        if (generation !== epoch) throw new ApiError("SESSION_CHANGED", 401);
+        const observed = access;
+        const challenge = await raw("/auth/csrf");
+        if (generation !== epoch) throw new ApiError("SESSION_CHANGED", 401);
+        const data = await raw("/auth/password/change", {
+          method: "POST",
+          body,
+          headers: {
+            Authorization: "Bearer " + observed,
+            "X-CSRF-Token": challenge.csrfToken,
+          },
+        });
+        if (generation !== epoch) throw new ApiError("SESSION_CHANGED", 401);
+        epoch++;
+        return session(data);
+      });
+    },
     async login(body) {
       const generation = ++epoch;
       const data = await raw("/auth/login", { method: "POST", body });

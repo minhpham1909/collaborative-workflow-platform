@@ -25,6 +25,12 @@ const messages = {
   SESSION_CHANGED: "Phiên vừa thay đổi. Vui lòng đăng nhập lại.",
   ORIGIN_REJECTED: "Địa chỉ ứng dụng chưa được BE cho phép.",
   GOOGLE_NOT_CONFIGURED: "Đăng nhập Google chưa được cấu hình.",
+  GOOGLE_EMAIL_MISMATCH:
+    "Google account phải cùng email với tài khoản hiện tại.",
+  GOOGLE_IDENTITY_IN_USE: "Google account đã được liên kết với tài khoản khác.",
+  GOOGLE_CHALLENGE_INVALID:
+    "Phiên liên kết Google đã hết hạn. Bắt đầu lại thao tác.",
+  LOCAL_PASSWORD_UNAVAILABLE: "Tài khoản này không có mật khẩu hệ thống.",
 };
 export const messageFor = (error) =>
   messages[error?.code] ?? "Chưa kết nối được hệ thống. Vui lòng thử lại.";

@@ -27,7 +27,7 @@ Cập nhật 04/10/2026: G04 đã xử lý phần Workspace bằng server search
 
 | ID | Mức độ | Vấn đề thật | Hướng xử lý đề xuất / tác động UI |
 |---|---|---|---|
-| G01 | P0 trước Account FE | User/auth/me DTO không có hasLocalPassword/providers; avatar Google không chứng minh kiểu credential | Bổ sung own account capabilities từ AuthIdentity/password existence, chỉ boolean/provider, không secret; mới phân nhánh change password/link/linked/Google-only đúng |
+| G01 | Đã xử lý 04/10/2026 | GET /users/me trả own account capabilities hasLocalPassword/googleLinked từ password existence/AuthIdentity, recheck phiên; không suy từ avatar | Account FE đã phân nhánh đúng; xem [thiết kế](../sds/FE-ACCOUNT-SETTINGS-v0.1.md) và [QA](../qa/FE-ACCOUNT-SETTINGS-CHECK.md) |
 | G02 | P1 trước Task/Members polished | Task/Comment chỉ ID creator/assignee/author; active Member list không chứa tên người đã rời | Enrich DTO hoặc endpoint batch identity trong scope Task/Workspace, name/avatar allowlist kể cả historical reference; không expose email hoặc User lookup toàn hệ thống; UI không hiển thị ObjectId |
 | G03 | P1 trước picker nhiều thành viên | Members chỉ paginated, chưa server search hoặc lookup assignee selection/history | Add scoped search/pagination cho picker và total nếu cần; tạm load more nhưng không giả search toàn bộ trên trang đã tải |
 | G04 | P1 trước mở rộng search/time danh sách | Hiện dynamic q/time đầy đủ chỉ Task/Board/My Tasks; Project/Workspace/Member/Invitation/Notification chưa có cùng query | Screen spec mục 7 đề xuất field/scope phù hợp theo yêu cầu search/time; thêm server filters/total trước UI; không search client page đầu rồi tuyên bố toàn tập; Notification phải check masking trước search và bind cutoff với filters mới |

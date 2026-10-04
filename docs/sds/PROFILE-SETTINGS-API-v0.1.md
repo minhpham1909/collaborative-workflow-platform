@@ -8,7 +8,7 @@ User đã đăng nhập, kể cả chưa verified, xem/sửa Profile và setting
 
 | API đã có | Fields / điều kiện | Response |
 |---|---|---|
-| GET /users/me | Bearer hợp lệ | Public User DTO như /auth/me, gồm version |
+| GET /users/me | Bearer hợp lệ | `{user, account: {hasLocalPassword, googleLinked}}`; user như /auth/me, gồm version |
 | PATCH /users/me/profile | expectedVersion, displayName | User DTO/version mới |
 | PATCH /users/me/preferences | expectedVersion, locale và/hoặc emailPreferences | User DTO/version mới |
 
@@ -30,3 +30,5 @@ Triển khai sau membership APIs: mỗi loại inherit/on/off, chỉ User sửa 
 4. Global preferences partial merge đúng, giữ các loại chưa gửi, locale không đổi quyền/timezone/nội dung User.
 5. Đổi tên không sửa Google identity/avatar và không ảnh hưởng JWT/session; response không lộ hashes/revisions.
 6. Kiểm HTTP và Mongo replica set, rồi cập nhật SDS/QA; tiếp theo Workspace/Invitations.
+
+04/10/2026: GET own capabilities đọc trong transaction, recheck session/authVersion; không lộ hash/Google subject. [Account FE](FE-ACCOUNT-SETTINGS-v0.1.md) đã nối; các ghi chú "tiếp theo" phía trên là mốc triển khai BE.
