@@ -705,3 +705,440 @@ nav + nav {
 .tabs {
   flex-wrap: wrap;
 }
+/* Creative Studio foundation: shared navigation, filters and account controls. */
+:root {
+  --studio-purple: #6650bf;
+  --studio-ink: #30283f;
+  --studio-border: #e8e1eb;
+}
+select {
+  font: inherit;
+}
+select:focus-visible {
+  outline: 3px solid #6650bf;
+  outline-offset: 3px;
+}
+.ui-icon {
+  flex: 0 0 24px;
+}
+.shell > aside {
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--studio-border);
+  background: #faf9f5;
+}
+.navigation-label {
+  margin: 38px 12px 14px;
+  font-size: 10px;
+  letter-spacing: 1.3px;
+  color: #756a83;
+  font-weight: 700;
+}
+.app-navigation {
+  margin: 0;
+  display: grid;
+  gap: 7px;
+}
+.app-navigation a {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  min-height: 52px;
+  padding: 12px;
+  color: #61576e;
+  border: 1px solid transparent;
+  font-weight: 600;
+}
+.app-navigation a > span:not(.inbox-badge) {
+  flex: 1;
+}
+.app-navigation a:hover {
+  background: #f0eaf6;
+  color: var(--studio-purple);
+}
+.app-navigation a.active {
+  background: #ece4fa;
+  border-color: #e0d2f6;
+  color: #5e42a5;
+}
+.studio-note {
+  margin-top: auto;
+  padding: 28px 10px 0;
+}
+.studio-note img {
+  display: block;
+  width: 100%;
+  max-width: 200px;
+  margin: 0 auto 8px;
+}
+.studio-note strong {
+  display: block;
+  font-size: 13px;
+  color: #5c4881;
+}
+.studio-note p {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: #756a83;
+}
+.shell > div {
+  min-width: 0;
+}
+.hero {
+  border: 1px solid #e7dcf0;
+  background: linear-gradient(115deg, #f0e7fb, #fff0e8);
+}
+.illustrated-hero {
+  position: relative;
+  min-height: 230px;
+  gap: 20px;
+}
+.illustrated-hero > div {
+  max-width: 560px;
+  position: relative;
+  z-index: 1;
+}
+.illustrated-hero h1 {
+  font-size: clamp(26px, 2.5vw, 36px);
+}
+.hero-art {
+  width: clamp(150px, 20vw, 270px);
+  flex-shrink: 0;
+}
+.illustrated-hero > button {
+  position: absolute;
+  left: 32px;
+  bottom: 24px;
+}
+.illustrated-hero > div {
+  padding-bottom: 44px;
+}
+.eyebrow {
+  font-size: 10px;
+  color: #7554ab;
+  letter-spacing: 1.5px;
+  font-weight: 700;
+}
+.section-title h2 {
+  margin: 6px 0 8px;
+  font-size: 28px;
+  color: var(--studio-ink);
+}
+.section-description {
+  margin: 0 0 20px;
+  color: #756a83;
+}
+.filter-panel {
+  border: 1px solid var(--studio-border);
+  border-radius: 20px;
+  background: #fffdfb;
+  margin: 22px 0;
+  box-shadow: 0 5px 20px #60477805;
+  overflow: hidden;
+}
+.filter-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 20px;
+  border-bottom: 1px solid #f0eaf2;
+  color: #5c4487;
+}
+.filter-heading strong {
+  font-size: 13px;
+}
+.filter-heading span {
+  margin-left: auto;
+  color: #756a83;
+  font-size: 12px;
+}
+.filter-panel .filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  align-items: end;
+  gap: 18px 16px;
+  background: transparent;
+  padding: 20px;
+  margin: 0;
+  border-radius: 0;
+}
+.filter-panel .filters label {
+  min-width: 0;
+  font-size: 12px;
+  color: #675975;
+  gap: 8px;
+  font-weight: 600;
+}
+.filter-panel .filters label:has(input[type="search"]) {
+  grid-column: span 2;
+}
+.filter-panel .filters input:not([type="checkbox"]),
+.filter-panel .filters select {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid #e1d9e7;
+  border-radius: 10px;
+  background: #fff;
+  color: #3e3450;
+  font-weight: 400;
+}
+.filter-panel .filters button {
+  min-height: 44px;
+  color: #6650a2;
+  background: #f6f1fc;
+  border-color: #e8def5;
+}
+.filter-panel .filters .check {
+  display: flex;
+  min-height: 44px;
+  padding: 0 12px;
+  background: #fff4ee;
+  border-radius: 10px;
+  color: #9d503e;
+}
+.check input {
+  width: 18px;
+  height: 18px;
+  accent-color: #7352b5;
+  flex-shrink: 0;
+}
+.mine-list {
+  gap: 0;
+  border: 1px solid var(--studio-border);
+  border-radius: 18px;
+  background: white;
+  overflow: hidden;
+}
+.mine-list .task-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 22px 24px;
+  border: 0;
+  border-bottom: 1px solid #eee8f1;
+  border-radius: 0;
+}
+.mine-list .task-row:last-child {
+  border-bottom: 0;
+}
+.mine-list .task-row:hover {
+  background: #fffcf8;
+}
+.task-row .task-summary {
+  min-width: 0;
+}
+.task-row h3 {
+  margin: 0 0 6px;
+  font-size: 16px;
+}
+.task-row p {
+  margin: 0;
+}
+.task-row-meta {
+  display: grid;
+  gap: 7px;
+}
+.task-row .task-row-meta {
+  text-align: right;
+  flex-shrink: 0;
+}
+.task-row .task-row-meta p {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  justify-content: end;
+}
+.status-in_progress {
+  background: #fff0d9;
+  color: #946012;
+}
+.status-done {
+  background: #e3f3ea;
+  color: #38775c;
+}
+.settings-page .settings-card {
+  padding: 30px;
+  border-color: var(--studio-border);
+  box-shadow: 0 6px 30px #60477804;
+}
+.settings-card h2 {
+  margin-top: 0;
+}
+.settings-card fieldset > label:not(.preference-row) {
+  margin: 18px 0;
+}
+.preference-row {
+  display: flex;
+  flex-direction: row-reverse;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  border-bottom: 1px solid #eee8f1;
+  padding: 20px 0;
+  cursor: pointer;
+}
+.preference-row span {
+  display: grid;
+  gap: 5px;
+}
+.preference-row strong {
+  font-size: 14px;
+  font-weight: 600;
+}
+.preference-row small {
+  color: #756a83;
+  font-size: 12px;
+}
+.preference-row input {
+  appearance: none;
+  width: 44px;
+  height: 26px;
+  padding: 0;
+  flex: 0 0 44px;
+  border-radius: 20px;
+  border: 1px solid #c7bfce;
+  background: #ded8e4;
+  cursor: pointer;
+  position: relative;
+  transition: background 0.15s;
+}
+.preference-row input::after {
+  content: "";
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  top: 3px;
+  left: 3px;
+  box-shadow: 0 1px 4px #30283f25;
+  transition: transform 0.15s;
+}
+.preference-row input:checked {
+  background: #7955b8;
+  border-color: #7955b8;
+}
+.preference-row input:checked::after {
+  transform: translateX(18px);
+}
+.language-preference {
+  max-width: 420px;
+  padding-top: 8px;
+}
+.settings-card .muted {
+  line-height: 1.8;
+  margin: 16px 0;
+}
+.settings-card button.primary {
+  margin-top: 8px;
+  background: #6b4db1;
+  border-color: #6b4db1;
+}
+.settings-card .login-method {
+  display: inline-flex;
+  padding: 12px 18px;
+  background: #f4eefb;
+  border: 1px solid #e7dbf5;
+  border-radius: 12px;
+  margin: 0 12px 24px 0;
+  color: #604286;
+}
+.settings-card .google-method {
+  background: #eef6f1;
+  border-color: #d7e9dd;
+  color: #43795e;
+}
+.password-form {
+  padding-top: 12px;
+  border-top: 1px solid #eee8f1;
+  max-width: 660px;
+}
+.password-form fieldset {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+.password-form fieldset > label {
+  margin: 0 !important;
+  gap: 10px;
+}
+.password-form fieldset > label:first-child {
+  grid-column: 1 / -1;
+}
+.password-form fieldset > button {
+  justify-self: start;
+}
+.password-form input {
+  width: 100%;
+  min-height: 48px;
+}
+@media (max-width: 1100px) {
+  .hero-art {
+    width: 180px;
+  }
+  .filter-heading span {
+    display: none;
+  }
+}
+@media (max-width: 760px) {
+  .navigation-label,
+  .studio-note {
+    display: none;
+  }
+  .app-navigation {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-top: 18px;
+  }
+  .app-navigation a {
+    min-width: 0;
+    font-size: 12px;
+    gap: 8px;
+    padding: 10px;
+  }
+  .hero-art {
+    display: none;
+  }
+  .illustrated-hero > div {
+    max-width: 100%;
+  }
+  .filter-panel .filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 16px;
+    gap: 14px;
+  }
+  .filter-panel .filters label:has(input[type="search"]) {
+    grid-column: 1 / -1;
+  }
+  .mine-list .task-row {
+    display: grid;
+    gap: 12px;
+    padding: 18px;
+  }
+  .task-row .task-row-meta {
+    text-align: left;
+  }
+  .task-row .task-row-meta p {
+    justify-content: start;
+  }
+  .settings-page .settings-card {
+    padding: 20px;
+  }
+  .password-form fieldset {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 420px) {
+  .filter-panel .filters {
+    grid-template-columns: 1fr;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .preference-row input,
+  .preference-row input::after {
+    transition: none;
+  }
+}

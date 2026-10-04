@@ -1,3 +1,4 @@
+import FilterPanel from "../../components/FilterPanel.jsx";
 import { useEffect, useRef, useState } from "react";
 import { messageFor } from "../../lib/messages.js";
 const changed = () => window.dispatchEvent(new Event("workflow-inbox-changed"));
@@ -294,7 +295,7 @@ export default function Notifications({ api, id, user }) {
       </section>
       {!id && (
         <>
-          <div className="filters">
+          <FilterPanel>
             <label>
               Trạng thái đọc
               <select
@@ -323,6 +324,7 @@ export default function Notifications({ api, id, user }) {
               Tìm thông báo
               <input
                 type="search"
+                placeholder="Nhập để tìm kiếm…"
                 maxLength={200}
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
@@ -355,7 +357,7 @@ export default function Notifications({ api, id, user }) {
             >
               Xóa bộ lọc thông báo
             </button>
-          </div>
+          </FilterPanel>
           {data && (
             <p className="muted">
               {data.total} kết quả · {data.unreadCount} chưa đọc theo loại/tìm

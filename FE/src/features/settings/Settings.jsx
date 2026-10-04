@@ -72,7 +72,7 @@ export default function Settings({ api, onUser }) {
     setDirty(false);
   }
   return (
-    <main>
+    <main className="settings-page">
       <section className="hero">
         <div>
           <small>TÙY CHỈNH KHÔNG GIAN CỦA BẠN</small>
@@ -194,7 +194,7 @@ function EditSettings({ api, data, tab, onUser, onDirty, onSaving }) {
     }
   }
   return (
-    <section className="project-info">
+    <section className="project-info settings-card">
       <form onSubmit={submit}>
         <fieldset disabled={busy} onChange={() => onDirty(true)}>
           {tab === "profile" ? (
@@ -231,18 +231,33 @@ function EditSettings({ api, data, tab, onUser, onDirty, onSaving }) {
                 Workspace được ưu tiên.
               </p>
               {Object.entries(names).map(([key, label]) => (
-                <label className="check" key={key}>
+                <label className="preference-row" key={key}>
                   <input
                     type="checkbox"
+                    aria-label={label}
                     checked={prefs[key]}
                     onChange={(e) =>
                       setPrefs((old) => ({ ...old, [key]: e.target.checked }))
                     }
                   />
-                  {label}
+                  <span>
+                    <strong>{label}</strong>
+                    <small>
+                      {
+                        {
+                          assignment:
+                            "Theo dõi những công việc vừa được giao cho bạn.",
+                          comment: "Cập nhật trao đổi mới trong công việc.",
+                          content:
+                            "Biết khi nội dung hoặc hạn hoàn thành được điều chỉnh.",
+                          status: "Nhận tin khi công việc chuyển trạng thái.",
+                        }[key]
+                      }
+                    </small>
+                  </span>
                 </label>
               ))}
-              <label>
+              <label className="language-preference">
                 Ngôn ngữ ưu tiên
                 <select
                   aria-label="Ngôn ngữ ưu tiên"
@@ -404,19 +419,23 @@ function Security({ api, data, onUser, onDirty, onSaving, reload }) {
   }
   return (
     <>
-      <section className="project-info">
+      <section className="project-info settings-card">
         <h2>Phương thức đăng nhập</h2>
-        <p>
+        <p className="login-method">
           {data.account.hasLocalPassword
             ? "Email và mật khẩu"
             : "Tài khoản Google-only · Không có mật khẩu riêng"}
         </p>
-        <p>
+        <p className="login-method google-method">
           Google: {data.account.googleLinked ? "Đã liên kết" : "Chưa liên kết"}
         </p>
         {data.account.hasLocalPassword && (
-          <form onSubmit={change}>
+          <form className="password-form" onSubmit={change}>
             <h3>Đổi mật khẩu</h3>
+            <p className="muted">
+              Dùng 12–128 ký tự. Sau khi đổi, các phiên đăng nhập khác sẽ được
+              thu hồi.
+            </p>
             <fieldset disabled={busy || linking} onChange={() => onDirty(true)}>
               <label>
                 Mật khẩu hiện tại
@@ -468,7 +487,7 @@ function Security({ api, data, onUser, onDirty, onSaving, reload }) {
         {note && <p role="status">{note}</p>}
       </section>
       {data.account.hasLocalPassword && !data.account.googleLinked && (
-        <section className="project-info">
+        <section className="project-info settings-card">
           <h2>Liên kết Google</h2>
           <p>
             Chọn Google account cùng email {data.user.email}. Hệ thống không

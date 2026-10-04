@@ -1,3 +1,4 @@
+import Icon from "../components/Icon.jsx";
 import { useEffect, useState } from "react";
 import { createApi } from "../lib/api.js";
 import { messageFor } from "../lib/messages.js";
@@ -137,39 +138,38 @@ export default function App() {
         <a className="brand" href="#home">
           <span>W</span>Workflow
         </a>
-        <nav>
-          <a className={route.kind === "home" ? "active" : ""} href="#home">
-            ⌂ Trang chủ
-          </a>
+        <p className="navigation-label">KHÔNG GIAN CÁ NHÂN</p>
+        <nav className="app-navigation" aria-label="Điều hướng chính">
+          {[
+            ["home", "Trang chủ", "home"],
+            ["mine", "Công việc của tôi", "tasks"],
+            ["notifications", "Thông báo", "bell"],
+            ["settings", "Tài khoản & Cài đặt", "settings"],
+          ].map(([value, label, icon]) => {
+            const active =
+              route.kind === value ||
+              (value === "notifications" && route.kind === "notification");
+            return (
+              <a
+                key={value}
+                className={active ? "active" : ""}
+                aria-current={active ? "page" : undefined}
+                href={"#" + value}
+              >
+                <Icon name={icon} />
+                <span>{label}</span>
+                {value === "notifications" && (
+                  <InboxBadge key={user.id} api={api} userId={user.id} />
+                )}
+              </a>
+            );
+          })}
         </nav>
-        <nav>
-          <a className={route.kind === "mine" ? "active" : ""} href="#mine">
-            ✓ Công việc của tôi
-          </a>
-        </nav>
-        <nav>
-          <a
-            className={
-              ["notifications", "notification"].includes(route.kind)
-                ? "active"
-                : ""
-            }
-            href="#notifications"
-          >
-            ♧ Thông báo <InboxBadge key={user.id} api={api} userId={user.id} />
-          </a>
-        </nav>
-        <nav>
-          <a
-            className={route.kind === "settings" ? "active" : ""}
-            href="#settings"
-          >
-            ⚙ Tài khoản & Cài đặt
-          </a>
-        </nav>
-        <p className="aside-note">
-          Không gian cho những ý tưởng trở thành công việc.
-        </p>
+        <div className="studio-note">
+          <img src="/illustrations/creative-workspace.svg" alt="" />
+          <strong>Ý tưởng hay, cùng làm ngay.</strong>
+          <p>Một không gian cho những ý tưởng trở thành công việc.</p>
+        </div>
       </aside>
       <div>
         <header>

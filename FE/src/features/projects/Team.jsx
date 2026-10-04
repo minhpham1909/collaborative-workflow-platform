@@ -1,3 +1,4 @@
+import FilterPanel from "../../components/FilterPanel.jsx";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Avatar from "../../components/Avatar.jsx";
@@ -105,11 +106,12 @@ export default function Team({ api, id, invitations, onContext }) {
         <p>Chỉ chủ sở hữu được quản lý lời mời.</p>
       ) : (
         <>
-          <div className="filters">
+          <FilterPanel>
             <label>
               {invitations ? "Tìm email người nhận" : "Tìm tên thành viên"}
               <input
                 type="search"
+                placeholder="Nhập để tìm kiếm…"
                 maxLength={200}
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
@@ -171,7 +173,7 @@ export default function Team({ api, id, invitations, onContext }) {
             >
               Xóa bộ lọc
             </button>
-          </div>
+          </FilterPanel>
           <p className="muted">
             Mới {invitations ? "tạo" : "gia nhập"} trước · Thời gian Việt Nam ·
             Tìm kiếm trên toàn danh sách có quyền xem

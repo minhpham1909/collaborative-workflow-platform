@@ -1,3 +1,4 @@
+import FilterPanel from "../../components/FilterPanel.jsx";
 import { useEffect, useRef, useState } from "react";
 import { messageFor } from "../../lib/messages.js";
 import NameDialog from "../../components/NameDialog.jsx";
@@ -206,11 +207,12 @@ export default function Workspace({ api, id }) {
       )}
       {tab === "projects" && (
         <>
-          <div className="filters">
+          <FilterPanel>
             <label>
               Tìm theo tên hoặc mô tả Dự án
               <input
                 type="search"
+                placeholder="Nhập để tìm kiếm…"
                 maxLength={200}
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
@@ -250,7 +252,7 @@ export default function Workspace({ api, id }) {
             >
               Xóa bộ lọc
             </button>
-          </div>
+          </FilterPanel>
           <p className="muted">
             Mới tạo trước · Ngày theo giờ Việt Nam
             {data.total !== undefined ? ` · ${data.total} Dự án phù hợp` : ""}

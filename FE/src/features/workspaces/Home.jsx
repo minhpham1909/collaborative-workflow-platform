@@ -1,3 +1,4 @@
+import FilterPanel from "../../components/FilterPanel.jsx";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { messageFor } from "../../lib/messages.js";
@@ -130,21 +131,27 @@ export default function Home({ api, user }) {
   }
   return (
     <main>
-      <section className="hero">
+      <section className="hero illustrated-hero">
         <div>
           <small>KHÔNG GIAN LÀM VIỆC CỦA BẠN</small>
           <h1>Chào {user.displayName}, hôm nay mình cùng làm gì? ✨</h1>
           <p>Chọn một Workspace để bắt đầu.</p>
         </div>
+        <img
+          className="hero-art"
+          src="/illustrations/creative-workspace.svg"
+          alt=""
+        />
         <button className="primary" onClick={() => setCreating(true)}>
           + Tạo Workspace
         </button>
       </section>
-      <div className="filters">
+      <FilterPanel>
         <label>
           Tìm theo tên hoặc mô tả Workspace
           <input
             type="search"
+            placeholder="Nhập để tìm kiếm…"
             maxLength={200}
             value={q}
             onChange={(e) => setQ(e.target.value)}
@@ -178,7 +185,7 @@ export default function Home({ api, user }) {
         <button disabled={busy} onClick={() => setRefresh((v) => v + 1)}>
           Làm mới
         </button>
-      </div>
+      </FilterPanel>
       {invalid && (
         <p className="error" role="alert">
           Ngày bắt đầu phải trước hoặc bằng ngày kết thúc.

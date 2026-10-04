@@ -31,7 +31,7 @@ GET /auth/capabilities,/auth/me,/auth/csrf. POST login,refresh,logout,register,v
 
 BE/.env.example không secrets. WEB_ORIGIN chính xác; JWT_ACCESS_KEY_HEX,JWT_REFRESH_KEY_HEX,MAIL_OUTBOX_KEY_HEX riêng mỗi key 32 bytes lowercase hex. TERMS_VERSION draft chỉ dev; production cần nội dung/version thực. GOOGLE_CLIENT_ID trống làm Google unavailable; cần OAuth Web client/audience/origins để kiểm thực tế.
 
-EMAIL_MODE=disabled mặc định: chỉ queue. capture để đọc link local: pnpm mail:once xử lý từng job, preview .local/mail chứa link nhạy cảm bị Git ignore. SMTP cần mode smtp và cấu hình TLS. Chưa worker nền, SMTP/Google live validation. Capture cấm production.
+EMAIL_MODE=disabled mặc định: chỉ queue. capture để đọc link local: pnpm mail:once xử lý từng job, preview .local/mail chứa link nhạy cảm bị Git ignore. SMTP cần mode smtp và cấu hình TLS. Worker chạy process riêng: `pnpm dev` chỉ khởi động API và không gửi email. Capture cấm production.
 
 ## Boundaries
 
@@ -50,3 +50,14 @@ Project/Task/Comment, Board và My Tasks đã triển khai: [API](../docs/sds/PR
 
 
 Notifications và work email: [API](../docs/sds/NOTIFICATIONS-EMAIL-API-v0.1.md), [QA](../docs/qa/NOTIFICATIONS-EMAIL-CHECK.md), 40 tests thường/40 tích hợp. src/notifications own inbox, unavailable masking và signed cutoff; pnpm mail:worker process riêng chạy Auth/Invitation/Work round-robin. EMAIL_MODE smtp sẽ gửi các job đủ điều kiện; chưa chạy SMTP work mail thật trong increment này.
+
+## Chạy API và gửi email local
+
+- `pnpm dev`: API có watch, không tự chạy worker.
+- `pnpm mail:status`: kiểm số lượng/trạng thái hàng đợi, không gửi và không in địa chỉ/token.
+- `pnpm mail:worker`: terminal riêng; xử lý Auth/Invitation/Work trong hàng đợi.
+- `pnpm dev:full`: một terminal chạy API + worker, không watch; nếu một process dừng, process còn lại cũng dừng. DB và FE vẫn chạy riêng. Dừng API đang dùng cổng 4000 trước khi chạy.
+
+**Bật worker là cho phép xử lý cả job cũ đủ điều kiện.** Với EMAIL_MODE=smtp, thư sẽ được gửi thật; capture lưu preview local; disabled chỉ queue. Trạng thái đăng ký 202/queued xác nhận tiếp nhận yêu cầu, chưa xác nhận SMTP đã gửi hay hộp thư đã nhận. Không đổi thành gửi SMTP đồng bộ trong request đăng ký.
+
+Chẩn đoán ngày 2026-10-04: 5 job verify_email pending, chưa có lỗi gửi, không có worker local chạy. Theo lựa chọn người dùng, chỉ sửa setup; không chạy worker hoặc gửi hàng đợi cũ trong lần sửa này.

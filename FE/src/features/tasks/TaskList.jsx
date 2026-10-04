@@ -1,3 +1,4 @@
+import FilterPanel from "../../components/FilterPanel.jsx";
 import { useEffect, useRef, useState } from "react";
 import { statuses, deadline } from "../../lib/content.js";
 import { messageFor } from "../../lib/messages.js";
@@ -122,32 +123,51 @@ export default function TaskList({ api, project, workspaceId, mine = false }) {
   }
   function card(t) {
     return (
-      <article className="task-card" key={t.id}>
-        <h3>
-          <a href={`#task/${t.id}`}>{t.title}</a>
-        </h3>
-        {mine ? (
+      <article className={"task-card" + (mine ? " task-row" : "")} key={t.id}>
+        <div className="task-summary">
+          <h3>
+            <a href={`#task/${t.id}`}>{t.title}</a>
+          </h3>
+          {mine ? (
+            <p>
+              {t.workspaceName} / {t.projectName}{" "}
+              {t.projectState === "archived" && "· Đã lưu trữ"}
+            </p>
+          ) : (
+            <p>
+              {t.assignee?.displayName ?? "Chưa phân công"}
+              {t.assigneeLeft && " · Đã rời"}
+            </p>
+          )}
+        </div>
+        <div className="task-row-meta">
           <p>
-            {t.workspaceName} / {t.projectName}{" "}
-            {t.projectState === "archived" && "· Đã lưu trữ"}
+            <span className={"pill status-" + t.status}>
+              {statuses[t.status]}
+            </span>{" "}
+            {deadline(t.dueAt)}
           </p>
-        ) : (
-          <p>
-            {t.assignee?.displayName ?? "Chưa phân công"}
-            {t.assigneeLeft && " · Đã rời"}
-          </p>
-        )}
-        <p>
-          <span className="pill">{statuses[t.status]}</span> {deadline(t.dueAt)}
-        </p>
-        {t.overdue && <strong className="overdue">Quá hạn</strong>}
+          {t.overdue && <strong className="overdue">Quá hạn</strong>}
+        </div>
       </article>
     );
   }
   return (
     <section className="task-area">
       <div className="section-title">
-        <h2>{mine ? "Công việc của tôi" : "Bảng công việc"}</h2>
+        <div>
+          <small className="eyebrow">
+            {mine
+              ? "TẬP TRUNG VÀO ĐIỀU QUAN TRỌNG"
+              : "CÙNG NHÓM TIẾN VỀ PHÍA TRƯỚC"}
+          </small>
+          <h2>{mine ? "Công việc của tôi" : "Bảng công việc"}</h2>
+          <p className="section-description">
+            {mine
+              ? "Công việc được giao cho bạn, trong một góc nhìn rõ ràng."
+              : "Theo dõi tiến độ và tìm nhanh công việc trong dự án."}
+          </p>
+        </div>
         <div className="buttons">
           <button disabled={busy} onClick={() => setRevision((v) => v + 1)}>
             Làm mới công việc
@@ -171,11 +191,12 @@ export default function TaskList({ api, project, workspaceId, mine = false }) {
           }}
         />
       )}
-      <div className="filters">
+      <FilterPanel>
         <label>
           Tìm Task
           <input
             type="search"
+            placeholder="Nhập để tìm kiếm…"
             maxLength={200}
             value={q}
             onChange={(e) => setQ(e.target.value)}
@@ -270,7 +291,7 @@ export default function TaskList({ api, project, workspaceId, mine = false }) {
         >
           Xóa bộ lọc Task
         </button>
-      </div>
+      </FilterPanel>
       <p className="muted">
         Mới tạo trước · Giờ Việt Nam ·{" "}
         {mine
