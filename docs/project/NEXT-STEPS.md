@@ -4,6 +4,8 @@ Cập nhật 04/10/2026. Yêu cầu trực tiếp của chủ dự án có ưu t
 
 ## Hiện tại
 
+Nguồn visual mới do chủ dự án chọn 04/10/2026: [hai màn Stitch Home/Workspace](../ui-ux/stitch-import-2026-10-04/README.md), project `41254457511662208`. Đã lấy MCP, tải ảnh full-resolution/HTML và 10 asset nhúng; có đánh giá sai khác nghiệp vụ và handoff. Lần này chỉ import/review, chưa thay FE; khi port không giữ statistics/mock controls hoặc Workspace Archived trái scope. Luồng hệ thống tiếp tục ưu tiên như dưới đây.
+
 Ưu tiên mới của chủ dự án 04/10/2026: rà soát luồng hệ thống trước UI. [Audit lượt 1](../qa/SYSTEM-FLOWS-CHECK.md): 44 BE integration tests đạt; đã tái hiện/sửa gửi lại create sau mất phản hồi cho Workspace/Project/Task/Comment và vùng bấm Tạo Workspace. Có regression fault-injection lưu trong FE/scripts. Tiếp theo ưu tiên draft/navigation transitions, BE idempotency và các nhánh auth/email còn thiếu; chưa gửi hàng đợi mail cũ.
 
 Increment mới nhất: [UI polish và email diagnosis](../ui-ux/UI-POLISH-v0.1.md): sidebar SVG, FilterPanel chung, My Tasks dạng dòng, email toggles/password form và illustration Home. Figma live bị quota chặn; dùng Stitch đã lưu. Đã xác định 5 email xác minh pending vì không có worker chạy; thêm `mail:status` và `dev:full`, sửa BE README. Theo lựa chọn người dùng chỉ sửa setup, chưa gửi hàng đợi cũ. Review giao diện trực tiếp và xử lý phạm vi queue trước kiểm SMTP live tiếp theo.

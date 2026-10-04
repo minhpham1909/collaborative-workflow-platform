@@ -1,0 +1,156 @@
+{
+  "projectId": "41254457511662208",
+  "title": "Workflow Collaborative Workspace Design",
+  "retrievedAt": "2026-10-04",
+  "source": "Stitch MCP get_project/get_screen; curl -L downloads",
+  "screens": [
+    {
+      "file": "home",
+      "id": "3d29b5291038486fb0d9ba4db402d73b",
+      "title": "Trang chủ cá nhân / Workspace của bạn",
+      "canvas": {
+        "width": 1280,
+        "height": 1326
+      },
+      "screenshot": {
+        "width": 2560,
+        "height": 2652
+      },
+      "sha256": {
+        "html": "9cfc4b7c541cd730f4f3269a7810c5b2524932f2910017dd4392e4ad765438bd",
+        "png": "b6befef5d5b55b0cd95ee6e3781c9ea5840a88eb8331c64fa0d41f47dd97fad3"
+      }
+    },
+    {
+      "file": "workspace",
+      "id": "32a7a04259fb43709799a034dd2fca6f",
+      "title": "Workspace Sáng Tạo Studio / Danh sách Project",
+      "canvas": {
+        "width": 1280,
+        "height": 1588
+      },
+      "screenshot": {
+        "width": 2560,
+        "height": 3176
+      },
+      "sha256": {
+        "html": "c896e00b54c2d801fdfcee7c000d1ba6f397be7d0197afa7ce93b46ffe03dad2",
+        "png": "9a9a7480e5884bbbd32684efdfb3ec89ab7069a1be1025b1b9d2e6f3400f86b6"
+      }
+    }
+  ],
+  "assets": [
+    {
+      "file": "assets/image-01.png",
+      "url": "https://lh3.googleusercontent.com/aida/AEtjO1UKC8G9vrcB7ANdNQ6R-TGl5jhbKBaUGnJQSvQCKclUg5BlPXw8sXcNlylwuFqbxBLMIYVjm0d_VfXKZ03SREw0MhBcwOxCjWE-s2LL-oD7aVUhlJakrJBVwyZzdjY8vzTq0dw0mOS6DjyM_qdOTgzZQKG1-GWvW-R43sJRYCHXU6uMbo1q3c5XMf8t0ilH76QOnZdupm3UsavlD53_I2IOx64iS4-6xOE8wI1zY4lH4mc-FPP1bbc",
+      "description": "Workflow Logo",
+      "usedBy": [
+        "home",
+        "workspace"
+      ],
+      "bytes": 17554,
+      "sha256": "9fffb06c8e67b4d689b855d76c8149bafa7a40935ffa652be6d5a86947f7a397",
+      "mimeType": "image/png"
+    },
+    {
+      "file": "assets/image-02.jpg",
+      "url": "https://lh3.googleusercontent.com/aida-public/AB6AXuCT3EEANk92vBlUVda1DzDfpBXEtOOFxd9tbmNbiygkPAgSmP3NPWNIuK2NPhvEEPZST_mqIbGuu-Xc6bItEi9vUwic1DUh-kMn6wk7Mre0VKxvCiFe_kDycLjmEufr6wi53OtOY0w9DBGQWMXRK170Ab_2KHD0kPt56dP13CfvOS8VQtbFCEGwr9fj-KIolXzEPz1GQHP-sEJUERU4tnLzw_hZrNoMTrs8f6508-6PwriN_R-Ezg",
+      "description": "Profile",
+      "usedBy": [
+        "home",
+        "workspace"
+      ],
+      "bytes": 55461,
+      "sha256": "a4e9e0fcdcf7f9c9cbdb479b98bf6a035d3844b3f2d072e1d8fc7062143cd514",
+      "mimeType": "image/jpeg"
+    },
+    {
+      "file": "assets/image-03.jpg",
+      "url": "https://lh3.googleusercontent.com/aida-public/AB6AXuAFI-i7QSnxqG5yTTdElLI7uqH-nJXFbfKwIL0pPEHtefXeYQ26Lf1xjA29UE_mJEWN_HA-fy0DxQ8Uo6nGhSz8XUlH7AQOgA0cimfUwPHJ913NzolFwes_q2RVIUAe84tUwUyn3KC161dw68KViU3jGI6e4lsXk9KgxDE2p63Z8oczxgYgNZP8067Ud4irnddmEollveubzT3j_qIWaoVuo0jkWBOrTdgPsV6N2DIX8oPG26EESw",
+      "description": "Editorial creative studio moodboard with swatch cards, typography sheets, warm terracotta, soft lavender palettes, warm sunlight on linen paper",
+      "usedBy": [
+        "home"
+      ],
+      "bytes": 46040,
+      "sha256": "31759541ea735aea72d7d912817cc3f5b8fb4382aef84c3a48df28cb42c42fd7",
+      "mimeType": "image/jpeg"
+    },
+    {
+      "file": "assets/image-04.jpg",
+      "url": "https://lh3.googleusercontent.com/aida-public/AB6AXuDgygzoMXAfkYj_ZfcoNjN9ekxI-IgZE2Lb3PYQRha9Wn9pcRp290ZQTalcQf2Evsx9askBsGI2avpyOOxdB2Z5U70krKYuoYWIZytcjaXjPb3X4uLi1AtcRu8NqhCpMDc9q5sU43dEIZ0QthOJVI0KofNtBcaw3htd3ruPujAWP7QcaIEmWQWCxA_8qvNIykqqyfZjXjKUmGSNlnFWPhQvlNgl1dHH_5NuRXQztMmg8jVb6CN2WA",
+      "description": "Modern software architecture blueprint and UI code wireframe displayed on modern tablet with warm indoor lighting and minimal desk setup",
+      "usedBy": [
+        "home"
+      ],
+      "bytes": 38267,
+      "sha256": "1fe93792d562469c383d1bd4f00cb33efd4da28eb7ecee5c1bbc33e6efe1c39b",
+      "mimeType": "image/jpeg"
+    },
+    {
+      "file": "assets/image-05.jpg",
+      "url": "https://lh3.googleusercontent.com/aida-public/AB6AXuCGRImQBN6_o9w4jG-UwSkvST4aR2YfhGAlwpK_lsVcW17djUhjVmwdWkc9hZHAT5EyO7Nb5HO6j6hPleRav4jfkzS0LbR0YzUhlMJ0TLk0aomiVZAaKyRttJwaQ3cjnb8S9fNq8DqNtBsyH19EM3Su-R65jQYBlBLHkq_DoEs6lF9jielFY5vPgNAvlEMxwXzf5NImvr216ZG8g7mGd6S4gJg6ce5V-MeOzC25-VEc6YgWihUnCw",
+      "description": "Creative marketing campaign roadmap, warm mood with paper notes, colorful markers, strategic diagrams in a cozy studio setting",
+      "usedBy": [
+        "home"
+      ],
+      "bytes": 56178,
+      "sha256": "0c9617864b8c5959493f38af5a43f64e64594129616e8143e9181ad0af040aa0",
+      "mimeType": "image/jpeg"
+    },
+    {
+      "file": "assets/image-06.jpg",
+      "url": "https://lh3.googleusercontent.com/aida-public/AB6AXuCyK1qEh6mvGjM4xt_do_vjB-jbPBImzhrelvm9aWf7JlDQbqjTRrdcaYzZ0C8YoK-_h1RD9ZcPBTcCiOyn16n8weZh-Mu5QhW1Az_kFkEanyJvSK0Zzw2v_OWR9d3C0f_lkosAf31CyKcVTf-OTtb4n3NquYAWsjXYywpeECZ-cfphA7YAuh0B8EAjG90fH_wxN6vS9tsJOB5GxtUwFUsw_wZhYM7ed6JVGHudhm4NPAAAhSZyUg",
+      "description": "Editorial close-up of a modern e-commerce fashion editorial website layout wireframe on an elegant warm cream surface with soft lavender lighting and minimalist typography accents",
+      "usedBy": [
+        "workspace"
+      ],
+      "bytes": 33157,
+      "sha256": "ab2ef42c0392f1949d502dc5202f20aa11d6b4578ca67e15a73d8630091823c3",
+      "mimeType": "image/jpeg"
+    },
+    {
+      "file": "assets/image-07.jpg",
+      "url": "https://lh3.googleusercontent.com/aida-public/AB6AXuB9DsvwKjz5hJdJOXwwzQelanJqq6k5luJT965cpZmKlvh5ds3nv1FbkNe31A3xfibatAtdds9yxBc_jlkF-sGeu58cq2bCjlO4YX5k778xgR3Mp4mnS-s9G_sMpWRWxQphOHPiMjUJEA56Mn0t64f2tge06EptSGO7kmLpi5MNtInNkb75Gb5jkh41op4gN-0DymIyRhvindVE_1OZPtKKOS3GQo6_v4vvN6InRy8M6dP2fK61eA",
+      "description": "Portrait photo of a young Vietnamese creative director with glasses smiling in warm daylight studio setting",
+      "usedBy": [
+        "workspace"
+      ],
+      "bytes": 47518,
+      "sha256": "108a8efc47f71c75094a25c75e342c9270cffd47736d9d76a8cb3a5d1a7a2408",
+      "mimeType": "image/jpeg"
+    },
+    {
+      "file": "assets/image-08.jpg",
+      "url": "https://lh3.googleusercontent.com/aida-public/AB6AXuBqQMJYbMsQdrDKfgdnd6Ck5eItblAeo-zh2uVW0PhtpStWQ8C8gs9GdZuaNIou-b1WeJ2MahlhxX5mu0Bqx_RJ82IWO-ZtgCfbrdID-2Koar5pIPZhG60jGLLTJlLcu7XFX9jZMnuQbAIHaeJKq5oBCYlWD9CRqnpjL_1bBZpdTvKKlH12qKaq3hEzJ8TJigj7FQjwUw3RMMOgUPqNIEyb7zEf0RjlqYwQJ_ud9XZECkncP5FEFg",
+      "description": "Portrait photo of a young female UX designer with neat hair against soft pastel studio backdrop",
+      "usedBy": [
+        "workspace"
+      ],
+      "bytes": 37706,
+      "sha256": "0987990e44073f56f25e68e07c2058ae065fc4295adab2949503b1804eda6cff",
+      "mimeType": "image/jpeg"
+    },
+    {
+      "file": "assets/image-09.jpg",
+      "url": "https://lh3.googleusercontent.com/aida-public/AB6AXuAe3YG75Qfn2zTMSw94gJ1FKTwsl-N8XlmSnuk0NGMCwKCE8dY_YSSBZoHFa922Huzv9rsLb6qYYz_uQeJxotMcauzk2XjU4YdGJ-Ts8ZS1WOCQV1DfEAwAXGgl8MhRt8P-81dMOtB-unUVD_EYJMF5yj13pXgYDX_zTPvwhAdnB5CfL_Znfis0RfMvFYKEXmuU6IVoJUkBl66fXwlzkDMxa_DKtp97jk3Iq4B7oXuy3m4Iuoql_Q",
+      "description": "Portrait photo of a Vietnamese male frontend engineer in minimalist black tee sitting at work desk with monitor",
+      "usedBy": [
+        "workspace"
+      ],
+      "bytes": 47555,
+      "sha256": "ceb713af9c192aa1f917450ab1b44a9fa6bccd8932acf88daeaf0b4ff3894f0c",
+      "mimeType": "image/jpeg"
+    },
+    {
+      "file": "assets/image-10.jpg",
+      "url": "https://lh3.googleusercontent.com/aida-public/AB6AXuDCfMXOL2yPwPMn4hsNfoEoJQ0WhU9usEvkrJxELIUEbVqRXe6BoXccAzMCtpcExTpaImUtBuV7QE-EoHdc2w5GHhFHTvy7AkgnbohxBPqCyWTZinGpN8xhhH_JZaPg_M3fYjaBMIA1K5lO9Tg1LyEGIv-L9l4ZfZPfuaWGonpOlN0Z7tLhM5H_9MvLOMqCpInujquMygjDlJULSVdmnVrA1ELIWiOtVSGYtwgF-FZYgS3THNNO-A",
+      "description": "Modern branding agency presentation board with clean terracotta color swatches, elegant serif typography proofs and embossed stationery mockup",
+      "usedBy": [
+        "workspace"
+      ],
+      "bytes": 38206,
+      "sha256": "f6b4f15d9126d9466e5fe253603a63e6722a9c320e66be1e5e2de995f07e7649",
+      "mimeType": "image/jpeg"
+    }
+  ]
+}
