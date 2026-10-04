@@ -2,6 +2,8 @@
 
 Ngày 04/10/2026. Theo yêu cầu chủ dự án: đánh giá từng bước hoàn thành đến đâu rồi mới chuyển bước tiếp theo. Mốc code khởi đầu: `29c8ffa` trên dev.
 
+Yêu cầu bổ sung: dùng skill ui-ux để rà và tối ưu trực tiếp màn hiện có, bỏ wireframe. [Increment giao diện đã thực hiện](../qa/UI-DESIGN-REVIEW-2026-10-04.md) giữ brand, có kiểm 6 màn ở 1440/375px. Không coi increment này là nghiệm thu P2–P6 hoặc đóng gate P1; NAV-01 còn mở.
+
 ## Cách triển khai và đánh giá
 
 - Đi lần lượt P1 → P2 → P3 → P4 → P5 → P6. Mỗi bước gồm xác định phạm vi, thực hiện, kiểm chứng và cập nhật kết quả trước khi chuyển bước.

@@ -39,3 +39,5 @@ Hiện hành sau Workspace: [Workspace/Invitations QA](WORKSPACE-INVITATIONS-CHE
 [Cài đặt Workspace / own email overrides QA](FE-WORKSPACE-SETTINGS-CHECK.md): 18 Users/Workspace integration + 8 FE tests, browser settings và Task/editor regression, không gửi SMTP thật.
 
 [Registration / verification / recovery FE QA](FE-REGISTRATION-RECOVERY-CHECK.md): 12 FE tests, 8 Accounts/Auth integration, automated browser fixtures; live QA để sau.
+
+[Review UI bằng skill ui-ux](UI-DESIGN-REVIEW-2026-10-04.md): tối ưu trực tiếp sáu màn, kiểm 1440/375px và đối chiếu probe; NAV-01 còn mở.

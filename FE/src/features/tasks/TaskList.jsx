@@ -154,7 +154,9 @@ export default function TaskList({
         )}
         <div className="task-summary">
           <h3>
-            <a href={`#task/${t.id}`}>{t.title}</a>
+            <a className="surface-link" href={`#task/${t.id}`}>
+              {t.title}
+            </a>
           </h3>
           {mine ? (
             <p>
@@ -201,21 +203,19 @@ export default function TaskList({
     <section className={"task-area" + (mine ? "" : " studio-board-area")}>
       <div className="section-title">
         <div>
-          <small className="eyebrow">
-            {mine
-              ? "TẬP TRUNG VÀO ĐIỀU QUAN TRỌNG"
-              : "CÙNG NHÓM TIẾN VỀ PHÍA TRƯỚC"}
-          </small>
+          {mine && (
+            <small className="eyebrow">TẬP TRUNG VÀO ĐIỀU QUAN TRỌNG</small>
+          )}
           {mine ? (
             <h1 className="task-list-title">Công việc của tôi</h1>
           ) : (
             <h2>Bảng công việc</h2>
           )}
-          <p className="section-description">
-            {mine
-              ? "Công việc được giao cho bạn, trong một góc nhìn rõ ràng."
-              : "Theo dõi tiến độ và tìm nhanh công việc trong dự án."}
-          </p>
+          {mine && (
+            <p className="section-description">
+              Công việc được giao cho bạn, trong một góc nhìn rõ ràng.
+            </p>
+          )}
         </div>
         <div className="buttons">
           <button

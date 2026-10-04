@@ -1282,3 +1282,322 @@
   font-size: 17px;
   margin: 0;
 }
+
+/* Shared screen rhythm: preserve the studio brand while keeping work in view. */
+:root {
+  --studio-muted: #665e70;
+  --studio-control-border: #ded5d0;
+  --studio-control-hover: #f1eeeb;
+  --studio-focus: #4f46e51f;
+}
+button {
+  min-height: 40px;
+  line-height: 1.4;
+  transition:
+    background-color 160ms,
+    color 160ms;
+}
+button:hover {
+  background: var(--studio-control-hover);
+}
+.primary,
+.settings-card button.primary {
+  background: var(--studio-purple);
+  border-color: var(--studio-purple);
+}
+.primary:hover,
+.settings-card button.primary:hover {
+  background: #3525cd;
+}
+.preference-row input:checked {
+  background: var(--studio-purple);
+  border-color: var(--studio-purple);
+}
+.hero button {
+  white-space: normal;
+  flex-shrink: 0;
+}
+.shell main {
+  padding-top: 24px;
+}
+.studio-home-hero {
+  min-height: 0;
+  padding: 28px 32px;
+}
+.studio-home-hero h1 {
+  font-size: clamp(26px, 2.6vw, 36px);
+  letter-spacing: -0.6px;
+}
+.workspace-hero {
+  padding: 24px;
+  align-items: flex-start;
+}
+.workspace-hero h1,
+.board-project-header .project-title,
+.task-detail-header h1 {
+  font-size: 26px;
+  letter-spacing: -0.4px;
+  overflow-wrap: anywhere;
+}
+.workspace-tabs {
+  padding: 0 24px 20px;
+}
+.board-project-header {
+  padding: 8px 0 16px;
+}
+.board-project-header > div:first-child {
+  min-width: 0;
+}
+.studio-project-page .project-scope {
+  padding: 16px 20px;
+  margin: 0 0 24px;
+}
+.project-scope .section-heading,
+.workspace-description .section-heading {
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.project-scope .section-heading button,
+.workspace-description .section-heading button {
+  font-size: 12px;
+  padding: 8px 12px;
+}
+.project-scope > .muted {
+  margin: 8px 0 0;
+}
+.workspace-description {
+  margin-top: 16px;
+}
+.description-preview .rich-editor {
+  margin-top: 12px;
+}
+.description-excerpt {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+  margin: 12px 0 4px;
+  color: var(--studio-muted);
+}
+.project-created {
+  display: inline-block;
+  margin-left: 12px;
+}
+.board-project-header .badge.state-archived {
+  background: #eee9e5;
+  color: var(--studio-muted);
+}
+.description-toggle {
+  color: var(--studio-purple);
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  padding: 8px 0;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.description-toggle:hover {
+  background: transparent;
+  color: #3525cd;
+}
+.filter-panel .compact-filter-bar {
+  gap: 8px;
+}
+.filter-panel .compact-filter-bar > label {
+  font-size: 12px;
+  gap: 6px;
+  max-width: 560px;
+}
+.avatar {
+  color: #40328a;
+}
+.footer-mark {
+  background: var(--studio-purple);
+}
+.filter-panel .filters input:not([type="checkbox"]),
+.filter-panel .filters select {
+  min-height: 40px;
+  padding: 8px 14px;
+  border-color: var(--studio-control-border);
+}
+.compact-filter-bar button {
+  border-color: var(--studio-control-border);
+  padding: 8px 14px;
+}
+.filter-panel .filters button:hover {
+  background: var(--studio-control-hover);
+}
+.filter-panel .filters .check input {
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
+  padding: 0;
+  border: 1px solid var(--studio-control-border);
+  border-radius: 6px;
+  background: #fff;
+  position: relative;
+}
+.filter-panel .filters .check input:checked {
+  background: var(--studio-purple);
+  border-color: var(--studio-purple);
+}
+.filter-panel .filters .check input:checked::after {
+  content: "";
+  position: absolute;
+  width: 5px;
+  height: 10px;
+  top: 2px;
+  left: 6px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+.compact-filter-bar button[aria-expanded="true"] {
+  color: var(--studio-purple);
+  border-color: var(--studio-purple);
+  background: #eeebff;
+}
+.filter-sort {
+  background: transparent;
+  padding: 8px 0 8px 8px;
+  color: var(--studio-muted);
+}
+input:not([type="checkbox"]):focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 0;
+  border-color: var(--studio-purple);
+  box-shadow: 0 0 0 2px var(--studio-focus);
+}
+.project-card,
+.task-card {
+  position: relative;
+}
+.surface-link::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+.project-card .pill-link {
+  position: relative;
+  z-index: 1;
+}
+.project-card:focus-within,
+.task-card:focus-within {
+  outline: 2px solid var(--studio-purple);
+  outline-offset: 3px;
+}
+.studio-board-area .section-title h2,
+.task-list-title {
+  font-size: 22px;
+  margin: 4px 0;
+}
+.studio-board-area .compact-filter {
+  margin-top: 20px;
+}
+.studio-board-area .board {
+  gap: 16px;
+}
+.studio-board-area .board-column {
+  padding: 16px;
+}
+.board-task .board-assignee,
+.board-task .task-row-meta p,
+.board-task-top {
+  font-size: 12px;
+}
+.board-task-top {
+  margin-bottom: 10px;
+}
+.board-task.status-done h3 a {
+  color: var(--studio-muted);
+}
+.settings-page .hero {
+  background: transparent;
+  padding: 8px 0 20px;
+  border: 0;
+}
+.settings-page .hero h1 {
+  font-size: 26px;
+  margin: 8px 0;
+  letter-spacing: -0.4px;
+}
+.settings-page .hero p {
+  margin: 0;
+}
+.settings-page .settings-card {
+  max-width: 880px;
+  padding: 24px;
+  box-shadow: none;
+}
+.settings-card button.primary {
+  border-radius: 12px;
+}
+.preference-row {
+  padding: 16px 0;
+}
+@media (max-width: 640px) {
+  .shell main {
+    padding: 20px 16px 32px;
+  }
+  .studio-home-hero,
+  .workspace-hero,
+  .settings-page .settings-card {
+    padding: 20px;
+  }
+  .studio-home-hero h1,
+  .workspace-hero h1,
+  .board-project-header .project-title,
+  .settings-page .hero h1,
+  .task-detail-header h1 {
+    font-size: 24px;
+  }
+  .workspace-tabs {
+    padding: 0 20px 20px;
+  }
+  .filter-panel .compact-filter-bar > label,
+  .filter-panel .compact-filter-bar > label:has(select) {
+    flex: 1 1 100%;
+    min-width: 100%;
+    max-width: none;
+  }
+  .app-header .app-navigation a {
+    font-size: 12px;
+  }
+  .board-project-header > .buttons {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+  }
+  .board-project-header > .buttons > button:first-child {
+    grid-column: 1 / -1;
+  }
+  .filter-panel .filters input:not([type="checkbox"]),
+  .filter-panel .filters select {
+    font-size: 16px;
+    min-height: 44px;
+  }
+  .compact-filter-bar button,
+  .settings-card button,
+  .description-toggle {
+    min-height: 44px;
+  }
+  .filter-sort {
+    width: 100%;
+    padding-left: 0;
+  }
+}
+.board-project-header .badge,
+.board-progress p {
+  font-size: 12px;
+}
+@media (prefers-reduced-motion: reduce) {
+  button {
+    transition: none;
+  }
+}

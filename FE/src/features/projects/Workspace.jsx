@@ -10,7 +10,7 @@ import { messageFor } from "../../lib/messages.js";
 import NameDialog from "../../components/NameDialog.jsx";
 import Team from "./Team.jsx";
 import WorkspaceSettings from "./WorkspaceSettings.jsx";
-import RichEditor from "../../components/RichEditor.jsx";
+import DescriptionPreview from "../../components/DescriptionPreview.jsx";
 
 export default function Workspace({ api, id }) {
   const [workspace, setWorkspace] = useState(null),
@@ -145,8 +145,8 @@ export default function Workspace({ api, id }) {
                   )}
                 </div>
                 {workspace.description?.plainText ? (
-                  <RichEditor
-                    readOnly
+                  <DescriptionPreview
+                    key={workspace.id + ":" + workspace.version}
                     value={workspace.description}
                     label="Mô tả nhóm"
                     limit={20000}
@@ -333,7 +333,9 @@ export default function Workspace({ api, id }) {
                       <Icon name={item.icon ?? "folder"} />
                     </span>
                     <h2>
-                      <a href={`#project/${item.id}`}>{item.name}</a>
+                      <a className="surface-link" href={`#project/${item.id}`}>
+                        {item.name}
+                      </a>
                     </h2>
                     <p>
                       {item.description?.plainText ||

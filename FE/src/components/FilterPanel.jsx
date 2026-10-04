@@ -56,7 +56,7 @@ export default function FilterPanel({
             <Icon name="filter" />
             Bộ lọc{count ? ` (${count})` : ""}
           </button>
-          <span className="filter-sort">{sortLabel}</span>
+          <span className="filter-sort">Sắp xếp: {sortLabel}</span>
         </div>
         <div id={panelId} className="filters filter-advanced" hidden={!open}>
           {advanced}

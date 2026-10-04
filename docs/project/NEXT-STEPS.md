@@ -4,6 +4,8 @@ Cập nhật 04/10/2026. Yêu cầu trực tiếp của chủ dự án có ưu t
 
 ## Hiện tại
 
+Theo yêu cầu mới, đã [rà và tối ưu trực tiếp UI bằng skill ui-ux](../qa/UI-DESIGN-REVIEW-2026-10-04.md), bỏ wireframe: nhịp màn, mô tả dài, click thẻ Project/Task, filters mobile và màu Cài đặt. Sáu màn được kiểm ở 1440/375px; giữ Stitch/Jakarta/kem-tím. Đây là increment giao diện được yêu cầu thêm, không đóng NAV-01 hoặc chuyển gate P1 sang Đạt.
+
 P1 đang **Cần sửa**, xem [audit bốn cụm](../qa/UI-UX-FLOW-AUDIT.md). Đã sửa khóa parent actions khi tạo Task, uncertain 5xx ở Auth/Workspace/Profile/password, stale Google button khi retry, actions verify trong Invite, counter filters Fragment và vị trí refresh Project/Task/Comments; My Tasks có H1. NAV-01 browser Back/hash mất draft đã tái hiện, còn chặn P1 → P2. Provider Google/SMTP thật chưa kiểm lại; không gửi hàng đợi mail cũ.
 
 Increment mới: [tương tác và phản hồi hệ thống](../ui-ux/INTERACTION-FOUNDATION-v0.1.md). Toàn card Workspace mở được; mô tả Workspace hiển thị cùng CTA Owner; Project có editor mô tả/mục tiêu, quyền Owner hoặc Creator còn membership trong Active. NotificationProvider dùng chung confirm/input/toast, thay confirm/prompt native trong FE. Xóa Task vẫn soft delete và giữ Comments; chưa có restore/purge. 46 BE integration tests, 12 FE tests và các luồng UI/uncertain network đã kiểm; chưa chạy worker SMTP thật.

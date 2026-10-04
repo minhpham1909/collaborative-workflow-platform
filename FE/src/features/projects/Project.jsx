@@ -3,7 +3,7 @@ import {
   notify,
 } from "../../components/NotificationProvider.jsx";
 import ProjectDescriptionEditor from "./ProjectDescriptionEditor.jsx";
-import RichEditor from "../../components/RichEditor.jsx";
+import DescriptionPreview from "../../components/DescriptionPreview.jsx";
 import Icon from "../../components/Icon.jsx";
 import { useEffect, useRef, useState } from "react";
 import NameDialog from "../../components/NameDialog.jsx";
@@ -133,17 +133,22 @@ export default function Project({ api, id, user }) {
         <>
           <section className="hero board-project-header">
             <div>
-              <small>DỰ ÁN CỦA ĐỘI NGŨ</small>
               <h1 className="project-title">
                 <span className="project-type-icon">
                   <Icon name={project.icon ?? "folder"} />
                 </span>
                 {project.name}
               </h1>
-              <span className="badge">
+              <span className={"badge state-" + project.state}>
                 {project.state === "archived"
                   ? "Đã lưu trữ · Chỉ đọc"
                   : "Đang hoạt động"}
+              </span>
+              <span className="project-created muted">
+                Tạo{" "}
+                {new Date(project.createdAt).toLocaleDateString("vi-VN", {
+                  timeZone: "Asia/Ho_Chi_Minh",
+                })}
               </span>
             </div>
             <div className="buttons">
@@ -215,9 +220,9 @@ export default function Project({ api, id, user }) {
             ) : (
               <div>
                 {project.description?.plainText ? (
-                  <RichEditor
+                  <DescriptionPreview
+                    key={project.id + ":" + project.version}
                     value={project.description}
-                    readOnly
                     label="Mô tả Dự án"
                     limit={10000}
                   />
@@ -226,12 +231,6 @@ export default function Project({ api, id, user }) {
                 )}
               </div>
             )}
-            <p className="muted">
-              Tạo{" "}
-              {new Date(project.createdAt).toLocaleDateString("vi-VN", {
-                timeZone: "Asia/Ho_Chi_Minh",
-              })}
-            </p>
           </section>
           {!editingDescription && (
             <TaskList
