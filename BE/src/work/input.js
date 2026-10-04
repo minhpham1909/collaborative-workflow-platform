@@ -11,9 +11,13 @@ function rich(value, scope, required = false) {
   try { return normalizeRichText(value, { maxCharacters: CONTENT_LIMITS[scope], required }); } catch { fail(); }
 }
 export function projectInput(input, edit = false) {
-  inputObject(input, edit ? ['expectedVersion', 'name', 'description'] : ['name', 'description']);
+  inputObject(input, edit ? ['expectedVersion', 'name', 'description', 'icon'] : ['name', 'description', 'icon']);
   const fields = {};
   if (!edit || Object.hasOwn(input, 'name')) fields.name = text(input.name, 200);
+  if (Object.hasOwn(input, 'icon')) {
+    if (!['folder', 'palette', 'code', 'megaphone', 'layers', 'document'].includes(input.icon)) fail();
+    fields.icon = input.icon;
+  }
   if (Object.hasOwn(input, 'description')) fields.description = rich(input.description, 'project');
   if (edit && !Object.keys(fields).length) fail();
   return { fields, ...(edit ? { expectedVersion: expectedVersion(input) } : {}) };

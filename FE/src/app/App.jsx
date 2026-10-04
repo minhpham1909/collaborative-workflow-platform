@@ -1,3 +1,4 @@
+import AppFooter from "../components/AppFooter.jsx";
 import AppHeader from "../components/AppHeader.jsx";
 import { useEffect, useState } from "react";
 import { createApi } from "../lib/api.js";
@@ -192,6 +193,7 @@ export default function App() {
         ) : (
           <Home key={user.id} api={api} user={user} />
         )}
+        <AppFooter />
       </div>
     </div>
   );

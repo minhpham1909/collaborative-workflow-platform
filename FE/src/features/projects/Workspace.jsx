@@ -1,3 +1,4 @@
+import Icon from "../../components/Icon.jsx";
 import StudioCover from "../../components/StudioCover.jsx";
 import FilterPanel from "../../components/FilterPanel.jsx";
 import { useEffect, useRef, useState } from "react";
@@ -212,7 +213,7 @@ export default function Workspace({ api, id }) {
       )}
       {tab === "projects" && (
         <>
-          <FilterPanel>
+          <FilterPanel compact>
             <label>
               Tìm theo tên hoặc mô tả Dự án
               <input
@@ -305,6 +306,9 @@ export default function Workspace({ api, id }) {
                     </span>
                   </StudioCover>
                   <div className="project-card-body">
+                    <span className="project-type-icon">
+                      <Icon name={item.icon ?? "folder"} />
+                    </span>
                     <h2>
                       <a href={`#project/${item.id}`}>{item.name}</a>
                     </h2>
@@ -372,14 +376,15 @@ export default function Workspace({ api, id }) {
       {creating && workspace?.role === "owner" && (
         <NameDialog
           title="Tạo Dự án"
+          withIcon
           onClose={(uncertain) => {
             setCreating(false);
             if (uncertain) setRevision((v) => v + 1);
           }}
-          onSave={async (name) => {
+          onSave={async (name, icon) => {
             await api.request(`/workspaces/${id}/projects`, {
               method: "POST",
-              body: { name },
+              body: { name, icon },
             });
             setState("active");
             setQ("");

@@ -198,7 +198,7 @@ export default function TaskList({ api, project, workspaceId, mine = false }) {
           }}
         />
       )}
-      <FilterPanel>
+      <FilterPanel compact>
         <label>
           Tìm Task
           <input

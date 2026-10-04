@@ -1,3 +1,4 @@
+import Icon from "../../components/Icon.jsx";
 import { useEffect, useRef, useState } from "react";
 import NameDialog from "../../components/NameDialog.jsx";
 import { messageFor } from "../../lib/messages.js";
@@ -120,7 +121,12 @@ export default function Project({ api, id }) {
           <section className="hero">
             <div>
               <small>DỰ ÁN CỦA ĐỘI NGŨ</small>
-              <h1>{project.name}</h1>
+              <h1 className="project-title">
+                <span className="project-type-icon">
+                  <Icon name={project.icon ?? "folder"} />
+                </span>
+                {project.name}
+              </h1>
               <span className="badge">
                 {project.state === "archived"
                   ? "Đã lưu trữ · Chỉ đọc"
@@ -170,14 +176,16 @@ export default function Project({ api, id }) {
         <NameDialog
           title="Đổi tên Dự án"
           initial={project.name}
+          withIcon
+          initialIcon={project.icon ?? "folder"}
           onClose={(uncertain) => {
             setEditing(false);
             if (uncertain) setRevision((v) => v + 1);
           }}
-          onSave={async (name) => {
+          onSave={async (name, icon) => {
             const data = await api.request(`/projects/${id}`, {
               method: "PATCH",
-              body: { expectedVersion: project.version, name },
+              body: { expectedVersion: project.version, name, icon },
             });
             setProject(data.project);
             setNotice("Đã cập nhật tên Dự án.");

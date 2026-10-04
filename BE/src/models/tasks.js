@@ -2,7 +2,7 @@ import { coreSchema, ref, nullableDate, choice, singleLine, richText, contentHoo
 
 export const projectSchema = coreSchema({
   workspaceId: { ...ref('Workspace'), immutable: true }, createdBy: { ...ref('User'), immutable: true },
-  name: singleLine(200), description: richText(), state: choice(['active', 'archived'], 'active'),
+  name: singleLine(200), icon: choice(['folder', 'palette', 'code', 'megaphone', 'layers', 'document'], 'folder'), description: richText(), state: choice(['active', 'archived'], 'active'),
   archivedAt: nullableDate(), archivedBy: ref('User', true),
 });
 contentHook(projectSchema, 'description', 'project');

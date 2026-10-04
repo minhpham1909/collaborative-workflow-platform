@@ -45,7 +45,7 @@ export function createMongoWorkStore({ now = () => new Date() } = {}) {
   async function assignee(context, assigneeId) {
     if (assigneeId && !await WorkspaceMembership.collection.findOne({ workspaceId: context.workspace._id, userId: id(assigneeId), state: 'active' }, { session: context.tx })) deny('ASSIGNEE_NOT_MEMBER', 409);
   }
-  const projectResponse = (value) => ({ id: String(value._id), workspaceId: String(value.workspaceId), createdBy: String(value.createdBy), name: value.name, description: value.description, state: value.state, version: value.version, archivedAt: value.archivedAt, createdAt: value.createdAt, updatedAt: value.updatedAt });
+  const projectResponse = (value) => ({ id: String(value._id), workspaceId: String(value.workspaceId), createdBy: String(value.createdBy), name: value.name, icon: value.icon ?? 'folder', description: value.description, state: value.state, version: value.version, archivedAt: value.archivedAt, createdAt: value.createdAt, updatedAt: value.updatedAt });
   async function identity(userId, context) {
     if (!userId) return null;
     const key=String(userId); if(context.identities.has(key))return context.identities.get(key);
@@ -151,11 +151,11 @@ export function createMongoWorkStore({ now = () => new Date() } = {}) {
         { $match: { $expr: { $eq: ['$workspaceId', '$project.workspaceId'] }, ...(query.state !== 'all' ? { 'project.state': query.state } : {}) } },
         { $lookup: { from: 'workspaces', localField: 'workspaceId', foreignField: '_id', as: 'workspace' } }, { $unwind: '$workspace' },
       ];
-      const counts = await Task.collection.aggregate([...pipeline, { $count: 'total' }], { session: context.tx }).toArray();
+      const counts = await Task.collection.aggregate([...pipeline, { $group: { _id: null, total: { $sum: 1 }, workspaces: { $addToSet: '$workspaceId' } } }], { session: context.tx }).toArray();
       const records = await Task.collection.aggregate([...pipeline, { $match: after(query) }, { $sort: { createdAt: -1, _id: -1 } }, { $limit: query.limit + 1 }], { session: context.tx }).toArray();
       const result = await taskPage(records, query, async (value) => ({ ...context, workspace: value.workspace, project: value.project }));
       result.items = result.items.map((value, index) => ({ ...value, workspaceName: records[index].workspace.name, projectName: records[index].project.name, projectState: records[index].project.state }));
-      return { ...result, total: counts[0]?.total ?? 0 };
+      return { ...result, total: counts[0]?.total ?? 0, workspaceCount: counts[0]?.workspaces.length ?? 0 };
     }),
     createTask: (claims, projectId, input) => run(claims, async (context) => {
       context = await projectScope(context, projectId, true); await assignee(context, input.fields.assigneeId);

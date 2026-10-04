@@ -70,6 +70,37 @@ test('Project, Task, Comment and scoped queries on real MongoDB/HTTP', { skip: !
       const response = await http(1, `/projects/${outsiderProject.id}`); assert.equal(response.status, 404);
       assert.ok(!JSON.stringify(await response.json()).includes('Secret'));
     });
+    await t.test('Home aggregates and Project icons respect membership, lifecycle and complete query scope', async () => {
+      const first = (await workspaces.create(claims[0], { name: 'Home metrics A' })).workspace;
+      const second = (await workspaces.create(claims[0], { name: 'Home metrics B' })).workspace;
+      workspaceIds.push(O(first.id), O(second.id));
+      const invitation = await workspaces.invite(claims[0], first.id, { type: 'LINK' });
+      await workspaces.accept(claims[1], { token: new URLSearchParams(new URL(invitation.url).hash.slice(1)).get('token') });
+      const p = (await service.createProject(claims[0], first.id, { name: 'Icon design', icon: 'palette' })).project;
+      const p2 = (await service.createProject(claims[0], second.id, { name: 'Icon code', icon: 'code' })).project;
+      assert.equal(p.icon, 'palette');
+      await assert.rejects(service.updateProject(claims[1], p.id, { expectedVersion: p.version, icon: 'code' }), /OWNER_REQUIRED/u);
+      assert.throws(() => service.createProject(claims[0], first.id, { name: 'Invalid icon', icon: '<script>' }), /INVALID_INPUT/u);
+      const updated = (await service.updateProject(claims[0], p.id, { expectedVersion: p.version, icon: 'document' })).project;
+      assert.equal(updated.icon, 'document');
+      await assert.rejects(service.updateProject(claims[0], p.id, { expectedVersion: p.version, icon: 'folder' }), /VERSION_CONFLICT/u);
+      const title = 'daily-' + prefix;
+      const make = (projectId, dueAt) => service.createTask(claims[0], projectId, { title, assigneeId: String(users[0]._id), dueAt });
+      await make(p.id, '2026-10-03T17:00:00.000Z');
+      await make(p2.id, '2026-10-04T16:59:00.000Z');
+      await make(p2.id, '2026-10-04T17:00:00.000Z');
+      const daily = await service.mine(claims[0], { q: title, limit: '1', status: 'open', timeField: 'dueAt', from: '2026-10-04', to: '2026-10-04' });
+      assert.equal(daily.total, 2); assert.equal(daily.workspaceCount, 2); assert.equal(daily.items.length, 1); assert.ok(daily.nextCursor);
+      let metrics = (await workspaces.list(claims[0], { q: 'Home metrics A' })).items[0];
+      assert.equal(metrics.memberCount, 2); assert.equal(metrics.activeProjectCount, 1);
+      await service.state(claims[0], p.id, { expectedVersion: updated.version, state: 'archived' });
+      const member = await WorkspaceMembership.collection.findOne({ workspaceId: O(first.id), userId: users[1]._id });
+      await workspaces.remove(claims[0], first.id, String(users[1]._id), { expectedVersion: member.version });
+      metrics = (await workspaces.list(claims[0], { q: 'Home metrics A' })).items[0];
+      assert.equal(metrics.memberCount, 1); assert.equal(metrics.activeProjectCount, 0);
+      assert.equal((await workspaces.list(claims[1], { q: 'Home metrics A' })).items.length, 0);
+      assert.equal((await service.mine(claims[0], { q: title, status: 'open', timeField: 'dueAt', from: '2026-10-04', to: '2026-10-04' })).workspaceCount, 1);
+    });
     await t.test('Project search/date/lifecycle filters apply before cursor and total within Workspace', async () => {
       const a = (await service.createProject(claims[0], workspace.id, { name: 'Sáng Tạo A', description: content('Nội dung riêng') })).project;
       const b = (await service.createProject(claims[0], workspace.id, { name: 'Sáng Tạo B' })).project;

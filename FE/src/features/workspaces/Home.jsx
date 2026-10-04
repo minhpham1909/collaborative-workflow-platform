@@ -1,3 +1,7 @@
+import HomeHighlights, {
+  HomeDay,
+  useHomeHighlights,
+} from "./HomeHighlights.jsx";
 import StudioCover, { studioTone } from "../../components/StudioCover.jsx";
 import Icon from "../../components/Icon.jsx";
 import { isUncertainMutation } from "../../lib/mutation-outcome.js";
@@ -26,6 +30,7 @@ export default function Home({ api, user }) {
     [createError, setCreateError] = useState("");
   const generation = useRef(0),
     mutation = useRef(false);
+  const highlights = useHomeHighlights(api, refresh);
   const invalid = from && to && from > to;
   const query = new URLSearchParams({
     limit: "12",
@@ -157,6 +162,7 @@ export default function Home({ api, user }) {
         <div>
           <small>KHÔNG GIAN LÀM VIỆC CỦA BẠN</small>
           <h1>Chào {user.displayName}, hôm nay mình cùng làm gì? ✨</h1>
+          <HomeDay data={highlights} />
           <p>
             Chọn một Workspace để bắt đầu. Cùng đội ngũ biến ý tưởng thành công
             việc.
@@ -170,7 +176,7 @@ export default function Home({ api, user }) {
           + Tạo Workspace
         </button>
       </section>
-      <FilterPanel>
+      <FilterPanel compact>
         <label>
           Tìm theo tên hoặc mô tả Workspace
           <input
@@ -243,6 +249,21 @@ export default function Home({ api, user }) {
             </h2>
             <p>{plain(w.description) || "Không gian để cùng nhau làm việc."}</p>
             <StudioCover id={w.id} />
+            <div className="workspace-metrics">
+              <span>
+                <Icon name="people" />
+                <div>
+                  Thành viên<strong>{w.memberCount ?? "—"} người</strong>
+                </div>
+              </span>
+              <span>
+                <Icon name="folder" />
+                <div>
+                  Đang hoạt động
+                  <strong>{w.activeProjectCount ?? "—"} Dự án</strong>
+                </div>
+              </span>
+            </div>
             <div className="studio-card-footer">
               <p className="muted">
                 Tạo{" "}
@@ -279,24 +300,7 @@ export default function Home({ api, user }) {
           Tải thêm
         </button>
       )}
-      <section className="studio-shortcuts" aria-label="Lối tắt cá nhân">
-        <a href="#mine">
-          <Icon name="tasks" />
-          <div>
-            <h2>Công việc của tôi</h2>
-            <p>Tập trung vào các Task được giao cho bạn.</p>
-          </div>
-          <span aria-hidden="true">→</span>
-        </a>
-        <a href="#notifications">
-          <Icon name="bell" />
-          <div>
-            <h2>Thông báo</h2>
-            <p>Theo dõi những cập nhật trong nhóm.</p>
-          </div>
-          <span aria-hidden="true">→</span>
-        </a>
-      </section>
+      <HomeHighlights data={highlights} />
       {creating &&
         createPortal(
           <div className="overlay">

@@ -2,8 +2,17 @@ import { isUncertainMutation } from "../lib/mutation-outcome.js";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { messageFor } from "../lib/messages.js";
+import ProjectIconPicker from "./ProjectIconPicker.jsx";
 
-export default function NameDialog({ title, initial = "", onSave, onClose }) {
+export default function NameDialog({
+  title,
+  initial = "",
+  initialIcon = "folder",
+  withIcon = false,
+  onSave,
+  onClose,
+}) {
+  const [icon, setIcon] = useState(initialIcon);
   const [name, setName] = useState(initial),
     [busy, setBusy] = useState(false),
     [uncertain, setUncertain] = useState(false),
@@ -13,7 +22,8 @@ export default function NameDialog({ title, initial = "", onSave, onClose }) {
   close.current = () => {
     if (
       !pending.current &&
-      (name === initial || confirm("Bỏ nội dung chưa lưu?"))
+      ((name === initial && icon === initialIcon) ||
+        confirm("Bỏ nội dung chưa lưu?"))
     )
       onClose(uncertain);
   };
@@ -62,7 +72,7 @@ export default function NameDialog({ title, initial = "", onSave, onClose }) {
     setBusy(true);
     setError("");
     try {
-      await onSave(name);
+      await onSave(name, icon);
       onClose();
     } catch (e) {
       setUncertain(isUncertainMutation(e));
@@ -97,6 +107,13 @@ export default function NameDialog({ title, initial = "", onSave, onClose }) {
               disabled={busy}
             />
           </label>
+          {withIcon && (
+            <ProjectIconPicker
+              value={icon}
+              onChange={setIcon}
+              disabled={busy || uncertain}
+            />
+          )}
           {error && (
             <p role="alert" className="error">
               {error}

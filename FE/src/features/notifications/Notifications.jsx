@@ -295,7 +295,7 @@ export default function Notifications({ api, id, user }) {
       </section>
       {!id && (
         <>
-          <FilterPanel>
+          <FilterPanel compact>
             <label>
               Trạng thái đọc
               <select

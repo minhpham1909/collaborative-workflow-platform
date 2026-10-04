@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import { randomBytes, randomUUID } from 'node:crypto';
-import { User, Session, Workspace, WorkspaceMembership, WorkspaceInvitation, Task, EmailOutbox } from '../models/index.js';
+import { User, Session, Workspace, WorkspaceMembership, WorkspaceInvitation, Project, Task, EmailOutbox } from '../models/index.js';
 import { AuthError } from '../auth/errors.js';
 import { tokenHash } from '../auth/tokens.js';
 import { createDeliveryCrypto } from '../auth/delivery-crypto.js';
@@ -69,7 +69,10 @@ export function createMongoWorkspaceStore({ config, now = () => new Date() }) {
         { $lookup: { from: 'workspace_memberships', let: { workspace: '$_id' }, pipeline: [{ $match: { userId: user._id, state: 'active', $expr: { $eq: ['$workspaceId', '$$workspace'] } } }], as: 'membership' } },
         { $unwind: '$membership' }, { $sort: { createdAt: -1, _id: -1 } }, { $limit: page.limit + 1 },
       ], { session: tx }).toArray();
-      return paged(records, page.limit, (value) => workspaceResponse(value, value.membership));
+      const ids = records.slice(0, page.limit).map(value => value._id);
+      const members = await WorkspaceMembership.collection.aggregate([{ $match: { workspaceId: { $in: ids }, state: 'active' } }, { $group: { _id: '$workspaceId', count: { $sum: 1 } } }], { session: tx }).toArray();
+      const projects = await Project.collection.aggregate([{ $match: { workspaceId: { $in: ids }, state: 'active' } }, { $group: { _id: '$workspaceId', count: { $sum: 1 } } }], { session: tx }).toArray();
+      return paged(records, page.limit, (value) => ({ ...workspaceResponse(value, value.membership), memberCount: members.find(row => sameId(row._id, value._id))?.count ?? 0, activeProjectCount: projects.find(row => sameId(row._id, value._id))?.count ?? 0 }));
     }),
     create: (claims, fields) => run(claims, async (user, tx) => {
       const workspace = new Workspace({ ...fields, ownerId: user._id }); await workspace.save({ session: tx });

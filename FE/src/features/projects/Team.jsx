@@ -106,7 +106,10 @@ export default function Team({ api, id, invitations, onContext }) {
         <p>Chỉ chủ sở hữu được quản lý lời mời.</p>
       ) : (
         <>
-          <FilterPanel>
+          <FilterPanel
+            compact
+            sortLabel={invitations ? "Mới tạo trước" : "Mới tham gia trước"}
+          >
             <label>
               {invitations ? "Tìm email người nhận" : "Tìm tên thành viên"}
               <input
