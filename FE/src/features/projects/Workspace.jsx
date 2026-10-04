@@ -1,3 +1,8 @@
+import {
+  EmptyState,
+  InlineMessage,
+  LoadingState,
+} from "../../components/Feedback.jsx";
 import { useDraftGuard } from "../../lib/draft-navigation.js";
 import { confirmDialog } from "../../components/NotificationProvider.jsx";
 import Icon from "../../components/Icon.jsx";
@@ -101,10 +106,10 @@ export default function Workspace({ api, id }) {
         <a href="#home">Trang chủ</a> / Workspace
       </p>
       {error && (
-        <div className="error" role="alert">
+        <InlineMessage>
           {error}{" "}
           <button onClick={() => setRevision((v) => v + 1)}>Tải lại</button>
-        </div>
+        </InlineMessage>
       )}
       {workspace && (
         <>
@@ -270,16 +275,16 @@ export default function Workspace({ api, id }) {
             {data.total !== undefined ? ` · ${data.total} Dự án phù hợp` : ""}
           </p>
           {invalid && (
-            <p className="error" role="alert">
+            <InlineMessage>
               Ngày bắt đầu phải trước hoặc bằng ngày kết thúc.
-            </p>
+            </InlineMessage>
           )}
         </>
       )}
       {busy && tab === "projects" && (
-        <p role="status">
+        <LoadingState>
           Đang tải {tab === "projects" ? "Dự án" : "thành viên"}…
-        </p>
+        </LoadingState>
       )}
       {tab === "projects" && (
         <>
@@ -358,7 +363,7 @@ export default function Workspace({ api, id }) {
             )}
           </div>
           {!busy && !error && !invalid && !data.items.length && (
-            <section className="empty">
+            <EmptyState>
               <h2>
                 {tab === "projects"
                   ? "Không có Dự án phù hợp"
@@ -369,7 +374,7 @@ export default function Workspace({ api, id }) {
                   ? "Tạo Dự án mới hoặc thay đổi bộ lọc."
                   : "Danh sách chỉ gồm thành viên đang trong Workspace."}
               </p>
-            </section>
+            </EmptyState>
           )}
           {data.nextCursor && (
             <button

@@ -1,4 +1,45 @@
-# P2 — FormField và MemberPicker
+# P2 — Nghiệm thu nền component và phản hồi
+
+05/10/2026, hoàn thiện sau `6b34d5d` trên dev. **Đạt gate P2 → P3** trong phạm vi component/tương tác của ứng dụng hiện có. Không sửa BE hoặc đổi quyền nghiệp vụ; không gửi SMTP/Google thật và không xử lý hàng đợi mail cũ.
+
+## Kết quả hiện hành
+
+- Đã thống nhất focus/Tab/Shift+Tab/Escape/inert/khóa cuộn và trả focus qua useDialogFocus cho cả 4 loại dialog. Giữ layout chung có giới hạn viewport; confirm danger có variant riêng. Không còn keyboard handlers tự khóa `.shell` riêng cho từng form.
+- InlineMessage/LoadingState/EmptyState áp dụng Shell/Auth/Home/Workspace/Project/Team/Settings/Task/Comments/Inbox, loading editor và verification actions. Read-only có thông điệp và quyền CTA/editor riêng. Home không hiển thị kết quả cũ/empty khi khoảng ngày đang sai.
+- Quy tắc field validation, toast/inline success, native controls và ngoại lệ có lý do tại [quy ước hiện hành](../ui-ux/COMPONENT-INTERACTION-RULES.md). Không coi migrate mọi input thành một wrapper là tiêu chí thay cho semantic/validation đúng.
+
+| Regression chạy lại | Bằng chứng |
+|---|---|
+| check-interaction-flows.mjs | Focus đầu vào Home; Shift+Tab/Tab wrap bỏ qua control hidden và fieldset disabled; dialog cha inert khi confirm mở; Escape chỉ hủy confirm và giữ tên draft; đóng hết trả focus CTA/mở khóa nền. Input link/editor, toast, Task/Comment, CAS, quyền, Archived/read-only/delete vẫn đạt |
+| check-picker-flows.mjs | >20 Members/Workspaces, server search, no-result, retry GET 503, response cũ, selection ngoài page/reset/count đạt. Remove assignee qua service sau chọn: BE từ chối, không tạo Task, giữ title/assignee. Rejoin qua LINK rồi remove Workspace: picker giữ scope, refresh My Tasks trả empty, không hiện Task hoặc tự mở rộng scope |
+| check-account-flows.mjs | Signup/consent/verify/recover/reset/replay/token scrub; password toggles/names; Login gửi lặp bị chặn và busy giữ form |
+| check-settings-flows.mjs | Profile/preferences/CAS/503-after-commit, password/CSRF/rotation, Google GIS/verifier fixture, lỗi và draft giữ nguyên |
+| check-team-flows.mjs | EMAIL queue/retry, LINK one-time/login intent/accept, membership CAS/remove, transfer/revoke/leave, dialog result và responsive |
+| check-navigation-flows.mjs | Back/Forward/hash/link/refresh/logout, toàn bộ các draft hiện có, dialog invite Escape và in-flight write giữ đúng hành vi. Giới hạn fallback history vẫn P4 |
+| check-network-flows.mjs | Workspace/Project/Task/Comment đã commit nhưng mất/503 response: khóa keyboard/form resubmit, không tự retry, mỗi thao tác đúng 1 record; đóng/tải lại đối soát |
+| check-screen-layout.mjs | Thêm Inbox loading giữ GET → 503 → retry GET thật → empty; không hiển thị empty khi đang tải hoặc lỗi. 7 màn ở 1440/375px không overflow hoặc page errors |
+| FE unit/build | 12/12 tests đạt; production build 113 modules đạt |
+
+Các fixture dùng browser headless Edge, API Express và Mongo replica set riêng; chạy tuần tự để không tranh bộ nhớ. Không tác động dữ liệu dev. Mất membership được kiểm giữa lần chọn và lưu/tìm tiếp/refresh; stale response được kiểm bằng response giữ lại riêng. Không khẳng định push realtime tự ẩn nội dung nếu chưa có request/refresh.
+
+## Visual và giới hạn
+
+Đã xem ảnh Task form desktop, My Tasks mobile và confirm xóa Task mobile tại `.local/p2-components/` / `.local/system-dialog-390.png`; ảnh layout 7 màn tại `.local/design-review/`. Không chụp password đang hiện. Probe helper đo geometry/contrast trên Task form và picker; không phải full hover/popup/sweep. Báo cáo còn cờ shell/header, chữ phụ 10px, native date, xuống dòng cuối mô tả My Tasks; toolbar editor mobile có B/I/U dưới target 32px (không dưới floor của probe). Những mục này được ghi P3/P6, không công bố toàn probe sạch hoặc mọi trạng thái đã visual QA.
+
+Một số lần kiểm đầu không đạt: harness còn kiểm `.shell.inert` trực tiếp thay vì inert ở ancestor; selector empty text cũ sau thêm hướng dẫn; fixture thử updateOne bị model guard chặn và kỳ vọng nhầm My Tasks trả lỗi thay vì empty. Đã sửa harness để kiểm tác động thực tế, sử dụng remove/rejoin qua service và chạy lại đạt. Không tính các lần thất bại là pass. Không sửa guard/model/API để làm test qua.
+
+## Gate P2 → P3
+
+- [x] Có quy tắc chọn toast/inline/confirm/input và states, phạm vi/ngoại lệ rõ.
+- [x] Các cụm màn đã áp dụng nền chung; native labels/controls, editor counter và inline success có lý do giữ riêng.
+- [x] Dialog focus/Tab/Escape/inert/nested và validation giữ bản nhập qua regression.
+- [x] Busy chống gửi lặp; uncertain không tự gửi lại; 8 browser fixtures và FE tests/build đạt.
+
+P3 là bước kế tiếp; P4 navigation/context, P5 restore và P6 visual chưa nghiệm thu. Google/SMTP thật, screen reader đầy đủ, English/policies và release gate vẫn riêng.
+
+## Lịch sử các increment P2 (không phải trạng thái hiện hành)
+
+### FormField và MemberPicker
 
 Ngày 04/10/2026, sau `2f699d8`. P2 đang triển khai; increment này xử lý assignee search và lỗi nhập cạnh field. Không sửa BE/quyền/API hoặc gọi nhà cung cấp thật.
 

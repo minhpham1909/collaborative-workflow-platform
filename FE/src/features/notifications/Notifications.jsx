@@ -1,3 +1,8 @@
+import {
+  EmptyState,
+  InlineMessage,
+  LoadingState,
+} from "../../components/Feedback.jsx";
 import { confirmDialog } from "../../components/NotificationProvider.jsx";
 import FilterPanel from "../../components/FilterPanel.jsx";
 import { useEffect, useRef, useState } from "react";
@@ -368,17 +373,13 @@ export default function Notifications({ api, id, user }) {
         </>
       )}
       {invalid && !id && (
-        <p className="error" role="alert">
+        <InlineMessage>
           Ngày bắt đầu phải trước hoặc bằng ngày kết thúc.
-        </p>
+        </InlineMessage>
       )}
-      {error && (
-        <p className="error" role="alert">
-          {error}
-        </p>
-      )}
-      {notice && <p role="status">{notice}</p>}
-      {busy && <p role="status">Đang tải thông báo…</p>}
+      {error && <InlineMessage>{error}</InlineMessage>}
+      {notice && <InlineMessage tone="info">{notice}</InlineMessage>}
+      {busy && <LoadingState>Đang tải thông báo…</LoadingState>}
       {data &&
         (id ? (
           row(data.notification)
@@ -386,9 +387,9 @@ export default function Notifications({ api, id, user }) {
           <>
             {data.items.map(row)}
             {!data.items.length && (
-              <section className="empty">
+              <EmptyState>
                 <h2>Không có thông báo phù hợp</h2>
-              </section>
+              </EmptyState>
             )}
             {data.nextCursor && (
               <button

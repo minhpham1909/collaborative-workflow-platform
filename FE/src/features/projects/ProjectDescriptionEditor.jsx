@@ -1,3 +1,4 @@
+import { InlineMessage } from "../../components/Feedback.jsx";
 import { useDraftGuard } from "../../lib/draft-navigation.js";
 import { useRef, useState } from "react";
 import RichEditor from "../../components/RichEditor.jsx";
@@ -71,11 +72,7 @@ export default function ProjectDescriptionEditor({
         label="Mục tiêu & mô tả Dự án"
         limit={10000}
       />
-      {error && (
-        <p role="alert" className="error">
-          {error}
-        </p>
-      )}
+      {error && <InlineMessage>{error}</InlineMessage>}
       <div className="buttons">
         <button
           type="button"

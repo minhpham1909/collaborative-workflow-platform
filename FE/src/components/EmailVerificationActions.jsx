@@ -1,3 +1,4 @@
+import { InlineMessage } from "./Feedback.jsx";
 import { useRef, useState } from "react";
 import { messageFor } from "../lib/messages.js";
 export default function EmailVerificationActions({ api }) {
@@ -34,7 +35,7 @@ export default function EmailVerificationActions({ api }) {
       <button disabled={busy} onClick={() => run("reload")}>
         Đã xác minh · Tải lại
       </button>
-      <p role="status">{note}</p>
+      <InlineMessage tone="info">{note}</InlineMessage>
     </>
   );
 }

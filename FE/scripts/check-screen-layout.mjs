@@ -185,6 +185,45 @@ try {
     .click();
   await page.locator(".board-task").click({ position: { x: 10, y: 10 } });
   await page.getByRole("heading", { name: task.title, exact: true }).waitFor();
+  // Inbox must distinguish a pending/failed read from a genuine empty result.
+  let releaseInbox, startedInbox;
+  const inboxGate = new Promise((r) => (releaseInbox = r));
+  const inboxStarted = new Promise((r) => (startedInbox = r));
+  await page.route("http://localhost:4000/notifications?*", async (route) => {
+    if (new URL(route.request().url()).searchParams.get("limit") !== "12")
+      return route.fallback();
+    startedInbox();
+    await inboxGate;
+    await route.fulfill({
+      status: 503,
+      contentType: "application/json",
+      body: JSON.stringify({ error: "TEST_UNAVAILABLE" }),
+    });
+  });
+  await page.goto("http://localhost:5173/#notifications");
+  await inboxStarted;
+  await page.getByText("Đang tải thông báo…", { exact: true }).waitFor();
+  assert.equal(
+    await page
+      .getByRole("button", { name: "Tải lại thông báo", exact: true })
+      .isDisabled(),
+    true,
+  );
+  assert.equal(
+    await page.getByText("Không có thông báo phù hợp", { exact: true }).count(),
+    0,
+  );
+  releaseInbox();
+  await page.locator('main .feedback[role="alert"]').waitFor();
+  assert.equal(
+    await page.getByText("Không có thông báo phù hợp", { exact: true }).count(),
+    0,
+  );
+  await page.unroute("http://localhost:4000/notifications?*");
+  await page
+    .getByRole("button", { name: "Tải lại thông báo", exact: true })
+    .click();
+  await page.getByText("Không có thông báo phù hợp", { exact: true }).waitFor();
   for (const [name, hash, ready] of [
     ["home", "#home", ".workspace-card"],
     ["workspace", "#workspace/" + workspace.id, ".project-card"],
@@ -192,6 +231,7 @@ try {
     ["task", "#task/" + task.id, ".detail-meta-grid"],
     ["mine", "#mine", ".task-row"],
     ["settings", "#settings", ".settings-card"],
+    ["inbox", "#notifications", ".empty"],
   ]) {
     await page.goto("http://localhost:5173/" + hash);
     await page.locator(ready).first().waitFor();
@@ -225,7 +265,7 @@ try {
   }
   assert.deepEqual(errors, []);
   console.log(
-    "PASS: whole Project/Task card navigation, long description expand/collapse, 6 screens at 1440/375px without overflow or page errors. Isolated data; no SMTP/provider calls.",
+    "PASS: whole Project/Task card navigation, long description expand/collapse, inbox loading/error/retry/empty; 7 screens at 1440/375px without overflow or page errors. Isolated data; no SMTP/provider calls.",
   );
 } finally {
   await browser?.close();

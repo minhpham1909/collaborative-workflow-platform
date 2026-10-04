@@ -1,3 +1,4 @@
+import { InlineMessage, LoadingState } from "../components/Feedback.jsx";
 import EmailVerificationActions from "../components/EmailVerificationActions.jsx";
 import AppFooter from "../components/AppFooter.jsx";
 import AppHeader from "../components/AppHeader.jsx";
@@ -125,7 +126,7 @@ export default function App() {
   if (!ready)
     return (
       <main className="auth-page">
-        <p role="status">Đang kiểm tra phiên đăng nhập…</p>
+        <LoadingState>Đang kiểm tra phiên đăng nhập…</LoadingState>
       </main>
     );
   if (
@@ -155,11 +156,7 @@ export default function App() {
           busy={busy}
           logout={logout}
         />
-        {error && (
-          <p className="error" role="alert">
-            {error}
-          </p>
-        )}
+        {error && <InlineMessage>{error}</InlineMessage>}
         {route.kind === "invite" ? (
           <Invite
             key={user.id + (inviteToken ?? "")}

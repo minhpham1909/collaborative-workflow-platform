@@ -174,7 +174,10 @@ try {
     .click();
   await page.getByLabel("Liên kết tham gia").waitFor();
   const url = await page.getByLabel("Liên kết tham gia").inputValue();
-  assert.equal(await page.locator(".shell").evaluate((n) => n.inert), true);
+  assert.equal(
+    await page.locator(".shell").evaluate((n) => !!n.closest("[inert]")),
+    true,
+  );
   await page.getByRole("button", { name: "Đóng kết quả" }).click();
   assert.equal(await page.getByLabel("Liên kết tham gia").count(), 0);
   const newcomer = await User.create({
@@ -243,11 +246,9 @@ try {
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.getByRole("button", { name: "Thành viên", exact: true }).click();
   await page.getByRole("heading", { name: "Người mới", exact: true }).waitFor();
-  const row = page
-    .locator("article")
-    .filter({
-      has: page.getByRole("heading", { name: "Người mới", exact: true }),
-    });
+  const row = page.locator("article").filter({
+    has: page.getByRole("heading", { name: "Người mới", exact: true }),
+  });
   await row.getByRole("button", { name: "Loại khỏi nhóm" }).click();
   await WorkspaceMembership.collection.updateOne(
     {
@@ -313,14 +314,12 @@ try {
   await newOwner
     .getByRole("heading", { name: "Liên kết tham gia", exact: true })
     .waitFor();
-  const linkRow = newOwner
-    .locator("article")
-    .filter({
-      has: newOwner.getByRole("heading", {
-        name: "Liên kết tham gia",
-        exact: true,
-      }),
-    });
+  const linkRow = newOwner.locator("article").filter({
+    has: newOwner.getByRole("heading", {
+      name: "Liên kết tham gia",
+      exact: true,
+    }),
+  });
   await linkRow.getByRole("button", { name: "Thu hồi", exact: true }).click();
   await newOwner
     .locator(".dialog")

@@ -1,3 +1,4 @@
+import useDialogFocus from "./useDialogFocus.js";
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 let dispatch = null;
@@ -100,46 +101,12 @@ function Toast({ toast, onClose }) {
 function SystemDialog({ item, finish }) {
   const panel = useRef(null),
     [value, setValue] = useState(item.initial);
-  useEffect(() => {
-    const previous = document.activeElement;
-    const siblings = [...document.body.children].filter(
-      (node) => !node.contains(panel.current),
-    );
-    const states = siblings.map((node) => [node, node.inert]);
-    siblings.forEach((node) => (node.inert = true));
-    panel.current
-      .querySelector(item.kind === "input" ? "input" : "button")
-      ?.focus();
-    const key = (event) => {
-      if (event.key === "Escape") {
-        event.preventDefault();
-        event.stopImmediatePropagation();
-        finish(item.kind === "confirm" ? false : null);
-      }
-      if (event.key === "Tab") {
-        const nodes = [...panel.current.querySelectorAll("input,button")],
-          first = nodes[0],
-          last = nodes.at(-1);
-        if (event.shiftKey && document.activeElement === first) {
-          event.preventDefault();
-          last.focus();
-        } else if (!event.shiftKey && document.activeElement === last) {
-          event.preventDefault();
-          first.focus();
-        }
-      }
-    };
-    document.addEventListener("keydown", key, true);
-    return () => {
-      document.removeEventListener("keydown", key, true);
-      states.forEach(([node, inert]) => (node.inert = inert));
-      if (previous?.isConnected) previous.focus();
-    };
-  }, []);
+  useDialogFocus(panel, () => finish(item.kind === "confirm" ? false : null));
   return (
     <div className="system-overlay">
       <section
         ref={panel}
+        tabIndex={-1}
         className={`system-dialog ${item.options.tone === "danger" ? "danger" : ""}`}
         role="dialog"
         aria-modal="true"

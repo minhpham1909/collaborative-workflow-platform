@@ -1,6 +1,8 @@
+import { InlineMessage } from "./Feedback.jsx";
+import useDialogFocus from "./useDialogFocus.js";
 import { confirmDialog } from "./NotificationProvider.jsx";
 import { isUncertainMutation } from "../lib/mutation-outcome.js";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { messageFor } from "../lib/messages.js";
 import ProjectIconPicker from "./ProjectIconPicker.jsx";
@@ -21,6 +23,7 @@ export default function NameDialog({
     [uncertain, setUncertain] = useState(false),
     [error, setError] = useState("");
   const [nameError, setNameError] = useState("");
+  const panel = useRef(null);
   const pending = useRef(false),
     close = useRef(null);
   useDraftGuard({
@@ -36,40 +39,7 @@ export default function NameDialog({
     )
       onClose(uncertain);
   };
-  useEffect(() => {
-    const previous = document.activeElement,
-      shell = document.querySelector(".shell");
-    shell.inert = true;
-    function key(e) {
-      if (e.key === "Escape") {
-        e.preventDefault();
-        close.current();
-      }
-      if (e.key === "Tab") {
-        const nodes = [
-          ...document.querySelectorAll(
-            ".dialog input:not(:disabled), .dialog button:not(:disabled)",
-          ),
-        ];
-        const first = nodes[0],
-          last = nodes.at(-1);
-        if (e.shiftKey && document.activeElement === first) {
-          e.preventDefault();
-          last?.focus();
-        }
-        if (!e.shiftKey && document.activeElement === last) {
-          e.preventDefault();
-          first?.focus();
-        }
-      }
-    }
-    document.addEventListener("keydown", key);
-    return () => {
-      shell.removeAttribute("inert");
-      document.removeEventListener("keydown", key);
-      previous?.focus();
-    };
-  }, []);
+  useDialogFocus(panel, () => close.current());
   async function submit(e) {
     e.preventDefault();
     if (pending.current || uncertain) return;
@@ -101,6 +71,8 @@ export default function NameDialog({
   return createPortal(
     <div className="overlay">
       <section
+        ref={panel}
+        tabIndex={-1}
         className="dialog"
         role="dialog"
         aria-modal="true"
@@ -116,7 +88,6 @@ export default function NameDialog({
             {(props) => (
               <input
                 {...props}
-                autoFocus
                 required
                 maxLength={200}
                 value={name}
@@ -135,11 +106,7 @@ export default function NameDialog({
               disabled={busy || uncertain}
             />
           )}
-          {error && (
-            <p role="alert" className="error">
-              {error}
-            </p>
-          )}
+          {error && <InlineMessage>{error}</InlineMessage>}
           <div className="buttons">
             <button
               type="button"

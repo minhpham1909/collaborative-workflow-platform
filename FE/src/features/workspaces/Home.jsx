@@ -1,4 +1,10 @@
 import {
+  EmptyState,
+  InlineMessage,
+  LoadingState,
+} from "../../components/Feedback.jsx";
+import useDialogFocus from "../../components/useDialogFocus.js";
+import {
   confirmDialog,
   notify,
 } from "../../components/NotificationProvider.jsx";
@@ -88,6 +94,7 @@ export default function Home({ api, user }) {
       generation.current++;
     };
   }, [query, refresh, invalid]);
+  const panel = useRef(null);
   const closeDialog = useRef(() => {});
   closeDialog.current = async () => {
     if (
@@ -110,39 +117,7 @@ export default function Home({ api, user }) {
       }
     }
   };
-  useEffect(() => {
-    if (!creating) return;
-    const previous = document.activeElement;
-    document.querySelector(".shell").inert = true;
-    const handler = (e) => {
-      if (e.key === "Escape") {
-        e.preventDefault();
-        closeDialog.current();
-      }
-      if (e.key === "Tab") {
-        const nodes = [
-          ...document.querySelectorAll(
-            ".dialog input:not(:disabled),.dialog button:not(:disabled)",
-          ),
-        ];
-        const first = nodes[0],
-          last = nodes.at(-1);
-        if (e.shiftKey && document.activeElement === first) {
-          e.preventDefault();
-          last?.focus();
-        } else if (!e.shiftKey && document.activeElement === last) {
-          e.preventDefault();
-          first?.focus();
-        }
-      }
-    };
-    document.addEventListener("keydown", handler);
-    return () => {
-      document.querySelector(".shell")?.removeAttribute("inert");
-      document.removeEventListener("keydown", handler);
-      previous?.focus();
-    };
-  }, [creating]);
+  useDialogFocus(panel, () => closeDialog.current(), creating);
   async function create(e) {
     e.preventDefault();
     if (mutation.current || uncertain) return;
@@ -239,18 +214,18 @@ export default function Home({ api, user }) {
         </button>
       </FilterPanel>
       {invalid && (
-        <p className="error" role="alert">
+        <InlineMessage>
           Ngày bắt đầu phải trước hoặc bằng ngày kết thúc.
-        </p>
+        </InlineMessage>
       )}
       <p className="muted">Mới tạo trước · Ngày theo giờ Việt Nam</p>
       {error && (
-        <div className="error" role="alert">
+        <InlineMessage>
           {error}{" "}
           <button onClick={() => setRefresh((v) => v + 1)}>Thử lại</button>
-        </div>
+        </InlineMessage>
       )}
-      {busy && <p role="status">Đang tải Workspace…</p>}
+      {busy && <LoadingState>Đang tải Workspace…</LoadingState>}
       <div className="section-heading studio-list-heading">
         <h2>Workspace của bạn</h2>
         <span className="muted">
@@ -258,50 +233,53 @@ export default function Home({ api, user }) {
         </span>
       </div>
       <div className="cards workspace-cards" aria-busy={busy}>
-        {data.items.map((w) => (
-          <article className="card workspace-card" key={w.id}>
-            <span className={"symbol tone-" + studioTone(w.id)}>
-              {["✦", "◇", "↗"][studioTone(w.id)]}
-            </span>
-            <span className="badge">
-              {w.role === "owner" ? "Chủ sở hữu" : "Thành viên"}
-            </span>
-            <h2>
-              <a href={`#workspace/${w.id}`}>{w.name}</a>
-            </h2>
-            <p>{plain(w.description) || "Không gian để cùng nhau làm việc."}</p>
-            <StudioCover id={w.id} />
-            <div className="workspace-metrics">
-              <span>
-                <Icon name="people" />
-                <div>
-                  Thành viên<strong>{w.memberCount ?? "—"} người</strong>
-                </div>
+        {!invalid &&
+          data.items.map((w) => (
+            <article className="card workspace-card" key={w.id}>
+              <span className={"symbol tone-" + studioTone(w.id)}>
+                {["✦", "◇", "↗"][studioTone(w.id)]}
               </span>
-              <span>
-                <Icon name="folder" />
-                <div>
-                  Đang hoạt động
-                  <strong>{w.activeProjectCount ?? "—"} Dự án</strong>
-                </div>
+              <span className="badge">
+                {w.role === "owner" ? "Chủ sở hữu" : "Thành viên"}
               </span>
-            </div>
-            <div className="studio-card-footer">
-              <p className="muted">
-                Tạo{" "}
-                {new Date(w.createdAt).toLocaleDateString("vi-VN", {
-                  timeZone: "Asia/Ho_Chi_Minh",
-                })}
+              <h2>
+                <a href={`#workspace/${w.id}`}>{w.name}</a>
+              </h2>
+              <p>
+                {plain(w.description) || "Không gian để cùng nhau làm việc."}
               </p>
-              <a className="pill-link" href={`#workspace/${w.id}`}>
-                Mở Workspace <span aria-hidden="true">→</span>
-              </a>
-            </div>
-          </article>
-        ))}
+              <StudioCover id={w.id} />
+              <div className="workspace-metrics">
+                <span>
+                  <Icon name="people" />
+                  <div>
+                    Thành viên<strong>{w.memberCount ?? "—"} người</strong>
+                  </div>
+                </span>
+                <span>
+                  <Icon name="folder" />
+                  <div>
+                    Đang hoạt động
+                    <strong>{w.activeProjectCount ?? "—"} Dự án</strong>
+                  </div>
+                </span>
+              </div>
+              <div className="studio-card-footer">
+                <p className="muted">
+                  Tạo{" "}
+                  {new Date(w.createdAt).toLocaleDateString("vi-VN", {
+                    timeZone: "Asia/Ho_Chi_Minh",
+                  })}
+                </p>
+                <a className="pill-link" href={`#workspace/${w.id}`}>
+                  Mở Workspace <span aria-hidden="true">→</span>
+                </a>
+              </div>
+            </article>
+          ))}
       </div>
-      {!busy && !error && !data.items.length && (
-        <section className="empty">
+      {!busy && !error && !invalid && !data.items.length && (
+        <EmptyState>
           <h2>
             {q || from || to
               ? "Không có Workspace phù hợp"
@@ -312,7 +290,7 @@ export default function Home({ api, user }) {
               ? "Thử thay đổi từ khóa hoặc bộ lọc."
               : "Tạo Workspace đầu tiên để bắt đầu cùng đội ngũ."}
           </p>
-        </section>
+        </EmptyState>
       )}
       {data.nextCursor && (
         <button
@@ -327,6 +305,8 @@ export default function Home({ api, user }) {
         createPortal(
           <div className="overlay">
             <section
+              ref={panel}
+              tabIndex={-1}
               role="dialog"
               aria-modal="true"
               aria-labelledby="create-title"
@@ -342,7 +322,6 @@ export default function Home({ api, user }) {
                   {(props) => (
                     <input
                       {...props}
-                      autoFocus
                       maxLength={200}
                       required
                       value={name}
@@ -354,11 +333,7 @@ export default function Home({ api, user }) {
                     />
                   )}
                 </FormField>
-                {createError && (
-                  <p className="error" role="alert">
-                    {createError}
-                  </p>
-                )}
+                {createError && <InlineMessage>{createError}</InlineMessage>}
                 <div className="buttons">
                   <button
                     type="button"

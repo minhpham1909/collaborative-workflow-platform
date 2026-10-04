@@ -1,3 +1,4 @@
+import { InlineMessage } from "../../components/Feedback.jsx";
 import PasswordField from "../../components/PasswordField.jsx";
 import { useDraftGuard } from "../../lib/draft-navigation.js";
 import { useEffect, useRef, useState } from "react";
@@ -123,9 +124,9 @@ export default function Login({ api, connectionError, retry }) {
         <h2>Chào bạn trở lại ✨</h2>
         <p>Đăng nhập để mở không gian làm việc của bạn.</p>
         {connectionError && (
-          <div className="error" role="alert">
+          <InlineMessage>
             {connectionError} <button onClick={retry}>Thử kết nối lại</button>
-          </div>
+          </InlineMessage>
         )}
         <form onSubmit={submit}>
           <label>
@@ -152,11 +153,7 @@ export default function Login({ api, connectionError, retry }) {
             }}
             disabled={busy}
           />
-          {error && (
-            <p className="error" role="alert">
-              {error}
-            </p>
-          )}
+          {error && <InlineMessage>{error}</InlineMessage>}
           <button className="primary" disabled={busy}>
             {busy ? "Đang đăng nhập…" : "Đăng nhập"}
           </button>

@@ -1,38 +1,53 @@
 # P2 — Quy ước component và phản hồi
 
-Ngày 04/10/2026. Giữ React/JSX, CSS nội bộ và nền Stitch/Jakarta/kem-tím. Không dựng lại wireframe; áp dụng từng phần vào ứng dụng thật. P2 đang làm, chưa chuyển P3.
+Cập nhật 05/10/2026. P2 đạt gate trong phạm vi ứng dụng hiện có; bằng chứng tại [QA P2](../qa/FE-COMPONENTS-CHECK.md). Giữ React/JSX, CSS nội bộ và nền Stitch/Jakarta/kem-tím. Không thêm thư viện hoặc dựng lại wireframe.
 
 ## Chọn cách phản hồi
 
-| Tình huống | Cách xử lý |
+| Tình huống | Quy tắc và component |
 |---|---|
-| Dữ liệu nhập sai | Lỗi cạnh field, liên kết bằng aria-describedby; aria-invalid và focus về ô sai nếu có thể. Không dùng toast thay lỗi cần sửa |
-| Request bị từ chối / mất quyền / CAS | Lỗi cạnh form hoặc dữ liệu liên quan, giữ nội dung nhập; chỉ rõ cần tải lại/kiểm quyền. BE vẫn quyết định quyền và validation |
-| Timeout/5xx sau mutation | Kết quả chưa xác định; khóa gửi lại và hướng dẫn kiểm dữ liệu. Không tự retry mutation |
-| Lưu thành công | Phản hồi ngắn qua NotificationProvider; cập nhật dữ liệu sau phản hồi xác nhận |
-| Bỏ draft / thao tác cần xác nhận | Dialog của ứng dụng; tên action diễn đạt tác động. Navigation dùng “Ở lại” / “Bỏ thay đổi” |
-| Refresh/đóng document còn draft | beforeunload của browser; giới hạn theo QA điều hướng |
-| Tải danh sách lựa chọn | Trạng thái riêng cạnh picker, retry chỉ GET; không nhập lỗi này vào lỗi lưu form |
+| Nhập sai tên/title/password/confirmation | `FormField`/`PasswordField`, lỗi sát ô, aria-invalid/describedby; sửa ô xóa lỗi local. Không dùng toast thay lỗi cần sửa |
+| Email/consent/select/date | Label gắn control native; required/type/maxLength/step do browser kiểm trước submit. Khoảng ngày sai có InlineMessage ngay sau vùng filters, không hiển thị empty như một truy vấn hợp lệ. BE kiểm lại mọi input |
+| Nội dung rich text sai/quá dài | Counter trong editor; lỗi cạnh editor/form. Không xóa nội dung đang nhập. Counter không dùng loading hoặc toast |
+| Tải dữ liệu | `LoadingState`, role=status, chỉ rõ đang tải gì. Nút đang thao tác bị khóa; pending ref chặn requestSubmit lặp. Có thể giữ kết quả cũ trong lúc tải, nhưng dùng aria-busy; không coi loading là empty |
+| Danh sách rỗng | `EmptyState` sau GET thành công; phân biệt chưa có dữ liệu với không khớp filters. Có hướng dẫn đổi/xóa filter khi phù hợp |
+| GET thất bại | `InlineMessage`, role=alert, cạnh dữ liệu. Retry/Làm mới chỉ đọc lại; không tự gửi mutation. Picker có vùng lỗi riêng |
+| Request bị từ chối / mất quyền / CAS | `InlineMessage` cạnh form/dữ liệu, giữ bản nhập khi form vẫn có quyền tồn tại. Scope/session bị thu hồi có thể buộc ẩn nội dung; draft guard không vượt quyền BE |
+| Timeout/5xx sau mutation | Nói rõ kết quả chưa xác định, khóa gửi lại, hướng dẫn đóng/tải lại để kiểm dữ liệu. Không tự retry hoặc thông báo thành công trước xác nhận |
+| Read-only | `InlineMessage` tone=info cho Project Archived/Task/Owner-only settings/invitations; badge bổ sung trạng thái. Editor readOnly, mutation CTA ẩn/khóa theo quyền; không chỉ đổi màu |
+| Thành công ngắn | NotificationProvider toast, tối đa 4, tự đóng 6 giây, có nút đóng và live region |
+| Kết quả cần giữ để tiếp tục | `InlineMessage` tone=info hoặc vùng kết quả trong form. Email đã xếp hàng không đồng nghĩa đã tới Inbox. LINK lời mời hiển thị một lần, cho sao chép trước đóng |
+| Bỏ draft/thao tác cần xác nhận | confirmDialog của ứng dụng; các hành động phá hủy có title/label/tone cụ thể. Guard điều hướng dùng “Ở lại”/“Bỏ thay đổi” |
+| Nhập đường dẫn | inputDialog; kiểm link an toàn ở editor, từ chối scheme không hỗ trợ và giữ editor draft |
+| Refresh/đóng document có draft | beforeunload của browser; ngoại lệ có chủ đích vì app không thay được hộp cảnh báo cấp trình duyệt |
 
-## Component đã áp dụng
+## Nền component
 
-- `FormField`: ID duy nhất, label gắn control, một dòng hint/error có chiều cao tối thiểu; màu lỗi dùng chung, field lỗi có viền và nội dung chữ. Áp dụng tiêu đề Task, tên Project trong NameDialog và các ô MemberPicker. Các form khác chưa migrate.
-- `MemberPicker`: tìm theo tên bằng API Members, debounce 250ms và cursor server; không lọc trên trang đã tải. Giữ ID/tên người đã chọn riêng với kết quả tìm kiếm. Có loading/no-result/error/retry/clear/load-more. Phản hồi query cũ không thay kết quả query mới; tải thêm đang chạy không được gọi lặp. Select native giữ bàn phím chuẩn, không dựng combobox riêng.
-- Tìm kiếm/thử tải thành viên không đánh dấu Task là draft; thay title/assignee/deadline/description mới đánh dấu. Không tự bỏ assignee khi không có trong kết quả tìm kiếm; BE kiểm membership khi lưu. Với Task Done có assignee đã rời, giữ tên/nhãn hiện có, không suy luận “đã rời” từ một trang kết quả thiếu người.
-- `NotificationProvider`, `NameDialog`, `ProjectIconPicker`, `RichEditor` tiếp tục dùng nền tương tác có sẵn. Không tạo một hệ dialog/toast thứ hai.
-- `PasswordField` (05/10): dùng FormField, mặc định ẩn; toggle độc lập từng ô, type=button, label nói rõ hiện/ẩn ô nào và aria-pressed. Áp dụng Login/Register/Reset/đổi mật khẩu/liên kết Google; không trim password, không đưa giá trị vào storage. Lỗi độ dài/xác nhận nằm cạnh ô; lỗi xác thực từ BE còn ở vùng lỗi form.
-- Team: nút submit ghi Tạo lời mời/Loại thành viên/Chuyển quyền sở hữu/Rời Workspace/Thu hồi lời mời/Thử gửi lại email. Escape/Đóng lời mời dirty hỏi qua guard chung. Rời nhóm thành công chỉ chuyển route sau khi busy đã kết thúc, để guard không chặn điều hướng sau thao tác hợp lệ.
-- WorkspacePicker trong My Tasks: GET server theo tên/mô tả, phân trang cursor, debounce và chặn phản hồi cũ; selection tách khỏi trang kết quả. Mặc định chỉ hiện select; nút Tìm Workspace mở ô tìm khi cần. Lỗi tải picker/retry không thay vùng lỗi Task hoặc xóa danh sách Task. Reset bộ lọc xóa cả Workspace đã chọn và query nội bộ, thu gọn tìm kiếm. FilterPanel đếm filterActive của component phức hợp; query tìm lựa chọn không tính là bộ lọc Task.
-- FormField đã thêm vào tên đăng ký, hồ sơ, tạo Workspace và tên trong WorkspaceSettings; description quá dài được báo ngay dưới editor. Hủy thật form tạo Workspace xóa tên draft; Escape hủy confirm giữ draft. Các trường email/select khác vẫn dùng validation native/quyền BE, chưa migrate toàn bộ field.
+- `FormField`: ID duy nhất, label gắn control, hint/error có chiều cao tối thiểu, viền lỗi và nội dung chữ. Đã áp dụng tên đăng ký/hồ sơ/Workspace/Project, title Task, password và picker.
+- `PasswordField`: mặc định ẩn, toggle độc lập từng ô, type=button, aria-label và aria-pressed. Không trim hoặc lưu password vào storage.
+- `MemberPicker`/`WorkspacePicker`: server search debounce 250ms, cursor, loading/error/retry/no-result/load-more, chặn phản hồi cũ. Selection lưu riêng với kết quả; query tìm lựa chọn không tạo Task draft hoặc tăng filter count. Reset My Tasks xóa selection/query và thu gọn tìm kiếm.
+- Người đã chọn không xuất hiện trong kết quả tìm kiếm không đồng nghĩa đã rời nhóm. Không tự bỏ assignee hoặc mở rộng Workspace scope. BE quyết định membership khi lưu/tải. Đã kiểm remove qua service thật giữa chọn và lưu; My Tasks mất membership trả danh sách rỗng trong scope đã chọn khi làm mới.
+- `useDialogFocus`: nền tương tác duy nhất cho Home create, NameDialog, TeamAction và SystemDialog. Chỉ dialog trên cùng nhận Escape/Tab; focus đầu tiên, wrap Tab/Shift+Tab trong các control nhìn thấy và không disabled; không có control thì focus panel. Khóa nền bằng inert ở portal siblings, khóa cuộn body, khôi phục giá trị trước khi mở và focus khi đóng. Dialog lồng trả quyền tương tác cho form cha; chỉ đóng hết mới mở khóa trang.
+- Layout `.dialog` và `.system-dialog` dùng chung giới hạn viewport/scroll/padding; confirm danger có emblem và màu riêng theo brand. Footer actions dùng `.buttons`; form submit dùng `.primary` và nhãn nghiệp vụ. Không dựng Button library khác chỉ để bọc thẻ button.
+- `Feedback.jsx`: InlineMessage/LoadingState/EmptyState dùng cùng CSS và semantic role. Không thay handler, quyền/CAS hoặc vòng đời token bởi việc migrate UI.
 
-## Coverage và việc tiếp theo
+## Coverage theo cụm
 
-| Phần | Trạng thái |
+| Cụm/màn | Áp dụng và kiểm chứng |
 |---|---|
-| MemberPicker trong Task tạo/sửa; lỗi title/name/description cạnh dữ liệu | Đã triển khai, QA fixture ghi tại FE-COMPONENTS-CHECK |
-| Auth/Settings/Workspace/Team field errors và mật khẩu hiện/ẩn | PasswordField + lỗi password/confirmation đã áp dụng; các field còn lại tiếp tục P2 |
-| Team labels cho remove/transfer/revoke/leave; dialog layout chung | Labels và đóng invite dirty đã sửa, lifecycle QA đạt; dialog layout chung chưa migrate |
-| Workspace picker trong My Tasks | Đã nối server search, retry/stale/reset/count/responsive; Members/Workspace >20 pagination QA đạt. Mất quyền giữa query còn cần fixture riêng |
-| Loading/empty/error/read-only và toast trên mọi cụm | Chưa nghiệm thu toàn bộ |
+| Shell/Login/Register/Verify/Recover/Reset | Loading/error chung; names/password field; native email/consent; token scrub và busy giữ form. Account + navigation fixtures |
+| Home/Workspace/Project | Create/name dialog chung; filter errors/loading/empty; description errors sát editor; read-only và Owner CTA; interaction/network/layout fixtures |
+| Members/Invitations/Invite | Team dialog chung, action labels đúng tác động, one-time LINK/result/copy, mất quyền, busy, dirty-close; Team/navigation fixtures |
+| WorkspaceSettings/Profile/Email/Security | FormField names/password, description errors, loading/error/info, reload/CAS/uncertain; settings/navigation fixtures |
+| Board/My Tasks/Task/Comments | Picker chung, task/name/editor errors, empty từng cột/danh sách, loading/read-only/CAS/draft; interaction/picker/network fixtures |
+| Notifications/inbox/detail | Loading/error/info/empty; unavailable không lộ payload, retry qua Tải lại; fixture Inbox loading→503→retry→empty và layout. Quyền/cutoff nghiệp vụ giữ nguyên |
+| Public policies | N/A cho mutation/dialog/picker; trang văn bản tĩnh và navigation giữ nguyên. Nội dung policies thật là release gate riêng |
 
-Không coi việc có FormField là hoàn thành P2. Chỉ chuyển P3 khi các tiêu chí trong kế hoạch nâng cấp có bằng chứng đủ phạm vi. Không thêm số liệu giả, ảnh, dark mode hoặc thư viện mới trong increment này.
+## Khác biệt có chủ đích và phạm vi kế tiếp
+
+- Không ép mọi control vào FormField: nested label cho email, search, checkbox, select, datetime đã có liên kết semantic hợp lệ và validation native. Lỗi BE liên quan nhiều field (credentials, CAS, scope) nằm cạnh form; không gán sai lỗi vào một ô. Counter/editor và picker hints có semantic riêng.
+- Giữ select/date native để dùng bàn phím và nhập thời gian ổn định; không thêm calendar/combobox mới trong P2. Styling và vùng bấm toàn hệ thống tiếp tục P3/P6. Native consent required vẫn là điều kiện submit.
+- Inline success dành cho Settings/Task/Auth/Inbox vì người dùng cần biết kết quả trong ngữ cảnh; toast dành cho phản hồi ngắn. Team LINK phải giữ kết quả đến khi người dùng đóng, không dùng toast biến mất.
+- Confirm bỏ draft đơn giản có thể dùng fallback “Hủy”/“Xác nhận” kèm thông điệp nói rõ tác động; các action nguy hiểm và guard route có nhãn cụ thể. Không đổi ngữ nghĩa confirm vì thống nhất style.
+- P3 còn audit vùng bấm/focus, gồm skip link và toolbar editor mobile; P4 còn filters/context và fallback history; P5 restore/retention/purge; P6 hierarchy/typography/visual và English. Đây không phải lỗi chặn nền component P2.
+- Google/SMTP thật, screen reader đầy đủ, mọi tổ hợp trạng thái ở mọi kích thước và performance dữ liệu lớn chưa nghiệm thu. P2 đạt không đồng nghĩa toàn sản phẩm release-ready.

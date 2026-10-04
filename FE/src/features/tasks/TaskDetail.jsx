@@ -1,3 +1,4 @@
+import { InlineMessage, LoadingState } from "../../components/Feedback.jsx";
 import { confirmDialog } from "../../components/NotificationProvider.jsx";
 import Avatar from "../../components/Avatar.jsx";
 import { useEffect, useRef, useState } from "react";
@@ -119,13 +120,9 @@ export default function TaskDetail({ api, id }) {
           Làm mới Task
         </button>
       )}
-      {busy && <p role="status">Đang xử lý Task…</p>}
-      {error && (
-        <p role="alert" className="error">
-          {error}
-        </p>
-      )}
-      {notice && <p role="status">{notice}</p>}
+      {busy && <LoadingState>Đang xử lý Task…</LoadingState>}
+      {error && <InlineMessage>{error}</InlineMessage>}
+      {notice && <InlineMessage tone="info">{notice}</InlineMessage>}
       {task && (
         <>
           <section className="hero task-detail-header">
@@ -162,9 +159,9 @@ export default function TaskDetail({ api, id }) {
             )}
           </section>
           {project.state === "archived" && (
-            <p className="archive-banner">
+            <InlineMessage tone="info" className="archive-banner">
               Dự án đã lưu trữ · Task và bình luận chỉ đọc.
-            </p>
+            </InlineMessage>
           )}
           {editing ? (
             <TaskForm

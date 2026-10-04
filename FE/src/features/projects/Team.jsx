@@ -1,3 +1,9 @@
+import {
+  EmptyState,
+  InlineMessage,
+  LoadingState,
+} from "../../components/Feedback.jsx";
+import useDialogFocus from "../../components/useDialogFocus.js";
 import FilterPanel from "../../components/FilterPanel.jsx";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -104,7 +110,9 @@ export default function Team({ api, id, invitations, onContext }) {
         </div>
       </div>
       {invitations && workspace && !owner ? (
-        <p>Chỉ chủ sở hữu được quản lý lời mời.</p>
+        <InlineMessage tone="info">
+          Chỉ chủ sở hữu được quản lý lời mời.
+        </InlineMessage>
       ) : (
         <>
           <FilterPanel
@@ -185,16 +193,12 @@ export default function Team({ api, id, invitations, onContext }) {
             Tìm kiếm trên toàn danh sách có quyền xem
           </p>
           {invalid && (
-            <p className="error" role="alert">
+            <InlineMessage>
               Ngày bắt đầu phải trước hoặc bằng ngày kết thúc.
-            </p>
+            </InlineMessage>
           )}
-          {error && (
-            <p className="error" role="alert">
-              {error}
-            </p>
-          )}
-          {busy && <p role="status">Đang tải danh sách…</p>}
+          {error && <InlineMessage>{error}</InlineMessage>}
+          {busy && <LoadingState>Đang tải danh sách…</LoadingState>}
           <div className="cards" aria-busy={busy}>
             {data.items.map((item) => (
               <article className="card" key={item.id ?? item.userId}>
@@ -262,9 +266,9 @@ export default function Team({ api, id, invitations, onContext }) {
             ))}
           </div>
           {!busy && !error && !invalid && !data.items.length && (
-            <p className="empty">
+            <EmptyState>
               Không có {invitations ? "lời mời" : "thành viên"} phù hợp.
-            </p>
+            </EmptyState>
           )}
           {data.nextCursor && (
             <button disabled={busy} onClick={() => load(data.nextCursor)}>
@@ -354,41 +358,7 @@ function TeamAction({ api, workspace, action, onClose }) {
       "Ngăn gia nhập qua lời mời này về sau; không loại người đã tham gia và không rút email đã gửi.",
     retry: "Chỉ xếp hàng gửi lại email thất bại; thời hạn lời mời giữ nguyên.",
   };
-  useEffect(() => {
-    const previous = document.activeElement,
-      shell = document.querySelector(".shell");
-    shell.inert = true;
-    const nodes = () => [
-      ...panel.current.querySelectorAll(
-        "input:not(:disabled),select:not(:disabled),button:not(:disabled),textarea:not(:disabled)",
-      ),
-    ];
-    nodes()[0]?.focus();
-    const key = (e) => {
-      if (e.key === "Escape") {
-        e.preventDefault();
-        close.current();
-      }
-      if (e.key === "Tab") {
-        const list = nodes(),
-          first = list[0],
-          last = list.at(-1);
-        if (e.shiftKey && document.activeElement === first) {
-          e.preventDefault();
-          last?.focus();
-        } else if (!e.shiftKey && document.activeElement === last) {
-          e.preventDefault();
-          first?.focus();
-        }
-      }
-    };
-    document.addEventListener("keydown", key);
-    return () => {
-      shell.removeAttribute("inert");
-      document.removeEventListener("keydown", key);
-      previous?.focus();
-    };
-  }, []);
+  useDialogFocus(panel, () => close.current());
   async function submit(e) {
     e.preventDefault();
     if (pending.current || blocked || result) return;
@@ -447,6 +417,7 @@ function TeamAction({ api, workspace, action, onClose }) {
     <div className="overlay">
       <section
         ref={panel}
+        tabIndex={-1}
         className="dialog"
         role="dialog"
         aria-modal="true"
@@ -460,13 +431,13 @@ function TeamAction({ api, workspace, action, onClose }) {
         </p>
         {result ? (
           <>
-            <p role="status">
+            <InlineMessage tone="info">
               {result.code === "ALREADY_MEMBER"
                 ? "Người này đã ở trong nhóm."
                 : result.url
                   ? "Đã tạo liên kết. Sao chép trước khi đóng; danh sách không lưu lại URL."
                   : "Đã tạo lời mời; email đang chờ gửi."}
-            </p>
+            </InlineMessage>
             {result.url && (
               <>
                 <label>
@@ -493,7 +464,7 @@ function TeamAction({ api, workspace, action, onClose }) {
                 >
                   Sao chép liên kết
                 </button>
-                <p role="status">{copied}</p>
+                <InlineMessage tone="info">{copied}</InlineMessage>
               </>
             )}
             <button
@@ -538,11 +509,7 @@ function TeamAction({ api, workspace, action, onClose }) {
             ) : (
               <p>{explanation[action.kind]}</p>
             )}
-            {error && (
-              <p className="error" role="alert">
-                {error}
-              </p>
-            )}
+            {error && <InlineMessage>{error}</InlineMessage>}
             <div className="buttons">
               <button
                 type="button"

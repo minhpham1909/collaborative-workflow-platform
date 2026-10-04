@@ -1,3 +1,8 @@
+import {
+  EmptyState,
+  InlineMessage,
+  LoadingState,
+} from "../../components/Feedback.jsx";
 import FilterPanel from "../../components/FilterPanel.jsx";
 import WorkspacePicker from "../../components/WorkspacePicker.jsx";
 import { useEffect, useRef, useState } from "react";
@@ -323,22 +328,23 @@ export default function TaskList({
           : "Sắp xếp theo ngày tạo trong mỗi cột"}
       </p>
       {invalid && (
-        <p role="alert" className="error">
+        <InlineMessage>
           Ngày bắt đầu phải trước hoặc bằng ngày kết thúc.
-        </p>
+        </InlineMessage>
       )}
-      {error && (
-        <p role="alert" className="error">
-          {error}
-        </p>
-      )}
-      {busy && <p role="status">Đang tải công việc…</p>}
+      {error && <InlineMessage>{error}</InlineMessage>}
+      {busy && <LoadingState>Đang tải công việc…</LoadingState>}
       {data &&
         (mine ? (
           <>
             <p>{data.total} công việc phù hợp</p>
             <div className="mine-list">{data.items.map(card)}</div>
-            {!data.items.length && <p>Không có công việc phù hợp bộ lọc.</p>}
+            {!data.items.length && (
+              <EmptyState>
+                Không có công việc phù hợp bộ lọc. Thử đổi từ khóa hoặc xóa bộ
+                lọc.
+              </EmptyState>
+            )}
             {data.nextCursor && (
               <button disabled={busy} onClick={() => more()}>
                 Tải thêm công việc
@@ -375,7 +381,7 @@ export default function TaskList({
                   </div>
                   {data.columns[column].items.map(card)}
                   {!data.columns[column].items.length && (
-                    <p className="muted">Không có Task phù hợp.</p>
+                    <EmptyState>Không có Task phù hợp.</EmptyState>
                   )}
                   {data.columns[column].nextCursor && (
                     <button disabled={busy} onClick={() => more(column)}>

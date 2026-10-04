@@ -1,3 +1,4 @@
+import { InlineMessage, LoadingState } from "../../components/Feedback.jsx";
 import EmailVerificationActions from "../../components/EmailVerificationActions.jsx";
 import { useEffect, useRef, useState } from "react";
 import { messageFor } from "../../lib/messages.js";
@@ -64,12 +65,8 @@ export default function Invite({ api, token, user, onAccepted }) {
         </div>
       </section>
       <section className="project-info">
-        {busy && <p role="status">Đang xử lý lời mời…</p>}
-        {error && (
-          <p className="error" role="alert">
-            {error}
-          </p>
-        )}
+        {busy && <LoadingState>Đang xử lý lời mời…</LoadingState>}
+        {error && <InlineMessage>{error}</InlineMessage>}
         {preview && (
           <>
             <h2>{preview.workspaceName}</h2>

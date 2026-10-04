@@ -1,3 +1,4 @@
+import { InlineMessage, LoadingState } from "../../components/Feedback.jsx";
 import { useEffect, useState } from "react";
 import Icon from "../../components/Icon.jsx";
 function vietnamDay() {
@@ -103,9 +104,11 @@ export default function HomeHighlights({ data }) {
           </a>
         </div>
         {data.today === undefined ? (
-          <p role="status">Đang tải công việc…</p>
+          <LoadingState>Đang tải công việc…</LoadingState>
         ) : data.today === null ? (
-          <p>Chưa tải được công việc. Mở Công việc của tôi để thử lại.</p>
+          <InlineMessage>
+            Chưa tải được công việc. Mở Công việc của tôi để thử lại.
+          </InlineMessage>
         ) : data.today.total === 0 ? (
           <p className="highlight-empty">
             Hôm nay bạn không có Task đến hạn. Một chút không gian cho ý tưởng
@@ -153,9 +156,11 @@ export default function HomeHighlights({ data }) {
           </div>
         </div>
         {data.inbox === undefined ? (
-          <p role="status">Đang tải thông báo…</p>
+          <LoadingState>Đang tải thông báo…</LoadingState>
         ) : data.inbox === null ? (
-          <p>Chưa tải được thông báo.</p>
+          <InlineMessage>
+            Chưa tải được thông báo. Mở danh sách thông báo để thử lại.
+          </InlineMessage>
         ) : note ? (
           <a className="latest-notification" href={`#notification/${note.id}`}>
             <strong>

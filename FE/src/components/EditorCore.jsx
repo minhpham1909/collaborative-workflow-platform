@@ -1,3 +1,4 @@
+import { InlineMessage } from "./Feedback.jsx";
 import { inputDialog } from "./NotificationProvider.jsx";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
@@ -117,11 +118,7 @@ export default function RichEditor({
           {words} từ · {chars}/{limit} ký tự
         </p>
       )}
-      {error && (
-        <p role="alert" className="error">
-          {error}
-        </p>
-      )}
+      {error && <InlineMessage>{error}</InlineMessage>}
     </div>
   );
 }

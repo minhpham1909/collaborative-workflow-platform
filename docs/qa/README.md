@@ -1,5 +1,7 @@
 # Trạng thái kiểm tra
 
+05/10/2026 — **P2 Đạt gate**: nền dialog chung và states/feedback hoàn thiện trên các cụm; thêm regression bàn phím/dialog lồng, assignee rời nhóm, Workspace scope mất quyền và Inbox loading/error/retry/empty. 8 browser fixtures, 12 FE tests và build 113 modules đạt. [QA hiện hành](FE-COMPONENTS-CHECK.md) và [kế hoạch](../project/UI-UX-UPGRADE-PLAN.md) ghi ngoại lệ và giới hạn. Bước tiếp theo P3; chưa nghiệm thu toàn bộ UI hoặc providers thật. Các đoạn dưới là lịch sử increment.
+
 05/10/2026 sau 44bd73c: [QA P2](FE-COMPONENTS-CHECK.md) bổ sung WorkspacePicker My Tasks và names/FormField; >20 Members/Workspaces, search/retry/stale/reset/count/responsive đạt. Account/Settings/Navigation/Interactions, build 111 modules/12 tests đạt; P2 còn dialog/state/field coverage.
 
 04/10/2026: [P2 FormField/MemberPicker](FE-COMPONENTS-CHECK.md) — Task assignee search, giữ selection, retry/stale response và lỗi title cạnh field đạt fixture; build/12 FE tests/navigation regression đạt. P2 đang làm, chưa chuyển P3.

@@ -1173,12 +1173,9 @@
 }
 .system-dialog {
   width: min(460px, 100%);
-  max-height: calc(100dvh - 40px);
-  overflow-y: auto;
   background: #fffaf7;
   border: 1px solid #fff;
   border-radius: 26px;
-  padding: 28px;
   box-shadow: 0 24px 80px #30283f33;
 }
 .system-dialog h2 {

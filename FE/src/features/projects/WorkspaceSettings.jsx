@@ -1,3 +1,4 @@
+import { InlineMessage, LoadingState } from "../../components/Feedback.jsx";
 import { notify } from "../../components/NotificationProvider.jsx";
 import FormField from "../../components/FormField.jsx";
 import { confirmDialog } from "../../components/NotificationProvider.jsx";
@@ -197,16 +198,14 @@ export default function WorkspaceSettings({
           Tải lại cài đặt
         </button>
       </div>
-      {busy && <p role="status">Đang tải cài đặt…</p>}
-      {error && (
-        <p className="error" role="alert">
-          {error}
-        </p>
-      )}
-      {note && <p role="status">{note}</p>}
+      {busy && <LoadingState>Đang tải cài đặt…</LoadingState>}
+      {error && <InlineMessage>{error}</InlineMessage>}
+      {note && <InlineMessage tone="info">{note}</InlineMessage>}
       {snapshot &&
         (!emailOnly && snapshot.role !== "owner" ? (
-          <p>Chỉ chủ sở hữu được sửa thông tin nhóm.</p>
+          <InlineMessage tone="info">
+            Chỉ chủ sở hữu được sửa thông tin nhóm.
+          </InlineMessage>
         ) : (
           <form onSubmit={submit}>
             <fieldset disabled={saving || uncertain}>
@@ -290,9 +289,9 @@ export default function WorkspaceSettings({
                     }}
                   />
                   {fieldErrors.description && (
-                    <p role="alert" className="field-message error">
+                    <InlineMessage className="field-message error">
                       {fieldErrors.description}
-                    </p>
+                    </InlineMessage>
                   )}
                   <p className="muted">
                     Tên và mô tả được chia sẻ với các thành viên trong nhóm.

@@ -1,3 +1,8 @@
+import {
+  EmptyState,
+  InlineMessage,
+  LoadingState,
+} from "../../components/Feedback.jsx";
 import { useDraftGuard } from "../../lib/draft-navigation.js";
 import {
   confirmDialog,
@@ -71,11 +76,7 @@ function Composer({ api, taskId, comment, onDone, onCancel }) {
         label={comment ? "Sửa bình luận" : "Bình luận mới"}
         limit={5000}
       />
-      {error && (
-        <p className="error" role="alert">
-          {error}
-        </p>
-      )}
+      {error && <InlineMessage>{error}</InlineMessage>}
       <div className="buttons">
         <button disabled={busy || uncertain} className="primary">
           {busy ? "Đang lưu…" : comment ? "Lưu bình luận" : "Gửi bình luận"}
@@ -191,13 +192,9 @@ export default function Comments({ api, taskId, readOnly, onComposing }) {
         </div>
       </div>
       <p className="muted">Bình luận mới nhất trước</p>
-      {error && (
-        <p className="error" role="alert">
-          {error}
-        </p>
-      )}
+      {error && <InlineMessage>{error}</InlineMessage>}
 
-      {busy && <p role="status">Đang tải bình luận…</p>}
+      {busy && <LoadingState>Đang tải bình luận…</LoadingState>}
       {writing && !readOnly && (
         <Composer
           api={api}
@@ -262,7 +259,9 @@ export default function Comments({ api, taskId, readOnly, onComposing }) {
           )}
         </article>
       ))}
-      {!busy && !data.items.length && !error && <p>Chưa có bình luận.</p>}
+      {!busy && !data.items.length && !error && (
+        <EmptyState>Chưa có bình luận.</EmptyState>
+      )}
       {data.nextCursor && !editing && !writing && (
         <button disabled={busy} onClick={() => load(data.nextCursor)}>
           Tải thêm bình luận

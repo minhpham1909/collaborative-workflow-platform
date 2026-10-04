@@ -1,3 +1,4 @@
+import { InlineMessage, LoadingState } from "../../components/Feedback.jsx";
 import {
   confirmDialog,
   notify,
@@ -113,7 +114,7 @@ export default function Project({ api, id, user }) {
       )}
 
       {error && (
-        <div role="alert" className="error">
+        <InlineMessage>
           {error}{" "}
           <button
             disabled={busy || editingDescription || taskComposing}
@@ -125,10 +126,10 @@ export default function Project({ api, id, user }) {
           >
             Tải lại dữ liệu
           </button>
-        </div>
+        </InlineMessage>
       )}
-      {notice && <p role="status">{notice}</p>}
-      {busy && <p role="status">Đang xử lý Dự án…</p>}
+      {notice && <InlineMessage tone="info">{notice}</InlineMessage>}
+      {busy && <LoadingState>Đang xử lý Dự án…</LoadingState>}
       {project && (
         <>
           <section className="hero board-project-header">
@@ -185,9 +186,9 @@ export default function Project({ api, id, user }) {
             </div>
           </section>
           {project.state === "archived" && (
-            <p className="archive-banner">
+            <InlineMessage tone="info" className="archive-banner">
               Dự án chỉ đọc. Owner có thể mở lại để tiếp tục chỉnh sửa.
-            </p>
+            </InlineMessage>
           )}
           <section className="project-info project-scope">
             <div className="section-heading">

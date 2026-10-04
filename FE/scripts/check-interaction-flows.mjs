@@ -43,6 +43,7 @@ try {
     },
     replSet: { count: 1, storageEngine: "wiredTiger", ip: "127.0.0.1" },
   });
+  if (process.env.WORKFLOW_DEBUG) console.log("Fixture database ready");
   await mongoose.connect(repl.getUri("workflow_fe_projects_test"));
   for (const model of Object.values(models)) await model.createIndexes();
   const config = { ...testConfig(), webOrigin: "http://localhost:5173" },
@@ -103,6 +104,8 @@ try {
       await route.fulfill({ response });
     });
     const page = await context.newPage();
+    page.setDefaultTimeout(15000);
+    page.on("pageerror", (e) => console.error("Browser error:", e.message));
     await page.goto("http://localhost:5173/");
     await page.getByLabel("Email", { exact: true }).fill(email);
     await page.getByLabel("Mật khẩu", { exact: true }).fill(password);
@@ -113,6 +116,7 @@ try {
   const project = (
     await work.createProject(identity, workspace.id, { name: "Thiết kế Bloom" })
   ).project;
+  if (process.env.WORKFLOW_DEBUG) console.log("Fixture API ready; logging in");
   const page = await pageFor(owner.email),
     errors = [];
   page.on("pageerror", (e) => errors.push(e.message));
@@ -121,9 +125,50 @@ try {
       errors.push("Unexpected native " + d.type());
     d.accept();
   });
+  if (process.env.WORKFLOW_DEBUG) console.log("Checking Home dialog");
   await page
     .getByRole("button", { name: "+ Tạo Workspace", exact: true })
     .click();
+  assert.equal(
+    await page
+      .getByLabel("Tên Workspace", { exact: true })
+      .evaluate((n) => n === document.activeElement),
+    true,
+  );
+  // Hidden controls and controls disabled by their fieldset are not tab stops.
+  await page.locator(".dialog").evaluate((panel) => {
+    const hidden = document.createElement("button");
+    hidden.type = "button";
+    hidden.style.visibility = "hidden";
+    hidden.dataset.focusFixture = "true";
+    panel.append(hidden);
+    const disabled = document.createElement("fieldset");
+    disabled.disabled = true;
+    disabled.dataset.focusFixture = "true";
+    disabled.append(document.createElement("button"));
+    panel.append(disabled);
+  });
+  await page.keyboard.press("Shift+Tab");
+  assert.equal(
+    await page
+      .locator(".dialog button.primary")
+      .evaluate((n) => n === document.activeElement),
+    true,
+  );
+  await page.keyboard.press("Tab");
+  assert.equal(
+    await page
+      .getByLabel("Tên Workspace", { exact: true })
+      .evaluate((n) => n === document.activeElement),
+    true,
+  );
+  await page
+    .locator(".dialog")
+    .evaluate((panel) =>
+      panel
+        .querySelectorAll("[data-focus-fixture]")
+        .forEach((node) => node.remove()),
+    );
   await page.getByLabel("Tên Workspace", { exact: true }).fill("   ");
   await page
     .getByRole("button", { name: "Tạo Workspace", exact: true })
@@ -141,7 +186,27 @@ try {
     .locator(".dialog")
     .getByRole("button", { name: "Hủy", exact: true })
     .click();
+  if (process.env.WORKFLOW_DEBUG) console.log("Waiting nested dialog");
   await page.locator(".system-dialog").waitFor();
+  assert.equal(
+    await page.locator(".dialog").evaluate((n) => !!n.closest("[inert]")),
+    true,
+  );
+  await page.keyboard.press("Shift+Tab");
+  assert.equal(
+    await page
+      .locator(".system-dialog button.primary")
+      .evaluate((n) => n === document.activeElement),
+    true,
+  );
+  await page.keyboard.press("Tab");
+  assert.equal(
+    await page
+      .locator(".system-dialog button")
+      .first()
+      .evaluate((n) => n === document.activeElement),
+    true,
+  );
   await page.keyboard.press("Escape");
   await page.locator(".system-dialog").waitFor({ state: "hidden" });
   assert.equal(
@@ -149,7 +214,10 @@ try {
     "Bản nháp chưa tạo",
   );
   assert.equal(await page.locator(".dialog").evaluate((n) => n.inert), false);
-  assert.equal(await page.locator(".shell").evaluate((n) => n.inert), true);
+  assert.equal(
+    await page.locator(".shell").evaluate((n) => !!n.closest("[inert]")),
+    true,
+  );
   await page
     .locator(".dialog")
     .getByRole("button", { name: "Hủy", exact: true })
@@ -159,6 +227,16 @@ try {
     .getByRole("button", { name: "Xác nhận", exact: true })
     .click();
   await page.locator(".dialog").waitFor({ state: "hidden" });
+  assert.equal(
+    await page.locator(".shell").evaluate((n) => !!n.closest("[inert]")),
+    false,
+  );
+  assert.equal(
+    await page
+      .getByRole("button", { name: "+ Tạo Workspace", exact: true })
+      .evaluate((n) => n === document.activeElement),
+    true,
+  );
   await page
     .locator(".workspace-card")
     .first()
@@ -581,7 +659,10 @@ try {
     .getByRole("link", { name: "Công việc của tôi", exact: false })
     .click();
   await memberPage
-    .getByText("Không có công việc phù hợp bộ lọc.", { exact: true })
+    .getByText(
+      "Không có công việc phù hợp bộ lọc. Thử đổi từ khóa hoặc xóa bộ lọc.",
+      { exact: true },
+    )
     .waitFor();
   await memberPage.getByLabel("Trạng thái Task").selectOption("done");
   await memberPage
@@ -729,6 +810,9 @@ try {
   console.log(
     "PASS: whole Workspace card, shared/Project descriptions, nested dialogs/Escape/draft retention, safe link input, toast, React/Express/Mongo Board/create/detail/editor/comments, author rights, assignee status/My Tasks, CAS draft, archived read-only, per-column load more, deleted unavailable, no overflow/page errors. No SMTP/provider calls.",
   );
+} catch (error) {
+  console.error(error);
+  throw error;
 } finally {
   await browser?.close();
   if (server) await new Promise((r) => server.close(r));

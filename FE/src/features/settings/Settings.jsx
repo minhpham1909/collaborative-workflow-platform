@@ -1,3 +1,4 @@
+import { InlineMessage, LoadingState } from "../../components/Feedback.jsx";
 import PasswordField from "../../components/PasswordField.jsx";
 import FormField from "../../components/FormField.jsx";
 import { useDraftGuard } from "../../lib/draft-navigation.js";
@@ -102,12 +103,8 @@ export default function Settings({ api, onUser }) {
           </button>
         ))}
       </div>
-      {busy && <p role="status">Đang tải tài khoản…</p>}
-      {error && (
-        <p role="alert" className="error">
-          {error}
-        </p>
-      )}
+      {busy && <LoadingState>Đang tải tài khoản…</LoadingState>}
+      {error && <InlineMessage>{error}</InlineMessage>}
       {data &&
         (tab === "security" ? (
           <Security
@@ -289,12 +286,8 @@ function EditSettings({ api, data, tab, onUser, onDirty, onSaving }) {
                 : "Lưu tùy chọn email"}
           </button>
         </fieldset>
-        {error && (
-          <p role="alert" className="error">
-            {error}
-          </p>
-        )}
-        {note && <p role="status">{note}</p>}
+        {error && <InlineMessage>{error}</InlineMessage>}
+        {note && <InlineMessage tone="info">{note}</InlineMessage>}
       </form>
     </section>
   );
@@ -507,12 +500,8 @@ function Security({ api, data, onUser, onDirty, onSaving, reload }) {
             thống.
           </p>
         )}
-        {error && (
-          <p className="error" role="alert">
-            {error}
-          </p>
-        )}
-        {note && <p role="status">{note}</p>}
+        {error && <InlineMessage>{error}</InlineMessage>}
+        {note && <InlineMessage tone="info">{note}</InlineMessage>}
       </section>
       {data.account.hasLocalPassword && !data.account.googleLinked && (
         <section className="project-info settings-card">

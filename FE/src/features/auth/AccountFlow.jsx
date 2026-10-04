@@ -1,3 +1,4 @@
+import { InlineMessage } from "../../components/Feedback.jsx";
 import PasswordField from "../../components/PasswordField.jsx";
 import FormField from "../../components/FormField.jsx";
 import { useEffect, useRef, useState } from "react";
@@ -219,7 +220,7 @@ export default function AccountFlow({
         <h2>{titles[mode]}</h2>
         {success ? (
           <>
-            <p role="status">{success}</p>
+            <InlineMessage tone="info">{success}</InlineMessage>
             <a className="card-link" href={loginHref}>
               {mode === "verify-email" && user?.emailVerified
                 ? "Tiếp tục làm việc →"
@@ -228,10 +229,10 @@ export default function AccountFlow({
           </>
         ) : tokenMode && !token ? (
           <>
-            <p className="error" role="alert">
+            <InlineMessage>
               Mở lại liên kết gốc trong email. Token không được lưu sau khi tải
               lại trang.
-            </p>
+            </InlineMessage>
             {mode === "reset-password" && (
               <a href="#recover">Yêu cầu liên kết mới</a>
             )}
@@ -353,11 +354,7 @@ export default function AccountFlow({
             </fieldset>
           </form>
         )}
-        {error && (
-          <p className="error" role="alert">
-            {error}
-          </p>
-        )}
+        {error && <InlineMessage>{error}</InlineMessage>}
         {!success && (
           <p>
             <a href={loginHref}>Về đăng nhập</a>

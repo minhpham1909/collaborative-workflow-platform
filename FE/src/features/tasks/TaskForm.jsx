@@ -1,3 +1,4 @@
+import { InlineMessage } from "../../components/Feedback.jsx";
 import { useDraftGuard } from "../../lib/draft-navigation.js";
 import FormField from "../../components/FormField.jsx";
 import MemberPicker from "../../components/MemberPicker.jsx";
@@ -156,9 +157,9 @@ export default function TaskForm({
             readOnly={busy}
           />
           {descriptionError && (
-            <p className="field-message error" role="alert">
+            <InlineMessage className="field-message error">
               {descriptionError}
-            </p>
+            </InlineMessage>
           )}
           <div className="buttons">
             <button
@@ -182,11 +183,7 @@ export default function TaskForm({
             </button>
           </div>
         </fieldset>
-        {error && (
-          <p role="alert" className="error">
-            {error}
-          </p>
-        )}
+        {error && <InlineMessage>{error}</InlineMessage>}
       </form>
     </section>
   );

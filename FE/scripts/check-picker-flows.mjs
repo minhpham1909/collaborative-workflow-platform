@@ -103,6 +103,7 @@ try {
       await route.fulfill({ response });
     });
     const page = await context.newPage();
+    page.setDefaultTimeout(15000);
     await page.goto("http://localhost:5173/");
     await page.getByLabel("Email", { exact: true }).fill(email);
     await page.getByLabel("Mật khẩu", { exact: true }).fill(password);
@@ -168,6 +169,39 @@ try {
     await page.getByLabel("Người thực hiện", { exact: true }).inputValue(),
     member.id,
   );
+  // Membership changes after selection: keep the draft; the BE is authoritative.
+  await workspaces.remove(identity, workspace.id, member.id, {
+    expectedVersion: (
+      await WorkspaceMembership.findOne({
+        workspaceId: workspace.id,
+        userId: member.id,
+      })
+    ).version,
+  });
+  await page
+    .getByLabel("Tiêu đề Task", { exact: true })
+    .fill("Giữ bản nháp khi người được giao rời nhóm");
+  await page.getByRole("button", { name: "Lưu Task", exact: true }).click();
+  await page
+    .getByText(
+      "Người được giao không còn trong Workspace. Tải lại trước khi phân công.",
+      { exact: true },
+    )
+    .waitFor();
+  assert.equal(
+    await page.getByLabel("Người thực hiện", { exact: true }).inputValue(),
+    member.id,
+  );
+  assert.equal(
+    await Task.countDocuments({
+      title: "Giữ bản nháp khi người được giao rời nhóm",
+    }),
+    0,
+  );
+  assert.equal(
+    await page.getByLabel("Tiêu đề Task", { exact: true }).inputValue(),
+    "Giữ bản nháp khi người được giao rời nhóm",
+  );
   await page.getByRole("button", { name: "Hủy", exact: true }).click();
   await page
     .locator(".system-dialog")
@@ -201,7 +235,9 @@ try {
   );
   await select.selectOption(workspace.id);
   await page.getByRole("button", { name: "Bộ lọc (1)", exact: true }).waitFor();
-  await page.getByRole("link", { name: "Task cho chủ nhóm", exact: true }).waitFor();
+  await page
+    .getByRole("link", { name: "Task cho chủ nhóm", exact: true })
+    .waitFor();
   await search.fill("không có workspace này");
   await page
     .getByText("Không có Workspace phù hợp. Thử tên khác hoặc xóa tìm kiếm.", {
@@ -323,8 +359,12 @@ try {
     1,
   );
   assert.equal(await search.isVisible(), false);
-  await page.waitForFunction(() => !document.querySelector('.workspace-picker select').disabled);
-  await page.getByRole("link", { name: "Task cho chủ nhóm", exact: true }).waitFor();
+  await page.waitForFunction(
+    () => !document.querySelector(".workspace-picker select").disabled,
+  );
+  await page
+    .getByRole("link", { name: "Task cho chủ nhóm", exact: true })
+    .waitFor();
   for (const width of [1440, 375]) {
     await page.setViewportSize({ width, height: 900 });
     await page.screenshot({
@@ -332,10 +372,75 @@ try {
       fullPage: true,
     });
   }
+  // A scoped Workspace disappears between searches. Do not silently broaden scope.
+  const link = await workspaces.invite(identity, workspace.id, {
+    type: "LINK",
+  });
+  const memberIdentity = await auth.authenticate(
+    (await auth.login({ email: member.email, password })).accessToken,
+  );
+  await workspaces.accept(memberIdentity, {
+    token: new URLSearchParams(new URL(link.url).hash.slice(1)).get("token"),
+  });
+  const memberPage = await pageFor(member.email);
+  await work.createTask(identity, project.id, {
+    title: "Task riêng của thành viên",
+    assigneeId: member.id,
+  });
+  await memberPage.goto("http://localhost:5173/#mine");
+  await memberPage
+    .getByRole("link", { name: "Task riêng của thành viên", exact: true })
+    .waitFor();
+  await memberPage.getByRole("button", { name: /^Bộ lọc/ }).click();
+  await memberPage
+    .getByRole("button", { name: "Tìm Workspace", exact: true })
+    .click();
+  const memberSelect = memberPage.getByLabel("Workspace", { exact: true });
+  await memberPage.waitForFunction(
+    () => !document.querySelector(".workspace-picker select").disabled,
+  );
+  await memberSelect.selectOption(workspace.id);
+  await workspaces.remove(identity, workspace.id, member.id, {
+    expectedVersion: (
+      await WorkspaceMembership.findOne({
+        workspaceId: workspace.id,
+        userId: member.id,
+      })
+    ).version,
+  });
+  await memberPage.getByLabel("Tìm Workspace", { exact: true }).fill("Sáng");
+  await memberPage
+    .getByText("Không có Workspace phù hợp. Thử tên khác hoặc xóa tìm kiếm.", {
+      exact: true,
+    })
+    .waitFor();
+  assert.equal(await memberSelect.inputValue(), workspace.id);
+  await memberPage
+    .getByRole("button", { name: "Làm mới công việc", exact: true })
+    .click();
+  await memberPage
+    .getByText(
+      "Không có công việc phù hợp bộ lọc. Thử đổi từ khóa hoặc xóa bộ lọc.",
+      {
+        exact: true,
+      },
+    )
+    .waitFor();
+  assert.equal(
+    await memberPage
+      .getByRole("link", { name: "Task riêng của thành viên", exact: true })
+      .count(),
+    0,
+  );
+  assert.equal(await memberSelect.inputValue(), workspace.id);
+  await memberPage.context().close();
   assert.deepEqual(errors, []);
   console.log(
-    "PASS Members >20 pagination/search/selection; Workspace >20 pagination/server search/error/retry/stale/selection/reset/filter count/responsive. Isolated DB/API; no SMTP/Google.",
+    "PASS Members >20 pagination/search/selection; Workspace >20 pagination/server search/error/retry/stale/selection/reset/filter count/responsive; membership loss during selection/scope refresh. Isolated DB/API; no SMTP/Google.",
   );
+} catch (error) {
+  console.error(error);
+  throw error;
 } finally {
   await browser?.close();
   if (server) await new Promise((r) => server.close(r));

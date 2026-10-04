@@ -25,6 +25,36 @@
   background: #fff8f5;
   font-synthesis: none;
 }
+.feedback {
+  margin: 12px 0;
+  overflow-wrap: anywhere;
+}
+.feedback.error:not(.field-message) {
+  padding: 12px 16px;
+  border: 1px solid #eed0ce;
+  border-radius: 12px;
+  background: #fff2f0;
+}
+.feedback.note {
+  color: #51476b;
+}
+.loading-state {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #615a70;
+}
+.loading-dot {
+  width: 8px;
+  height: 8px;
+  flex: 0 0 8px;
+  border-radius: 50%;
+  background: #5143eb;
+}
+.board-column .empty {
+  padding: 16px;
+  font-size: 13px;
+}
 * {
   box-sizing: border-box;
 }
@@ -265,7 +295,8 @@ main {
   place-items: center;
   padding: 20px;
 }
-.dialog {
+.dialog,
+.system-dialog {
   max-height: calc(100dvh - 40px);
   overflow-y: auto;
   width: min(500px, 100%);

@@ -73,10 +73,10 @@ Không có Workspace Archived, Workspace delete hoặc storage/resources trong s
 | NAV-01 | Chặn — đã sửa trong phạm vi kiểm | Trước sửa: Back khỏi create Task mất input, không confirm | Guard chung giữ form khi chờ xác nhận; Back/Forward/hash/link/refresh/logout và đang lưu qua [regression](FE-DRAFT-NAVIGATION-CHECK.md). Fallback giữ draft/URL nhưng không đủ history slots; giới hạn này tiếp tục P4 |
 | FILTER-01 | Trung bình | Filters bên trong Fragment của Team không được tách/đếm như các field khác | Đã flatten Fragment/giữ keys, bổ sung aria-label cho selects; Team fixture chọn revoked có Bộ lọc (1) Đạt |
 | FILTER-02 | Trung bình | Shortcut hôm nay/quá hạn mở #mine mặc định; trở lại danh sách mất filters | P4: route/query presets và khôi phục context; không thêm sort tay hoặc tìm client trên trang đã tải |
-| PICKER-01 | Trung bình — search/pagination đã sửa | Trước sửa: Assignee và Workspace picker phụ thuộc tải từng trang | [P2 QA](FE-COMPONENTS-CHECK.md): cả hai có server search/loading/no-result/error/retry/giữ selection; fixture >20 items/reset/count đạt. Mất quyền giữa request còn cần fixture riêng |
+| PICKER-01 | Trung bình — search/pagination đã sửa | Trước sửa: Assignee và Workspace picker phụ thuộc tải từng trang | [P2 QA](FE-COMPONENTS-CHECK.md): cả hai có server search/loading/no-result/error/retry/giữ selection; fixture >20 items/reset/count đạt. P2 fixture đã thêm remove/rejoin: giữ draft khi assignee mất membership; giữ Workspace scope và trả empty theo quyền sau refresh |
 | LAYOUT-01 | Trung bình | Refresh Project/Task/Comments đứng riêng ngoài header; My Tasks chỉ có H2 | Đã gom refresh đúng header từng vùng; My Tasks có H1; giữ tên nút để không đổi thao tác |
 | LAYOUT-02 | Trung bình — đã sửa phần mô tả/thẻ | Trước sửa: description dài và hero đẩy Board xuống; Project chỉ title/CTA mở | [Review UI](UI-DESIGN-REVIEW-2026-10-04.md): preview/expand, click toàn Project/Task card, giảm hero và kiểm desktop/mobile. P3/P6 còn nghiệm thu toàn hệ thống |
-| UI-STATE-01 | Trung bình | Nhiều lỗi chung chưa chỉ field; Team “Xác nhận” cho cả remove/transfer; toast không đồng đều, thiếu skip link/show password | P2: chuẩn component/labels/feedback; P6 visual variants. Không thay quyền vì mockup |
+| UI-STATE-01 | Đã xử lý nền P2; còn audit P3/P6 | Nhiều lỗi chung chưa chỉ field; Team “Xác nhận” cho cả remove/transfer; toast không đồng đều, thiếu skip link/show password | [P2 QA](FE-COMPONENTS-CHECK.md): field/password, labels, dialog/feedback đã chuẩn hóa. Skip link/toolbar targets tiếp P3, visual P6. Không thay quyền vì mockup |
 | RELEASE-01 | Điều kiện release | Google signup FE, policies thật, English UI, SMTP Inbox/Spam chưa hoàn thiện/kiểm live | Giữ backlog/release gate riêng; không gửi hàng đợi cũ, không công bố release-ready |
 | RESTORE-01 | Phạm vi mới | Task soft delete đã có nhưng không có restore/trash/backup policy | P5: chốt nghiệp vụ/thiết kế trước chức năng. Không purge tự động |
 
@@ -112,4 +112,4 @@ Không có Workspace Archived, Workspace delete hoặc storage/resources trong s
 - [x] Các khoảng trống đã có ID, mức độ, nơi xử lý P2–P6/release; không đưa NAV-01 sang phần visual để đóng audit.
 - [x] Kiểm fixture và nhà cung cấp thật được tách; không phát hàng đợi mail cũ.
 
-Bước kế tiếp: P2 chuẩn hóa component, field errors, picker, dialog labels và phản hồi. P1 đạt gate audit; P2–P6 và provider live chưa nghiệm thu.
+Cập nhật 05/10: [P2 đạt gate](FE-COMPONENTS-CHECK.md); bước tiếp theo P3 audit vùng bấm/focus/nội dung dài. P3–P6 và provider live chưa nghiệm thu.

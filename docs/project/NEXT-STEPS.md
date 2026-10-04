@@ -1,5 +1,7 @@
 # Trạng thái và bước tiếp theo
 
+05/10/2026 — **P2 Đạt gate**: nền dialog chung và states/feedback hoàn thiện trên các cụm; thêm regression bàn phím/dialog lồng, assignee rời nhóm, Workspace scope mất quyền và Inbox loading/error/retry/empty. 8 browser fixtures, 12 FE tests và build 113 modules đạt. [QA hiện hành](../qa/FE-COMPONENTS-CHECK.md) và [kế hoạch](../project/UI-UX-UPGRADE-PLAN.md) ghi ngoại lệ và giới hạn. Bước tiếp theo P3; chưa nghiệm thu toàn bộ UI hoặc providers thật. Các đoạn dưới là lịch sử increment.
+
 Increment tiếp theo 05/10: WorkspacePicker My Tasks có server search/phân trang/retry, giữ selection và reset/counter đúng; tên đăng ký/hồ sơ/tạo/cài đặt Workspace dùng FormField. Picker >20 items và Account/Settings/Navigation/Interactions fixtures, build 111 modules/12 FE tests đạt. Tiếp tục P2 với nền dialog và states/feedback; không chuyển P3. Xem [QA component hiện hành](../qa/FE-COMPONENTS-CHECK.md).
 
 P2 đang làm: đã có [quy ước component](../ui-ux/COMPONENT-INTERACTION-RULES.md), FormField và MemberPicker nối vào Task/NameDialog. [QA](../qa/FE-COMPONENTS-CHECK.md) tìm thành viên, giữ lựa chọn, lỗi tải/thử lại, phản hồi cũ và draft regression đạt. Tiếp tục Auth/Settings/Workspace/Team fields, action labels/dialogs và Workspace picker; chưa chuyển P3.
@@ -46,7 +48,7 @@ Increment trước 04/10/2026: [Board/Task/Comments/My Tasks FE](../sds/FE-TASKS
 
 ## Thứ tự triển khai tiếp
 
-Theo yêu cầu 04/10/2026, nâng cấp UI/UX đi theo [kế hoạch có tiêu chí chuyển bước](UI-UX-UPGRADE-PLAN.md): P1 audit → P2 component → P3 tương tác/nội dung dài → P4 navigation/draft → P5 thiết kế restore → P6 visual. P1 đạt gate audit sau sửa NAV-01; tiếp theo P2, chưa nghiệm thu P2–P6. Các ưu tiên bên dưới là backlog kỹ thuật, không thay thứ tự và tiêu chí của kế hoạch này.
+Theo yêu cầu 04/10/2026, nâng cấp UI/UX đi theo [kế hoạch có tiêu chí chuyển bước](UI-UX-UPGRADE-PLAN.md): P1 audit → P2 component → P3 tương tác/nội dung dài → P4 navigation/draft → P5 thiết kế restore → P6 visual. P1 đạt gate audit sau sửa NAV-01; P2 đạt gate component ngày 05/10; tiếp theo P3, chưa nghiệm thu P3–P6. Các ưu tiên bên dưới là backlog kỹ thuật, không thay thứ tự và tiêu chí của kế hoạch này.
 
 1. Workspace/Project/Board/Task/Comment/My Tasks đã nối, kiểm quyền/CAS. Tiếp tục routing/panel và phục hồi filters khi back, draft transitions trước release.
 2. Identity DTO G02 đã có creator/assignee/author kể cả lịch sử trong scope; G03 server search Members đã có; picker Task vẫn cần nối search. Editor chung Task/Comment đã chọn Tiptap 3.31.4; Workspace đã dùng editor chung; Project description đã nối editor và quyền Creator theo yêu cầu 04/10/2026.
