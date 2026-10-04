@@ -1,3 +1,4 @@
+import Avatar from "../../components/Avatar.jsx";
 import { useEffect, useRef, useState } from "react";
 import TaskForm from "./TaskForm.jsx";
 import Comments from "./Comments.jsx";
@@ -88,7 +89,7 @@ export default function TaskDetail({ api, id }) {
     }
   }
   return (
-    <main>
+    <main className="studio-task-detail">
       <p className="breadcrumbs">
         <a href="#home">Trang chủ</a>
         {workspace && (
@@ -125,7 +126,7 @@ export default function TaskDetail({ api, id }) {
       {notice && <p role="status">{notice}</p>}
       {task && (
         <>
-          <section className="hero">
+          <section className="hero task-detail-header">
             <div>
               <small>CHI TIẾT CÔNG VIỆC</small>
               <h1>{task.title}</h1>
@@ -173,7 +174,7 @@ export default function TaskDetail({ api, id }) {
           ) : (
             <>
               <section className="project-info">
-                <div className="task-meta">
+                <div className="task-meta detail-meta-grid">
                   <label>
                     Trạng thái
                     <select
@@ -189,9 +190,10 @@ export default function TaskDetail({ api, id }) {
                       ))}
                     </select>
                   </label>
-                  <p>
+                  <p className="detail-person">
                     Người thực hiện:{" "}
                     <strong>
+                      {task.assignee && <Avatar user={task.assignee} />}
                       {task.assignee?.displayName ?? "Chưa phân công"}
                       {task.assigneeLeft && " · Đã rời"}
                     </strong>
@@ -202,7 +204,29 @@ export default function TaskDetail({ api, id }) {
                       <strong className="overdue">Quá hạn</strong>
                     )}
                   </p>
-                  <p>Người tạo: {task.creator?.displayName}</p>
+                  <p className="detail-person">
+                    Người tạo:{" "}
+                    <strong>
+                      {task.creator && <Avatar user={task.creator} />}
+                      {task.creator?.displayName}
+                    </strong>
+                  </p>
+                  <p>
+                    Tạo:{" "}
+                    <strong>
+                      {new Date(task.createdAt).toLocaleString("vi-VN", {
+                        timeZone: "Asia/Ho_Chi_Minh",
+                      })}
+                    </strong>
+                  </p>
+                  <p>
+                    Cập nhật:{" "}
+                    <strong>
+                      {new Date(task.updatedAt).toLocaleString("vi-VN", {
+                        timeZone: "Asia/Ho_Chi_Minh",
+                      })}
+                    </strong>
+                  </p>
                 </div>
                 <h2>Mô tả</h2>
                 <RichEditor

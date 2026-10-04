@@ -4,6 +4,8 @@ Cập nhật 04/10/2026. Yêu cầu trực tiếp của chủ dự án có ưu t
 
 ## Hiện tại
 
+Increment mới: [Stitch Kanban/Task](../ui-ux/stitch-board-task-2026-10-04/README.md), screen IDs 80a665c29de642a8899aa7af740c881f và bcb8d6af3741455ebd88c7d75de0a0de. Đã import HTML/full screenshots, review và nâng Project header/scope, Kanban columns/cards/progress, Task metadata/comments. Giữ top nav/Jakarta/API/quyền/CAS/uncertain writes; Task detail vẫn full page, drawer routing và drag/drop còn riêng. Build, 12 FE tests, Board/Task flow và network regression đạt; không overflow 1440/1280/390.
+
 Increment mới: [Home highlights/footer/icon Project/compact filters](../ui-ux/HOME-HIGHLIGHTS-FILTERS-v0.1.md). Home có ngày VN, số Task đến hạn hôm nay/Workspace liên quan, khối ưu tiên và thông báo chưa đọc; card Workspace có active members/projects từ BE aggregates. Owner chọn/lưu icon Project qua enum/CAS. Bộ lọc của các danh sách gọn hơn, mở chi tiết khi cần; footer chung đã có. Build, 12 FE tests và các fixture flows/network regression đạt; 45 BE integration tests đạt, gồm regression aggregates/icon mới. Chưa chạy SMTP worker thật.
 
 Nguồn visual mới do chủ dự án chọn 04/10/2026: [hai màn Stitch Home/Workspace](../ui-ux/stitch-import-2026-10-04/README.md), project `41254457511662208`. [Đã triển khai React và kiểm thử](../ui-ux/STITCH-IMPLEMENTATION-v0.1.md): top navigation/account menu, Home hero/cover cards/shortcuts, Workspace header/pill tabs/Project covers và filters đồng bộ. Giữ API/quyền/CAS/uncertain-write guards; không đưa statistics/mock controls hoặc Workspace Archived trái scope vào sản phẩm. Board/Task/Auth chưa có thiết kế riêng mới. Luồng hệ thống tiếp tục ưu tiên như dưới đây.

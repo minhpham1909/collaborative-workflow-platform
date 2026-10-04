@@ -1,3 +1,4 @@
+import Avatar from "../../components/Avatar.jsx";
 import { isUncertainMutation } from "../../lib/mutation-outcome.js";
 import { useEffect, useRef, useState } from "react";
 import RichEditor from "../../components/RichEditor.jsx";
@@ -169,7 +170,7 @@ export default function Comments({ api, taskId, readOnly, onComposing }) {
     }
   }
   return (
-    <section className="project-info">
+    <section className="project-info comments">
       <div className="section-title">
         <h2>Thảo luận {data.total !== undefined && `(${data.total})`}</h2>
         {!readOnly && !writing && !editing && (
@@ -207,7 +208,8 @@ export default function Comments({ api, taskId, readOnly, onComposing }) {
       {data.items.map((c) => (
         <article className="comment" key={c.id}>
           <div className="section-title">
-            <strong>
+            <strong className="comment-author">
+              {c.author && <Avatar user={c.author} />}
               {c.author?.displayName ?? "Người dùng không còn khả dụng"}
             </strong>
             <span className="muted">

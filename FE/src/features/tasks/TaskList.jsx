@@ -3,6 +3,8 @@ import { useEffect, useRef, useState } from "react";
 import { statuses, deadline } from "../../lib/content.js";
 import { messageFor } from "../../lib/messages.js";
 import TaskForm from "./TaskForm.jsx";
+import Avatar from "../../components/Avatar.jsx";
+import Icon from "../../components/Icon.jsx";
 export default function TaskList({ api, project, workspaceId, mine = false }) {
   const [workspaceFilter, setWorkspaceFilter] = useState(""),
     [workspaces, setWorkspaces] = useState({ items: [] });
@@ -123,7 +125,23 @@ export default function TaskList({ api, project, workspaceId, mine = false }) {
   }
   function card(t) {
     return (
-      <article className={"task-card" + (mine ? " task-row" : "")} key={t.id}>
+      <article
+        className={
+          "task-card" +
+          (mine
+            ? " task-row"
+            : ` board-task status-${t.status}${t.overdue ? " is-overdue" : ""}`)
+        }
+        key={t.id}
+      >
+        {!mine && (
+          <div className="board-task-top">
+            <span className={"pill status-" + t.status}>
+              {statuses[t.status]}
+            </span>
+            {t.overdue && <span className="overdue-chip">Quá hạn</span>}
+          </div>
+        )}
         <div className="task-summary">
           <h3>
             <a href={`#task/${t.id}`}>{t.title}</a>
@@ -134,26 +152,43 @@ export default function TaskList({ api, project, workspaceId, mine = false }) {
               {t.projectState === "archived" && "· Đã lưu trữ"}
             </p>
           ) : (
-            <p>
-              {t.assignee?.displayName ?? "Chưa phân công"}
-              {t.assigneeLeft && " · Đã rời"}
-            </p>
+            <>
+              {t.description?.plainText && (
+                <p className="board-task-excerpt">{t.description.plainText}</p>
+              )}
+              <p className="board-assignee">
+                {t.assignee ? (
+                  <Avatar user={t.assignee} />
+                ) : (
+                  <Icon name="people" />
+                )}
+                <span>
+                  {t.assignee?.displayName ?? "Chưa phân công"}
+                  {t.assigneeLeft && (
+                    <span className="left-member"> · Đã rời</span>
+                  )}
+                </span>
+              </p>
+            </>
           )}
         </div>
         <div className="task-row-meta">
           <p>
-            <span className={"pill status-" + t.status}>
-              {statuses[t.status]}
-            </span>{" "}
+            {mine && (
+              <span className={"pill status-" + t.status}>
+                {statuses[t.status]}
+              </span>
+            )}{" "}
+            {!mine && <Icon name="calendar" />}
             {deadline(t.dueAt)}
           </p>
-          {t.overdue && <strong className="overdue">Quá hạn</strong>}
+          {mine && t.overdue && <strong className="overdue">Quá hạn</strong>}
         </div>
       </article>
     );
   }
   return (
-    <section className="task-area">
+    <section className={"task-area" + (mine ? "" : " studio-board-area")}>
       <div className="section-title">
         <div>
           <small className="eyebrow">
@@ -329,25 +364,77 @@ export default function TaskList({ api, project, workspaceId, mine = false }) {
             )}
           </>
         ) : (
-          <div className="board">
-            {Object.entries(statuses).map(([column, label]) => (
-              <section className={"board-column " + column} key={column}>
-                <h3>
-                  {label} <span>{data.columns[column].total}</span>
-                </h3>
-                {data.columns[column].items.map(card)}
-                {!data.columns[column].items.length && (
-                  <p className="muted">Không có Task phù hợp.</p>
-                )}
-                {data.columns[column].nextCursor && (
-                  <button disabled={busy} onClick={() => more(column)}>
-                    Tải thêm {label}
-                  </button>
-                )}
-              </section>
-            ))}
-          </div>
+          <>
+            <div className="board" aria-busy={busy}>
+              {Object.entries(statuses).map(([column, label]) => (
+                <section
+                  className={"board-column " + column}
+                  key={column}
+                  tabIndex={0}
+                  aria-label={`${label}: ${data.columns[column].total} Task`}
+                >
+                  <div className="board-column-heading">
+                    <h3>
+                      <span className="column-dot" aria-hidden="true" />
+                      {label}{" "}
+                      <span className="column-count">
+                        {data.columns[column].total}
+                      </span>
+                    </h3>
+                    <Icon
+                      name={
+                        column === "done"
+                          ? "check"
+                          : column === "in_progress"
+                            ? "layers"
+                            : "tasks"
+                      }
+                    />
+                  </div>
+                  {data.columns[column].items.map(card)}
+                  {!data.columns[column].items.length && (
+                    <p className="muted">Không có Task phù hợp.</p>
+                  )}
+                  {data.columns[column].nextCursor && (
+                    <button disabled={busy} onClick={() => more(column)}>
+                      Tải thêm {label}
+                    </button>
+                  )}
+                </section>
+              ))}
+            </div>
+            <BoardProgress columns={data.columns} />
+          </>
         ))}
+    </section>
+  );
+}
+function BoardProgress({ columns }) {
+  const total = Object.values(columns).reduce(
+    (sum, column) => sum + column.total,
+    0,
+  );
+  const done = columns.done.total;
+  return (
+    <section
+      className="board-progress"
+      aria-label="Tiến độ công việc phù hợp bộ lọc"
+    >
+      <span className="progress-icon">
+        <Icon name="layers" />
+      </span>
+      <div>
+        <strong>Tiến độ công việc</strong>
+        <p>
+          {done}/{total} Task phù hợp bộ lọc đã hoàn thành
+        </p>
+      </div>
+      <progress
+        max={total || 1}
+        value={done}
+        aria-label={`${done} trên ${total} Task đã hoàn thành`}
+      />
+      <span>{total ? Math.round((done / total) * 100) : 0}%</span>
     </section>
   );
 }

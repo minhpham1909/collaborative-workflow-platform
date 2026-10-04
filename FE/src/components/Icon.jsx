@@ -1,4 +1,6 @@
 const paths = {
+  calendar: "M5 3v4m14-4v4M3 9h18M3 5h18v16H3Z",
+  check: "m4 12 5 5L20 6",
   folder: "M3 7V5h6l2 2h10v13H3Z",
   palette:
     "M12 3a9 9 0 1 0 0 18h2a2 2 0 0 0 0-4h-1a2 2 0 0 1 0-4h4a4 4 0 0 0 4-4c0-4-5-6-9-6ZM7 8h.01M12 6h.01M17 8h.01M6 13h.01",

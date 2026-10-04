@@ -1,0 +1,69 @@
+{
+  "projectId": "41254457511662208",
+  "screens": [
+    {
+      "deviceType": "DESKTOP",
+      "height": "2468",
+      "htmlCode": {
+        "downloadUrl": "https://contribution.usercontent.google.com/download?c=CgthaWRhX2NvZGVmeBJ5Eh1hcHBfY29tcGFuaW9uX2dlbmVyYXRlZF9maWxlcxpYCiVodG1sXzAwMDY1ZDAyMGMzY2MzZDQwMjJkNDU5NDc2MTMxYTgyEgsSBxDsgv_m1wgYAZIBIQoKcHJvamVjdF9pZBITQhE0MTI1NDQ1NzUxMTY2MjIwOA&filename=&opi=89354086",
+        "mimeType": "text/html",
+        "name": "projects/41254457511662208/files/18385342802566595487"
+      },
+      "name": "projects/41254457511662208/screens/80a665c29de642a8899aa7af740c881f",
+      "screenshot": {
+        "downloadUrl": "https://lh3.googleusercontent.com/aida/AEtjO1WVM0puvNeXV57QFiP6iLYws8EQULriYRhbObjwIg_KVcsA_yzP1CxR-jOlCNcwzk889QBWCnZ3Qyu9ttU2i-qYoYLtPonnuDEq8q8uzMrQvQ6HPStkJd7-eLgJ_v-gqyZ1B8L7adf6sUxZHR5b4YVons0lUC2WOhg5f1qCUztn3YBiI53rCV6473GgSeUT8P-Ofv8yJeaduZ7T9dy647wdglYNtNrogY3jOlyhXl3zYY_3eGNtndhD",
+        "name": "projects/41254457511662208/files/12981790898890489755"
+      },
+      "title": "Bảng Kanban / Thiết kế Website Bloom",
+      "width": "2560",
+      "htmlFile": "kanban.html",
+      "imageFile": "kanban.png",
+      "sha256": {
+        "kanban.html": "75a83228857583204154115774ba5d18739b913d2fbfae4a0585742bdd1c9d3a",
+        "kanban.png": "808ce24ad0a5787e07475d687d2ba4eb02aa6b9ca521cdf3542feab6403a50c3"
+      }
+    },
+    {
+      "deviceType": "DESKTOP",
+      "height": "2048",
+      "htmlCode": {
+        "downloadUrl": "https://contribution.usercontent.google.com/download?c=CgthaWRhX2NvZGVmeBJ5Eh1hcHBfY29tcGFuaW9uX2dlbmVyYXRlZF9maWxlcxpYCiVodG1sXzAwMDY1ZDAyMGMyZTY5MWEwNzc5YTA4M2RjMDdmMDY0EgsSBxDsgv_m1wgYAZIBIQoKcHJvamVjdF9pZBITQhE0MTI1NDQ1NzUxMTY2MjIwOA&filename=&opi=89354086",
+        "mimeType": "text/html",
+        "name": "projects/41254457511662208/files/3815440716098097746"
+      },
+      "name": "projects/41254457511662208/screens/bcb8d6af3741455ebd88c7d75de0a0de",
+      "screenshot": {
+        "downloadUrl": "https://lh3.googleusercontent.com/aida/AEtjO1W3uejgGNl6Q7ev5sVROLGo944kJEYOXDhcjs3Zbm1z0YQHdr9QiH_RMb0oa6CzzrfIL0pYiSXQTOWO8l90yJjasbEWvl1wgiyZwvtO6TY7CurB6JXN-S0dS_WarfVLPUgRQFumAcWaDtXC2Sf8LKj1zUVJ2L28u7TrsYUKPclELtRP-RoCOhPp6IVHJ4yXkBXZ0w2iw0tHGTUQvpTwPfFaRHE30y4zDRmqHRN05DscmRWcBZzHsb9p",
+        "name": "projects/41254457511662208/files/10783442447130887951"
+      },
+      "title": "Chi tiết Task & Thảo luận bình luận",
+      "width": "2560",
+      "htmlFile": "task.html",
+      "imageFile": "task.png",
+      "sha256": {
+        "task.html": "9beb019489ecc31f5bb26e876e7851e2f11e7bd1a7d3096e3fef5cf6360e976f",
+        "task.png": "5495fcf1a1fca484e8fd58ac9ccd39ab866d448400605799cfb26e218c8c8de9"
+      }
+    }
+  ],
+  "assets": [
+    {
+      "url": "https://lh3.googleusercontent.com/aida/AEtjO1UKC8G9vrcB7ANdNQ6R-TGl5jhbKBaUGnJQSvQCKclUg5BlPXw8sXcNlylwuFqbxBLMIYVjm0d_VfXKZ03SREw0MhBcwOxCjWE-s2LL-oD7aVUhlJakrJBVwyZzdjY8vzTq0dw0mOS6DjyM_qdOTgzZQKG1-GWvW-R43sJRYCHXU6uMbo1q3c5XMf8t0ilH76QOnZdupm3UsavlD53_I2IOx64iS4-6xOE8wI1zY4lH4mc-FPP1bbc",
+      "file": "assets/image-01.png",
+      "sha256": "9fffb06c8e67b4d689b855d76c8149bafa7a40935ffa652be6d5a86947f7a397"
+    },
+    {
+      "url": "https://lh3.googleusercontent.com/aida-public/AB6AXuCT3EEANk92vBlUVda1DzDfpBXEtOOFxd9tbmNbiygkPAgSmP3NPWNIuK2NPhvEEPZST_mqIbGuu-Xc6bItEi9vUwic1DUh-kMn6wk7Mre0VKxvCiFe_kDycLjmEufr6wi53OtOY0w9DBGQWMXRK170Ab_2KHD0kPt56dP13CfvOS8VQtbFCEGwr9fj-KIolXzEPz1GQHP-sEJUERU4tnLzw_hZrNoMTrs8f6508-6PwriN_R-Ezg",
+      "file": "assets/image-02.jpg",
+      "sha256": "a4e9e0fcdcf7f9c9cbdb479b98bf6a035d3844b3f2d072e1d8fc7062143cd514"
+    },
+    {
+      "url": "https://lh3.googleusercontent.com/aida-public/AB6AXuDTJ1n6K46oY14p4G8F7U5q3zGz3jYx0M9lQh2fK3_E-T1_8q",
+      "error": "Hosted asset unavailable; original HTML reference retained"
+    },
+    {
+      "url": "https://lh3.googleusercontent.com/aida-public/AB6AXuFlkR4Z2g1N0r2kC7Y8p_09E7rEw4vE5yUq",
+      "error": "Hosted asset unavailable; original HTML reference retained"
+    }
+  ]
+}

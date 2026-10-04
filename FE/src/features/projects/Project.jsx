@@ -1,3 +1,4 @@
+import RichEditor from "../../components/RichEditor.jsx";
 import Icon from "../../components/Icon.jsx";
 import { useEffect, useRef, useState } from "react";
 import NameDialog from "../../components/NameDialog.jsx";
@@ -78,7 +79,7 @@ export default function Project({ api, id }) {
     }
   }
   return (
-    <main>
+    <main className="studio-project-page">
       <p className="breadcrumbs">
         <a href="#home">Trang chủ</a>
         {workspace && (
@@ -118,7 +119,7 @@ export default function Project({ api, id }) {
       {busy && <p role="status">Đang xử lý Dự án…</p>}
       {project && (
         <>
-          <section className="hero">
+          <section className="hero board-project-header">
             <div>
               <small>DỰ ÁN CỦA ĐỘI NGŨ</small>
               <h1 className="project-title">
@@ -153,11 +154,20 @@ export default function Project({ api, id }) {
               Dự án chỉ đọc. Owner có thể mở lại để tiếp tục chỉnh sửa.
             </p>
           )}
-          <section className="project-info">
-            <h2>Tổng quan Dự án</h2>
-            <p className="description">
-              {project.description?.plainText || "Dự án chưa có mô tả."}
-            </p>
+          <section className="project-info project-scope">
+            <details>
+              <summary>Mục tiêu & mô tả Dự án</summary>
+              {project.description?.plainText ? (
+                <RichEditor
+                  value={project.description}
+                  readOnly
+                  label="Mô tả Dự án"
+                  limit={20000}
+                />
+              ) : (
+                <p>Dự án chưa có mô tả.</p>
+              )}
+            </details>
             <p className="muted">
               Tạo{" "}
               {new Date(project.createdAt).toLocaleDateString("vi-VN", {
