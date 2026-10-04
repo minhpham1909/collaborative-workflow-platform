@@ -1,4 +1,5 @@
 import { notify } from "../../components/NotificationProvider.jsx";
+import FormField from "../../components/FormField.jsx";
 import { confirmDialog } from "../../components/NotificationProvider.jsx";
 import { useEffect, useRef, useState } from "react";
 import RichEditor from "../../components/RichEditor.jsx";
@@ -32,6 +33,7 @@ export default function WorkspaceSettings({
     [dirty, setDirty] = useState(false),
     [uncertain, setUncertain] = useState(false);
   const pending = useRef(false);
+  const [fieldErrors, setFieldErrors] = useState({});
   useEffect(() => {
     let live = true;
     setBusy(true);
@@ -41,6 +43,7 @@ export default function WorkspaceSettings({
     setDirty(false);
     onDirty(false);
     setUncertain(false);
+    setFieldErrors({});
     (async () => {
       try {
         const workspace = (await api.request(`/workspaces/${id}`)).workspace;
@@ -95,9 +98,22 @@ export default function WorkspaceSettings({
           ),
         ].length > 20000)
     ) {
-      setError(
-        "Tên tối đa 200 ký tự, không để trống; mô tả tối đa 20.000 ký tự hiển thị.",
-      );
+      setFieldErrors({
+        name:
+          !name.trim() ||
+          name.length > 200 ||
+          /[\u0000-\u001f\u007f\u2028\u2029]/u.test(name)
+            ? "Tên tối đa 200 ký tự, không để trống hoặc chứa ký tự điều khiển."
+            : "",
+        description:
+          [
+            ...new Intl.Segmenter("vi", { granularity: "grapheme" }).segment(
+              description?.plainText ?? "",
+            ),
+          ].length > 20000
+            ? "Mô tả tối đa 20.000 ký tự hiển thị."
+            : "",
+      });
       return;
     }
     if (
@@ -243,18 +259,25 @@ export default function WorkspaceSettings({
                 </>
               ) : (
                 <>
-                  <label>
-                    Tên Workspace
-                    <input
-                      maxLength={200}
-                      required
-                      value={name}
-                      onChange={(e) => {
-                        setName(e.target.value);
-                        setDirty(true);
-                      }}
-                    />
-                  </label>
+                  <FormField
+                    label="Tên Workspace"
+                    hint="Tối đa 200 ký tự."
+                    error={fieldErrors.name}
+                  >
+                    {(props) => (
+                      <input
+                        {...props}
+                        maxLength={200}
+                        required
+                        value={name}
+                        onChange={(e) => {
+                          setName(e.target.value);
+                          setFieldErrors((old) => ({ ...old, name: "" }));
+                          setDirty(true);
+                        }}
+                      />
+                    )}
+                  </FormField>
                   <RichEditor
                     value={description}
                     label="Mô tả Workspace"
@@ -262,9 +285,15 @@ export default function WorkspaceSettings({
                     readOnly={saving || uncertain}
                     onChange={(value) => {
                       setDescription(value);
+                      setFieldErrors((old) => ({ ...old, description: "" }));
                       setDirty(true);
                     }}
                   />
+                  {fieldErrors.description && (
+                    <p role="alert" className="field-message error">
+                      {fieldErrors.description}
+                    </p>
+                  )}
                   <p className="muted">
                     Tên và mô tả được chia sẻ với các thành viên trong nhóm.
                   </p>

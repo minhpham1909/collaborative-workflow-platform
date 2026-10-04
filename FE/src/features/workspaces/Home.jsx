@@ -10,6 +10,7 @@ import StudioCover, { studioTone } from "../../components/StudioCover.jsx";
 import Icon from "../../components/Icon.jsx";
 import { isUncertainMutation } from "../../lib/mutation-outcome.js";
 import FilterPanel from "../../components/FilterPanel.jsx";
+import FormField from "../../components/FormField.jsx";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { messageFor } from "../../lib/messages.js";
@@ -32,7 +33,8 @@ export default function Home({ api, user }) {
     [name, setName] = useState(""),
     [saving, setSaving] = useState(false),
     [uncertain, setUncertain] = useState(false),
-    [createError, setCreateError] = useState("");
+    [createError, setCreateError] = useState(""),
+    [nameError, setNameError] = useState("");
   const generation = useRef(0),
     mutation = useRef(false);
   useDraftGuard({
@@ -98,6 +100,8 @@ export default function Home({ api, user }) {
         )))
     ) {
       setCreating(false);
+      setName("");
+      setNameError("");
       if (uncertain) {
         setQ("");
         setFrom("");
@@ -143,7 +147,10 @@ export default function Home({ api, user }) {
     e.preventDefault();
     if (mutation.current || uncertain) return;
     if (!name.trim() || /[\u0000-\u001f\u007f\u2028\u2029]/u.test(name)) {
-      setCreateError("Tên Workspace chưa hợp lệ.");
+      setNameError(
+        "Tên Workspace chưa hợp lệ. Nhập tên có nội dung, không có ký tự điều khiển.",
+      );
+      e.currentTarget.querySelector("input")?.focus();
       return;
     }
     mutation.current = true;
@@ -182,7 +189,11 @@ export default function Home({ api, user }) {
         <button
           className="primary"
           disabled={busy || uncertain}
-          onClick={() => setCreating(true)}
+          onClick={() => {
+            setNameError("");
+            setCreateError("");
+            setCreating(true);
+          }}
         >
           + Tạo Workspace
         </button>
@@ -323,17 +334,26 @@ export default function Home({ api, user }) {
             >
               <h2 id="create-title">Tạo Workspace</h2>
               <form onSubmit={create}>
-                <label>
-                  Tên Workspace
-                  <input
-                    autoFocus
-                    maxLength={200}
-                    required
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    disabled={saving}
-                  />
-                </label>
+                <FormField
+                  label="Tên Workspace"
+                  hint="Tối đa 200 ký tự."
+                  error={nameError}
+                >
+                  {(props) => (
+                    <input
+                      {...props}
+                      autoFocus
+                      maxLength={200}
+                      required
+                      value={name}
+                      onChange={(e) => {
+                        setName(e.target.value);
+                        setNameError("");
+                      }}
+                      disabled={saving}
+                    />
+                  )}
+                </FormField>
                 {createError && (
                   <p className="error" role="alert">
                     {createError}

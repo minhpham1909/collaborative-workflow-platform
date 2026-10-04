@@ -206,6 +206,25 @@ try {
     "password",
   );
   await page.getByLabel("Xác nhận mật khẩu", { exact: true }).fill(password);
+  await page.getByLabel("Tên hiển thị", { exact: true }).fill("   ");
+  await page.getByRole("checkbox").check();
+  await page
+    .getByRole("button", { name: "Tạo tài khoản thử nghiệm", exact: true })
+    .click();
+  assert.equal(
+    await page
+      .getByLabel("Tên hiển thị", { exact: true })
+      .getAttribute("aria-invalid"),
+    "true",
+  );
+  await page.getByLabel("Tên hiển thị", { exact: true }).fill("Người đăng ký");
+  await page.getByRole("checkbox").uncheck();
+  assert.equal(
+    await page
+      .getByLabel("Tên hiển thị", { exact: true })
+      .getAttribute("aria-invalid"),
+    "false",
+  );
   assert.equal(await page.getByRole("checkbox").isChecked(), false);
   await page
     .getByRole("button", { name: "Tạo tài khoản thử nghiệm", exact: true })

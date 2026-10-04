@@ -1,5 +1,7 @@
 # Trạng thái và bước tiếp theo
 
+Increment tiếp theo 05/10: WorkspacePicker My Tasks có server search/phân trang/retry, giữ selection và reset/counter đúng; tên đăng ký/hồ sơ/tạo/cài đặt Workspace dùng FormField. Picker >20 items và Account/Settings/Navigation/Interactions fixtures, build 111 modules/12 FE tests đạt. Tiếp tục P2 với nền dialog và states/feedback; không chuyển P3. Xem [QA component hiện hành](../qa/FE-COMPONENTS-CHECK.md).
+
 P2 đang làm: đã có [quy ước component](../ui-ux/COMPONENT-INTERACTION-RULES.md), FormField và MemberPicker nối vào Task/NameDialog. [QA](../qa/FE-COMPONENTS-CHECK.md) tìm thành viên, giữ lựa chọn, lỗi tải/thử lại, phản hồi cũ và draft regression đạt. Tiếp tục Auth/Settings/Workspace/Team fields, action labels/dialogs và Workspace picker; chưa chuyển P3.
 
 Cập nhật 05/10: PasswordField áp dụng Auth/Security/link Google; lỗi password/confirmation cạnh ô, Login chống gửi lặp. Team labels cụ thể, Escape invite dirty được bảo vệ và rời Workspace không còn bị busy guard chặn về Home. Account/Settings/Navigation/Team fixtures, build 110 modules và 12 FE tests đạt; không gửi SMTP/Google thật. Phần tiếp theo của P2 là field còn lại, Workspace picker và nền dialog/state chung.

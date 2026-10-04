@@ -1625,6 +1625,21 @@ textarea:focus-visible {
 .member-picker {
   min-width: 0;
 }
+.workspace-picker {
+  min-width: 0;
+  width: min(100%, 360px);
+}
+.workspace-picker .form-field {
+  margin-block: 0 12px;
+}
+.filter-advanced:has(> .workspace-picker) {
+  align-items: start;
+}
+@media (max-width: 640px) {
+  .filter-advanced > .workspace-picker {
+    width: 100%;
+  }
+}
 .password-control {
   position: relative;
   min-width: 0;

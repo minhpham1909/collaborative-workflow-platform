@@ -22,6 +22,8 @@ Ngày 04/10/2026. Giữ React/JSX, CSS nội bộ và nền Stitch/Jakarta/kem-t
 - `NotificationProvider`, `NameDialog`, `ProjectIconPicker`, `RichEditor` tiếp tục dùng nền tương tác có sẵn. Không tạo một hệ dialog/toast thứ hai.
 - `PasswordField` (05/10): dùng FormField, mặc định ẩn; toggle độc lập từng ô, type=button, label nói rõ hiện/ẩn ô nào và aria-pressed. Áp dụng Login/Register/Reset/đổi mật khẩu/liên kết Google; không trim password, không đưa giá trị vào storage. Lỗi độ dài/xác nhận nằm cạnh ô; lỗi xác thực từ BE còn ở vùng lỗi form.
 - Team: nút submit ghi Tạo lời mời/Loại thành viên/Chuyển quyền sở hữu/Rời Workspace/Thu hồi lời mời/Thử gửi lại email. Escape/Đóng lời mời dirty hỏi qua guard chung. Rời nhóm thành công chỉ chuyển route sau khi busy đã kết thúc, để guard không chặn điều hướng sau thao tác hợp lệ.
+- WorkspacePicker trong My Tasks: GET server theo tên/mô tả, phân trang cursor, debounce và chặn phản hồi cũ; selection tách khỏi trang kết quả. Mặc định chỉ hiện select; nút Tìm Workspace mở ô tìm khi cần. Lỗi tải picker/retry không thay vùng lỗi Task hoặc xóa danh sách Task. Reset bộ lọc xóa cả Workspace đã chọn và query nội bộ, thu gọn tìm kiếm. FilterPanel đếm filterActive của component phức hợp; query tìm lựa chọn không tính là bộ lọc Task.
+- FormField đã thêm vào tên đăng ký, hồ sơ, tạo Workspace và tên trong WorkspaceSettings; description quá dài được báo ngay dưới editor. Hủy thật form tạo Workspace xóa tên draft; Escape hủy confirm giữ draft. Các trường email/select khác vẫn dùng validation native/quyền BE, chưa migrate toàn bộ field.
 
 ## Coverage và việc tiếp theo
 
@@ -30,7 +32,7 @@ Ngày 04/10/2026. Giữ React/JSX, CSS nội bộ và nền Stitch/Jakarta/kem-t
 | MemberPicker trong Task tạo/sửa; lỗi title/name/description cạnh dữ liệu | Đã triển khai, QA fixture ghi tại FE-COMPONENTS-CHECK |
 | Auth/Settings/Workspace/Team field errors và mật khẩu hiện/ẩn | PasswordField + lỗi password/confirmation đã áp dụng; các field còn lại tiếp tục P2 |
 | Team labels cho remove/transfer/revoke/leave; dialog layout chung | Labels và đóng invite dirty đã sửa, lifecycle QA đạt; dialog layout chung chưa migrate |
-| Workspace picker trong My Tasks | Chưa có search server nối vào picker; PICKER-01 mới xử lý phần assignee |
+| Workspace picker trong My Tasks | Đã nối server search, retry/stale/reset/count/responsive; Members/Workspace >20 pagination QA đạt. Mất quyền giữa query còn cần fixture riêng |
 | Loading/empty/error/read-only và toast trên mọi cụm | Chưa nghiệm thu toàn bộ |
 
 Không coi việc có FormField là hoàn thành P2. Chỉ chuyển P3 khi các tiêu chí trong kế hoạch nâng cấp có bằng chứng đủ phạm vi. Không thêm số liệu giả, ảnh, dark mode hoặc thư viện mới trong increment này.

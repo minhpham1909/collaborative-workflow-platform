@@ -1,4 +1,5 @@
 import FilterPanel from "../../components/FilterPanel.jsx";
+import WorkspacePicker from "../../components/WorkspacePicker.jsx";
 import { useEffect, useRef, useState } from "react";
 import { statuses, deadline } from "../../lib/content.js";
 import { messageFor } from "../../lib/messages.js";
@@ -13,33 +14,7 @@ export default function TaskList({
   onComposing,
 }) {
   const [workspaceFilter, setWorkspaceFilter] = useState(""),
-    [workspaces, setWorkspaces] = useState({ items: [] });
-  useEffect(() => {
-    if (!mine) return;
-    let live = true;
-    api
-      .request("/workspaces?limit=20")
-      .then((v) => {
-        if (live) setWorkspaces(v);
-      })
-      .catch((e) => {
-        if (live) setError(messageFor(e));
-      });
-    return () => {
-      live = false;
-    };
-  }, [mine]);
-  async function moreWorkspaces() {
-    try {
-      const v = await api.request(
-        "/workspaces?limit=20&cursor=" +
-          encodeURIComponent(workspaces.nextCursor),
-      );
-      setWorkspaces((old) => ({ ...v, items: [...old.items, ...v.items] }));
-    } catch (e) {
-      setError(messageFor(e));
-    }
-  }
+    [filterReset, setFilterReset] = useState(0);
   const [q, setQ] = useState(""),
     [from, setFrom] = useState(""),
     [to, setTo] = useState(""),
@@ -276,24 +251,13 @@ export default function TaskList({
           </select>
         </label>
         {mine && (
-          <label>
-            Workspace
-            <select
-              aria-label="Workspace"
-              value={workspaceFilter}
-              onChange={(e) => setWorkspaceFilter(e.target.value)}
-            >
-              <option value="">Tất cả Workspace</option>
-              {workspaces.items.map((w) => (
-                <option key={w.id} value={w.id}>
-                  {w.name}
-                </option>
-              ))}
-            </select>
-            {workspaces.nextCursor && (
-              <button onClick={moreWorkspaces}>Tải thêm Workspace</button>
-            )}
-          </label>
+          <WorkspacePicker
+            api={api}
+            value={workspaceFilter}
+            onChange={setWorkspaceFilter}
+            resetKey={filterReset}
+            filterActive={Boolean(workspaceFilter)}
+          />
         )}
         {mine && (
           <label>
@@ -346,6 +310,7 @@ export default function TaskList({
             setStatus(mine ? "open" : "all");
             setState("active");
             setWorkspaceFilter("");
+            setFilterReset((v) => v + 1);
           }}
         >
           Xóa bộ lọc Task

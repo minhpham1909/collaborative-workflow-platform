@@ -31,3 +31,15 @@ Sau `9d1f412`: PasswordField nối vào Login/Register/Reset/Security/link Googl
 - Production build 110 modules và 12 FE unit tests đạt. Không sửa BE hoặc đổi quy tắc liên kết Google.
 
 P2 vẫn đang làm: field migration ngoài password, Workspace picker, dialog layout/common states và coverage >20 members/mất quyền chưa đủ. Không chuyển P3, không công bố nhà cung cấp thật đã nghiệm thu.
+
+## Workspace picker và tên — 05/10/2026, sau 44bd73c
+
+WorkspacePicker nối My Tasks, lỗi tải ở picker riêng, không thay lỗi/dữ liệu Task. Search được mở khi cần; reset xóa selection/query và thu gọn. FormField áp dụng thêm tên đăng ký/hồ sơ/tạo Workspace/cài đặt Workspace; local validation và description limit báo cạnh nội dung. Hủy thật form tạo Workspace xóa tên chưa tạo, không tái hiện draft đã xác nhận bỏ.
+
+- `FE/scripts/check-picker-flows.mjs`: fixture 22 Workspaces và 23 members, phân trang qua mốc 20; search Members và Workspaces qua BE, giữ selection ngoài trang kết quả, no-result, GET 503/retry, response query cũ đến sau query mới, reset/counter Bộ lọc và 1440/375px đạt. Không gửi worker/Google/SMTP.
+- Account/Settings/Navigation/Interactions chạy lại đạt: tên toàn khoảng trắng được báo aria-invalid, sửa tên xóa lỗi; draft/CAS/503/account/security/editor/roles còn giữ đúng hành vi. Native consent required cần được chọn trước khi fixture đo custom name validation; lần harness chưa chọn consent không chạy submit, đã chỉnh setup và chạy lại đạt.
+- Picker fixture có một lần kiểm Task trước response tải bộ lọc tới (count 0); đã chờ request hiển thị dữ liệu trước assertion, chạy lại đạt. Không coi timeout/race của harness là pass.
+- 12 FE unit tests và production build 111 modules đạt. Không đổi BE hoặc quyền nghiệp vụ.
+- Đã xem ảnh expanded và compact tại `.local/p2-components/workspace-picker-*` / `workspace-filter-compact-*`. Căn controls từ đầu hàng, tránh các bộ lọc khác bị dồn xuống đáy picker; không overflow. Chạy measureInPage của skill trên fixture, lưu `workspace-probe.json`: không contrast/target/field alignment/overflow errors. Còn cờ shell/header, chữ phụ 10px, native date và một từ cuối dòng ở mô tả My Tasks mobile; ghi P6, không công bố toàn probe sạch hoặc đã chạy đầy đủ hover/sweep.
+
+P2 còn nền dialog chung, states/feedback và field migration ngoài tên/password. Fixture mất quyền đúng giữa picker request chưa thêm; quyền vẫn do BE kiểm. Chưa chuyển P3 hoặc nghiệm thu live providers.

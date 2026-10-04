@@ -124,6 +124,16 @@ try {
   await page
     .getByRole("button", { name: "+ Tạo Workspace", exact: true })
     .click();
+  await page.getByLabel("Tên Workspace", { exact: true }).fill("   ");
+  await page
+    .getByRole("button", { name: "Tạo Workspace", exact: true })
+    .click();
+  assert.equal(
+    await page
+      .getByLabel("Tên Workspace", { exact: true })
+      .getAttribute("aria-invalid"),
+    "true",
+  );
   await page
     .getByLabel("Tên Workspace", { exact: true })
     .fill("Bản nháp chưa tạo");

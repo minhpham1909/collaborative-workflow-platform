@@ -294,7 +294,11 @@ try {
   await open("workspace/" + workspace.id, heading("Sáng Tạo Studio"));
   await page.getByRole("button", { name: "Cài đặt nhóm", exact: true }).click();
   const groupName = page.getByLabel("Tên Workspace", { exact: true });
+  await groupName.fill("   ");
+  await page.getByRole("button", { name: "Lưu cài đặt", exact: true }).click();
+  assert.equal(await groupName.getAttribute("aria-invalid"), "true");
   await groupName.fill("Nhóm chưa lưu");
+  assert.equal(await groupName.getAttribute("aria-invalid"), "false");
   await stay(() => page.goBack(), groupName, "Nhóm chưa lưu");
   const groupDescription = page.getByRole("textbox", {
     name: "Mô tả Workspace",

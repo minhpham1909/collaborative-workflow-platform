@@ -148,7 +148,21 @@ try {
   page.on("dialog", (d) => d.accept());
   await page.locator(".account-menu summary").click();
   await page.getByRole("link", { name: /Tài khoản & Cài đặt/ }).click();
+  await page.getByLabel("Tên hiển thị", { exact: true }).fill("   ");
+  await page.getByRole("button", { name: "Lưu hồ sơ" }).click();
+  assert.equal(
+    await page
+      .getByLabel("Tên hiển thị", { exact: true })
+      .getAttribute("aria-invalid"),
+    "true",
+  );
   await page.getByLabel("Tên hiển thị", { exact: true }).fill("Minh mới");
+  assert.equal(
+    await page
+      .getByLabel("Tên hiển thị", { exact: true })
+      .getAttribute("aria-invalid"),
+    "false",
+  );
   await page.getByRole("button", { name: "Lưu hồ sơ" }).click();
   await page
     .getByRole("status")

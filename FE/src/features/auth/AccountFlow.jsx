@@ -1,4 +1,5 @@
 import PasswordField from "../../components/PasswordField.jsx";
+import FormField from "../../components/FormField.jsx";
 import { useEffect, useRef, useState } from "react";
 import { messageFor } from "../../lib/messages.js";
 import { validPassword } from "../../lib/auth-links.js";
@@ -98,6 +99,17 @@ export default function AccountFlow({
   async function submit(e) {
     e.preventDefault();
     if (pending.current || uncertain) return;
+    if (
+      mode === "register" &&
+      (!name.trim() ||
+        name.length > 100 ||
+        /[\u0000-\u001f\u007f\u2028\u2029]/u.test(name))
+    ) {
+      setFieldErrors({
+        name: "Tên tối đa 100 ký tự, không để trống hoặc chứa ký tự điều khiển.",
+      });
+      return;
+    }
     if (
       ["register", "reset-password"].includes(mode) &&
       (!validPassword(password) || repeat !== password)
@@ -229,16 +241,25 @@ export default function AccountFlow({
             <fieldset disabled={busy || uncertain}>
               {mode === "register" && (
                 <>
-                  <label>
-                    Tên hiển thị
-                    <input
-                      required
-                      maxLength={100}
-                      autoComplete="name"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                    />
-                  </label>
+                  <FormField
+                    label="Tên hiển thị"
+                    hint="Tối đa 100 ký tự."
+                    error={fieldErrors.name}
+                  >
+                    {(props) => (
+                      <input
+                        {...props}
+                        required
+                        maxLength={100}
+                        autoComplete="name"
+                        value={name}
+                        onChange={(e) => {
+                          setName(e.target.value);
+                          setFieldErrors((old) => ({ ...old, name: "" }));
+                        }}
+                      />
+                    )}
+                  </FormField>
                   <p className="muted">
                     Đăng ký email/mật khẩu cho bản thử nghiệm local. Google mới
                     vẫn chờ nội dung chính sách phát hành.

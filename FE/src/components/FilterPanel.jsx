@@ -31,14 +31,16 @@ export default function FilterPanel({
         isSearch(item) || item.type === "button" || item === firstSelect,
     );
     const advanced = items.filter((item) => !primary.includes(item));
-    const count = advanced.filter((item) =>
-      Children.toArray(item.props?.children).some(
-        (field) =>
-          (field.props?.checked || field.props?.value) &&
-          (field.type !== "select" ||
-            field.props.value !==
-              Children.toArray(field.props.children)[0]?.props?.value),
-      ),
+    const count = advanced.filter(
+      (item) =>
+        item.props?.filterActive ??
+        Children.toArray(item.props?.children).some(
+          (field) =>
+            (field.props?.checked || field.props?.value) &&
+            (field.type !== "select" ||
+              field.props.value !==
+                Children.toArray(field.props.children)[0]?.props?.value),
+        ),
     ).length;
     return (
       <section

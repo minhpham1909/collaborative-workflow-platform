@@ -1,5 +1,7 @@
 # Trạng thái kiểm tra
 
+05/10/2026 sau 44bd73c: [QA P2](FE-COMPONENTS-CHECK.md) bổ sung WorkspacePicker My Tasks và names/FormField; >20 Members/Workspaces, search/retry/stale/reset/count/responsive đạt. Account/Settings/Navigation/Interactions, build 111 modules/12 tests đạt; P2 còn dialog/state/field coverage.
+
 04/10/2026: [P2 FormField/MemberPicker](FE-COMPONENTS-CHECK.md) — Task assignee search, giữ selection, retry/stale response và lỗi title cạnh field đạt fixture; build/12 FE tests/navigation regression đạt. P2 đang làm, chưa chuyển P3.
 
 05/10/2026: cùng QA P2 đã bổ sung PasswordField/Auth/Security và Team labels/dirty-close/leave-success; Account/Settings/Navigation/Team fixtures, 12 FE tests và build 110 modules đạt. Provider live và phần P2 còn lại chưa nghiệm thu.

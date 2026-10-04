@@ -1,4 +1,5 @@
 import PasswordField from "../../components/PasswordField.jsx";
+import FormField from "../../components/FormField.jsx";
 import { useDraftGuard } from "../../lib/draft-navigation.js";
 import { confirmDialog } from "../../components/NotificationProvider.jsx";
 import { useEffect, useRef, useState } from "react";
@@ -141,6 +142,7 @@ function EditSettings({ api, data, tab, onUser, onDirty, onSaving }) {
     [note, setNote] = useState(""),
     [uncertain, setUncertain] = useState(false);
   const pending = useRef(false);
+  const [nameError, setNameError] = useState("");
   async function submit(e) {
     e.preventDefault();
     if (pending.current || uncertain) return;
@@ -148,7 +150,10 @@ function EditSettings({ api, data, tab, onUser, onDirty, onSaving }) {
       tab === "profile" &&
       (!name.trim() || /[\u0000-\u001f\u007f\u2028\u2029]/u.test(name))
     ) {
-      setError("Tên hiển thị chưa hợp lệ.");
+      setNameError(
+        "Tên hiển thị chưa hợp lệ. Nhập tên có nội dung, không có ký tự điều khiển.",
+      );
+      e.currentTarget.querySelector("input")?.focus();
       return;
     }
     pending.current = true;
@@ -200,15 +205,24 @@ function EditSettings({ api, data, tab, onUser, onDirty, onSaving }) {
                   </p>
                 </div>
               </div>
-              <label>
-                Tên hiển thị
-                <input
-                  required
-                  maxLength={100}
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                />
-              </label>
+              <FormField
+                label="Tên hiển thị"
+                hint="Tối đa 100 ký tự."
+                error={nameError}
+              >
+                {(props) => (
+                  <input
+                    {...props}
+                    required
+                    maxLength={100}
+                    value={name}
+                    onChange={(e) => {
+                      setName(e.target.value);
+                      setNameError("");
+                    }}
+                  />
+                )}
+              </FormField>
               <p className="muted">
                 Email tài khoản chỉ đọc. Avatar lấy từ Google đã liên kết; nếu
                 chưa có ảnh sẽ dùng chữ cái tên.
