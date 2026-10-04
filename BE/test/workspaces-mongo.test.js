@@ -57,6 +57,26 @@ test('Workspace membership/invitation lifecycle on real MongoDB and HTTP', { ski
       // Isolate this case so pre-existing lifecycle tests retain their assumptions.
       const ids=[first.id,second.id,hidden.workspace.id].map(id=>new mongoose.Types.ObjectId(id));await WorkspaceMembership.collection.deleteMany({workspaceId:{$in:ids}});await Workspace.collection.deleteMany({_id:{$in:ids}});
     });
+    await t.test('Team search/date/state filters apply before pagination and preserve privacy', async () => {
+      const workspace = await create('Team query test');
+      const invitation = await link(workspace); await join(1, raw(invitation)); await join(2, raw(invitation));
+      const first = await service.members(identities[0], workspace.id, { q: 'Test User', limit: '1' });
+      const second = await service.members(identities[0], workspace.id, { q: 'Test User', limit: '1', cursor: first.nextCursor });
+      assert.equal(first.items.length, 1); assert.equal(second.items.length, 1); assert.notEqual(first.items[0].userId, second.items[0].userId);
+      assert.equal((await service.members(identities[0], workspace.id, { q: 'User 2' })).items[0].userId, String(users[2]._id));
+      assert.ok(!JSON.stringify(first).includes('email')); assert.ok(!JSON.stringify(first).includes('passwordHash'));
+      await WorkspaceMembership.collection.updateOne({workspaceId:new mongoose.Types.ObjectId(workspace.id),userId:users[2]._id}, {$set:{joinedAt:new Date('2026-10-03T17:00:00Z')}});
+      assert.deepEqual((await service.members(identities[0], workspace.id, {q:'User 2',from:'2026-10-04',to:'2026-10-04'})).items.map(x=>x.userId), [String(users[2]._id)]);
+      await service.invite(identities[0], workspace.id, {type:'EMAIL',email:`${prefix}-query@example.com`});
+      const email = await service.invitations(identities[0],workspace.id,{q:'query',type:'EMAIL',state:'active'}); assert.equal(email.items.length,1); assert.equal(email.items[0].emailDelivery,'pending');
+      assert.equal((await service.invitations(identities[0],workspace.id,{q:'query',type:'LINK'})).items.length,0);
+      assert.ok(!JSON.stringify(email).includes('token')); await service.revoke(identities[0],workspace.id,email.items[0].id,{expectedVersion:email.items[0].version});
+      assert.equal((await service.invitations(identities[0],workspace.id,{q:'query',state:'revoked'})).items.length,1);
+      assert.equal((await service.invitations(identities[0],workspace.id,{q:'query',state:'active'})).items.length,0);
+      assert.equal((await http(1,`/workspaces/${workspace.id}/invitations?q=query`)).status,403);
+      for(const query of ['from=2026-10-05&to=2026-10-04','state=unknown','q[$ne]=x']) assert.equal((await http(0,`/workspaces/${workspace.id}/invitations?${query}`)).status,400);
+      await WorkspaceMembership.collection.deleteMany({ workspaceId: new mongoose.Types.ObjectId(workspace.id) });
+    });
     await t.test('Atomic create, verified gate, ownership, rich text, privacy and pagination', async () => {
       assert.equal((await http(4, '/workspaces', 'POST', { name: 'Unverified' })).status, 403);
       await assert.rejects(service.create(identities[4], { name: 'Unverified direct' }), /EMAIL_VERIFICATION_REQUIRED/u);

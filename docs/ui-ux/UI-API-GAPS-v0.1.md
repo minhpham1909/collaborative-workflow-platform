@@ -53,3 +53,5 @@ P0 ở đây là mức ưu tiên nối màn đúng chức năng hoặc public re
 ## Đầu ra review trước Figma
 
 Chốt cấu trúc/navigation/forms và các layout đề xuất; ghi rõ state cần frame. G01/G02/G03 ưu tiên trước nối Account/Task UI. G04 có bảng scope đề xuất, cần server contract trước controls hoạt động. Public policies/operations vẫn là checklist trước release. Design không được suy từ dữ liệu demo rằng backend đã cung cấp identity/search/count nào đó.
+
+04/10/2026: G03 Members đã có server q/from/to trước pagination; Task picker chưa nối search. G04 Member/Invitation có q/time và Invitation type/state; Notification đã xử lý ở increment trước. Invitation time theo expiresAt chưa mở. [Team FE](../sds/FE-TEAM-INVITATIONS-v0.1.md). Các hàng đề xuất phía trên giữ mốc phân tích ban đầu.

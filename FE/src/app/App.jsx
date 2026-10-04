@@ -10,6 +10,7 @@ import TaskDetail from "../features/tasks/TaskDetail.jsx";
 import { readRoute } from "./routes.js";
 import Settings from "../features/settings/Settings.jsx";
 import Avatar from "../components/Avatar.jsx";
+import Invite from "../features/projects/Invite.jsx";
 import Notifications, {
   InboxBadge,
 } from "../features/notifications/Notifications.jsx";
@@ -33,10 +34,24 @@ for (const method of ["login", "google", "logout", "changePassword"]) {
     return result;
   };
 }
+function consumeInvite() {
+  if (!location.hash.startsWith("#token=")) return null;
+  const token = new URLSearchParams(location.hash.slice(1)).get("token");
+  history.replaceState(null, "", "/#invite");
+  return /^[a-f0-9]{64}$/.test(token ?? "") ? token : "";
+}
+const initialInvite = consumeInvite();
 export default function App() {
+  const [inviteToken, setInviteToken] = useState(initialInvite);
   const [route, setRoute] = useState(() => readRoute(location.hash));
   useEffect(() => {
-    const changed = () => setRoute(readRoute(location.hash));
+    const changed = () => {
+      const token = consumeInvite();
+      if (token !== null) setInviteToken(token);
+      const next = readRoute(location.hash);
+      if (next.kind !== "invite") setInviteToken(null);
+      setRoute(next);
+    };
     window.addEventListener("hashchange", changed);
     return () => window.removeEventListener("hashchange", changed);
   }, []);
@@ -145,7 +160,17 @@ export default function App() {
             {error}
           </p>
         )}
-        {route.kind === "settings" ? (
+        {route.kind === "invite" ? (
+          <Invite
+            api={api}
+            token={inviteToken}
+            user={user}
+            onAccepted={(id) => {
+              setInviteToken(null);
+              location.hash = `workspace/${id}`;
+            }}
+          />
+        ) : route.kind === "settings" ? (
           <Settings
             key={user.id}
             api={api}

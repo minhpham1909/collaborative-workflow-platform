@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { messageFor } from "../../lib/messages.js";
 import NameDialog from "../../components/NameDialog.jsx";
+import Team from "./Team.jsx";
 
 export default function Workspace({ api, id }) {
   const [workspace, setWorkspace] = useState(null),
@@ -32,9 +33,12 @@ export default function Workspace({ api, id }) {
         tab === "projects"
           ? `/workspaces/${id}/projects?${query}`
           : `/workspaces/${id}/members?limit=12`;
-      const result = await api.request(
-        path + (cursor ? "&cursor=" + encodeURIComponent(cursor) : ""),
-      );
+      const result =
+        tab === "projects"
+          ? await api.request(
+              path + (cursor ? "&cursor=" + encodeURIComponent(cursor) : ""),
+            )
+          : { items: [] };
       if (token === generation.current) {
         setWorkspace(context.workspace);
         setData((old) => ({
@@ -113,8 +117,25 @@ export default function Workspace({ api, id }) {
             >
               Thành viên
             </button>
+            {workspace.role === "owner" && (
+              <button
+                aria-pressed={tab === "invitations"}
+                onClick={() => setTab("invitations")}
+              >
+                Lời mời
+              </button>
+            )}
           </div>
         </>
+      )}
+      {tab !== "projects" && workspace && (
+        <Team
+          key={id + tab}
+          api={api}
+          id={id}
+          invitations={tab === "invitations"}
+          onContext={setWorkspace}
+        />
       )}
       {tab === "projects" && (
         <>
@@ -174,78 +195,84 @@ export default function Workspace({ api, id }) {
           )}
         </>
       )}
-      {busy && (
+      {busy && tab === "projects" && (
         <p role="status">
           Đang tải {tab === "projects" ? "Dự án" : "thành viên"}…
         </p>
       )}
-      <div className="cards" aria-busy={busy}>
-        {data.items.map((item, i) =>
-          tab === "projects" ? (
-            <article className="card" key={item.id}>
-              <span className={"symbol tone-" + (i % 3)}>
-                {item.state === "archived" ? "⌁" : "✦"}
-              </span>
-              <span className="badge">
-                {item.state === "archived"
-                  ? "Đã lưu trữ · Chỉ đọc"
-                  : "Đang hoạt động"}
-              </span>
+      {tab === "projects" && (
+        <>
+          <div className="cards" aria-busy={busy}>
+            {data.items.map((item, i) =>
+              tab === "projects" ? (
+                <article className="card" key={item.id}>
+                  <span className={"symbol tone-" + (i % 3)}>
+                    {item.state === "archived" ? "⌁" : "✦"}
+                  </span>
+                  <span className="badge">
+                    {item.state === "archived"
+                      ? "Đã lưu trữ · Chỉ đọc"
+                      : "Đang hoạt động"}
+                  </span>
+                  <h2>
+                    <a href={`#project/${item.id}`}>{item.name}</a>
+                  </h2>
+                  <p>
+                    {item.description?.plainText ||
+                      "Không gian để biến ý tưởng thành công việc."}
+                  </p>
+                  <p className="muted">
+                    Tạo{" "}
+                    {new Date(item.createdAt).toLocaleDateString("vi-VN", {
+                      timeZone: "Asia/Ho_Chi_Minh",
+                    })}
+                  </p>
+                  <a className="card-link" href={`#project/${item.id}`}>
+                    Xem Dự án →
+                  </a>
+                </article>
+              ) : (
+                <article className="card" key={item.userId}>
+                  <span className="avatar">
+                    {item.displayName?.slice(0, 1)}
+                  </span>
+                  <h2>{item.displayName}</h2>
+                  <span className="badge">
+                    {item.role === "owner" ? "Chủ sở hữu" : "Thành viên"}
+                  </span>
+                  <p className="muted">
+                    Tham gia{" "}
+                    {new Date(item.joinedAt).toLocaleDateString("vi-VN", {
+                      timeZone: "Asia/Ho_Chi_Minh",
+                    })}
+                  </p>
+                </article>
+              ),
+            )}
+          </div>
+          {!busy && !error && !invalid && !data.items.length && (
+            <section className="empty">
               <h2>
-                <a href={`#project/${item.id}`}>{item.name}</a>
+                {tab === "projects"
+                  ? "Không có Dự án phù hợp"
+                  : "Chưa có thành viên để hiển thị"}
               </h2>
               <p>
-                {item.description?.plainText ||
-                  "Không gian để biến ý tưởng thành công việc."}
+                {tab === "projects"
+                  ? "Tạo Dự án mới hoặc thay đổi bộ lọc."
+                  : "Danh sách chỉ gồm thành viên đang trong Workspace."}
               </p>
-              <p className="muted">
-                Tạo{" "}
-                {new Date(item.createdAt).toLocaleDateString("vi-VN", {
-                  timeZone: "Asia/Ho_Chi_Minh",
-                })}
-              </p>
-              <a className="card-link" href={`#project/${item.id}`}>
-                Xem Dự án →
-              </a>
-            </article>
-          ) : (
-            <article className="card" key={item.userId}>
-              <span className="avatar">{item.displayName?.slice(0, 1)}</span>
-              <h2>{item.displayName}</h2>
-              <span className="badge">
-                {item.role === "owner" ? "Chủ sở hữu" : "Thành viên"}
-              </span>
-              <p className="muted">
-                Tham gia{" "}
-                {new Date(item.joinedAt).toLocaleDateString("vi-VN", {
-                  timeZone: "Asia/Ho_Chi_Minh",
-                })}
-              </p>
-            </article>
-          ),
-        )}
-      </div>
-      {!busy && !error && !invalid && !data.items.length && (
-        <section className="empty">
-          <h2>
-            {tab === "projects"
-              ? "Không có Dự án phù hợp"
-              : "Chưa có thành viên để hiển thị"}
-          </h2>
-          <p>
-            {tab === "projects"
-              ? "Tạo Dự án mới hoặc thay đổi bộ lọc."
-              : "Danh sách chỉ gồm thành viên đang trong Workspace."}
-          </p>
-        </section>
-      )}
-      {data.nextCursor && (
-        <button
-          disabled={busy || Boolean(invalid && tab === "projects")}
-          onClick={() => load(data.nextCursor)}
-        >
-          Tải thêm
-        </button>
+            </section>
+          )}
+          {data.nextCursor && (
+            <button
+              disabled={busy || Boolean(invalid && tab === "projects")}
+              onClick={() => load(data.nextCursor)}
+            >
+              Tải thêm
+            </button>
+          )}
+        </>
       )}
       {creating && workspace?.role === "owner" && (
         <NameDialog

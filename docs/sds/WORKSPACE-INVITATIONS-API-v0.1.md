@@ -59,3 +59,5 @@ Project Active/Archived và Task/Comment APIs dùng cùng guard. Notifications i
 
 
 Cập nhật Notifications 03/10/2026: EMAIL in-app có thể accept qua POST /invitations/:invitationId/accept {} với verified exact recipient email; LINK không dùng đường này. Không trả token; cùng transaction guard/lifecycle với token accept. [Contract](NOTIFICATIONS-EMAIL-API-v0.1.md).
+
+04/10/2026: Members/Invitations GET nhận thêm q/from/to, invitations thêm type/state; filter trước cursor/limit. [FE và contract chi tiết](FE-TEAM-INVITATIONS-v0.1.md), [QA](../qa/FE-TEAM-INVITATIONS-CHECK.md). URL token accept đã có UI sản phẩm.

@@ -24,6 +24,8 @@ pnpm build
 
 ## Phạm vi hiện tại
 
+Workspace Thành viên/Lời mời: quản lý Owner remove/transfer/invite/revoke/retry, Member leave, server search/time và nhận link sau login. [Thiết kế](../docs/sds/FE-TEAM-INVITATIONS-v0.1.md), [QA](../docs/qa/FE-TEAM-INVITATIONS-CHECK.md). Không tự chạy SMTP worker.
+
 Account/Personal Settings tại `#settings`: hồ sơ, email preferences chung, locale cho email, đổi mật khẩu và Google link theo credential capabilities. [Thiết kế](../docs/sds/FE-ACCOUNT-SETTINGS-v0.1.md), [QA](../docs/qa/FE-ACCOUNT-SETTINGS-CHECK.md). Google link đã kiểm fixture, chưa kiểm provider thật.
 
 Notifications inbox/detail, badge chưa đọc, read/read-all, search/thời gian và accept EMAIL invitation đã nối BE. Unverified được xem own inbox, accept vẫn cần verified. [Thiết kế](../docs/sds/FE-NOTIFICATIONS-v0.1.md), [QA](../docs/qa/FE-NOTIFICATIONS-CHECK.md).
@@ -33,7 +35,7 @@ Notifications inbox/detail, badge chưa đọc, read/read-all, search/thời gia
 - Home: danh sách Workspace có quyền hiện tại, mới tạo trước, search tên/mô tả trên server, ngày tạo theo Việt Nam, cursor/load more, tạo Workspace bằng tên; trạng thái loading/empty/error.
 - Workspace cards mở Workspace thật: danh sách Dự án search/lọc ngày/trạng thái trên server, tạo Dự án Owner, danh sách thành viên có pagination. Chi tiết Dự án hỗ trợ Owner đổi tên/lưu trữ/mở lại và conflict expectedVersion. Reload link trực tiếp giữ ngữ cảnh.
 - Board/Task/Comments/My Tasks đã nối API thật: search/thời gian/cursor, status/quyền, CAS, Task create/edit/delete và author-only Comment edit/delete. Editor chung Tiptap cho Task/Comment; deadline nhập giờ Việt Nam. [Thiết kế](../docs/sds/FE-TASKS-v0.1.md), [QA](../docs/qa/FE-TASKS-CHECK.md).
-- Quản lý Members/Invitations và Workspace email override, signup/recovery, English UI và editor Workspace/Project còn tiếp theo. Task toàn trang, chưa panel/autosave/drag, phục hồi filters khi back hoặc mọi draft transition.
+- Cài đặt nhóm và Workspace email override, signup/recovery, English UI và editor Workspace/Project còn tiếp theo. Task toàn trang, chưa panel/autosave/drag, phục hồi filters khi back hoặc mọi draft transition.
 
 Font Plus Jakarta Sans self-hosted; license trong `public/fonts/OFL.txt`. Chưa cài UI kit, routing/form library; editor Tiptap pin 3.31.4. [Thiết kế nền](../docs/sds/FE-FOUNDATION-v0.1.md), [QA Auth/Home](../docs/qa/FE-AUTH-HOME-CHECK.md).
 

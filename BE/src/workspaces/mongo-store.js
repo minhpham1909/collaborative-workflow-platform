@@ -91,7 +91,12 @@ export function createMongoWorkspaceStore({ config, now = () => new Date() }) {
     }),
     members: (claims, workspaceId, page) => run(claims, async (user, tx) => {
       const { workspace } = await scope(user, workspaceId, tx);
-      const records = await WorkspaceMembership.collection.find({ workspaceId: workspace._id, state: 'active', ...mongoAfter(page.after) }, { session: tx }).sort({ joinedAt: -1, _id: -1 }).limit(page.limit + 1).toArray();
+      const records = await WorkspaceMembership.collection.aggregate([
+        { $match: { workspaceId: workspace._id, state: 'active', $and: [mongoAfter(page.after), ...page.filters] } },
+        { $lookup: { from: 'users', localField: 'userId', foreignField: '_id', pipeline: [{ $project: { displayName: 1 } }], as: 'identity' } },
+        ...(page.patterns.length ? [{ $match: { $and: page.patterns.map(pattern => ({ 'identity.displayName': { $regex: pattern, $options: 'i' } })) } }] : []),
+        { $sort: { joinedAt: -1, _id: -1 } }, { $limit: page.limit + 1 },
+      ], { session: tx }).toArray();
       const users = await User.collection.find({ _id: { $in: records.map((value) => value.userId) } }, { session: tx, projection: { displayName: 1, avatar: 1 } }).toArray();
       return paged(records, page.limit, (membership) => {
         const member = users.find((value) => sameId(value._id, membership.userId));
@@ -133,9 +138,11 @@ export function createMongoWorkspaceStore({ config, now = () => new Date() }) {
     }),
     invitations: (claims, workspaceId, page) => run(claims, async (user, tx) => {
       const { workspace } = await scope(user, workspaceId, tx, true);
-      const records = await WorkspaceInvitation.collection.find({ workspaceId: workspace._id, ...mongoAfter(page.after) }, { session: tx }).sort({ createdAt: -1, _id: -1 }).limit(page.limit + 1).toArray();
+      const time = now();
+      const states = { revoked: { revokedAt: { $ne: null } }, accepted: { revokedAt: null, acceptedAt: { $ne: null } }, expired: { revokedAt: null, acceptedAt: null, expiresAt: { $lte: time } }, active: { revokedAt: null, acceptedAt: null, expiresAt: { $gt: time } } };
+      const records = await WorkspaceInvitation.collection.find({ workspaceId: workspace._id, $and: [mongoAfter(page.after), ...page.filters, ...(page.type !== 'all' ? [{ type: page.type }] : []), ...(page.state !== 'all' ? [states[page.state]] : []), ...page.patterns.map(pattern => ({ email: { $regex: pattern, $options: 'i' } }))] }, { session: tx }).sort({ createdAt: -1, _id: -1 }).limit(page.limit + 1).toArray();
       const jobs = await EmailOutbox.collection.find({ invitationId: { $in: records.map((value) => value._id) }, category: 'invitation' }, { session: tx, projection: { invitationId: 1, state: 1 } }).toArray();
-      return paged(records, page.limit, (value) => invitationResponse(value, now(), jobs.find((job) => sameId(job.invitationId, value._id))));
+      return paged(records, page.limit, (value) => invitationResponse(value, time, jobs.find((job) => sameId(job.invitationId, value._id))));
     }),
     invite: (claims, workspaceId, input) => run(claims, async (user, tx) => {
       const { workspace } = await scope(user, workspaceId, tx, true);

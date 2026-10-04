@@ -31,6 +31,13 @@ const messages = {
   GOOGLE_CHALLENGE_INVALID:
     "Phiên liên kết Google đã hết hạn. Bắt đầu lại thao tác.",
   LOCAL_PASSWORD_UNAVAILABLE: "Tài khoản này không có mật khẩu hệ thống.",
+  TRANSFER_REQUIRED: "Cần chuyển quyền sở hữu trước khi rời Workspace.",
+  TRANSFER_TARGET_INVALID:
+    "Người nhận quyền không còn là thành viên hợp lệ. Tải lại danh sách.",
+  CANNOT_REMOVE_OWNER: "Không thể loại chủ sở hữu Workspace.",
+  EMAIL_RETRY_UNAVAILABLE:
+    "Không thể gửi lại email này. Tải lại để kiểm tra trạng thái.",
+  INVITATION_EMAIL_MISMATCH: "Lời mời này dành cho tài khoản có email khác.",
 };
 export const messageFor = (error) =>
   messages[error?.code] ?? "Chưa kết nối được hệ thống. Vui lòng thử lại.";
