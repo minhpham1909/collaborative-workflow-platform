@@ -5,6 +5,8 @@ import Login from "../features/auth/Login.jsx";
 import Home from "../features/workspaces/Home.jsx";
 import Workspace from "../features/projects/Workspace.jsx";
 import Project from "../features/projects/Project.jsx";
+import TaskList from "../features/tasks/TaskList.jsx";
+import TaskDetail from "../features/tasks/TaskDetail.jsx";
 import { readRoute } from "./routes.js";
 let sessionListener = () => {};
 const origin = import.meta.env.VITE_API_ORIGIN ?? "http://localhost:4000";
@@ -93,6 +95,11 @@ export default function App() {
             ⌂ Trang chủ
           </a>
         </nav>
+        <nav>
+          <a className={route.kind === "mine" ? "active" : ""} href="#mine">
+            ✓ Công việc của tôi
+          </a>
+        </nav>
         <p className="aside-note">
           Không gian cho những ý tưởng trở thành công việc.
         </p>
@@ -121,6 +128,12 @@ export default function App() {
               tin tài khoản.
             </p>
             <Verify api={api} />
+          </main>
+        ) : route.kind === "task" ? (
+          <TaskDetail key={user.id + route.id} api={api} id={route.id} />
+        ) : route.kind === "mine" ? (
+          <main>
+            <TaskList key={user.id} api={api} mine />
           </main>
         ) : route.kind === "workspace" ? (
           <Workspace key={user.id + route.id} api={api} id={route.id} />

@@ -1,5 +1,7 @@
 # Chuẩn bị SDS
 
+[FE Board/Task/Comments/My Tasks](FE-TASKS-v0.1.md) đã nối 04/10/2026, shared Tiptap editor và identity DTO.
+
 Increment 04/10/2026: [FE Workspace/Project](FE-WORKSPACE-PROJECT-v0.1.md) — navigation, Project server filters, Member list và Owner lifecycle đã nối; Board/Task UI tiếp theo.
 
 Hiện hành 04/10/2026: [FE foundation](FE-FOUNDATION-v0.1.md) đã triển khai React JS/JSX, Login và Home nối BE thật. [QA](../qa/FE-AUTH-HOME-CHECK.md). Các ghi nhận skeleton/chưa API bên dưới là lịch sử increment.

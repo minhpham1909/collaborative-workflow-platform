@@ -1,0 +1,126 @@
+import { useEditor, EditorContent } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import { useEffect, useRef, useState } from "react";
+import {
+  emptyDocument,
+  envelope,
+  safeLink,
+  visibleText,
+} from "../lib/content.js";
+export default function RichEditor({
+  value,
+  onChange,
+  readOnly = false,
+  label = "Nội dung",
+  limit = 10000,
+}) {
+  const latest = useRef(onChange);
+  latest.current = onChange;
+  const [text, setText] = useState(""),
+    [error, setError] = useState("");
+  const editor = useEditor({
+    extensions: [
+      StarterKit.configure({
+        codeBlock: false,
+        horizontalRule: false,
+        heading: { levels: [1, 2, 3] },
+        link: {
+          openOnClick: false,
+          autolink: false,
+          linkOnPaste: false,
+          isAllowedUri: safeLink,
+        },
+      }),
+    ],
+    content: value?.document ?? emptyDocument(),
+    editable: !readOnly,
+    editorProps: {
+      attributes: {
+        role: "textbox",
+        "aria-label": label,
+        "aria-multiline": "true",
+      },
+    },
+    onUpdate: ({ editor }) => {
+      setText(visibleText(editor.getJSON()));
+      latest.current?.(envelope(editor.getJSON()));
+    },
+    onCreate: ({ editor }) => setText(visibleText(editor.getJSON())),
+  });
+  useEffect(() => {
+    editor?.setEditable(!readOnly);
+  }, [readOnly, editor]);
+  useEffect(() => {
+    if (editor && readOnly)
+      editor.commands.setContent(value?.document ?? emptyDocument(), {
+        emitUpdate: false,
+      });
+  }, [editor, readOnly, value]);
+  const chars = [
+      ...new Intl.Segmenter("vi", { granularity: "grapheme" }).segment(text),
+    ].length,
+    words = [
+      ...new Intl.Segmenter("vi", { granularity: "word" }).segment(text),
+    ].filter((s) => s.isWordLike).length;
+  if (!editor) return null;
+  function link() {
+    const href = prompt(
+      "Đường dẫn https:// hoặc mailto: (để trống để bỏ liên kết)",
+      editor.getAttributes("link").href ?? "",
+    );
+    if (href === null) return;
+    if (!href) {
+      editor.chain().focus().extendMarkRange("link").unsetLink().run();
+      return;
+    }
+    if (!safeLink(href)) {
+      setError("Liên kết chưa hợp lệ.");
+      return;
+    }
+    setError("");
+    editor.chain().focus().extendMarkRange("link").setLink({ href }).run();
+  }
+  return (
+    <div className={"rich-editor" + (readOnly ? " read-only" : "")}>
+      {!readOnly && (
+        <div className="editor-toolbar" aria-label={"Định dạng " + label}>
+          {[
+            ["B", () => editor.chain().focus().toggleBold().run()],
+            ["I", () => editor.chain().focus().toggleItalic().run()],
+            ["U", () => editor.chain().focus().toggleUnderline().run()],
+            [
+              "H1",
+              () => editor.chain().focus().toggleHeading({ level: 1 }).run(),
+            ],
+            [
+              "H2",
+              () => editor.chain().focus().toggleHeading({ level: 2 }).run(),
+            ],
+            ["Nội dung", () => editor.chain().focus().setParagraph().run()],
+            ["• List", () => editor.chain().focus().toggleBulletList().run()],
+            ["1. List", () => editor.chain().focus().toggleOrderedList().run()],
+            ["Link", link],
+            ["😊", () => editor.chain().focus().insertContent("😊").run()],
+            ["↶", () => editor.chain().focus().undo().run()],
+            ["↷", () => editor.chain().focus().redo().run()],
+          ].map(([name, run]) => (
+            <button key={name} type="button" onClick={run}>
+              {name}
+            </button>
+          ))}
+        </div>
+      )}
+      <EditorContent editor={editor} />
+      {!readOnly && (
+        <p className={chars > limit ? "error" : "muted"} role="status">
+          {words} từ · {chars}/{limit} ký tự
+        </p>
+      )}
+      {error && (
+        <p role="alert" className="error">
+          {error}
+        </p>
+      )}
+    </div>
+  );
+}

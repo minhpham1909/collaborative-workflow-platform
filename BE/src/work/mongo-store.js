@@ -17,7 +17,7 @@ export function createMongoWorkStore({ now = () => new Date() } = {}) {
     const user = await User.collection.findOneAndUpdate({ _id: id(claims.sub) }, { $inc: { authMutationRevision: 1 } }, { session: tx, returnDocument: 'after' });
     if (!user || user.authVersion !== claims.av || !await Session.collection.findOne({ _id: id(claims.sid), userId: user._id, authVersionAtIssue: claims.av, revokedAt: null, expiresAt: { $gt: now() } }, { session: tx })) deny('UNAUTHENTICATED', 401);
     if (!user.emailVerifiedAt) deny('EMAIL_VERIFICATION_REQUIRED', 403);
-    return operation({ user, tx });
+    return operation({ user, tx, identities: new Map() });
   });
   async function scope(context, workspaceId) {
     const { user, tx } = context;
@@ -46,12 +46,18 @@ export function createMongoWorkStore({ now = () => new Date() } = {}) {
     if (assigneeId && !await WorkspaceMembership.collection.findOne({ workspaceId: context.workspace._id, userId: id(assigneeId), state: 'active' }, { session: context.tx })) deny('ASSIGNEE_NOT_MEMBER', 409);
   }
   const projectResponse = (value) => ({ id: String(value._id), workspaceId: String(value.workspaceId), createdBy: String(value.createdBy), name: value.name, description: value.description, state: value.state, version: value.version, archivedAt: value.archivedAt, createdAt: value.createdAt, updatedAt: value.updatedAt });
-  const commentResponse = (value, context) => ({ id: String(value._id), taskId: String(value.taskId), authorId: String(value.authorId), content: value.content, version: value.version, createdAt: value.createdAt, updatedAt: value.updatedAt, permissions: { edit: context.project.state === 'active' && sameId(value.authorId, context.user._id), delete: context.project.state === 'active' && sameId(value.authorId, context.user._id) } });
+  async function identity(userId, context) {
+    if (!userId) return null;
+    const key=String(userId); if(context.identities.has(key))return context.identities.get(key);
+    const person = await User.collection.findOne({ _id: userId }, { session: context.tx, projection: { displayName: 1, avatar: 1 } });
+    const result={ id: key, displayName: person?.displayName ?? 'Người dùng không còn khả dụng', avatar: person?.avatar ?? { source: 'initials', googlePictureUrl: null } };context.identities.set(key,result);return result;
+  }
+  const commentResponse = async (value, context) => ({ id: String(value._id), taskId: String(value.taskId), authorId: String(value.authorId), author: await identity(value.authorId, context), content: value.content, version: value.version, createdAt: value.createdAt, updatedAt: value.updatedAt, permissions: { edit: context.project.state === 'active' && sameId(value.authorId, context.user._id), delete: context.project.state === 'active' && sameId(value.authorId, context.user._id) } });
   async function taskResponse(value, context) {
     const current = value.assigneeId && await WorkspaceMembership.collection.findOne({ workspaceId: value.workspaceId, userId: value.assigneeId, state: 'active' }, { session: context.tx });
     const active = context.project.state === 'active';
     const canEdit = owner(context) || sameId(value.createdBy, context.user._id);
-    return { id: String(value._id), workspaceId: String(value.workspaceId), projectId: String(value.projectId), createdBy: String(value.createdBy), title: value.title, description: value.description, status: value.status, assigneeId: value.assigneeId ? String(value.assigneeId) : null, assigneeLeft: Boolean(value.assigneeId && !current), dueAt: value.dueAt, overdue: Boolean(value.dueAt && value.dueAt < now() && value.status !== 'done'), version: value.version, createdAt: value.createdAt, updatedAt: value.updatedAt, permissions: { edit: active && canEdit, delete: active && canEdit, status: active && (canEdit || sameId(value.assigneeId, context.user._id)) } };
+    return { id: String(value._id), workspaceId: String(value.workspaceId), projectId: String(value.projectId), createdBy: String(value.createdBy), creator: await identity(value.createdBy, context), assignee: await identity(value.assigneeId, context), title: value.title, description: value.description, status: value.status, assigneeId: value.assigneeId ? String(value.assigneeId) : null, assigneeLeft: Boolean(value.assigneeId && !current), dueAt: value.dueAt, overdue: Boolean(value.dueAt && value.dueAt < now() && value.status !== 'done'), version: value.version, createdAt: value.createdAt, updatedAt: value.updatedAt, permissions: { edit: active && canEdit, delete: active && canEdit, status: active && (canEdit || sameId(value.assigneeId, context.user._id)) } };
   }
   async function emit(context, before, task, changes) {
     if (!changes.length) return;
@@ -189,13 +195,15 @@ export function createMongoWorkStore({ now = () => new Date() } = {}) {
       context = await taskScope(context, taskId);
       const criteria = { taskId: context.task._id, workspaceId: context.workspace._id, deletedAt: null };
       const records = await TaskComment.collection.find({ ...criteria, ...after(page) }, { session: context.tx }).sort({ createdAt: -1, _id: -1 }).limit(page.limit + 1).toArray();
-      return { ...paged(records, page.limit, (value) => commentResponse(value, context)), total: await TaskComment.collection.countDocuments(criteria, { session: context.tx }) };
+      const result = paged(records, page.limit, value => value);
+      const items = []; for (const value of result.items) items.push(await commentResponse(value, context));
+      return { ...result, items, total: await TaskComment.collection.countDocuments(criteria, { session: context.tx }) };
     }),
     createComment: (claims, taskId, input) => run(claims, async (context) => {
       context = await taskScope(context, taskId, true);
       const comment = new TaskComment({ ...input.fields, workspaceId: context.workspace._id, taskId: context.task._id, authorId: context.user._id });
       await comment.save({ session: context.tx }); await emit(context, context.task, context.task, ['comment']);
-      return { comment: commentResponse(comment.toObject(), context) };
+      return { comment: await commentResponse(comment.toObject(), context) };
     }),
     changeComment: (claims, taskId, commentId, input, deleting = false) => run(claims, async (context) => {
       context = await taskScope(context, taskId, true);
@@ -203,7 +211,7 @@ export function createMongoWorkStore({ now = () => new Date() } = {}) {
       if (!comment) deny(); if (!sameId(comment.authorId, context.user._id)) deny('COMMENT_AUTHOR_REQUIRED', 403);
       checkVersion(comment, input.expectedVersion);
       const value = await update(TaskComment, comment, deleting ? { deletedAt: now(), deletedBy: context.user._id } : input.fields, context.tx);
-      return deleting ? { code: 'COMMENT_DELETED' } : { comment: commentResponse(value, context) };
+      return deleting ? { code: 'COMMENT_DELETED' } : { comment: await commentResponse(value, context) };
     }),
   };
 }

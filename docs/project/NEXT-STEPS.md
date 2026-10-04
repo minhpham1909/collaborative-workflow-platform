@@ -4,6 +4,8 @@ Cập nhật 04/10/2026. Yêu cầu trực tiếp của chủ dự án có ưu t
 
 ## Hiện tại
 
+Increment mới nhất 04/10/2026: [Board/Task/Comments/My Tasks FE](../sds/FE-TASKS-v0.1.md) đã nối API thật, shared editor Tiptap, identity DTO và quyền/CAS. [QA](../qa/FE-TASKS-CHECK.md). Các ghi nhận chưa Board bên dưới là mốc Workspace trước increment này.
+
 - Repo private minhpham1909/collaborative-workflow-platform, phát triển trên dev; main giữ mốc nền.
 - BE Node 24.x, JS ESM/Express/Mongoose; Auth/JWT/Google, Profile/Settings, Workspace/Invitations, Project/Task/Comment, Board/My Tasks và Notifications/work-email đã có API. Mongo local replica set/indexes phục vụ dev; secrets/data/binaries ignored.
 - FE React JS/JSX + Vite đã chạy. Login và Home dùng API thật: restore/logout, verified gate, list/create Workspace, server search tên/mô tả và ngày tạo, cursor/load more. Xem [FE README](../../FE/README.md), [thiết kế](../sds/FE-FOUNDATION-v0.1.md), [QA mới](../qa/FE-AUTH-HOME-CHECK.md).
@@ -12,8 +14,8 @@ Cập nhật 04/10/2026. Yêu cầu trực tiếp của chủ dự án có ưu t
 
 ## Thứ tự triển khai tiếp
 
-1. Workspace context/Project list và routing đã nối, kiểm quyền/CAS. Tiếp tục nối Board vào Project route, giữ shell/visual chung và hoàn thiện phục hồi filters khi back.
-2. Nối Board/Task/Comment và My Tasks, expectedVersion/conflict/archive/quyền; xử lý G02 identity lịch sử và G03 member picker trước polished UI. Chọn editor chung sau khi kiểm envelope/validation.
+1. Workspace/Project/Board/Task/Comment/My Tasks đã nối, kiểm quyền/CAS. Tiếp tục routing/panel và phục hồi filters khi back, draft transitions trước release.
+2. Identity DTO G02 đã có creator/assignee/author kể cả lịch sử trong scope; G03 member picker hiện load more, cần server search. Editor chung Task/Comment đã chọn Tiptap 3.31.4; mở rộng Workspace/Project sau.
 3. Hoàn thiện signup/verify-link/recovery, Account/link/Settings/Invitations và Notifications. G01 credential capabilities cần trước phân nhánh Account UI; không tự link Google trùng email. Terms/Privacy nội dung thật trước mở đăng ký/public release.
 4. Bổ sung English UI, shared error/validation mapping và server filters các danh sách còn thiếu theo [gap log](../ui-ux/UI-API-GAPS-v0.1.md). Workspace/Project filters đã có; Member/Invitation/Notification trong G04 vẫn mở.
 5. Google GIS mới và SMTP/outbox tới Inbox/Spam kiểm live riêng; production secrets/rotation, HTTPS/cookie topology, shared limiter/proxy, retention/purge/backup và NFR. Local replica set không thay production.

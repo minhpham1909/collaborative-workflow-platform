@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import NameDialog from "../../components/NameDialog.jsx";
 import { messageFor } from "../../lib/messages.js";
+import TaskList from "../tasks/TaskList.jsx";
 
 export default function Project({ api, id }) {
   const [project, setProject] = useState(null),
@@ -158,6 +159,11 @@ export default function Project({ api, id }) {
               })}
             </p>
           </section>
+          <TaskList
+            api={api}
+            project={project}
+            workspaceId={project.workspaceId}
+          />
         </>
       )}
       {editing && project && (

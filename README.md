@@ -2,6 +2,8 @@
 
 Dự án portfolio cộng tác nhóm nhỏ: User → Workspace → Project → Task.
 
+FE mới nhất 04/10/2026: **Board/Task/Comments/My Tasks đã nối API**, editor chung và quyền/CAS; [thiết kế](docs/sds/FE-TASKS-v0.1.md), [QA](docs/qa/FE-TASKS-CHECK.md). Những ghi nhận chưa Board phía dưới là mốc increment trước.
+
 Increment FE mới nhất 04/10/2026: Home→Workspace→Project, danh sách thành viên, Owner tạo/đổi tên/archive/reopen Dự án và server search/ngày/trạng thái. [QA](docs/qa/FE-WORKSPACE-PROJECT-CHECK.md). Board/Task FE tiếp theo.
 
 Cập nhật 04/10/2026: **FE React đã chạy** Login/Home với dữ liệu BE thật, list/create/search và bộ lọc ngày tạo Workspace. Mở localhost:5173 theo [FE README](FE/README.md); [QA mới](docs/qa/FE-AUTH-HOME-CHECK.md), [trạng thái hiện hành](docs/project/NEXT-STEPS.md). Workspace→Project/Board/Task FE là increment kế tiếp; các ghi nhận chưa frontend/Figma bên dưới là lịch sử.

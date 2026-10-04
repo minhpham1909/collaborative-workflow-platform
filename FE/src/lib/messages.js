@@ -10,6 +10,11 @@ const messages = {
   WORKSPACE_UNAVAILABLE: "Workspace không còn khả dụng với quyền hiện tại.",
   RESOURCE_UNAVAILABLE: "Nội dung không còn khả dụng với quyền hiện tại.",
   OWNER_REQUIRED: "Thao tác này chỉ dành cho chủ sở hữu Workspace.",
+  TASK_EDIT_FORBIDDEN: "Bạn không có quyền sửa hoặc xóa Task này.",
+  TASK_STATUS_FORBIDDEN: "Bạn không có quyền đổi trạng thái Task này.",
+  COMMENT_AUTHOR_REQUIRED: "Chỉ tác giả được sửa hoặc xóa bình luận.",
+  ASSIGNEE_NOT_MEMBER:
+    "Người được giao không còn trong Workspace. Tải lại trước khi phân công.",
   PROJECT_ARCHIVED:
     "Dự án đã được lưu trữ. Tải lại để xem trạng thái hiện tại.",
   VERSION_CONFLICT:

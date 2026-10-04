@@ -1,5 +1,7 @@
 # Project, Task, Comment API — increment BE
 
+Cập nhật Task FE 04/10/2026: Task trả thêm creator/assignee {id, displayName, avatar}, Comment thêm author cùng allowlist. Lookup chỉ identities được tham chiếu sau parent/session/membership guard, giữ tên người đã rời và không lộ email/password. Board/Task/Comments/My Tasks FE đã nối; [thiết kế](FE-TASKS-v0.1.md), [QA](../qa/FE-TASKS-CHECK.md).
+
 Cập nhật 04/10/2026: Project list nhận thêm q/from/to theo ngày tạo Việt Nam, literal search không dấu trên name/description.plainText, cùng semantics Workspace filters. Scope/state/search/date áp dụng trước cursor và total. FE Workspace/Project đã nối; Board/Task FE chưa nối. [Thiết kế FE](FE-WORKSPACE-PROJECT-v0.1.md), [QA](../qa/FE-WORKSPACE-PROJECT-CHECK.md).
 
 Ngày 03/10/2026. JS/Express/Mongoose, nối với [Workspace API](WORKSPACE-INVITATIONS-API-v0.1.md), [DB v0.2](DATABASE-DESIGN-v0.2.md) và [quyền đã chốt](../srs/TASK-COMMENT-PERMISSIONS.md). Đây là hợp đồng triển khai lõi; frontend sản phẩm và worker email công việc chưa thuộc increment này.

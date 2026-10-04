@@ -28,8 +28,9 @@ pnpm build
 - Google control dùng challenge/nonce BE và Google Identity Services. Tài khoản đã đăng ký/liên kết được sử dụng theo contract. Chưa có UI link account; đăng ký Google mới chưa mở khi Terms UI/nội dung chưa hoàn thiện. Không tự nhận consent hoặc tự link tài khoản trùng email.
 - Home: danh sách Workspace có quyền hiện tại, mới tạo trước, search tên/mô tả trên server, ngày tạo theo Việt Nam, cursor/load more, tạo Workspace bằng tên; trạng thái loading/empty/error.
 - Workspace cards mở Workspace thật: danh sách Dự án search/lọc ngày/trạng thái trên server, tạo Dự án Owner, danh sách thành viên có pagination. Chi tiết Dự án hỗ trợ Owner đổi tên/lưu trữ/mở lại và conflict expectedVersion. Reload link trực tiếp giữ ngữ cảnh.
-- Board/Task, My Tasks, quản lý Members/Invitations/Settings, signup/recovery, editor chung và English UI triển khai ở increment tiếp theo. Mô tả hiện đọc plainText an toàn, chưa render rich text hoặc có editor.
+- Board/Task/Comments/My Tasks đã nối API thật: search/thời gian/cursor, status/quyền, CAS, Task create/edit/delete và author-only Comment edit/delete. Editor chung Tiptap cho Task/Comment; deadline nhập giờ Việt Nam. [Thiết kế](../docs/sds/FE-TASKS-v0.1.md), [QA](../docs/qa/FE-TASKS-CHECK.md).
+- Quản lý Members/Invitations/Settings, signup/recovery, English UI và editor Workspace/Project còn tiếp theo. Task toàn trang, chưa panel/autosave/drag, phục hồi filters khi back hoặc mọi draft transition.
 
-Font Plus Jakarta Sans self-hosted; license trong `public/fonts/OFL.txt`. Không cài UI kit, router, editor hoặc thư viện form ở increment này. [Thiết kế FE](../docs/sds/FE-FOUNDATION-v0.1.md), [QA](../docs/qa/FE-AUTH-HOME-CHECK.md).
+Font Plus Jakarta Sans self-hosted; license trong `public/fonts/OFL.txt`. Chưa cài UI kit, routing/form library; editor Tiptap pin 3.31.4. [Thiết kế nền](../docs/sds/FE-FOUNDATION-v0.1.md), [QA Auth/Home](../docs/qa/FE-AUTH-HOME-CHECK.md).
 
 [Workspace/Project increment](../docs/sds/FE-WORKSPACE-PROJECT-v0.1.md), [QA Workspace/Project](../docs/qa/FE-WORKSPACE-PROJECT-CHECK.md). Hash navigation nhỏ dùng Home/Workspace/Project; chưa chọn routing library.

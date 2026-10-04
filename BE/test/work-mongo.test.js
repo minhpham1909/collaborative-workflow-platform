@@ -91,6 +91,7 @@ test('Project, Task, Comment and scoped queries on real MongoDB/HTTP', { skip: !
     await t.test('Task matrix, derived content, assignee membership, no-op and stale writes', async () => {
       task = await createTask({ title: 'Đề xuất dự án', description: content('Nội dung 👋'), assigneeId: String(users[2]._id), dueAt: '2020-01-01T00:00:00.000Z' });
       assert.equal(task.overdue, true); assert.equal(task.description.plainText, 'Nội dung 👋'); assert.equal(task.permissions.edit, true);
+      assert.equal(task.creator.displayName, users[1].displayName);assert.equal(task.assignee.displayName, users[2].displayName);assert.ok(!JSON.stringify(task.creator).includes(users[1].email));assert.ok(!Object.hasOwn(task.assignee,'passwordHash'));
       const assigned = (await service.getTask(claims[2], task.id)).task; assert.equal(assigned.permissions.edit, false); assert.equal(assigned.permissions.status, true);
       await assert.rejects(service.updateTask(claims[2], task.id, { expectedVersion: 0, title: 'No' }), /TASK_EDIT_FORBIDDEN/u);
       await assert.rejects(service.deleteTask(claims[2], task.id, { expectedVersion: 0 }), /TASK_EDIT_FORBIDDEN/u);
@@ -106,6 +107,7 @@ test('Project, Task, Comment and scoped queries on real MongoDB/HTTP', { skip: !
     });
     await t.test('Author-only comments, CAS, child scoping and atomic event rollback', async () => {
       comment = (await service.createComment(claims[3], task.id, { content: content('Bình luận') })).comment;
+      assert.equal(comment.author.displayName,users[3].displayName);assert.ok(!JSON.stringify(comment.author).includes(users[3].email));
       for (const index of [0, 1, 2]) await assert.rejects(service.updateComment(claims[index], task.id, comment.id, { expectedVersion: 0, content: content('No') }), /COMMENT_AUTHOR_REQUIRED/u);
       await assert.rejects(service.deleteComment(claims[0], task.id, comment.id, { expectedVersion: 0 }), /COMMENT_AUTHOR_REQUIRED/u);
       comment = (await service.updateComment(claims[3], task.id, comment.id, { expectedVersion: 0, content: content('Updated') })).comment;
@@ -168,6 +170,7 @@ test('Project, Task, Comment and scoped queries on real MongoDB/HTTP', { skip: !
       assert.equal((await service.getTask(claims[1], todo.id)).task.assigneeId, null);
       done = (await service.updateTask(claims[1], done.id, { expectedVersion: done.version, title: 'Done edit preserves history' })).task;
       assert.equal(done.assigneeId, String(users[2]._id)); assert.equal(done.assigneeLeft, true);
+      assert.equal(done.assignee.displayName,users[2].displayName);
       await assert.rejects(service.getTask(claims[2], done.id), /RESOURCE_UNAVAILABLE/u); assert.equal((await service.mine(claims[2], { state: 'all', status: 'all' })).total, 0);
       done = (await service.status(claims[1], done.id, { expectedVersion: done.version, status: 'todo' })).task; assert.equal(done.assigneeId, null);
       await workspaces.accept(claims[2], { token }); assert.equal((await service.getTask(claims[2], todo.id)).task.assigneeId, null);

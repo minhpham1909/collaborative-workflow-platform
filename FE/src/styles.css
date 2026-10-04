@@ -499,3 +499,151 @@ select {
   display: inline-block;
   margin-top: 4px;
 }
+.task-area {
+  margin-top: 26px;
+}
+.section-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.board {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+.board-column {
+  background: #eee9f5;
+  border-radius: 20px;
+  padding: 18px;
+  min-width: 0;
+}
+.board-column.in_progress {
+  background: #fff0dd;
+}
+.board-column.done {
+  background: #e5f1eb;
+}
+.task-card {
+  background: white;
+  border: 1px solid #ece5e0;
+  border-radius: 16px;
+  padding: 18px;
+  margin: 14px 0;
+  overflow-wrap: anywhere;
+}
+.task-card h3 {
+  margin-top: 0;
+}
+.task-card a {
+  color: #45366d;
+  text-decoration: none;
+}
+.task-card a:hover {
+  text-decoration: underline;
+}
+.task-card p {
+  font-size: 13px;
+  color: #706877;
+}
+.pill {
+  display: inline-block;
+  border-radius: 999px;
+  padding: 3px 9px;
+  background: #f4eff9;
+}
+.overdue {
+  color: #a84435;
+  font-size: 13px;
+}
+.mine-list {
+  display: grid;
+  gap: 12px;
+}
+.mine-list .task-card {
+  margin: 0;
+}
+.task-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px 24px;
+  align-items: center;
+}
+.task-meta label {
+  max-width: 220px;
+}
+fieldset {
+  border: 0;
+  padding: 0;
+  min-width: 0;
+}
+.rich-editor {
+  border: 1px solid #ded7e5;
+  border-radius: 16px;
+  background: white;
+  margin: 12px 0;
+  overflow: hidden;
+}
+.editor-toolbar {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  padding: 8px;
+  background: #f4eff9;
+}
+.editor-toolbar button {
+  padding: 6px 9px;
+}
+.tiptap {
+  padding: 16px;
+  min-height: 140px;
+  outline-color: #ac90d6;
+  overflow-wrap: anywhere;
+}
+.tiptap p {
+  margin: 8px 0;
+}
+.rich-editor .muted,
+.rich-editor .error {
+  padding: 0 16px;
+}
+.rich-editor.read-only {
+  border: none;
+}
+.read-only .tiptap {
+  padding: 0;
+  min-height: 0;
+}
+.tiptap h1 {
+  font-size: 28px;
+}
+.tiptap h2 {
+  font-size: 23px;
+}
+.tiptap a {
+  color: #6952ba;
+  text-decoration: underline;
+}
+.comment {
+  border-top: 1px solid #ebe4ef;
+  padding: 22px 0;
+}
+.check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.check input {
+  width: auto;
+}
+h1 {
+  overflow-wrap: anywhere;
+}
+@media (max-width: 900px) {
+  .board {
+    grid-template-columns: 1fr;
+  }
+}

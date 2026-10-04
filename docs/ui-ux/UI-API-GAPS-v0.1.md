@@ -1,5 +1,7 @@
 # Gap log giữa screen review và BE
 
+Increment Task FE 04/10/2026: G02 đã bổ sung identity allowlist vào Task/Comment DTO sau scoped guards, kể cả historical references, không email/credentials. G03 picker có pagination/load more, server search vẫn mở. [Thiết kế](../sds/FE-TASKS-v0.1.md), [QA](../qa/FE-TASKS-CHECK.md). Các hàng phía dưới mô tả gap gốc trước implementation.
+
 Increment Workspace/Project 04/10/2026: phần Project trong G04 đã có server q/from/to cùng state/cursor/total, nối UI và kiểm Mongo/HTTP. Member tab hiện read/pagination, chưa search/time; Member/Invitation/Notification vẫn mở. [QA](../qa/FE-WORKSPACE-PROJECT-CHECK.md).
 
 Cập nhật 04/10/2026: G04 đã xử lý phần Workspace bằng server search tên/mô tả và ngày tạo, trước pagination/membership scope. Project/Member/Invitation/Notification vẫn mở. G09 có mapping tiếng Việt cho lát cắt Login/Home; catalog song ngữ đầy đủ còn tiếp theo. G06 được giảm rủi ro bằng chặn double submit/no auto retry ở FE, chưa có BE idempotency. [FE foundation](../sds/FE-FOUNDATION-v0.1.md).
