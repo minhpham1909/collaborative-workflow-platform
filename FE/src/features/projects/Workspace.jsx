@@ -1,7 +1,5 @@
-import {
-  confirmDialog,
-  confirmNavigation,
-} from "../../components/NotificationProvider.jsx";
+import { useDraftGuard } from "../../lib/draft-navigation.js";
+import { confirmDialog } from "../../components/NotificationProvider.jsx";
 import Icon from "../../components/Icon.jsx";
 import StudioCover from "../../components/StudioCover.jsx";
 import FilterPanel from "../../components/FilterPanel.jsx";
@@ -35,27 +33,12 @@ export default function Workspace({ api, id }) {
       setTab(value);
     }
   }
-  useEffect(() => {
-    if (!dirty && !saving) return;
-    const unload = (e) => {
-      e.preventDefault();
-      e.returnValue = "";
-    };
-    const click = (e) => {
-      if (saving && e.target.closest("a[href]")) {
-        e.preventDefault();
-        e.stopImmediatePropagation();
-        return;
-      }
-      confirmNavigation(e, "Bỏ thay đổi cài đặt chưa lưu?");
-    };
-    window.addEventListener("beforeunload", unload);
-    document.addEventListener("click", click, true);
-    return () => {
-      window.removeEventListener("beforeunload", unload);
-      document.removeEventListener("click", click, true);
-    };
-  }, [dirty, saving]);
+  useDraftGuard({
+    dirty: dirty,
+    busy: saving,
+    message: "Bỏ thay đổi cài đặt chưa lưu?",
+  });
+
   const generation = useRef(0),
     invalid = from && to && from > to;
   const query = new URLSearchParams({

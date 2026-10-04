@@ -1,6 +1,6 @@
 # Trạng thái kiểm tra
 
-04/10/2026: [P1 audit bốn cụm màn hình](UI-UX-FLOW-AUDIT.md) — đã sửa các lỗi parent refresh, uncertain 5xx, Google retry, entry point verify và vị trí actions. 46 BE integration/12 FE tests, fixture flows và build đạt trong phạm vi ghi nhận. P1 vẫn Cần sửa do NAV-01 browser Back làm mất draft; chưa chuyển P2, chưa nghiệm thu nhà cung cấp thật hoặc toàn sản phẩm.
+04/10/2026: [P1 audit bốn cụm màn hình](UI-UX-FLOW-AUDIT.md) — đạt gate audit sau [sửa NAV-01 và regression bản nháp](FE-DRAFT-NAVIGATION-CHECK.md). Navigation/account/settings/interactions/network fixtures, 12 FE tests và build đạt sau guard chung; 46 BE integration là bằng chứng mốc audit trước. Tiếp theo P2; chưa nghiệm thu nhà cung cấp thật, P4 hoặc toàn sản phẩm.
 
 [FE Notifications](FE-NOTIFICATIONS-CHECK.md) — 3 unit/8 integration, browser inbox/read/cutoff/privacy và unverified→verified invitation gate/accept đạt; không SMTP thật.
 
@@ -40,4 +40,4 @@ Hiện hành sau Workspace: [Workspace/Invitations QA](WORKSPACE-INVITATIONS-CHE
 
 [Registration / verification / recovery FE QA](FE-REGISTRATION-RECOVERY-CHECK.md): 12 FE tests, 8 Accounts/Auth integration, automated browser fixtures; live QA để sau.
 
-[Review UI bằng skill ui-ux](UI-DESIGN-REVIEW-2026-10-04.md): tối ưu trực tiếp sáu màn, kiểm 1440/375px và đối chiếu probe; NAV-01 còn mở.
+[Review UI bằng skill ui-ux](UI-DESIGN-REVIEW-2026-10-04.md): tối ưu trực tiếp sáu màn, kiểm 1440/375px và đối chiếu probe. NAV-01 đã sửa ở increment điều hướng tiếp theo.

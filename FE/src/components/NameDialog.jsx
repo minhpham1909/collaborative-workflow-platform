@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { messageFor } from "../lib/messages.js";
 import ProjectIconPicker from "./ProjectIconPicker.jsx";
+import { useDraftGuard } from "../lib/draft-navigation.js";
 
 export default function NameDialog({
   title,
@@ -20,6 +21,11 @@ export default function NameDialog({
     [error, setError] = useState("");
   const pending = useRef(false),
     close = useRef(null);
+  useDraftGuard({
+    dirty: name !== initial || icon !== initialIcon,
+    busy,
+    message: "Bỏ nội dung chưa lưu?",
+  });
   close.current = async () => {
     if (
       !pending.current &&

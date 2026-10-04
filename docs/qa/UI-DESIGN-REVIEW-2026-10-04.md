@@ -34,4 +34,4 @@ Các gợi ý khác của probe: viền kem so với ngưỡng xám mặc địn
 
 ## Còn mở
 
-NAV-01 vẫn chặn P1: Back/Forward/hash cần bảo vệ draft toàn diện và regression riêng. Cần tiếp tục rà picker, lỗi cạnh field, dialog labels, các trạng thái của Team/Invites/Auth/Inbox, trang khôi phục và English UI. Chưa nghiệm thu toàn hệ thống hoặc Google/SMTP thật. Không chạy worker hay gửi hàng đợi email cũ.
+Tại mốc review visual này NAV-01 vẫn chặn P1. Increment tiếp theo đã [sửa và kiểm điều hướng](FE-DRAFT-NAVIGATION-CHECK.md), đóng gate audit P1 trong phạm vi ghi nhận. Cần tiếp tục rà picker, lỗi cạnh field, dialog labels, các trạng thái của Team/Invites/Auth/Inbox, trang khôi phục và English UI. Chưa nghiệm thu toàn hệ thống hoặc Google/SMTP thật. Không chạy worker hay gửi hàng đợi email cũ.

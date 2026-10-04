@@ -4,9 +4,9 @@ Cập nhật 04/10/2026. Yêu cầu trực tiếp của chủ dự án có ưu t
 
 ## Hiện tại
 
-Theo yêu cầu mới, đã [rà và tối ưu trực tiếp UI bằng skill ui-ux](../qa/UI-DESIGN-REVIEW-2026-10-04.md), bỏ wireframe: nhịp màn, mô tả dài, click thẻ Project/Task, filters mobile và màu Cài đặt. Sáu màn được kiểm ở 1440/375px; giữ Stitch/Jakarta/kem-tím. Đây là increment giao diện được yêu cầu thêm, không đóng NAV-01 hoặc chuyển gate P1 sang Đạt.
+Theo yêu cầu mới, đã [rà và tối ưu trực tiếp UI bằng skill ui-ux](../qa/UI-DESIGN-REVIEW-2026-10-04.md), bỏ wireframe: nhịp màn, mô tả dài, click thẻ Project/Task, filters mobile và màu Cài đặt. Sáu màn được kiểm ở 1440/375px; giữ Stitch/Jakarta/kem-tím. Increment điều hướng tiếp theo đã [sửa NAV-01](../qa/FE-DRAFT-NAVIGATION-CHECK.md); gate audit P1 hiện Đạt trong phạm vi ghi nhận.
 
-P1 đang **Cần sửa**, xem [audit bốn cụm](../qa/UI-UX-FLOW-AUDIT.md). Đã sửa khóa parent actions khi tạo Task, uncertain 5xx ở Auth/Workspace/Profile/password, stale Google button khi retry, actions verify trong Invite, counter filters Fragment và vị trí refresh Project/Task/Comments; My Tasks có H1. NAV-01 browser Back/hash mất draft đã tái hiện, còn chặn P1 → P2. Provider Google/SMTP thật chưa kiểm lại; không gửi hàng đợi mail cũ.
+P1 **Đạt gate audit**, xem [audit bốn cụm](../qa/UI-UX-FLOW-AUDIT.md). Đã sửa khóa parent actions, uncertain 5xx, Google retry, verify trong Invite, counter filters và vị trí refresh; My Tasks có H1. Guard chung và regression bảo vệ bản nháp khi Back/Forward/hash/link/refresh/logout đã đạt. Fallback giữ draft/URL nhưng chưa bảo toàn history slots; P4 tiếp tục xử lý context/filters và tương thích. Bước tiếp theo là P2 component/feedback. Provider Google/SMTP thật chưa kiểm lại; không gửi hàng đợi mail cũ.
 
 Increment mới: [tương tác và phản hồi hệ thống](../ui-ux/INTERACTION-FOUNDATION-v0.1.md). Toàn card Workspace mở được; mô tả Workspace hiển thị cùng CTA Owner; Project có editor mô tả/mục tiêu, quyền Owner hoặc Creator còn membership trong Active. NotificationProvider dùng chung confirm/input/toast, thay confirm/prompt native trong FE. Xóa Task vẫn soft delete và giữ Comments; chưa có restore/purge. 46 BE integration tests, 12 FE tests và các luồng UI/uncertain network đã kiểm; chưa chạy worker SMTP thật.
 
@@ -40,7 +40,7 @@ Increment trước 04/10/2026: [Board/Task/Comments/My Tasks FE](../sds/FE-TASKS
 
 ## Thứ tự triển khai tiếp
 
-Theo yêu cầu 04/10/2026, nâng cấp UI/UX đi theo [kế hoạch có tiêu chí chuyển bước](UI-UX-UPGRADE-PLAN.md): P1 audit → P2 component → P3 tương tác/nội dung dài → P4 navigation/draft → P5 thiết kế restore → P6 visual. P1 đã có audit, cần tiếp tục sửa NAV-01; chưa chuyển P2. Các ưu tiên bên dưới là backlog kỹ thuật, không thay thứ tự và tiêu chí của kế hoạch này.
+Theo yêu cầu 04/10/2026, nâng cấp UI/UX đi theo [kế hoạch có tiêu chí chuyển bước](UI-UX-UPGRADE-PLAN.md): P1 audit → P2 component → P3 tương tác/nội dung dài → P4 navigation/draft → P5 thiết kế restore → P6 visual. P1 đạt gate audit sau sửa NAV-01; tiếp theo P2, chưa nghiệm thu P2–P6. Các ưu tiên bên dưới là backlog kỹ thuật, không thay thứ tự và tiêu chí của kế hoạch này.
 
 1. Workspace/Project/Board/Task/Comment/My Tasks đã nối, kiểm quyền/CAS. Tiếp tục routing/panel và phục hồi filters khi back, draft transitions trước release.
 2. Identity DTO G02 đã có creator/assignee/author kể cả lịch sử trong scope; G03 server search Members đã có; picker Task vẫn cần nối search. Editor chung Task/Comment đã chọn Tiptap 3.31.4; Workspace đã dùng editor chung; Project description đã nối editor và quyền Creator theo yêu cầu 04/10/2026.

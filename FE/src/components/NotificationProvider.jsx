@@ -22,25 +22,6 @@ export const notify = (message, tone = "success") =>
   dispatch?.({ kind: "toast", message, tone, id: crypto.randomUUID() });
 const NotificationContext = createContext(null);
 export const useNotifications = () => useContext(NotificationContext);
-export async function confirmNavigation(event, message) {
-  const link = event.target.closest("a[href]");
-  if (
-    !link ||
-    event.defaultPrevented ||
-    event.ctrlKey ||
-    event.metaKey ||
-    event.shiftKey ||
-    event.altKey ||
-    link.target === "_blank" ||
-    link.hasAttribute("download") ||
-    link.href === location.href
-  )
-    return;
-  event.preventDefault();
-  event.stopImmediatePropagation();
-  const href = link.href;
-  if (await confirmDialog(message)) location.assign(href);
-}
 export default function NotificationProvider({ children }) {
   const [queue, setQueue] = useState([]),
     [toasts, setToasts] = useState([]);
@@ -52,7 +33,7 @@ export default function NotificationProvider({ children }) {
       pending.current.clear();
       setQueue([]);
     };
-    window.addEventListener("hashchange", cancel);
+    window.addEventListener("workflow:route-committed", cancel);
     dispatch = (item) => {
       if (item.kind === "toast") setToasts((old) => [...old.slice(-3), item]);
       else {
@@ -61,7 +42,7 @@ export default function NotificationProvider({ children }) {
       }
     };
     return () => {
-      window.removeEventListener("hashchange", cancel);
+      window.removeEventListener("workflow:route-committed", cancel);
       dispatch = null;
       for (const item of pending.current)
         item.resolve(item.kind === "confirm" ? false : null);
@@ -199,7 +180,7 @@ function SystemDialog({ item, finish }) {
               type="button"
               onClick={() => finish(item.kind === "confirm" ? false : null)}
             >
-              Hủy
+              {item.options.cancelLabel ?? "Hủy"}
             </button>
             <button className="primary">
               {item.kind === "input"

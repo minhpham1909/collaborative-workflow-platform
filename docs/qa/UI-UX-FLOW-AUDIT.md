@@ -1,6 +1,6 @@
 # P1 — Audit luồng và bố cục từng cụm màn hình
 
-Ngày 04/10/2026. Mốc bắt đầu `dba605d`, theo [kế hoạch P1–P6](../project/UI-UX-UPGRADE-PLAN.md). Phạm vi gồm cả đúng/sai nghiệp vụ, thiếu chức năng, trạng thái và vị trí UI. **Kết quả audit đã được lập; P1 hiện Cần sửa, chưa chuyển P2** do lỗi điều hướng có thể mất bản nháp.
+Ngày 04/10/2026. Mốc bắt đầu `dba605d`, theo [kế hoạch P1–P6](../project/UI-UX-UPGRADE-PLAN.md). Phạm vi gồm cả đúng/sai nghiệp vụ, thiếu chức năng, trạng thái và vị trí UI. **P1 đạt gate audit** sau [regression sửa NAV-01](FE-DRAFT-NAVIGATION-CHECK.md). Các giới hạn/provider live và cải tiến P2–P6 còn mở; không nghiệm thu toàn sản phẩm.
 
 ## Phương pháp và mức độ bằng chứng
 
@@ -15,7 +15,7 @@ Ngày 04/10/2026. Mốc bắt đầu `dba605d`, theo [kế hoạch P1–P6](../p
 | Luồng | Bình thường / validation | Loading / lỗi / hủy | Quyền / stale / mạng | Đánh giá và cần nâng cấp |
 |---|---|---|---|---|
 | Login email | Đạt: login, restore/refresh/logout theo API tests và fixture | Có disabled/loading/error trong code; hủy login qua route thuộc NAV-01 | BE verified/session/replay Đạt; double Enter/login đang chờ cần rà tiếp theo chuẩn P2 | Giữ Email → Password → Login; recovery/register ngay dưới form; Google sau divider. Bổ sung show/hide password và lỗi gần field ở P2/P6 |
-| Đăng ký hệ thống | Đạt: consent ban đầu chưa chọn, email unique, password confirmation; chưa verified | Đạt: lỗi validation và success chờ gửi; 503 sau commit đã bổ sung chặn gửi lại | Đạt: DB chỉ một account ở fault fixture; rời form dirty chưa được bảo vệ chung | Không nói email đã đến inbox. CTA login sau thành công đúng; cần luồng tiếp tục xác minh rõ, dirty navigation theo NAV-01 |
+| Đăng ký hệ thống | Đạt: consent ban đầu chưa chọn, email unique, password confirmation; chưa verified | Đạt: lỗi validation và success chờ gửi; 503 sau commit đã bổ sung chặn gửi lại | Đạt: DB chỉ một account ở fault fixture; dirty navigation có guard chung và regression | Không nói email đã đến inbox. CTA login sau thành công đúng; tiếp tục chuẩn hóa field/feedback ở P2 |
 | Xác minh email | Đạt: token scrub, thao tác xác nhận rõ, token replay/reload | Có error thiếu/hết hạn token; resend và reload có trạng thái | Đạt BE token/session; SMTP Inbox/Spam Chưa kiểm | Đã đưa actions xác minh vào Invite để giữ lời mời khi reload account; phản hồi lỗi resend hiện còn dùng status, chuyển inline alert theo P2 |
 | Recovery/reset | Đạt: thông điệp generic, confirm password, reset revoke, replay | Có loading/error/success; uncertain dùng chung cho 5xx | Đạt fixture recovery/reset; mất phản hồi riêng reset Chưa kiểm bằng fault injection | Giữ một tác vụ chính/form; CTA yêu cầu link mới và login có. Lỗi cần link tiếp tục ở vị trí cạnh form |
 | Google login/link | Đạt BE cùng email/proof/nonce/unique; Đạt GIS fixture wrong-email → chọn lại → linked và Google-only | Đã sửa nút Google cũ còn tồn tại sau lỗi/hủy; không tái dùng callback đã bị vô hiệu | Provider thật Chưa kiểm lại; nhánh mạng Google callback riêng Chưa kiểm | Thiếu Google signup mới trên FE so với mục tiêu sản phẩm; hiện copy giải thích chưa mở. Chốt policies/consent trước release, không tự auto-link |
@@ -28,7 +28,7 @@ Empty state cho login/register/password N/A vì là form, không phải danh sá
 | Luồng | Bình thường / empty | Loading / lỗi / hủy | Quyền / stale / mạng | Đánh giá và cần nâng cấp |
 |---|---|---|---|---|
 | Home / chọn nhóm | Đạt: card link, metrics có nguồn, highlights/date VN; có empty/search-no-result | Có loading/error và unknown summary; create cancel/nested dialog Đạt | Aggregate scoping BE Đạt; create lost-response Đạt | Giữ hero/search → cards → highlights/footer. Link highlights hiện mở My Tasks chung, chưa mang filter hôm nay/quá hạn: FILTER-02 |
-| Workspace / Project list | Đạt: role, tabs, active/archived/search/time, empty CTA Owner | Có loading/error/mất scope; description empty và edit CTA có | Member xem/Owner quản lý Đạt; description Editor/CAS Đạt | Workspace hero đang chiếm nhiều chiều cao; mô tả dài cần preview. Project card chưa mở toàn card như Home: LAYOUT-02 |
+| Workspace / Project list | Đạt: role, tabs, active/archived/search/time, empty CTA Owner | Có loading/error/mất scope; description preview và edit CTA có | Member xem/Owner quản lý Đạt; description Editor/CAS Đạt | Đã giảm hero, thêm preview và click toàn Project card; kiểm toàn hệ thống tiếp ở P3/P6 |
 | Cài đặt nhóm | Đạt Owner name/rich description read-back; Member không có edit | Đạt dirty tab cancel, reload/CAS giữ draft; 503 sau commit khóa submit | Đạt mất Owner/membership; scope bị mất xóa snapshot | Để Save/Cancel dưới editor; phần thông tin chung không lặp editor ở header. Thu gọn mô tả header theo P3 |
 | Email theo Workspace | Đạt inherit/on/off/reset và effective state | Có loading/error/reset confirm; Đạt CAS/reset fixture | Chỉ sửa override chính mình Đạt; rời nhóm reset BE Đạt | Tách rõ setting cá nhân với quản trị nhóm. Có link/giải thích kế thừa; form cần dùng nền component P2 |
 | Members / transfer / remove / leave | Đạt search/date, transfer trước leave, assignee cleanup và Done history | Đạt modal/CAS không xóa khi stale, reload/mất quyền | BE race/role Đạt; generic modal đóng được nhưng invite dirty chưa hỏi | Hành động nguy hiểm đang cạnh nhau trên card; đưa vào menu quản trị, kèm tên người/tác động ở confirm. Không suy Owner được sửa Comment người khác |
@@ -59,7 +59,7 @@ Không có Workspace Archived, Workspace delete hoặc storage/resources trong s
 | Read-all / accept invitation | Đạt cutoff không chạm thông báo mới; accept verified | Read-all confirm và success Đạt fixture | BE cutoff/category/scope Đạt; riêng lost response Chưa kiểm | Nút read-all cạnh reload nhưng cần mức độ nổi bật thấp hơn hành động chính; action label cần phản ánh filter hiện tại P2 |
 | Profile / preferences | Đạt name/preferences/locale email/CAS read-back | Đã chặn submit sau network/5xx; profile 503-after-commit Đạt | Chỉ own user Đạt; dirty khi đổi tab có confirm | Giao diện chưa chuyển English; locale hiện cho email có giải thích đúng. English UI là khoảng trống sản phẩm P6 |
 | Shell/header/footer | Đạt links/role context/menu ngoài-click/Escape theo code và observation | Badge unknown/stale có nhãn; route loading có | Session clear/revocation được kiểm, logout dirty chưa confirm | Cần cấu trúc focus/skip-to-main và nav tiếng Anh đồng bộ. Footer hiện có links nội bộ; policy/help thật chưa có |
-| Confirm/input/toast | Đạt queue/cancel/Escape/inert/nested draft fixture | Inline errors còn cạnh form; success toast có ở một số luồng | Hashchange hủy dialog đang chờ; không thay navigation guard | Team/NameDialog còn form riêng là hợp lý nhưng nền/tên action chưa thống nhất. Toast chưa dùng đều, xử lý P2 |
+| Confirm/input/toast | Đạt queue/cancel/Escape/inert/nested draft fixture | Inline errors còn cạnh form; success toast có ở một số luồng | Chỉ hủy dialog khi route commit; draft prompt không mất khi hash tạm đổi | Team/NameDialog còn form riêng là hợp lý nhưng nền/tên action chưa thống nhất. Toast chưa dùng đều, xử lý P2 |
 
 ## Sổ phát hiện và nơi xử lý
 
@@ -70,12 +70,12 @@ Không có Workspace Archived, Workspace delete hoặc storage/resources trong s
 | SETTINGS-01 | Cao | Workspace Settings/Profile/password network/5xx có thể mở submit lại hoặc dùng thông điệp lỗi kết nối chung | Đã dùng uncertain/khóa form; Workspace+Profile 503-after-commit Đạt; fault password riêng Chưa kiểm |
 | GOOGLE-01 | Cao | Chọn sai email → thử lại: nút GIS cũ còn trên trang khi callback cũ live=false, click bị bỏ qua | Cleanup target khi hủy/lỗi/unmount ở Login và Security; wrong-email → retry → linked Đạt fixture |
 | INVITE-01 | Trung bình | Chưa verified ở Invite không có actions để xác minh mà giữ lời mời; 5xx chưa khóa retry | Đã thêm actions resend/reload và helper uncertain; verified gate/accept fixture Đạt; fault accept riêng Chưa kiểm |
-| NAV-01 | Chặn, còn mở | Home → Workspace → Project → create Task nhập draft → browser Back: chuyển Workspace, input biến mất, không confirm | Đã tái hiện bằng fixture riêng. Cần cơ chế chung Back/Forward/hash/internal-navigation/logout dirty, không chỉ click guard. P1 chưa Đạt; giải quyết trước chuyển P2, thiết kế có liên quan P4 |
+| NAV-01 | Chặn — đã sửa trong phạm vi kiểm | Trước sửa: Back khỏi create Task mất input, không confirm | Guard chung giữ form khi chờ xác nhận; Back/Forward/hash/link/refresh/logout và đang lưu qua [regression](FE-DRAFT-NAVIGATION-CHECK.md). Fallback giữ draft/URL nhưng không đủ history slots; giới hạn này tiếp tục P4 |
 | FILTER-01 | Trung bình | Filters bên trong Fragment của Team không được tách/đếm như các field khác | Đã flatten Fragment/giữ keys, bổ sung aria-label cho selects; Team fixture chọn revoked có Bộ lọc (1) Đạt |
 | FILTER-02 | Trung bình | Shortcut hôm nay/quá hạn mở #mine mặc định; trở lại danh sách mất filters | P4: route/query presets và khôi phục context; không thêm sort tay hoặc tìm client trên trang đã tải |
 | PICKER-01 | Trung bình | Assignee và Workspace picker phụ thuộc tải từng trang, chưa search trực tiếp | P2: picker query/search/loading/no-result/lost-member; API server search đã có cho Members |
 | LAYOUT-01 | Trung bình | Refresh Project/Task/Comments đứng riêng ngoài header; My Tasks chỉ có H2 | Đã gom refresh đúng header từng vùng; My Tasks có H1; giữ tên nút để không đổi thao tác |
-| LAYOUT-02 | Trung bình | Description dài không thu gọn; Project card chỉ title/CTA mở, khác Workspace card; hero+scope đẩy Board xuống | P3: preview/expand, vùng bấm và keyboard; P6: giảm chiều cao trang trí, ưu tiên vùng công việc |
+| LAYOUT-02 | Trung bình — đã sửa phần mô tả/thẻ | Trước sửa: description dài và hero đẩy Board xuống; Project chỉ title/CTA mở | [Review UI](UI-DESIGN-REVIEW-2026-10-04.md): preview/expand, click toàn Project/Task card, giảm hero và kiểm desktop/mobile. P3/P6 còn nghiệm thu toàn hệ thống |
 | UI-STATE-01 | Trung bình | Nhiều lỗi chung chưa chỉ field; Team “Xác nhận” cho cả remove/transfer; toast không đồng đều, thiếu skip link/show password | P2: chuẩn component/labels/feedback; P6 visual variants. Không thay quyền vì mockup |
 | RELEASE-01 | Điều kiện release | Google signup FE, policies thật, English UI, SMTP Inbox/Spam chưa hoàn thiện/kiểm live | Giữ backlog/release gate riêng; không gửi hàng đợi cũ, không công bố release-ready |
 | RESTORE-01 | Phạm vi mới | Task soft delete đã có nhưng không có restore/trash/backup policy | P5: chốt nghiệp vụ/thiết kế trước chức năng. Không purge tự động |
@@ -101,15 +101,15 @@ Không có Workspace Archived, Workspace delete hoặc storage/resources trong s
 - `FE/scripts/check-settings-flows.mjs`: Đạt profile/preferences/CAS/503, password rotation, Google wrong-email/retry/link và Google-only bằng GIS/verifier fixture.
 - Fixture local đã chạy: `p1-workspace-fault-e2e.mjs`, `team-e2e.mjs`, `p1-team-e2e.mjs`, `p1-inbox-e2e.mjs`; Workspace CAS/overrides/503, Team lifecycle/counter filter, inbox cutoff/masking đạt. Các fixture local không nằm trong Git; không coi chúng là script CI có sẵn.
 - Network regression tracked `FE/scripts/check-network-flows.mjs` chạy lại đạt sau thay đổi header/parent guards. Các scripts account/settings/interactions dùng Playwright qua WORKFLOW_PLAYWRIGHT_MODULE, browser qua WORKFLOW_BROWSER_EXECUTABLE và cần FE localhost:5173 đang chạy; fixtures có DB/API riêng.
-- `p1-history-repro.mjs`: tái hiện NAV-01, cleanup replica set sau kiểm. Đây là bằng chứng lỗi còn mở, không đánh dấu test bảo vệ draft đạt.
+- `p1-history-repro.mjs`: bằng chứng lịch sử tái hiện NAV-01 trước sửa. Hiện có script tracked `FE/scripts/check-navigation-flows.mjs` đạt; [QA](FE-DRAFT-NAVIGATION-CHECK.md) ghi phạm vi và giới hạn. Account/settings/interactions/network chạy lại đạt, production build 107 modules và 12 FE tests đạt sau guard chung.
 - Một harness Settings cũ dùng menu/selector và native confirm cũ được điều chỉnh trước chạy. Một lần test Auth trong lúc sửa key/token remount đã mất success state; đã bỏ remount và chạy lại chuỗi đạt. Không gộp lần timeout thành bằng chứng luồng đạt.
 - Không kiểm provider Google/SMTP thật, performance tập lớn, screen reader toàn bộ, every-state mobile, restore hoặc hoàn thiện English. Tests thành công không chứng minh UI hoàn chỉnh hoặc bảo vệ draft toàn diện.
 
 ## Gate P1 → P2
 
 - [x] Có ma trận cả bốn cụm, phân biệt Đạt/Cần sửa/Chưa kiểm/N/A và bằng chứng.
-- [ ] Không còn lỗi chặn: NAV-01 còn mở; cần sửa và regression trước chuyển bước.
+- [x] Không còn lỗi chặn thuộc phạm vi audit đã kiểm: NAV-01 đã sửa và regression đạt; giới hạn fallback history được ghi ở P4.
 - [x] Các khoảng trống đã có ID, mức độ, nơi xử lý P2–P6/release; không đưa NAV-01 sang phần visual để đóng audit.
 - [x] Kiểm fixture và nhà cung cấp thật được tách; không phát hàng đợi mail cũ.
 
-Bước kế tiếp: tiếp tục P1 xử lý NAV-01 và kiểm các form có draft khi Back/Forward/hash/đăng xuất chủ động. Chưa bắt đầu P2 hoặc redesign toàn bộ màn.
+Bước kế tiếp: P2 chuẩn hóa component, field errors, picker, dialog labels và phản hồi. P1 đạt gate audit; P2–P6 và provider live chưa nghiệm thu.

@@ -2,7 +2,7 @@
 
 Ngày 04/10/2026. Theo yêu cầu chủ dự án: đánh giá từng bước hoàn thành đến đâu rồi mới chuyển bước tiếp theo. Mốc code khởi đầu: `29c8ffa` trên dev.
 
-Yêu cầu bổ sung: dùng skill ui-ux để rà và tối ưu trực tiếp màn hiện có, bỏ wireframe. [Increment giao diện đã thực hiện](../qa/UI-DESIGN-REVIEW-2026-10-04.md) giữ brand, có kiểm 6 màn ở 1440/375px. Không coi increment này là nghiệm thu P2–P6 hoặc đóng gate P1; NAV-01 còn mở.
+Yêu cầu bổ sung: dùng skill ui-ux để rà và tối ưu trực tiếp màn hiện có, bỏ wireframe. [Increment giao diện đã thực hiện](../qa/UI-DESIGN-REVIEW-2026-10-04.md) giữ brand, có kiểm 6 màn ở 1440/375px. Sau đó [regression điều hướng](../qa/FE-DRAFT-NAVIGATION-CHECK.md) đã sửa NAV-01 và đóng gate audit P1 trong phạm vi kiểm; chưa nghiệm thu P2–P6 hoặc toàn sản phẩm.
 
 ## Cách triển khai và đánh giá
 
@@ -17,10 +17,10 @@ Yêu cầu bổ sung: dùng skill ui-ux để rà và tối ưu trực tiếp m�
 
 | Bước | Kết quả cần có | Trạng thái ban đầu | Nền hiện có / khoảng trống |
 |---|---|---|---|
-| P1 — Audit luồng | Ma trận hành vi và danh sách lỗi có ưu tiên | Cần sửa — đã có audit bốn cụm | [Audit P1](../qa/UI-UX-FLOW-AUDIT.md) đã phân loại lỗi và sửa các lỗi xác minh/5xx/parent refresh/Google retry; NAV-01 Back/hash mất draft còn chặn chuyển bước |
+| P1 — Audit luồng | Ma trận hành vi và danh sách lỗi có ưu tiên | Đạt gate audit | [Audit P1](../qa/UI-UX-FLOW-AUDIT.md) và [QA điều hướng](../qa/FE-DRAFT-NAVIGATION-CHECK.md): lỗi chặn đã sửa trong phạm vi fixture; giới hạn tương thích và provider live được ghi riêng |
 | P2 — Component dùng chung | Form/dialog/picker/feedback thống nhất | Chưa bắt đầu giai đoạn | Có NotificationProvider/editor/filter; dialog chuyên biệt và các form chưa được đánh giá đồng bộ |
-| P3 — Tương tác và nội dung dài | Vùng bấm, focus, thu gọn mô tả, bố cục dễ dùng | Chưa bắt đầu giai đoạn | Card Workspace đã sửa; mô tả dài và khả năng thao tác toàn hệ thống cần kiểm |
-| P4 — Điều hướng và bản nháp | Back/Forward/hash/link giữ đúng dữ liệu và context | Chưa bắt đầu giai đoạn | Có click guard/beforeunload; browser history và khôi phục filters còn thiếu |
+| P3 — Tương tác và nội dung dài | Vùng bấm, focus, thu gọn mô tả, bố cục dễ dùng | Chưa nghiệm thu giai đoạn | Đã có preview mô tả và click toàn thẻ Workspace/Project/Task; còn kiểm toàn hệ thống theo gate P3 |
+| P4 — Điều hướng và bản nháp | Back/Forward/hash/link giữ đúng dữ liệu và context | Chưa nghiệm thu giai đoạn | Guard chung đã triển khai để sửa NAV-01; còn quy ước filters/context và giới hạn fallback history |
 | P5 — Thiết kế khôi phục Task | Quy tắc và thiết kế restore được chốt | Chưa bắt đầu; có quyết định mới cần chốt | Soft delete đã có; chưa có thùng rác/restore/retention/purge |
 | P6 — Hoàn thiện visual | Các cụm màn đồng bộ theo Stitch và được review | Chưa bắt đầu giai đoạn | Có nền Jakarta/kem-tím và màn Stitch; chưa nghiệm thu visual toàn hệ thống |
 
@@ -43,10 +43,10 @@ Với từng luồng, ghi entry point, vai trò, điều kiện, tạo/xem/sửa
 
 Tiêu chí chuyển P2:
 
-- [ ] Bốn cụm có ma trận, mọi trường hợp ghi rõ Đạt/Cần sửa/Chưa kiểm/N/A.
-- [ ] Các lỗi phát hiện đã được phân loại; lỗi chặn về mất dữ liệu, ghi sai quyền, kết quả thao tác gây hiểu nhầm đã sửa và kiểm lại.
-- [ ] Các cải tiến thuộc P2–P6 có nơi xử lý rõ ràng; không có vấn đề bỏ quên giữa các màn.
-- [ ] Auth/SMTP fixture và kiểm nhà cung cấp thật được phân biệt. Kiểm live chưa được thực hiện phải giữ là điều kiện release riêng, không công bố đã nghiệm thu delivery.
+- [x] Bốn cụm có ma trận, mọi trường hợp ghi rõ Đạt/Cần sửa/Chưa kiểm/N/A.
+- [x] Các lỗi phát hiện đã được phân loại; lỗi chặn đã sửa và kiểm lại trong phạm vi audit/fixture ghi nhận.
+- [x] Các cải tiến thuộc P2–P6 có nơi xử lý rõ ràng; giới hạn fallback history còn ở P4.
+- [x] Auth/SMTP fixture và kiểm nhà cung cấp thật được phân biệt; live vẫn là điều kiện release riêng.
 
 ## P2 — Thống nhất component và phản hồi
 
@@ -125,4 +125,4 @@ Tiêu chí hoàn thành kế hoạch:
 | Quyết định | Quy tắc đã có hoặc câu hỏi mới thực sự cần chủ dự án chốt |
 | Chuyển bước | Có/Không và căn cứ theo tiêu chí bên trên |
 
-Bước hiện tại: tiếp tục P1 theo [audit](../qa/UI-UX-FLOW-AUDIT.md), xử lý NAV-01 và kiểm lại các form dirty khi điều hướng. Đã có ma trận bốn cụm; chưa chuyển P2 hoặc redesign toàn bộ màn.
+Bước kế tiếp: P2 — chuẩn hóa form, dialog, picker và phản hồi theo [audit](../qa/UI-UX-FLOW-AUDIT.md). P1 đạt gate audit sau regression NAV-01; P2 chưa nghiệm thu. Không coi guard bản nháp là autosave/backup hoặc nghiệm thu P4.

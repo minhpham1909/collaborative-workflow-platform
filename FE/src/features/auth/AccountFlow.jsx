@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { messageFor } from "../../lib/messages.js";
 import { validPassword } from "../../lib/auth-links.js";
 import { isUncertainMutation } from "../../lib/mutation-outcome.js";
+import { useDraftGuard } from "../../lib/draft-navigation.js";
 const titles = {
   register: "Bắt đầu cùng Workflow ✨",
   recover: "Quên mật khẩu?",
@@ -60,6 +61,11 @@ export default function AccountFlow({
     [uncertain, setUncertain] = useState(false);
   const pending = useRef(false),
     live = useRef(true);
+  useDraftGuard({
+    dirty: !success && Boolean(name || email || password || repeat || terms),
+    busy,
+    message: "Bỏ thông tin tài khoản đang nhập?",
+  });
   useEffect(() => {
     if (!token) return;
     setSuccess("");

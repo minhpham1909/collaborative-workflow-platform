@@ -13,6 +13,7 @@ import FilterPanel from "../../components/FilterPanel.jsx";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { messageFor } from "../../lib/messages.js";
+import { useDraftGuard } from "../../lib/draft-navigation.js";
 function plain(node) {
   if (!node) return "";
   if (typeof node.plainText === "string") return node.plainText;
@@ -34,6 +35,11 @@ export default function Home({ api, user }) {
     [createError, setCreateError] = useState("");
   const generation = useRef(0),
     mutation = useRef(false);
+  useDraftGuard({
+    dirty: creating && Boolean(name),
+    busy: saving,
+    message: "Bỏ Workspace đang tạo?",
+  });
   const highlights = useHomeHighlights(api, refresh);
   const invalid = from && to && from > to;
   const query = new URLSearchParams({

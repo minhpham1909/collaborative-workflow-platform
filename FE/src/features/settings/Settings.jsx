@@ -1,7 +1,5 @@
-import {
-  confirmDialog,
-  confirmNavigation,
-} from "../../components/NotificationProvider.jsx";
+import { useDraftGuard } from "../../lib/draft-navigation.js";
+import { confirmDialog } from "../../components/NotificationProvider.jsx";
 import { useEffect, useRef, useState } from "react";
 import Avatar from "../../components/Avatar.jsx";
 import { messageFor } from "../../lib/messages.js";
@@ -48,22 +46,12 @@ export default function Settings({ api, onUser }) {
       live = false;
     };
   }, [revision]);
-  useEffect(() => {
-    if (!dirty) return;
-    const unload = (e) => {
-      e.preventDefault();
-      e.returnValue = "";
-    };
-    const click = (e) => {
-      confirmNavigation(e, "Bỏ nội dung chưa lưu và chuyển trang?");
-    };
-    window.addEventListener("beforeunload", unload);
-    document.addEventListener("click", click, true);
-    return () => {
-      window.removeEventListener("beforeunload", unload);
-      document.removeEventListener("click", click, true);
-    };
-  }, [dirty]);
+  useDraftGuard({
+    dirty: dirty,
+    busy: saving,
+    message: "Bỏ thay đổi tài khoản chưa lưu?",
+  });
+
   const leave = async () =>
     !dirty || (await confirmDialog("Bỏ thay đổi cài đặt chưa lưu?"));
   function saved(user) {

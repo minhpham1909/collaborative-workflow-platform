@@ -1,7 +1,7 @@
 import EmailVerificationActions from "../components/EmailVerificationActions.jsx";
 import AppFooter from "../components/AppFooter.jsx";
 import AppHeader from "../components/AppHeader.jsx";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createApi } from "../lib/api.js";
 import { messageFor } from "../lib/messages.js";
 import Login from "../features/auth/Login.jsx";
@@ -12,6 +12,11 @@ import TaskList from "../features/tasks/TaskList.jsx";
 import TaskDetail from "../features/tasks/TaskDetail.jsx";
 import { readRoute } from "./routes.js";
 import Settings from "../features/settings/Settings.jsx";
+import {
+  installDraftNavigation,
+  mayLeaveDrafts,
+  useDraftGuard,
+} from "../lib/draft-navigation.js";
 
 import Invite from "../features/projects/Invite.jsx";
 import AccountFlow from "../features/auth/AccountFlow.jsx";
@@ -64,13 +69,14 @@ export default function App() {
         setAccountToken(null);
       setRoute(next);
     };
-    window.addEventListener("hashchange", changed);
-    return () => window.removeEventListener("hashchange", changed);
+    return installDraftNavigation(changed);
   }, []);
   const [user, setUser] = useState(null),
     [ready, setReady] = useState(false),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false);
+  const logoutPending = useRef(false);
+  useDraftGuard({ dirty: false, busy });
   async function start() {
     setError("");
     setReady(false);
@@ -98,6 +104,12 @@ export default function App() {
     };
   }, []);
   async function logout() {
+    if (logoutPending.current) return;
+    logoutPending.current = true;
+    if (!(await mayLeaveDrafts())) {
+      logoutPending.current = false;
+      return;
+    }
     setBusy(true);
     setError("");
     try {
@@ -106,6 +118,7 @@ export default function App() {
       if (e.status === 401) api.clear();
       else setError("Chưa xác nhận được việc thu hồi phiên. " + messageFor(e));
     } finally {
+      logoutPending.current = false;
       setBusy(false);
     }
   }

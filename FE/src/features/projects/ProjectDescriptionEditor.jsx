@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState } from "react";
+import { useDraftGuard } from "../../lib/draft-navigation.js";
+import { useRef, useState } from "react";
 import RichEditor from "../../components/RichEditor.jsx";
 import {
   confirmDialog,
-  confirmNavigation,
   notify,
 } from "../../components/NotificationProvider.jsx";
 import { envelope, emptyDocument, validateContent } from "../../lib/content.js";
@@ -22,25 +22,12 @@ export default function ProjectDescriptionEditor({
     [uncertain, setUncertain] = useState(false),
     [error, setError] = useState("");
   const pending = useRef(false);
-  useEffect(() => {
-    if (!dirty && !busy) return;
-    const unload = (event) => {
-      event.preventDefault();
-      event.returnValue = "";
-    };
-    const click = (event) => {
-      if (busy && event.target.closest("a[href]")) {
-        event.preventDefault();
-        event.stopImmediatePropagation();
-      } else confirmNavigation(event, "Bỏ mô tả Dự án chưa lưu?");
-    };
-    window.addEventListener("beforeunload", unload);
-    document.addEventListener("click", click, true);
-    return () => {
-      window.removeEventListener("beforeunload", unload);
-      document.removeEventListener("click", click, true);
-    };
-  }, [dirty, busy]);
+  useDraftGuard({
+    dirty: dirty,
+    busy: busy,
+    message: "Bỏ mô tả Dự án chưa lưu?",
+  });
+
   async function save(event) {
     event.preventDefault();
     if (pending.current || uncertain) return;

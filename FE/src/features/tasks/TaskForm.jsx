@@ -1,6 +1,6 @@
+import { useDraftGuard } from "../../lib/draft-navigation.js";
 import {
   confirmDialog,
-  confirmNavigation,
   notify,
 } from "../../components/NotificationProvider.jsx";
 import { isUncertainMutation } from "../../lib/mutation-outcome.js";
@@ -54,22 +54,12 @@ export default function TaskForm({
       live = false;
     };
   }, [workspaceId]);
-  useEffect(() => {
-    if (!dirty) return;
-    const unload = (e) => {
-      e.preventDefault();
-      e.returnValue = "";
-    };
-    const click = (e) => {
-      confirmNavigation(e, "Bỏ nội dung chưa lưu và chuyển trang?");
-    };
-    window.addEventListener("beforeunload", unload);
-    document.addEventListener("click", click, true);
-    return () => {
-      window.removeEventListener("beforeunload", unload);
-      document.removeEventListener("click", click, true);
-    };
-  }, [dirty]);
+  useDraftGuard({
+    dirty: dirty,
+    busy: busy,
+    message: "Bỏ nội dung chưa lưu và chuyển trang?",
+  });
+
   async function save(e) {
     e.preventDefault();
     if (pending.current || uncertain) return;

@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Avatar from "../../components/Avatar.jsx";
 import { messageFor } from "../../lib/messages.js";
+import { useDraftGuard } from "../../lib/draft-navigation.js";
 const date = (value) =>
   new Date(value).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" });
 const states = {
@@ -318,6 +319,12 @@ function TeamAction({ api, workspace, action, onClose }) {
     [result, setResult] = useState(null),
     [blocked, setBlocked] = useState(false),
     [copied, setCopied] = useState("");
+  useDraftGuard({
+    dirty:
+      action.kind === "invite" && !result && Boolean(email || type !== "EMAIL"),
+    busy,
+    message: "Bỏ lời mời đang soạn?",
+  });
   const pending = useRef(false),
     panel = useRef(null);
   const titles = {
