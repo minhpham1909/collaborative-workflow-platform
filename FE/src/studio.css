@@ -1158,6 +1158,9 @@
 .detail-meta-grid strong.overdue {
   color: #a84435;
 }
+.task-list-title {
+  font-size: 26px;
+}
 .system-overlay {
   position: fixed;
   inset: 0;

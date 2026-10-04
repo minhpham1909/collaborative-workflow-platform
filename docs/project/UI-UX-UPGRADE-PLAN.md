@@ -15,7 +15,7 @@ Ngày 04/10/2026. Theo yêu cầu chủ dự án: đánh giá từng bước ho�
 
 | Bước | Kết quả cần có | Trạng thái ban đầu | Nền hiện có / khoảng trống |
 |---|---|---|---|
-| P1 — Audit luồng | Ma trận hành vi và danh sách lỗi có ưu tiên | Đã xác định phạm vi; chưa Đạt | Có audit lượt 1 và regression; chưa rà đầy đủ mọi trạng thái trên mọi cụm màn |
+| P1 — Audit luồng | Ma trận hành vi và danh sách lỗi có ưu tiên | Cần sửa — đã có audit bốn cụm | [Audit P1](../qa/UI-UX-FLOW-AUDIT.md) đã phân loại lỗi và sửa các lỗi xác minh/5xx/parent refresh/Google retry; NAV-01 Back/hash mất draft còn chặn chuyển bước |
 | P2 — Component dùng chung | Form/dialog/picker/feedback thống nhất | Chưa bắt đầu giai đoạn | Có NotificationProvider/editor/filter; dialog chuyên biệt và các form chưa được đánh giá đồng bộ |
 | P3 — Tương tác và nội dung dài | Vùng bấm, focus, thu gọn mô tả, bố cục dễ dùng | Chưa bắt đầu giai đoạn | Card Workspace đã sửa; mô tả dài và khả năng thao tác toàn hệ thống cần kiểm |
 | P4 — Điều hướng và bản nháp | Back/Forward/hash/link giữ đúng dữ liệu và context | Chưa bắt đầu giai đoạn | Có click guard/beforeunload; browser history và khôi phục filters còn thiếu |
@@ -123,4 +123,4 @@ Tiêu chí hoàn thành kế hoạch:
 | Quyết định | Quy tắc đã có hoặc câu hỏi mới thực sự cần chủ dự án chốt |
 | Chuyển bước | Có/Không và căn cứ theo tiêu chí bên trên |
 
-Bước tiếp theo duy nhất sau lập kế hoạch: bắt đầu P1, tạo ma trận bốn cụm và audit từng cụm. Chưa chuyển sang refactor component hoặc redesign toàn bộ màn.
+Bước hiện tại: tiếp tục P1 theo [audit](../qa/UI-UX-FLOW-AUDIT.md), xử lý NAV-01 và kiểm lại các form dirty khi điều hướng. Đã có ma trận bốn cụm; chưa chuyển P2 hoặc redesign toàn bộ màn.

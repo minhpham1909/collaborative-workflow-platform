@@ -1,3 +1,4 @@
+import EmailVerificationActions from "../components/EmailVerificationActions.jsx";
 import AppFooter from "../components/AppFooter.jsx";
 import AppHeader from "../components/AppHeader.jsx";
 import { useEffect, useState } from "react";
@@ -148,6 +149,7 @@ export default function App() {
         )}
         {route.kind === "invite" ? (
           <Invite
+            key={user.id + (inviteToken ?? "")}
             api={api}
             token={inviteToken}
             user={user}
@@ -178,7 +180,7 @@ export default function App() {
               Kiểm tra hộp thư của {user.email}. Sau khi xác minh, tải lại thông
               tin tài khoản.
             </p>
-            <Verify api={api} />
+            <EmailVerificationActions api={api} />
           </main>
         ) : route.kind === "task" ? (
           <TaskDetail key={user.id + route.id} api={api} id={route.id} />
@@ -201,39 +203,5 @@ export default function App() {
         <AppFooter />
       </div>
     </div>
-  );
-}
-function Verify({ api }) {
-  const [note, setNote] = useState(""),
-    [busy, setBusy] = useState(false);
-  async function run(action) {
-    setBusy(true);
-    try {
-      if (action === "resend") {
-        await api.request("/auth/verify-email/resend", {
-          method: "POST",
-          body: {},
-        });
-        setNote("Yêu cầu gửi lại đã được tiếp nhận.");
-      } else {
-        await api.restore();
-        setNote("Đã tải lại tài khoản.");
-      }
-    } catch (e) {
-      setNote(messageFor(e));
-    } finally {
-      setBusy(false);
-    }
-  }
-  return (
-    <>
-      <button disabled={busy} onClick={() => run("resend")}>
-        Gửi lại email xác minh
-      </button>{" "}
-      <button disabled={busy} onClick={() => run("reload")}>
-        Đã xác minh · Tải lại
-      </button>
-      <p role="status">{note}</p>
-    </>
   );
 }

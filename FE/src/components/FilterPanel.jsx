@@ -1,5 +1,13 @@
 import Icon from "./Icon.jsx";
-import { Children, useId, useState } from "react";
+import { Children, Fragment, cloneElement, useId, useState } from "react";
+function flattenFields(children, prefix = "filter") {
+  return Children.toArray(children).flatMap((item, index) => {
+    const key = `${prefix}-${index}`;
+    return item.type === Fragment
+      ? flattenFields(item.props.children, key)
+      : [cloneElement(item, { key })];
+  });
+}
 export default function FilterPanel({
   children,
   compact = false,
@@ -8,7 +16,7 @@ export default function FilterPanel({
   const [open, setOpen] = useState(false);
   const panelId = useId();
   if (compact) {
-    const items = Children.toArray(children);
+    const items = flattenFields(children);
     const isSearch = (item) =>
       Children.toArray(item.props?.children).some(
         (child) => child.props?.type === "search",

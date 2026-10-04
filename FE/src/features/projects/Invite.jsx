@@ -1,5 +1,7 @@
+import EmailVerificationActions from "../../components/EmailVerificationActions.jsx";
 import { useEffect, useRef, useState } from "react";
 import { messageFor } from "../../lib/messages.js";
+import { isUncertainMutation } from "../../lib/mutation-outcome.js";
 export default function Invite({ api, token, user, onAccepted }) {
   const [preview, setPreview] = useState(null),
     [error, setError] = useState(""),
@@ -43,11 +45,11 @@ export default function Invite({ api, token, user, onAccepted }) {
       onAccepted(result.workspace.id);
     } catch (e) {
       setError(
-        e.status
+        !isUncertainMutation(e)
           ? messageFor(e)
           : "Chưa xác nhận gia nhập. Kiểm tra Workspace ở Trang chủ trước khi thử lại.",
       );
-      if (!e.status) setUncertain(true);
+      if (isUncertainMutation(e)) setUncertain(true);
     } finally {
       pending.current = false;
       setBusy(false);
@@ -87,10 +89,13 @@ export default function Invite({ api, token, user, onAccepted }) {
                 Tham gia Workspace
               </button>
             ) : (
-              <p>
-                Bạn cần xác minh email. Sau khi xác minh, tải lại thông tin tài
-                khoản hoặc mở lại lời mời.
-              </p>
+              <div>
+                <p>
+                  Bạn cần xác minh email. Sau khi xác minh, tải lại thông tin
+                  tài khoản hoặc mở lại lời mời.
+                </p>
+                <EmailVerificationActions api={api} />
+              </div>
             )}
           </>
         )}

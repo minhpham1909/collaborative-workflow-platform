@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import Avatar from "../../components/Avatar.jsx";
 import { messageFor } from "../../lib/messages.js";
 import { loadGoogle } from "../../lib/google.js";
+import { isUncertainMutation } from "../../lib/mutation-outcome.js";
 const validPassword = (value) =>
   [...value].length >= 12 &&
   [...value].length <= 128 &&
@@ -148,11 +149,12 @@ function EditSettings({ api, data, tab, onUser, onDirty, onSaving }) {
     [prefs, setPrefs] = useState({ ...data.user.emailPreferences }),
     [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
-    [note, setNote] = useState("");
+    [note, setNote] = useState(""),
+    [uncertain, setUncertain] = useState(false);
   const pending = useRef(false);
   async function submit(e) {
     e.preventDefault();
-    if (pending.current) return;
+    if (pending.current || uncertain) return;
     if (
       tab === "profile" &&
       (!name.trim() || /[\u0000-\u001f\u007f\u2028\u2029]/u.test(name))
@@ -181,8 +183,9 @@ function EditSettings({ api, data, tab, onUser, onDirty, onSaving }) {
       onUser(result.user);
       setNote("Đã lưu cài đặt.");
     } catch (e) {
+      setUncertain(isUncertainMutation(e));
       setError(
-        e.status
+        !isUncertainMutation(e)
           ? messageFor(e)
           : "Chưa rõ thay đổi đã lưu chưa. Kiểm tra lại tài khoản trước khi gửi tiếp.",
       );
@@ -195,7 +198,7 @@ function EditSettings({ api, data, tab, onUser, onDirty, onSaving }) {
   return (
     <section className="project-info settings-card">
       <form onSubmit={submit}>
-        <fieldset disabled={busy} onChange={() => onDirty(true)}>
+        <fieldset disabled={busy || uncertain} onChange={() => onDirty(true)}>
           {tab === "profile" ? (
             <>
               <div className="account-profile">
@@ -301,7 +304,8 @@ function Security({ api, data, onUser, onDirty, onSaving, reload }) {
     [error, setError] = useState(""),
     [note, setNote] = useState(""),
     [linking, setLinking] = useState(false),
-    [linkPassword, setLinkPassword] = useState("");
+    [linkPassword, setLinkPassword] = useState(""),
+    [uncertain, setUncertain] = useState(false);
   const pending = useRef(false),
     target = useRef(null),
     linkSecret = useRef("");
@@ -370,12 +374,13 @@ function Security({ api, data, onUser, onDirty, onSaving, reload }) {
     return () => {
       live = false;
       linkSecret.current = "";
+      target.current?.replaceChildren();
     };
   }, [linking, api]);
   useEffect(() => () => onSaving(false), []);
   async function change(e) {
     e.preventDefault();
-    if (pending.current) return;
+    if (pending.current || uncertain) return;
     if (
       !validPassword(current) ||
       !validPassword(password) ||
@@ -405,8 +410,9 @@ function Security({ api, data, onUser, onDirty, onSaving, reload }) {
         "Đã đổi mật khẩu. Các phiên khác đã được thu hồi; phiên này tiếp tục đăng nhập.",
       );
     } catch (e) {
+      setUncertain(isUncertainMutation(e));
       setError(
-        e.status
+        !isUncertainMutation(e)
           ? messageFor(e)
           : "Chưa xác nhận thay đổi mật khẩu. Đăng nhập lại để kiểm tra trước khi thử tiếp.",
       );
@@ -435,7 +441,10 @@ function Security({ api, data, onUser, onDirty, onSaving, reload }) {
               Dùng 12–128 ký tự. Sau khi đổi, các phiên đăng nhập khác sẽ được
               thu hồi.
             </p>
-            <fieldset disabled={busy || linking} onChange={() => onDirty(true)}>
+            <fieldset
+              disabled={busy || linking || uncertain}
+              onChange={() => onDirty(true)}
+            >
               <label>
                 Mật khẩu hiện tại
                 <input

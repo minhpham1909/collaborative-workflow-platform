@@ -108,7 +108,7 @@ export default function TaskDetail({ api, id }) {
         )}{" "}
         / Task
       </p>
-      {!editing && (
+      {!task && (
         <button
           disabled={busy || composing}
           onClick={async () => {
@@ -136,6 +136,15 @@ export default function TaskDetail({ api, id }) {
             </div>
             {!editing && (
               <div className="buttons">
+                <button
+                  disabled={busy || composing}
+                  onClick={async () => {
+                    setNotice("");
+                    setRevision((v) => v + 1);
+                  }}
+                >
+                  Làm mới Task
+                </button>
                 {task.permissions.edit && (
                   <button
                     disabled={busy || composing}

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { messageFor } from "../../lib/messages.js";
 import { validPassword } from "../../lib/auth-links.js";
+import { isUncertainMutation } from "../../lib/mutation-outcome.js";
 const titles = {
   register: "Bắt đầu cùng Workflow ✨",
   recover: "Quên mật khẩu?",
@@ -59,6 +60,14 @@ export default function AccountFlow({
     [uncertain, setUncertain] = useState(false);
   const pending = useRef(false),
     live = useRef(true);
+  useEffect(() => {
+    if (!token) return;
+    setSuccess("");
+    setError("");
+    setUncertain(false);
+    setPassword("");
+    setRepeat("");
+  }, [token]);
   useEffect(() => {
     live.current = true;
     if (mode === "register")
@@ -152,11 +161,11 @@ export default function AccountFlow({
     } catch (e) {
       if (live.current) {
         setError(
-          e.status
+          !isUncertainMutation(e)
             ? messageFor(e)
             : "Chưa xác nhận được kết quả. Kiểm tra trạng thái trước khi gửi lại yêu cầu.",
         );
-        if (!e.status) setUncertain(true);
+        if (isUncertainMutation(e)) setUncertain(true);
       }
     } finally {
       pending.current = false;

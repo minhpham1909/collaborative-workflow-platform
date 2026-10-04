@@ -5,7 +5,13 @@ import { messageFor } from "../../lib/messages.js";
 import TaskForm from "./TaskForm.jsx";
 import Avatar from "../../components/Avatar.jsx";
 import Icon from "../../components/Icon.jsx";
-export default function TaskList({ api, project, workspaceId, mine = false }) {
+export default function TaskList({
+  api,
+  project,
+  workspaceId,
+  mine = false,
+  onComposing,
+}) {
   const [workspaceFilter, setWorkspaceFilter] = useState(""),
     [workspaces, setWorkspaces] = useState({ items: [] });
   useEffect(() => {
@@ -46,6 +52,10 @@ export default function TaskList({ api, project, workspaceId, mine = false }) {
     [error, setError] = useState(""),
     [revision, setRevision] = useState(0),
     [creating, setCreating] = useState(false);
+  useEffect(() => {
+    onComposing?.(creating);
+    return () => onComposing?.(false);
+  }, [creating, onComposing]);
   const generation = useRef(0),
     invalid = from && to && from > to;
   const query = new URLSearchParams({
@@ -196,7 +206,11 @@ export default function TaskList({ api, project, workspaceId, mine = false }) {
               ? "TẬP TRUNG VÀO ĐIỀU QUAN TRỌNG"
               : "CÙNG NHÓM TIẾN VỀ PHÍA TRƯỚC"}
           </small>
-          <h2>{mine ? "Công việc của tôi" : "Bảng công việc"}</h2>
+          {mine ? (
+            <h1 className="task-list-title">Công việc của tôi</h1>
+          ) : (
+            <h2>Bảng công việc</h2>
+          )}
           <p className="section-description">
             {mine
               ? "Công việc được giao cho bạn, trong một góc nhìn rõ ràng."
@@ -204,13 +218,16 @@ export default function TaskList({ api, project, workspaceId, mine = false }) {
           </p>
         </div>
         <div className="buttons">
-          <button disabled={busy} onClick={() => setRevision((v) => v + 1)}>
+          <button
+            disabled={busy || creating}
+            onClick={() => setRevision((v) => v + 1)}
+          >
             Làm mới công việc
           </button>
           {!mine && project.state === "active" && (
             <button
               className="primary"
-              disabled={busy}
+              disabled={busy || creating}
               onClick={() => setCreating(true)}
             >
               + Tạo Task

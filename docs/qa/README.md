@@ -1,5 +1,7 @@
 # Trạng thái kiểm tra
 
+04/10/2026: [P1 audit bốn cụm màn hình](UI-UX-FLOW-AUDIT.md) — đã sửa các lỗi parent refresh, uncertain 5xx, Google retry, entry point verify và vị trí actions. 46 BE integration/12 FE tests, fixture flows và build đạt trong phạm vi ghi nhận. P1 vẫn Cần sửa do NAV-01 browser Back làm mất draft; chưa chuyển P2, chưa nghiệm thu nhà cung cấp thật hoặc toàn sản phẩm.
+
 [FE Notifications](FE-NOTIFICATIONS-CHECK.md) — 3 unit/8 integration, browser inbox/read/cutoff/privacy và unverified→verified invitation gate/accept đạt; không SMTP thật.
 
 [FE Task screens](FE-TASKS-CHECK.md): build, 6 FE tests, 10 Work Mongo/HTTP và browser thực Board/Task/Comments/My Tasks đạt; chưa Google/SMTP live hoặc nghiệm thu toàn sản phẩm.

@@ -4,6 +4,8 @@ Cập nhật 04/10/2026. Yêu cầu trực tiếp của chủ dự án có ưu t
 
 ## Hiện tại
 
+P1 đang **Cần sửa**, xem [audit bốn cụm](../qa/UI-UX-FLOW-AUDIT.md). Đã sửa khóa parent actions khi tạo Task, uncertain 5xx ở Auth/Workspace/Profile/password, stale Google button khi retry, actions verify trong Invite, counter filters Fragment và vị trí refresh Project/Task/Comments; My Tasks có H1. NAV-01 browser Back/hash mất draft đã tái hiện, còn chặn P1 → P2. Provider Google/SMTP thật chưa kiểm lại; không gửi hàng đợi mail cũ.
+
 Increment mới: [tương tác và phản hồi hệ thống](../ui-ux/INTERACTION-FOUNDATION-v0.1.md). Toàn card Workspace mở được; mô tả Workspace hiển thị cùng CTA Owner; Project có editor mô tả/mục tiêu, quyền Owner hoặc Creator còn membership trong Active. NotificationProvider dùng chung confirm/input/toast, thay confirm/prompt native trong FE. Xóa Task vẫn soft delete và giữ Comments; chưa có restore/purge. 46 BE integration tests, 12 FE tests và các luồng UI/uncertain network đã kiểm; chưa chạy worker SMTP thật.
 
 Increment mới: [Stitch Kanban/Task](../ui-ux/stitch-board-task-2026-10-04/README.md), screen IDs 80a665c29de642a8899aa7af740c881f và bcb8d6af3741455ebd88c7d75de0a0de. Đã import HTML/full screenshots, review và nâng Project header/scope, Kanban columns/cards/progress, Task metadata/comments. Giữ top nav/Jakarta/API/quyền/CAS/uncertain writes; Task detail vẫn full page, drawer routing và drag/drop còn riêng. Build, 12 FE tests, Board/Task flow và network regression đạt; không overflow 1440/1280/390.
@@ -36,7 +38,7 @@ Increment trước 04/10/2026: [Board/Task/Comments/My Tasks FE](../sds/FE-TASKS
 
 ## Thứ tự triển khai tiếp
 
-Theo yêu cầu 04/10/2026, nâng cấp UI/UX đi theo [kế hoạch có tiêu chí chuyển bước](UI-UX-UPGRADE-PLAN.md): P1 audit → P2 component → P3 tương tác/nội dung dài → P4 navigation/draft → P5 thiết kế restore → P6 visual. Bước hiện tại là lập kế hoạch, tiếp theo audit P1; chưa đánh dấu giai đoạn nào Đạt từ các increment cũ. Các ưu tiên bên dưới là backlog kỹ thuật, không thay thứ tự và tiêu chí của kế hoạch này.
+Theo yêu cầu 04/10/2026, nâng cấp UI/UX đi theo [kế hoạch có tiêu chí chuyển bước](UI-UX-UPGRADE-PLAN.md): P1 audit → P2 component → P3 tương tác/nội dung dài → P4 navigation/draft → P5 thiết kế restore → P6 visual. P1 đã có audit, cần tiếp tục sửa NAV-01; chưa chuyển P2. Các ưu tiên bên dưới là backlog kỹ thuật, không thay thứ tự và tiêu chí của kế hoạch này.
 
 1. Workspace/Project/Board/Task/Comment/My Tasks đã nối, kiểm quyền/CAS. Tiếp tục routing/panel và phục hồi filters khi back, draft transitions trước release.
 2. Identity DTO G02 đã có creator/assignee/author kể cả lịch sử trong scope; G03 server search Members đã có; picker Task vẫn cần nối search. Editor chung Task/Comment đã chọn Tiptap 3.31.4; Workspace đã dùng editor chung; Project description đã nối editor và quyền Creator theo yêu cầu 04/10/2026.

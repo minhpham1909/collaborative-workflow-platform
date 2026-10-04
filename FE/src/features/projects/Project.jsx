@@ -19,6 +19,7 @@ export default function Project({ api, id, user }) {
     [revision, setRevision] = useState(0),
     [notice, setNotice] = useState("");
   const [editingDescription, setEditingDescription] = useState(false);
+  const [taskComposing, setTaskComposing] = useState(false);
   const pending = useRef(false);
   useEffect(() => {
     let live = true;
@@ -98,21 +99,24 @@ export default function Project({ api, id, user }) {
         )}{" "}
         / Dự án
       </p>
-      <button
-        disabled={busy || editingDescription}
-        onClick={() => {
-          setEditing(false);
-          setNotice("");
-          setRevision((v) => v + 1);
-        }}
-      >
-        Làm mới Dự án
-      </button>
+      {!project && (
+        <button
+          disabled={busy || editingDescription || taskComposing}
+          onClick={() => {
+            setEditing(false);
+            setNotice("");
+            setRevision((v) => v + 1);
+          }}
+        >
+          Làm mới Dự án
+        </button>
+      )}
+
       {error && (
         <div role="alert" className="error">
           {error}{" "}
           <button
-            disabled={busy}
+            disabled={busy || editingDescription || taskComposing}
             onClick={() => {
               setEditing(false);
               setNotice("");
@@ -142,26 +146,38 @@ export default function Project({ api, id, user }) {
                   : "Đang hoạt động"}
               </span>
             </div>
-            {workspace.role === "owner" && (
-              <div className="buttons">
-                {project.state === "active" && (
+            <div className="buttons">
+              <button
+                disabled={busy || editingDescription || taskComposing}
+                onClick={() => {
+                  setEditing(false);
+                  setNotice("");
+                  setRevision((v) => v + 1);
+                }}
+              >
+                Làm mới Dự án
+              </button>
+              {workspace.role === "owner" && (
+                <>
+                  {project.state === "active" && (
+                    <button
+                      disabled={busy || editingDescription || taskComposing}
+                      onClick={() => setEditing(true)}
+                    >
+                      Đổi tên
+                    </button>
+                  )}
                   <button
-                    disabled={busy || editingDescription}
-                    onClick={() => setEditing(true)}
+                    disabled={busy || editingDescription || taskComposing}
+                    onClick={changeState}
                   >
-                    Đổi tên
+                    {project.state === "active"
+                      ? "Lưu trữ Dự án"
+                      : "Mở lại Dự án"}
                   </button>
-                )}
-                <button
-                  disabled={busy || editingDescription}
-                  onClick={changeState}
-                >
-                  {project.state === "active"
-                    ? "Lưu trữ Dự án"
-                    : "Mở lại Dự án"}
-                </button>
-              </div>
-            )}
+                </>
+              )}
+            </div>
           </section>
           {project.state === "archived" && (
             <p className="archive-banner">
@@ -175,7 +191,10 @@ export default function Project({ api, id, user }) {
                 (workspace.role === "owner" ||
                   project.createdBy === user?.id) &&
                 !editingDescription && (
-                  <button onClick={() => setEditingDescription(true)}>
+                  <button
+                    disabled={taskComposing || busy}
+                    onClick={() => setEditingDescription(true)}
+                  >
                     Chỉnh sửa mô tả Dự án
                   </button>
                 )}
@@ -214,11 +233,14 @@ export default function Project({ api, id, user }) {
               })}
             </p>
           </section>
-          <TaskList
-            api={api}
-            project={project}
-            workspaceId={project.workspaceId}
-          />
+          {!editingDescription && (
+            <TaskList
+              api={api}
+              project={project}
+              workspaceId={project.workspaceId}
+              onComposing={setTaskComposing}
+            />
+          )}
         </>
       )}
       {editing && project && (

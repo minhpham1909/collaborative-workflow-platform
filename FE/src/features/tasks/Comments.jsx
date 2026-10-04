@@ -187,11 +187,18 @@ export default function Comments({ api, taskId, readOnly, onComposing }) {
     <section className="project-info comments">
       <div className="section-title">
         <h2>Thảo luận {data.total !== undefined && `(${data.total})`}</h2>
-        {!readOnly && !writing && !editing && (
-          <button disabled={busy} onClick={() => setWriting(true)}>
-            + Viết bình luận
-          </button>
-        )}
+        <div className="buttons">
+          {!writing && !editing && (
+            <button disabled={busy} onClick={() => setRevision((v) => v + 1)}>
+              Tải lại bình luận
+            </button>
+          )}
+          {!readOnly && !writing && !editing && (
+            <button disabled={busy} onClick={() => setWriting(true)}>
+              + Viết bình luận
+            </button>
+          )}
+        </div>
       </div>
       <p className="muted">Bình luận mới nhất trước</p>
       {error && (
@@ -199,11 +206,7 @@ export default function Comments({ api, taskId, readOnly, onComposing }) {
           {error}
         </p>
       )}
-      {!writing && !editing && (
-        <button disabled={busy} onClick={() => setRevision((v) => v + 1)}>
-          Tải lại bình luận
-        </button>
-      )}
+
       {busy && <p role="status">Đang tải bình luận…</p>}
       {writing && !readOnly && (
         <Composer

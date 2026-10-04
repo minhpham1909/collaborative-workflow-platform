@@ -59,6 +59,7 @@ export default function Login({ api, connectionError, retry }) {
     })();
     return () => {
       live = false;
+      googleTarget.current?.replaceChildren();
     };
   }, [googleEnabled, api]);
   async function submit(e) {

@@ -125,6 +125,7 @@ export default function Team({ api, id, invitations, onContext }) {
                 <label>
                   Loại lời mời
                   <select
+                    aria-label="Loại lời mời"
                     value={type}
                     onChange={(e) => setType(e.target.value)}
                   >
@@ -136,6 +137,7 @@ export default function Team({ api, id, invitations, onContext }) {
                 <label>
                   Hiệu lực
                   <select
+                    aria-label="Hiệu lực"
                     value={state}
                     onChange={(e) => setState(e.target.value)}
                   >

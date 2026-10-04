@@ -230,6 +230,34 @@ try {
     .waitFor();
   await page.getByRole("button", { name: "+ Tạo Task", exact: true }).click();
   await page.getByLabel("Tiêu đề Task").fill("Thiết kế landing page");
+  assert.equal(
+    await page
+      .getByRole("button", { name: "Làm mới Dự án", exact: true })
+      .isDisabled(),
+    true,
+  );
+  assert.equal(
+    await page
+      .getByRole("button", { name: "Lưu trữ Dự án", exact: true })
+      .isDisabled(),
+    true,
+  );
+  assert.equal(
+    await page
+      .getByRole("button", { name: "Chỉnh sửa mô tả Dự án", exact: true })
+      .isDisabled(),
+    true,
+  );
+  assert.equal(
+    await page
+      .getByRole("button", { name: "+ Tạo Task", exact: true })
+      .isDisabled(),
+    true,
+  );
+  assert.equal(
+    await page.getByLabel("Tiêu đề Task").inputValue(),
+    "Thiết kế landing page",
+  );
   await page
     .getByLabel("Người thực hiện", { exact: true })
     .selectOption(member.id);

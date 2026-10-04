@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import RichEditor from "../../components/RichEditor.jsx";
 import { envelope, emptyDocument } from "../../lib/content.js";
 import { messageFor } from "../../lib/messages.js";
+import { isUncertainMutation } from "../../lib/mutation-outcome.js";
 const events = {
   assignment: "Phân công Task",
   comment: "Bình luận mới",
@@ -143,11 +144,11 @@ export default function WorkspaceSettings({
       notify("Đã lưu cài đặt Workspace.");
     } catch (e) {
       setError(
-        e.status
+        !isUncertainMutation(e)
           ? messageFor(e)
           : "Chưa xác nhận đã lưu. Tải lại cài đặt để kiểm tra trước khi gửi tiếp.",
       );
-      if (!e.status) setUncertain(true);
+      if (isUncertainMutation(e)) setUncertain(true);
       if (
         ["WORKSPACE_UNAVAILABLE", "OWNER_REQUIRED", "UNAUTHENTICATED"].includes(
           e.code,
