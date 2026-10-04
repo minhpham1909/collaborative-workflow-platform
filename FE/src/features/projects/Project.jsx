@@ -170,7 +170,10 @@ export default function Project({ api, id }) {
         <NameDialog
           title="Đổi tên Dự án"
           initial={project.name}
-          onClose={() => setEditing(false)}
+          onClose={(uncertain) => {
+            setEditing(false);
+            if (uncertain) setRevision((v) => v + 1);
+          }}
           onSave={async (name) => {
             const data = await api.request(`/projects/${id}`, {
               method: "PATCH",

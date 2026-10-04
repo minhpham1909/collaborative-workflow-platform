@@ -807,6 +807,7 @@ select:focus-visible {
 }
 .illustrated-hero > button {
   position: absolute;
+  z-index: 2;
   left: 32px;
   bottom: 24px;
 }

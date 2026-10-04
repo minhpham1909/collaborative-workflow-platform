@@ -1,3 +1,4 @@
+import { isUncertainMutation } from "../lib/mutation-outcome.js";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { messageFor } from "../lib/messages.js";
@@ -5,6 +6,7 @@ import { messageFor } from "../lib/messages.js";
 export default function NameDialog({ title, initial = "", onSave, onClose }) {
   const [name, setName] = useState(initial),
     [busy, setBusy] = useState(false),
+    [uncertain, setUncertain] = useState(false),
     [error, setError] = useState("");
   const pending = useRef(false),
     close = useRef(null);
@@ -13,7 +15,7 @@ export default function NameDialog({ title, initial = "", onSave, onClose }) {
       !pending.current &&
       (name === initial || confirm("Bỏ nội dung chưa lưu?"))
     )
-      onClose();
+      onClose(uncertain);
   };
   useEffect(() => {
     const previous = document.activeElement,
@@ -51,7 +53,7 @@ export default function NameDialog({ title, initial = "", onSave, onClose }) {
   }, []);
   async function submit(e) {
     e.preventDefault();
-    if (pending.current) return;
+    if (pending.current || uncertain) return;
     if (!name.trim() || /[\u0000-\u001f\u007f\u2028\u2029]/u.test(name)) {
       setError("Tên chưa hợp lệ.");
       return;
@@ -63,8 +65,9 @@ export default function NameDialog({ title, initial = "", onSave, onClose }) {
       await onSave(name);
       onClose();
     } catch (e) {
+      setUncertain(isUncertainMutation(e));
       setError(
-        e.status
+        !isUncertainMutation(e)
           ? messageFor(e)
           : "Chưa rõ yêu cầu đã lưu chưa. Đóng form và tải lại dữ liệu trước khi gửi lại.",
       );
@@ -107,7 +110,7 @@ export default function NameDialog({ title, initial = "", onSave, onClose }) {
             >
               Hủy
             </button>
-            <button className="primary" disabled={busy}>
+            <button className="primary" disabled={busy || uncertain}>
               {busy ? "Đang lưu…" : "Lưu"}
             </button>
           </div>

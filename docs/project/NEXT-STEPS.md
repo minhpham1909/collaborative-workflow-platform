@@ -4,6 +4,8 @@ Cập nhật 04/10/2026. Yêu cầu trực tiếp của chủ dự án có ưu t
 
 ## Hiện tại
 
+Ưu tiên mới của chủ dự án 04/10/2026: rà soát luồng hệ thống trước UI. [Audit lượt 1](../qa/SYSTEM-FLOWS-CHECK.md): 44 BE integration tests đạt; đã tái hiện/sửa gửi lại create sau mất phản hồi cho Workspace/Project/Task/Comment và vùng bấm Tạo Workspace. Có regression fault-injection lưu trong FE/scripts. Tiếp theo ưu tiên draft/navigation transitions, BE idempotency và các nhánh auth/email còn thiếu; chưa gửi hàng đợi mail cũ.
+
 Increment mới nhất: [UI polish và email diagnosis](../ui-ux/UI-POLISH-v0.1.md): sidebar SVG, FilterPanel chung, My Tasks dạng dòng, email toggles/password form và illustration Home. Figma live bị quota chặn; dùng Stitch đã lưu. Đã xác định 5 email xác minh pending vì không có worker chạy; thêm `mail:status` và `dev:full`, sửa BE README. Theo lựa chọn người dùng chỉ sửa setup, chưa gửi hàng đợi cũ. Review giao diện trực tiếp và xử lý phạm vi queue trước kiểm SMTP live tiếp theo.
 
 Increment trước: [Đăng ký/Xác minh/Khôi phục FE](../sds/FE-REGISTRATION-RECOVERY-v0.1.md) đã nối signup email local với draft policies/consent, verify/reset link scrub/explicit action, generic recovery và reset session clear. [QA](../qa/FE-REGISTRATION-RECOVERY-CHECK.md). Kiểm trực tiếp Google/SMTP để sau theo yêu cầu; chỉ chạy kiểm tự động fixtures.

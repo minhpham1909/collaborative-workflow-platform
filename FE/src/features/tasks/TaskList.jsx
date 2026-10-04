@@ -173,7 +173,11 @@ export default function TaskList({ api, project, workspaceId, mine = false }) {
             Làm mới công việc
           </button>
           {!mine && project.state === "active" && (
-            <button className="primary" onClick={() => setCreating(true)}>
+            <button
+              className="primary"
+              disabled={busy}
+              onClick={() => setCreating(true)}
+            >
               + Tạo Task
             </button>
           )}
@@ -184,7 +188,10 @@ export default function TaskList({ api, project, workspaceId, mine = false }) {
           api={api}
           projectId={project.id}
           workspaceId={workspaceId}
-          onCancel={() => setCreating(false)}
+          onCancel={(uncertain) => {
+            setCreating(false);
+            if (uncertain) setRevision((v) => v + 1);
+          }}
           onDone={() => {
             setCreating(false);
             setRevision((v) => v + 1);

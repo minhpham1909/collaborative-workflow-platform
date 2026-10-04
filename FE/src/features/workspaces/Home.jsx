@@ -1,3 +1,4 @@
+import { isUncertainMutation } from "../../lib/mutation-outcome.js";
 import FilterPanel from "../../components/FilterPanel.jsx";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -19,6 +20,7 @@ export default function Home({ api, user }) {
     [creating, setCreating] = useState(false),
     [name, setName] = useState(""),
     [saving, setSaving] = useState(false),
+    [uncertain, setUncertain] = useState(false),
     [createError, setCreateError] = useState("");
   const generation = useRef(0),
     mutation = useRef(false);
@@ -38,11 +40,13 @@ export default function Home({ api, user }) {
           query +
           (cursor ? "&cursor=" + encodeURIComponent(cursor) : ""),
       );
-      if (token === generation.current)
+      if (token === generation.current) {
+        if (!cursor) setUncertain(false);
         setData((old) => ({
           ...result,
           items: cursor ? [...old.items, ...result.items] : result.items,
         }));
+      }
     } catch (e) {
       if (token === generation.current) {
         setData({ items: [], nextCursor: null });
@@ -67,8 +71,23 @@ export default function Home({ api, user }) {
   }, [query, refresh, invalid]);
   const closeDialog = useRef(() => {});
   closeDialog.current = () => {
-    if (!saving && (!name || confirm("Bỏ tên Workspace chưa lưu?")))
+    if (
+      !saving &&
+      (!name ||
+        confirm(
+          uncertain
+            ? "Đóng form và tải lại để kiểm tra Workspace đã tạo chưa?"
+            : "Bỏ tên Workspace chưa lưu?",
+        ))
+    ) {
       setCreating(false);
+      if (uncertain) {
+        setQ("");
+        setFrom("");
+        setTo("");
+        setRefresh((v) => v + 1);
+      }
+    }
   };
   useEffect(() => {
     if (!creating) return;
@@ -105,7 +124,7 @@ export default function Home({ api, user }) {
   }, [creating]);
   async function create(e) {
     e.preventDefault();
-    if (mutation.current) return;
+    if (mutation.current || uncertain) return;
     if (!name.trim() || /[\u0000-\u001f\u007f\u2028\u2029]/u.test(name)) {
       setCreateError("Tên Workspace chưa hợp lệ.");
       return;
@@ -119,8 +138,9 @@ export default function Home({ api, user }) {
       setName("");
       setRefresh((v) => v + 1);
     } catch (e) {
+      setUncertain(isUncertainMutation(e));
       setCreateError(
-        e.status
+        !isUncertainMutation(e)
           ? messageFor(e)
           : "Chưa rõ yêu cầu tạo đã hoàn tất chưa. Đóng form và tải lại danh sách trước khi tạo lại.",
       );
@@ -142,7 +162,11 @@ export default function Home({ api, user }) {
           src="/illustrations/creative-workspace.svg"
           alt=""
         />
-        <button className="primary" onClick={() => setCreating(true)}>
+        <button
+          className="primary"
+          disabled={busy || uncertain}
+          onClick={() => setCreating(true)}
+        >
           + Tạo Workspace
         </button>
       </section>
@@ -274,14 +298,11 @@ export default function Home({ api, user }) {
                   <button
                     type="button"
                     disabled={saving}
-                    onClick={() => {
-                      if (!name || confirm("Bỏ tên Workspace chưa lưu?"))
-                        setCreating(false);
-                    }}
+                    onClick={() => closeDialog.current()}
                   >
                     Hủy
                   </button>
-                  <button className="primary" disabled={saving}>
+                  <button className="primary" disabled={saving || uncertain}>
                     {saving ? "Đang tạo…" : "Tạo Workspace"}
                   </button>
                 </div>

@@ -1,3 +1,4 @@
+import { isUncertainMutation } from "../../lib/mutation-outcome.js";
 import { useEffect, useRef, useState } from "react";
 import RichEditor from "../../components/RichEditor.jsx";
 import { toVietnamInput, toUtc, validateContent } from "../../lib/content.js";
@@ -16,6 +17,7 @@ export default function TaskForm({
     [due, setDue] = useState(toVietnamInput(task?.dueAt)),
     [members, setMembers] = useState({ items: [] }),
     [busy, setBusy] = useState(false),
+    [uncertain, setUncertain] = useState(false),
     [error, setError] = useState(""),
     [dirty, setDirty] = useState(false);
   const pending = useRef(false);
@@ -71,7 +73,7 @@ export default function TaskForm({
   }, [dirty]);
   async function save(e) {
     e.preventDefault();
-    if (pending.current) return;
+    if (pending.current || uncertain) return;
     const invalid = validateContent(description, 10000);
     if (invalid) {
       setError(invalid);
@@ -100,8 +102,9 @@ export default function TaskForm({
       setDirty(false);
       onDone(result.task);
     } catch (e) {
+      setUncertain(isUncertainMutation(e));
       setError(
-        e.status
+        !isUncertainMutation(e)
           ? messageFor(e)
           : "Chưa xác nhận kết quả. Kiểm tra dữ liệu trước khi gửi lại.",
       );
@@ -179,12 +182,20 @@ export default function TaskForm({
             <button
               type="button"
               onClick={() => {
-                if (!dirty || confirm("Bỏ thay đổi Task chưa lưu?")) onCancel();
+                if (
+                  !dirty ||
+                  confirm(
+                    uncertain
+                      ? "Đóng form và tải lại để kiểm tra Task đã lưu chưa?"
+                      : "Bỏ thay đổi Task chưa lưu?",
+                  )
+                )
+                  onCancel(uncertain);
               }}
             >
               Hủy
             </button>
-            <button className="primary">
+            <button className="primary" disabled={uncertain}>
               {busy ? "Đang lưu…" : "Lưu Task"}
             </button>
           </div>

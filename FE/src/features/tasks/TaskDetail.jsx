@@ -160,7 +160,10 @@ export default function TaskDetail({ api, id }) {
               api={api}
               task={task}
               workspaceId={task.workspaceId}
-              onCancel={() => setEditing(false)}
+              onCancel={(uncertain) => {
+                setEditing(false);
+                if (uncertain) setRevision((v) => v + 1);
+              }}
               onDone={(t) => {
                 setTask(t);
                 setEditing(false);

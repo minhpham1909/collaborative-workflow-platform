@@ -22,6 +22,8 @@ pnpm build
 
 `pnpm preview` dùng port 4176 để xem build; muốn gọi API phải cấu hình BE cho origin này. Server preview không phải deployment production.
 
+Regression lỗi mạng sau khi BE commit: `node scripts/check-network-flows.mjs` (FE dev đang chạy, Playwright/browser test có sẵn). Dùng Mongo/API fixture riêng, không gửi email thật. Cấu hình module/browser và bằng chứng tại [audit luồng](../docs/qa/SYSTEM-FLOWS-CHECK.md). Form create có kết quả chưa xác nhận sẽ giữ nội dung và chặn submit lặp; đóng form để đọc lại dữ liệu. Đây chưa phải BE idempotency.
+
 ## Phạm vi hiện tại
 
 Auth: signup email với consent bản nháp local, xác minh/đặt lại mật khẩu qua token link scrub URL, khôi phục generic và login lại sau reset. [Thiết kế](../docs/sds/FE-REGISTRATION-RECOVERY-v0.1.md), [QA](../docs/qa/FE-REGISTRATION-RECOVERY-CHECK.md). Kiểm trực tiếp Google/SMTP thật để sau; không coi draft policies là bản public release.

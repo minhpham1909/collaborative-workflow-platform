@@ -1,3 +1,4 @@
+import { isUncertainMutation } from "../../lib/mutation-outcome.js";
 import { useEffect, useRef, useState } from "react";
 import RichEditor from "../../components/RichEditor.jsx";
 import { messageFor } from "../../lib/messages.js";
@@ -5,6 +6,7 @@ import { validateContent } from "../../lib/content.js";
 function Composer({ api, taskId, comment, onDone, onCancel }) {
   const [content, setContent] = useState(comment?.content),
     [busy, setBusy] = useState(false),
+    [uncertain, setUncertain] = useState(false),
     [error, setError] = useState(""),
     [dirty, setDirty] = useState(false);
   const pending = useRef(false);
@@ -29,7 +31,7 @@ function Composer({ api, taskId, comment, onDone, onCancel }) {
   }, [dirty]);
   async function save(e) {
     e.preventDefault();
-    if (pending.current) return;
+    if (pending.current || uncertain) return;
     const invalid = validateContent(content, 5000, true);
     if (invalid) {
       setError(invalid);
@@ -52,8 +54,9 @@ function Composer({ api, taskId, comment, onDone, onCancel }) {
       setDirty(false);
       onDone();
     } catch (e) {
+      setUncertain(isUncertainMutation(e));
       setError(
-        e.status
+        !isUncertainMutation(e)
           ? messageFor(e)
           : "Chưa rõ bình luận đã lưu chưa. Tải lại danh sách trước khi gửi lại.",
       );
@@ -80,14 +83,22 @@ function Composer({ api, taskId, comment, onDone, onCancel }) {
         </p>
       )}
       <div className="buttons">
-        <button disabled={busy} className="primary">
+        <button disabled={busy || uncertain} className="primary">
           {busy ? "Đang lưu…" : comment ? "Lưu bình luận" : "Gửi bình luận"}
         </button>
         <button
           type="button"
           disabled={busy}
           onClick={() => {
-            if (!dirty || confirm("Bỏ bình luận chưa lưu?")) onCancel();
+            if (
+              !dirty ||
+              confirm(
+                uncertain
+                  ? "Đóng form và tải lại để kiểm tra bình luận đã lưu chưa?"
+                  : "Bỏ bình luận chưa lưu?",
+              )
+            )
+              onCancel(uncertain);
           }}
         >
           Hủy bình luận
@@ -162,7 +173,9 @@ export default function Comments({ api, taskId, readOnly, onComposing }) {
       <div className="section-title">
         <h2>Thảo luận {data.total !== undefined && `(${data.total})`}</h2>
         {!readOnly && !writing && !editing && (
-          <button onClick={() => setWriting(true)}>+ Viết bình luận</button>
+          <button disabled={busy} onClick={() => setWriting(true)}>
+            + Viết bình luận
+          </button>
         )}
       </div>
       <p className="muted">Bình luận mới nhất trước</p>
@@ -181,7 +194,10 @@ export default function Comments({ api, taskId, readOnly, onComposing }) {
         <Composer
           api={api}
           taskId={taskId}
-          onCancel={() => setWriting(false)}
+          onCancel={(uncertain) => {
+            setWriting(false);
+            if (uncertain) setRevision((v) => v + 1);
+          }}
           onDone={() => {
             setWriting(false);
             setRevision((v) => v + 1);
@@ -205,7 +221,10 @@ export default function Comments({ api, taskId, readOnly, onComposing }) {
               api={api}
               taskId={taskId}
               comment={c}
-              onCancel={() => setEditing(null)}
+              onCancel={(uncertain) => {
+                setEditing(null);
+                if (uncertain) setRevision((v) => v + 1);
+              }}
               onDone={() => {
                 setEditing(null);
                 setRevision((v) => v + 1);

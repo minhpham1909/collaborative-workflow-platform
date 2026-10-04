@@ -137,7 +137,11 @@ export default function Workspace({ api, id }) {
               )}
             </div>
             {workspace.role === "owner" && tab === "projects" && (
-              <button className="primary" onClick={() => setCreating(true)}>
+              <button
+                className="primary"
+                disabled={busy}
+                onClick={() => setCreating(true)}
+              >
                 + Tạo Dự án
               </button>
             )}
@@ -346,7 +350,10 @@ export default function Workspace({ api, id }) {
       {creating && workspace?.role === "owner" && (
         <NameDialog
           title="Tạo Dự án"
-          onClose={() => setCreating(false)}
+          onClose={(uncertain) => {
+            setCreating(false);
+            if (uncertain) setRevision((v) => v + 1);
+          }}
           onSave={async (name) => {
             await api.request(`/workspaces/${id}/projects`, {
               method: "POST",
