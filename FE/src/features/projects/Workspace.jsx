@@ -1,3 +1,4 @@
+import StudioCover from "../../components/StudioCover.jsx";
 import FilterPanel from "../../components/FilterPanel.jsx";
 import { useEffect, useRef, useState } from "react";
 import { messageFor } from "../../lib/messages.js";
@@ -105,7 +106,7 @@ export default function Workspace({ api, id }) {
     };
   }, [id, tab, query, revision]);
   return (
-    <main>
+    <main className="studio-workspace">
       <p className="breadcrumbs">
         <a href="#home">Trang chủ</a> / Workspace
       </p>
@@ -117,7 +118,7 @@ export default function Workspace({ api, id }) {
       )}
       {workspace && (
         <>
-          <section className="hero">
+          <section className="hero workspace-hero">
             <div>
               <small>KHÔNG GIAN CỦA ĐỘI NGŨ</small>
               <h1>{workspace.name}</h1>
@@ -146,7 +147,7 @@ export default function Workspace({ api, id }) {
               </button>
             )}
           </section>
-          <div className="tabs" aria-label="Nội dung Workspace">
+          <div className="tabs workspace-tabs" aria-label="Nội dung Workspace">
             <button
               aria-pressed={tab === "projects"}
               disabled={saving}
@@ -275,34 +276,55 @@ export default function Workspace({ api, id }) {
       )}
       {tab === "projects" && (
         <>
-          <div className="cards" aria-busy={busy}>
+          <div className="cards project-cards" aria-busy={busy}>
             {data.items.map((item, i) =>
               tab === "projects" ? (
-                <article className="card" key={item.id}>
-                  <span className={"symbol tone-" + (i % 3)}>
-                    {item.state === "archived" ? "⌁" : "✦"}
-                  </span>
-                  <span className="badge">
-                    {item.state === "archived"
-                      ? "Đã lưu trữ · Chỉ đọc"
-                      : "Đang hoạt động"}
-                  </span>
-                  <h2>
-                    <a href={`#project/${item.id}`}>{item.name}</a>
-                  </h2>
-                  <p>
-                    {item.description?.plainText ||
-                      "Không gian để biến ý tưởng thành công việc."}
-                  </p>
-                  <p className="muted">
-                    Tạo{" "}
-                    {new Date(item.createdAt).toLocaleDateString("vi-VN", {
-                      timeZone: "Asia/Ho_Chi_Minh",
-                    })}
-                  </p>
-                  <a className="card-link" href={`#project/${item.id}`}>
-                    Xem Dự án →
-                  </a>
+                <article
+                  className={
+                    "card project-card" +
+                    (item.state === "archived" ? " archived-card" : "")
+                  }
+                  key={item.id}
+                >
+                  <StudioCover
+                    id={item.id}
+                    project
+                    archived={item.state === "archived"}
+                  >
+                    <span
+                      className={
+                        "badge " +
+                        (item.state === "archived"
+                          ? "state-archived"
+                          : "state-active")
+                      }
+                    >
+                      {item.state === "archived"
+                        ? "Đã lưu trữ · Chỉ đọc"
+                        : "Đang hoạt động"}
+                    </span>
+                  </StudioCover>
+                  <div className="project-card-body">
+                    <h2>
+                      <a href={`#project/${item.id}`}>{item.name}</a>
+                    </h2>
+                    <p>
+                      {item.description?.plainText ||
+                        "Không gian để biến ý tưởng thành công việc."}
+                    </p>
+                    <p className="muted">
+                      Tạo{" "}
+                      {new Date(item.createdAt).toLocaleDateString("vi-VN", {
+                        timeZone: "Asia/Ho_Chi_Minh",
+                      })}
+                    </p>
+                    <a
+                      className="card-link pill-link"
+                      href={`#project/${item.id}`}
+                    >
+                      Xem Dự án →
+                    </a>
+                  </div>
                 </article>
               ) : (
                 <article className="card" key={item.userId}>

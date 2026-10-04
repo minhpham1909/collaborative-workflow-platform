@@ -1,4 +1,4 @@
-import Icon from "../components/Icon.jsx";
+import AppHeader from "../components/AppHeader.jsx";
 import { useEffect, useState } from "react";
 import { createApi } from "../lib/api.js";
 import { messageFor } from "../lib/messages.js";
@@ -10,13 +10,11 @@ import TaskList from "../features/tasks/TaskList.jsx";
 import TaskDetail from "../features/tasks/TaskDetail.jsx";
 import { readRoute } from "./routes.js";
 import Settings from "../features/settings/Settings.jsx";
-import Avatar from "../components/Avatar.jsx";
+
 import Invite from "../features/projects/Invite.jsx";
 import AccountFlow from "../features/auth/AccountFlow.jsx";
 import { consumeAuthLink } from "../lib/auth-links.js";
-import Notifications, {
-  InboxBadge,
-} from "../features/notifications/Notifications.jsx";
+import Notifications from "../features/notifications/Notifications.jsx";
 let sessionListener = () => {};
 const origin = import.meta.env.VITE_API_ORIGIN ?? "http://localhost:4000";
 export const api = createApi({
@@ -134,54 +132,14 @@ export default function App() {
   if (!user) return <Login api={api} connectionError={error} retry={start} />;
   return (
     <div className="shell">
-      <aside>
-        <a className="brand" href="#home">
-          <span>W</span>Workflow
-        </a>
-        <p className="navigation-label">KHÔNG GIAN CÁ NHÂN</p>
-        <nav className="app-navigation" aria-label="Điều hướng chính">
-          {[
-            ["home", "Trang chủ", "home"],
-            ["mine", "Công việc của tôi", "tasks"],
-            ["notifications", "Thông báo", "bell"],
-            ["settings", "Tài khoản & Cài đặt", "settings"],
-          ].map(([value, label, icon]) => {
-            const active =
-              route.kind === value ||
-              (value === "notifications" && route.kind === "notification");
-            return (
-              <a
-                key={value}
-                className={active ? "active" : ""}
-                aria-current={active ? "page" : undefined}
-                href={"#" + value}
-              >
-                <Icon name={icon} />
-                <span>{label}</span>
-                {value === "notifications" && (
-                  <InboxBadge key={user.id} api={api} userId={user.id} />
-                )}
-              </a>
-            );
-          })}
-        </nav>
-        <div className="studio-note">
-          <img src="/illustrations/creative-workspace.svg" alt="" />
-          <strong>Ý tưởng hay, cùng làm ngay.</strong>
-          <p>Một không gian cho những ý tưởng trở thành công việc.</p>
-        </div>
-      </aside>
       <div>
-        <header>
-          <span>Không gian cá nhân</span>
-          <div className="profile">
-            <Avatar user={user} />
-            <strong>{user.displayName}</strong>
-            <button disabled={busy} onClick={logout}>
-              {busy ? "Đang đăng xuất…" : "Đăng xuất"}
-            </button>
-          </div>
-        </header>
+        <AppHeader
+          route={route}
+          user={user}
+          api={api}
+          busy={busy}
+          logout={logout}
+        />
         {error && (
           <p className="error" role="alert">
             {error}

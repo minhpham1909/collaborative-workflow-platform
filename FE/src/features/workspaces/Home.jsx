@@ -1,3 +1,5 @@
+import StudioCover, { studioTone } from "../../components/StudioCover.jsx";
+import Icon from "../../components/Icon.jsx";
 import { isUncertainMutation } from "../../lib/mutation-outcome.js";
 import FilterPanel from "../../components/FilterPanel.jsx";
 import { useEffect, useRef, useState } from "react";
@@ -150,18 +152,16 @@ export default function Home({ api, user }) {
     }
   }
   return (
-    <main>
-      <section className="hero illustrated-hero">
+    <main className="studio-home">
+      <section className="hero studio-home-hero">
         <div>
           <small>KHÔNG GIAN LÀM VIỆC CỦA BẠN</small>
           <h1>Chào {user.displayName}, hôm nay mình cùng làm gì? ✨</h1>
-          <p>Chọn một Workspace để bắt đầu.</p>
+          <p>
+            Chọn một Workspace để bắt đầu. Cùng đội ngũ biến ý tưởng thành công
+            việc.
+          </p>
         </div>
-        <img
-          className="hero-art"
-          src="/illustrations/creative-workspace.svg"
-          alt=""
-        />
         <button
           className="primary"
           disabled={busy || uncertain}
@@ -223,11 +223,17 @@ export default function Home({ api, user }) {
         </div>
       )}
       {busy && <p role="status">Đang tải Workspace…</p>}
-      <div className="cards" aria-busy={busy}>
-        {data.items.map((w, i) => (
-          <article className="card" key={w.id}>
-            <span className={"symbol tone-" + (i % 3)}>
-              {["✦", "◇", "↗"][i % 3]}
+      <div className="section-heading studio-list-heading">
+        <h2>Workspace của bạn</h2>
+        <span className="muted">
+          Không gian cho những ý tưởng cùng phát triển
+        </span>
+      </div>
+      <div className="cards workspace-cards" aria-busy={busy}>
+        {data.items.map((w) => (
+          <article className="card workspace-card" key={w.id}>
+            <span className={"symbol tone-" + studioTone(w.id)}>
+              {["✦", "◇", "↗"][studioTone(w.id)]}
             </span>
             <span className="badge">
               {w.role === "owner" ? "Chủ sở hữu" : "Thành viên"}
@@ -236,12 +242,18 @@ export default function Home({ api, user }) {
               <a href={`#workspace/${w.id}`}>{w.name}</a>
             </h2>
             <p>{plain(w.description) || "Không gian để cùng nhau làm việc."}</p>
-            <p className="muted">
-              Tạo{" "}
-              {new Date(w.createdAt).toLocaleDateString("vi-VN", {
-                timeZone: "Asia/Ho_Chi_Minh",
-              })}
-            </p>
+            <StudioCover id={w.id} />
+            <div className="studio-card-footer">
+              <p className="muted">
+                Tạo{" "}
+                {new Date(w.createdAt).toLocaleDateString("vi-VN", {
+                  timeZone: "Asia/Ho_Chi_Minh",
+                })}
+              </p>
+              <a className="pill-link" href={`#workspace/${w.id}`}>
+                Mở Workspace <span aria-hidden="true">→</span>
+              </a>
+            </div>
           </article>
         ))}
       </div>
@@ -267,6 +279,24 @@ export default function Home({ api, user }) {
           Tải thêm
         </button>
       )}
+      <section className="studio-shortcuts" aria-label="Lối tắt cá nhân">
+        <a href="#mine">
+          <Icon name="tasks" />
+          <div>
+            <h2>Công việc của tôi</h2>
+            <p>Tập trung vào các Task được giao cho bạn.</p>
+          </div>
+          <span aria-hidden="true">→</span>
+        </a>
+        <a href="#notifications">
+          <Icon name="bell" />
+          <div>
+            <h2>Thông báo</h2>
+            <p>Theo dõi những cập nhật trong nhóm.</p>
+          </div>
+          <span aria-hidden="true">→</span>
+        </a>
+      </section>
       {creating &&
         createPortal(
           <div className="overlay">
