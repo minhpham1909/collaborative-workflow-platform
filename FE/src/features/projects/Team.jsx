@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Avatar from "../../components/Avatar.jsx";
 import { messageFor } from "../../lib/messages.js";
-import { useDraftGuard } from "../../lib/draft-navigation.js";
+import { mayLeaveDrafts, useDraftGuard } from "../../lib/draft-navigation.js";
 const date = (value) =>
   new Date(value).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" });
 const states = {
@@ -319,6 +319,10 @@ function TeamAction({ api, workspace, action, onClose }) {
     [result, setResult] = useState(null),
     [blocked, setBlocked] = useState(false),
     [copied, setCopied] = useState("");
+  const [left, setLeft] = useState(false);
+  useEffect(() => {
+    if (left && !busy) location.hash = "home";
+  }, [left, busy]);
   useDraftGuard({
     dirty:
       action.kind === "invite" && !result && Boolean(email || type !== "EMAIL"),
@@ -327,6 +331,10 @@ function TeamAction({ api, workspace, action, onClose }) {
   });
   const pending = useRef(false),
     panel = useRef(null);
+  const close = useRef(null);
+  close.current = async () => {
+    if (!pending.current && (await mayLeaveDrafts())) onClose();
+  };
   const titles = {
     invite: "Tạo lời mời",
     remove: "Loại thành viên",
@@ -357,7 +365,10 @@ function TeamAction({ api, workspace, action, onClose }) {
     ];
     nodes()[0]?.focus();
     const key = (e) => {
-      if (e.key === "Escape" && !pending.current) onClose();
+      if (e.key === "Escape") {
+        e.preventDefault();
+        close.current();
+      }
       if (e.key === "Tab") {
         const list = nodes(),
           first = list[0],
@@ -413,7 +424,7 @@ function TeamAction({ api, workspace, action, onClose }) {
       }
       const value = await api.request(path, { method, body });
       if (action.kind === "leave") {
-        location.hash = "home";
+        setLeft(true);
         return;
       }
       if (action.kind === "invite") setResult(value);
@@ -536,14 +547,12 @@ function TeamAction({ api, workspace, action, onClose }) {
               <button
                 type="button"
                 disabled={busy}
-                onClick={() => {
-                  onClose();
-                }}
+                onClick={() => close.current()}
               >
                 Đóng
               </button>
               <button className="primary" disabled={busy || blocked}>
-                {busy ? "Đang xử lý…" : "Xác nhận"}
+                {busy ? "Đang xử lý…" : titles[action.kind]}
               </button>
             </div>
           </form>

@@ -120,13 +120,49 @@ try {
       await route.fulfill({ response });
     });
     const page = await context.newPage();
+    let loginCalls = 0,
+      releaseLogin,
+      loginStarted;
+    const loginGate = new Promise((resolve) => {
+      releaseLogin = resolve;
+    });
+    const startedLogin = new Promise((resolve) => {
+      loginStarted = resolve;
+    });
+    await context.route("http://localhost:4000/auth/login", async (route) => {
+      loginCalls++;
+      const response = await route.fetch({ url: apiOrigin + "/auth/login" });
+      loginStarted();
+      await loginGate;
+      await route.fulfill({ response });
+    });
     await page.goto("http://localhost:5173/");
     await page.getByLabel("Email", { exact: true }).fill(email);
     await page.getByLabel("Mật khẩu", { exact: true }).fill(password);
     await page.getByRole("button", { name: "Đăng nhập", exact: true }).click();
+    await startedLogin;
+    await page.locator(".auth-form form").evaluate((form) => {
+      form.requestSubmit();
+      form.requestSubmit();
+    });
+    await page
+      .getByRole("link", { name: "Quên mật khẩu?", exact: true })
+      .click();
+    await page.waitForTimeout(100);
+    assert.equal(loginCalls, 1);
+    assert.equal(
+      await page
+        .getByRole("heading", { name: "Chào bạn trở lại ✨", exact: true })
+        .count(),
+      1,
+    );
+    releaseLogin();
     await page.getByRole("heading", { name: "Sáng Tạo Studio" }).waitFor();
+    await context.unroute("http://localhost:4000/auth/login");
     return page;
   }
+  const loginProbe = await pageFor(owner.email);
+  await loginProbe.context().close();
   const ctx = await browser.newContext({
     viewport: { width: 1440, height: 1000 },
   });
@@ -145,6 +181,30 @@ try {
     .getByLabel("Email", { exact: true })
     .fill("signup-fixture@example.com");
   await page.getByLabel("Mật khẩu mới", { exact: true }).fill(password);
+  await page
+    .getByRole("button", { name: "Hiện mật khẩu mới", exact: true })
+    .click();
+  assert.equal(
+    await page.getByLabel("Mật khẩu mới", { exact: true }).getAttribute("type"),
+    "text",
+  );
+  assert.equal(
+    await page.getByLabel("Mật khẩu mới", { exact: true }).inputValue(),
+    password,
+  );
+  assert.equal(
+    await page
+      .getByLabel("Xác nhận mật khẩu", { exact: true })
+      .getAttribute("type"),
+    "password",
+  );
+  await page
+    .getByRole("button", { name: "Ẩn mật khẩu mới", exact: true })
+    .click();
+  assert.equal(
+    await page.getByLabel("Mật khẩu mới", { exact: true }).getAttribute("type"),
+    "password",
+  );
   await page.getByLabel("Xác nhận mật khẩu", { exact: true }).fill(password);
   assert.equal(await page.getByRole("checkbox").isChecked(), false);
   await page
@@ -244,7 +304,7 @@ try {
     .click();
   await page
     .getByRole("alert")
-    .filter({ hasText: "xác nhận phải khớp" })
+    .filter({ hasText: "Xác nhận mật khẩu phải khớp" })
     .waitFor();
   await page
     .getByLabel("Xác nhận mật khẩu", { exact: true })

@@ -394,6 +394,17 @@ try {
   const inviteEmail = page.getByLabel("Email người nhận", { exact: true });
   await inviteEmail.fill("draft@example.com");
   await stay(() => page.goBack(), inviteEmail, "draft@example.com");
+  await stay(
+    () => page.keyboard.press("Escape"),
+    inviteEmail,
+    "draft@example.com",
+  );
+  assert.equal(
+    await page
+      .getByRole("button", { name: "Tạo lời mời", exact: true })
+      .count(),
+    1,
+  );
   await discardTo("home", heading("Sáng Tạo Studio"));
   await open("register", heading("Bắt đầu cùng Workflow ✨"));
   const registrationName = page.getByLabel("Tên hiển thị", { exact: true });

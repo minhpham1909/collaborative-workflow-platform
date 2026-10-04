@@ -1,3 +1,4 @@
+import PasswordField from "../../components/PasswordField.jsx";
 import { useEffect, useRef, useState } from "react";
 import { messageFor } from "../../lib/messages.js";
 import { validPassword } from "../../lib/auth-links.js";
@@ -61,6 +62,7 @@ export default function AccountFlow({
     [uncertain, setUncertain] = useState(false);
   const pending = useRef(false),
     live = useRef(true);
+  const [fieldErrors, setFieldErrors] = useState({});
   useDraftGuard({
     dirty: !success && Boolean(name || email || password || repeat || terms),
     busy,
@@ -100,7 +102,12 @@ export default function AccountFlow({
       ["register", "reset-password"].includes(mode) &&
       (!validPassword(password) || repeat !== password)
     ) {
-      setError("Mật khẩu từ 12–128 ký tự; xác nhận phải khớp.");
+      setFieldErrors({
+        password: !validPassword(password)
+          ? "Mật khẩu từ 12–128 ký tự, tối đa 512 byte UTF-8."
+          : "",
+        repeat: repeat !== password ? "Xác nhận mật khẩu phải khớp." : "",
+      });
       return;
     }
     if (
@@ -118,6 +125,7 @@ export default function AccountFlow({
     }
     if (tokenMode && !token) return;
     pending.current = true;
+    setFieldErrors({});
     setBusy(true);
     setError("");
     try {
@@ -252,26 +260,28 @@ export default function AccountFlow({
               )}
               {["register", "reset-password"].includes(mode) && (
                 <>
-                  <label>
-                    Mật khẩu mới
-                    <input
-                      required
-                      type="password"
-                      autoComplete="new-password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                    />
-                  </label>
-                  <label>
-                    Xác nhận mật khẩu
-                    <input
-                      required
-                      type="password"
-                      autoComplete="new-password"
-                      value={repeat}
-                      onChange={(e) => setRepeat(e.target.value)}
-                    />
-                  </label>
+                  <PasswordField
+                    label="Mật khẩu mới"
+                    error={fieldErrors.password}
+                    required
+                    autoComplete="new-password"
+                    value={password}
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      setFieldErrors({});
+                    }}
+                  />
+                  <PasswordField
+                    label="Xác nhận mật khẩu"
+                    error={fieldErrors.repeat}
+                    required
+                    autoComplete="new-password"
+                    value={repeat}
+                    onChange={(e) => {
+                      setRepeat(e.target.value);
+                      setFieldErrors((old) => ({ ...old, repeat: "" }));
+                    }}
+                  />
                   <p className="muted">
                     12–128 ký tự; không tự bỏ khoảng trắng trong mật khẩu.
                   </p>

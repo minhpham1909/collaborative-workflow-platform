@@ -1,3 +1,5 @@
+import PasswordField from "../../components/PasswordField.jsx";
+import { useDraftGuard } from "../../lib/draft-navigation.js";
 import { useEffect, useRef, useState } from "react";
 import { messageFor } from "../../lib/messages.js";
 import { loadGoogle } from "../../lib/google.js";
@@ -8,6 +10,9 @@ export default function Login({ api, connectionError, retry }) {
     [error, setError] = useState(""),
     [googleEnabled, setGoogleEnabled] = useState(false);
   const googleTarget = useRef(null);
+  const pending = useRef(false);
+  const [passwordError, setPasswordError] = useState("");
+  useDraftGuard({ dirty: false, busy });
   useEffect(() => {
     if (!googleEnabled) return;
     let live = true;
@@ -26,7 +31,8 @@ export default function Login({ api, connectionError, retry }) {
           nonce: challenge.nonce,
           auto_select: false,
           callback: async ({ credential }) => {
-            if (!live) return;
+            if (!live || pending.current) return;
+            pending.current = true;
             setBusy(true);
             setError("");
             try {
@@ -39,6 +45,7 @@ export default function Login({ api, connectionError, retry }) {
               );
               setGoogleEnabled(false);
             } finally {
+              pending.current = false;
               if (live) setBusy(false);
             }
           },
@@ -64,15 +71,21 @@ export default function Login({ api, connectionError, retry }) {
   }, [googleEnabled, api]);
   async function submit(e) {
     e.preventDefault();
+    if (pending.current) return;
     setError("");
+    setPasswordError("");
     if (
       [...password].length < 12 ||
       [...password].length > 128 ||
       new TextEncoder().encode(password).length > 512
     ) {
-      setError("Mật khẩu phải từ 12 đến 128 ký tự.");
+      setPasswordError("Mật khẩu phải từ 12 đến 128 ký tự.");
+      e.currentTarget
+        .querySelector('[autocomplete="current-password"]')
+        ?.focus();
       return;
     }
+    pending.current = true;
     setBusy(true);
     try {
       await api.login({ email, password });
@@ -80,6 +93,7 @@ export default function Login({ api, connectionError, retry }) {
     } catch (e) {
       setError(messageFor(e));
     } finally {
+      pending.current = false;
       setBusy(false);
     }
   }
@@ -126,17 +140,18 @@ export default function Login({ api, connectionError, retry }) {
               disabled={busy}
             />
           </label>
-          <label>
-            Mật khẩu
-            <input
-              type="password"
-              autoComplete="current-password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              disabled={busy}
-            />
-          </label>
+          <PasswordField
+            label="Mật khẩu"
+            error={passwordError}
+            autoComplete="current-password"
+            required
+            value={password}
+            onChange={(e) => {
+              setPassword(e.target.value);
+              setPasswordError("");
+            }}
+            disabled={busy}
+          />
           {error && (
             <p className="error" role="alert">
               {error}

@@ -236,9 +236,57 @@ try {
   await page.context().unroute("http://localhost:4000/users/me/profile");
   await page.getByRole("button", { name: "Bảo mật & Google" }).click();
   await page.getByText("Google: Chưa liên kết", { exact: true }).waitFor();
+  assert.ok(
+    await page.locator(".password-control").evaluateAll((controls) =>
+      controls.every((control) => {
+        const input = control.querySelector("input").getBoundingClientRect();
+        const toggle = control.querySelector("button").getBoundingClientRect();
+        return (
+          toggle.left >= input.left &&
+          toggle.right <= input.right &&
+          toggle.top >= input.top &&
+          toggle.bottom <= input.bottom
+        );
+      }),
+    ),
+    "password toggles fit inside their inputs",
+  );
+  const { mkdirSync } = await import("node:fs");
+  mkdirSync(".local/p2-components", { recursive: true });
+  await page.screenshot({
+    path: ".local/p2-components/security-desktop.png",
+    fullPage: true,
+  });
+  await page.setViewportSize({ width: 375, height: 900 });
+  assert.ok(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth + 1,
+    ),
+  );
+  await page.screenshot({
+    path: ".local/p2-components/security-mobile.png",
+    fullPage: true,
+  });
+  await page.setViewportSize({ width: 1440, height: 1000 });
   await page
     .getByLabel("Mật khẩu hiện tại", { exact: true })
     .fill("wrong password test");
+  await page
+    .getByRole("button", { name: "Hiện mật khẩu hiện tại", exact: true })
+    .click();
+  assert.equal(
+    await page
+      .getByLabel("Mật khẩu hiện tại", { exact: true })
+      .getAttribute("type"),
+    "text",
+  );
+  await page
+    .getByRole("button", { name: "Ẩn mật khẩu hiện tại", exact: true })
+    .click();
+  assert.equal(
+    await page.getByLabel("Mật khẩu hiện tại", { exact: true }).inputValue(),
+    "wrong password test",
+  );
   await page
     .getByLabel("Mật khẩu mới", { exact: true })
     .fill("Changed password test 456");

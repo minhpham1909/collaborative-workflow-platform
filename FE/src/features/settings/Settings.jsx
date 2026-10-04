@@ -1,3 +1,4 @@
+import PasswordField from "../../components/PasswordField.jsx";
 import { useDraftGuard } from "../../lib/draft-navigation.js";
 import { confirmDialog } from "../../components/NotificationProvider.jsx";
 import { useEffect, useRef, useState } from "react";
@@ -285,6 +286,7 @@ function EditSettings({ api, data, tab, onUser, onDirty, onSaving }) {
   );
 }
 function Security({ api, data, onUser, onDirty, onSaving, reload }) {
+  const [fieldErrors, setFieldErrors] = useState({});
   const [current, setCurrent] = useState(""),
     [password, setPassword] = useState(""),
     [repeat, setRepeat] = useState(""),
@@ -374,10 +376,19 @@ function Security({ api, data, onUser, onDirty, onSaving, reload }) {
       !validPassword(password) ||
       password !== repeat
     ) {
-      setError("Mật khẩu từ 12–128 ký tự; xác nhận phải khớp.");
+      setFieldErrors({
+        current: !validPassword(current)
+          ? "Mật khẩu từ 12–128 ký tự, tối đa 512 byte UTF-8."
+          : "",
+        password: !validPassword(password)
+          ? "Mật khẩu từ 12–128 ký tự, tối đa 512 byte UTF-8."
+          : "",
+        repeat: password !== repeat ? "Xác nhận mật khẩu phải khớp." : "",
+      });
       return;
     }
     pending.current = true;
+    setFieldErrors({});
     setBusy(true);
     onSaving(true);
     setError("");
@@ -433,36 +444,43 @@ function Security({ api, data, onUser, onDirty, onSaving, reload }) {
               disabled={busy || linking || uncertain}
               onChange={() => onDirty(true)}
             >
-              <label>
-                Mật khẩu hiện tại
-                <input
-                  type="password"
-                  required
-                  autoComplete="current-password"
-                  value={current}
-                  onChange={(e) => setCurrent(e.target.value)}
-                />
-              </label>
-              <label>
-                Mật khẩu mới
-                <input
-                  type="password"
-                  required
-                  autoComplete="new-password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-              </label>
-              <label>
-                Xác nhận mật khẩu mới
-                <input
-                  type="password"
-                  required
-                  autoComplete="new-password"
-                  value={repeat}
-                  onChange={(e) => setRepeat(e.target.value)}
-                />
-              </label>
+              <PasswordField
+                label="Mật khẩu hiện tại"
+                error={fieldErrors.current}
+                required
+                autoComplete="current-password"
+                value={current}
+                onChange={(e) => {
+                  setCurrent(e.target.value);
+                  setFieldErrors((old) => ({ ...old, current: "" }));
+                }}
+              />
+              <PasswordField
+                label="Mật khẩu mới"
+                error={fieldErrors.password}
+                required
+                autoComplete="new-password"
+                value={password}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setFieldErrors((old) => ({
+                    ...old,
+                    password: "",
+                    repeat: "",
+                  }));
+                }}
+              />
+              <PasswordField
+                label="Xác nhận mật khẩu mới"
+                error={fieldErrors.repeat}
+                required
+                autoComplete="new-password"
+                value={repeat}
+                onChange={(e) => {
+                  setRepeat(e.target.value);
+                  setFieldErrors((old) => ({ ...old, repeat: "" }));
+                }}
+              />
               <button className="primary">
                 {busy ? "Đang đổi…" : "Đổi mật khẩu"}
               </button>
@@ -489,19 +507,16 @@ function Security({ api, data, onUser, onDirty, onSaving, reload }) {
             Chọn Google account cùng email {data.user.email}. Hệ thống không
             liên kết email khác hoặc Google identity đã thuộc tài khoản khác.
           </p>
-          <label>
-            Mật khẩu xác nhận liên kết
-            <input
-              type="password"
-              autoComplete="current-password"
-              disabled={busy || linking}
-              value={linkPassword}
-              onChange={(e) => {
-                setLinkPassword(e.target.value);
-                onDirty(true);
-              }}
-            />
-          </label>
+          <PasswordField
+            label="Mật khẩu xác nhận liên kết"
+            autoComplete="current-password"
+            disabled={busy || linking}
+            value={linkPassword}
+            onChange={(e) => {
+              setLinkPassword(e.target.value);
+              onDirty(true);
+            }}
+          />
           <button
             disabled={busy || linking}
             onClick={() => {

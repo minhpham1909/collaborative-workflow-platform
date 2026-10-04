@@ -18,3 +18,16 @@ Probe còn cờ header desktop (gom các nút khác vùng thành một hàng), c
 Pagination/load-more có cơ chế dùng cursor và khóa request; lần QA này chưa dựng Workspace >20 thành viên hoặc test bỏ quyền đúng lúc tìm. Membership/CAS vẫn do BE kiểm khi lưu. Workspace picker, show/hide password, field migration toàn bộ và Team action labels còn P2; xem [quy ước component](../ui-ux/COMPONENT-INTERACTION-RULES.md).
 
 Một lần chạy song song không khởi động được Mongo fixture; một lần build thiếu bộ nhớ. Chạy lại đã đạt. Một lần harness đóng toast theo index cũ timeout; đổi sang đóng phần tử đầu hiện có và chạy lại đạt. Không tính các lần lỗi này là pass, không tác động DB dev/SMTP.
+
+## Increment tiếp theo — 05/10/2026
+
+Sau `9d1f412`: PasswordField nối vào Login/Register/Reset/Security/link Google; lỗi password/confirmation cạnh field. Team submit dùng tên hành động cụ thể, Escape/Đóng invite dirty hỏi trước khi bỏ nội dung. Login khóa gửi lặp bằng pending ref và guard busy.
+
+- Account regression đạt: toggle giữ giá trị, không bật đồng thời ô xác nhận; register/verify/recover/reset/token scrub. Bổ sung Login đã nhận response nhưng còn giữ trước FE: requestSubmit hai lần vẫn đúng một POST, link recovery không tháo Login; nhận response xong vào Home.
+- Settings regression đạt sau sửa constraint width cũ: nút eye nằm trong input (assert geometry), show/hide giữ giá trị; password rotation/reload, profile/preferences/CAS/uncertain 503 và Google GIS/verifier fixture vẫn đạt. Screenshot Security 1440/375px đã xem, không overflow; không chụp password đang hiện.
+- Navigation regression đạt thêm Escape invite dirty → Ở lại giữ email và dialog; labels mới không làm đổi guard của form khác.
+- `FE/scripts/check-team-flows.mjs` mới được đưa vào Git từ fixture local: EMAIL outbox/retry, LINK một lần, login intent/accept, membership CAS/remove, transfer/revoke/leave và responsive đạt. Không chạy worker SMTP. Dùng WORKFLOW_PLAYWRIGHT_MODULE/WORKFLOW_BROWSER_EXECUTABLE như các fixture khác.
+- Team lifecycle lần đầu phát hiện rời Workspace đã commit nhưng guard busy cản về Home. Đã chuyển route trong effect sau busy=false, chạy lại toàn lifecycle đạt. Đây là bổ sung coverage sau audit P1, không chỉ đổi nhãn.
+- Production build 110 modules và 12 FE unit tests đạt. Không sửa BE hoặc đổi quy tắc liên kết Google.
+
+P2 vẫn đang làm: field migration ngoài password, Workspace picker, dialog layout/common states và coverage >20 members/mất quyền chưa đủ. Không chuyển P3, không công bố nhà cung cấp thật đã nghiệm thu.

@@ -2,6 +2,8 @@
 
 P2 đang làm: đã có [quy ước component](../ui-ux/COMPONENT-INTERACTION-RULES.md), FormField và MemberPicker nối vào Task/NameDialog. [QA](../qa/FE-COMPONENTS-CHECK.md) tìm thành viên, giữ lựa chọn, lỗi tải/thử lại, phản hồi cũ và draft regression đạt. Tiếp tục Auth/Settings/Workspace/Team fields, action labels/dialogs và Workspace picker; chưa chuyển P3.
 
+Cập nhật 05/10: PasswordField áp dụng Auth/Security/link Google; lỗi password/confirmation cạnh ô, Login chống gửi lặp. Team labels cụ thể, Escape invite dirty được bảo vệ và rời Workspace không còn bị busy guard chặn về Home. Account/Settings/Navigation/Team fixtures, build 110 modules và 12 FE tests đạt; không gửi SMTP/Google thật. Phần tiếp theo của P2 là field còn lại, Workspace picker và nền dialog/state chung.
+
 Cập nhật 04/10/2026. Yêu cầu trực tiếp của chủ dự án có ưu tiên; tài liệu cung cấp là context. [Nhật ký cũ](../archive/project/PROJECT-HISTORY-2026-10-03.md) giữ lịch sử, không dùng ghi nhận skeleton để thay trạng thái hiện hành.
 
 ## Hiện tại

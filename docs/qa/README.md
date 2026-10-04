@@ -2,6 +2,8 @@
 
 04/10/2026: [P2 FormField/MemberPicker](FE-COMPONENTS-CHECK.md) — Task assignee search, giữ selection, retry/stale response và lỗi title cạnh field đạt fixture; build/12 FE tests/navigation regression đạt. P2 đang làm, chưa chuyển P3.
 
+05/10/2026: cùng QA P2 đã bổ sung PasswordField/Auth/Security và Team labels/dirty-close/leave-success; Account/Settings/Navigation/Team fixtures, 12 FE tests và build 110 modules đạt. Provider live và phần P2 còn lại chưa nghiệm thu.
+
 04/10/2026: [P1 audit bốn cụm màn hình](UI-UX-FLOW-AUDIT.md) — đạt gate audit sau [sửa NAV-01 và regression bản nháp](FE-DRAFT-NAVIGATION-CHECK.md). Navigation/account/settings/interactions/network fixtures, 12 FE tests và build đạt sau guard chung; 46 BE integration là bằng chứng mốc audit trước. Tiếp theo P2; chưa nghiệm thu nhà cung cấp thật, P4 hoặc toàn sản phẩm.
 
 [FE Notifications](FE-NOTIFICATIONS-CHECK.md) — 3 unit/8 integration, browser inbox/read/cutoff/privacy và unverified→verified invitation gate/accept đạt; không SMTP thật.

@@ -1625,6 +1625,43 @@ textarea:focus-visible {
 .member-picker {
   min-width: 0;
 }
+.password-control {
+  position: relative;
+  min-width: 0;
+  width: 100%;
+}
+.password-control input {
+  width: 100%;
+  padding-right: 52px;
+}
+.form-field .password-control input:not([type="checkbox"]) {
+  max-width: 100%;
+  width: 100%;
+  padding-right: 52px;
+}
+.password-control button {
+  position: absolute;
+  inset-block: 0;
+  right: 4px;
+  margin-block: auto;
+  width: 40px;
+  height: 40px;
+  min-height: 40px;
+  padding: 8px;
+  border: 0;
+  background: transparent;
+  color: #706675;
+}
+.password-control button:hover {
+  background: #f4f0f8;
+  color: #5143eb;
+}
+.password-form fieldset > .form-field {
+  margin: 0;
+}
+.password-form fieldset > .form-field:first-child {
+  grid-column: 1 / -1;
+}
 .picker-actions {
   display: flex;
   flex-wrap: wrap;
