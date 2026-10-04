@@ -8,6 +8,12 @@ const messages = {
     "Tài khoản Google mới cần đồng ý điều khoản trước khi tiếp tục.",
   RATE_LIMITED: "Bạn thao tác quá nhanh. Vui lòng thử lại sau.",
   WORKSPACE_UNAVAILABLE: "Workspace không còn khả dụng với quyền hiện tại.",
+  RESOURCE_UNAVAILABLE: "Nội dung không còn khả dụng với quyền hiện tại.",
+  OWNER_REQUIRED: "Thao tác này chỉ dành cho chủ sở hữu Workspace.",
+  PROJECT_ARCHIVED:
+    "Dự án đã được lưu trữ. Tải lại để xem trạng thái hiện tại.",
+  VERSION_CONFLICT:
+    "Dữ liệu đã được người khác thay đổi. Tải lại trước khi lưu tiếp.",
   UNAUTHENTICATED: "Phiên đăng nhập đã hết hạn.",
   SESSION_CHANGED: "Phiên vừa thay đổi. Vui lòng đăng nhập lại.",
   ORIGIN_REJECTED: "Địa chỉ ứng dụng chưa được BE cho phép.",

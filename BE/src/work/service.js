@@ -1,9 +1,10 @@
 import { objectId, versionInput, pageInput } from '../workspaces/input.js';
-import { projectInput, taskInput, statusInput, stateInput, commentInput, lifecyclePage, taskQuery } from './input.js';
+import { projectInput, taskInput, statusInput, stateInput, commentInput, taskQuery } from './input.js';
+import { projectQuery } from './project-query.js';
 
 export function createWorkService({ store }) {
   return {
-    projects: (auth, workspaceId, query) => store.projects(auth.claims, objectId(workspaceId), lifecyclePage(query)),
+    projects: (auth, workspaceId, query) => store.projects(auth.claims, objectId(workspaceId), projectQuery(query)),
     createProject: (auth, workspaceId, input) => store.createProject(auth.claims, objectId(workspaceId), projectInput(input)),
     getProject: (auth, projectId) => store.getProject(auth.claims, objectId(projectId)),
     updateProject: (auth, projectId, input) => store.updateProject(auth.claims, objectId(projectId), projectInput(input, true)),

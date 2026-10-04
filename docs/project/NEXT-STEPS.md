@@ -7,15 +7,15 @@ Cập nhật 04/10/2026. Yêu cầu trực tiếp của chủ dự án có ưu t
 - Repo private minhpham1909/collaborative-workflow-platform, phát triển trên dev; main giữ mốc nền.
 - BE Node 24.x, JS ESM/Express/Mongoose; Auth/JWT/Google, Profile/Settings, Workspace/Invitations, Project/Task/Comment, Board/My Tasks và Notifications/work-email đã có API. Mongo local replica set/indexes phục vụ dev; secrets/data/binaries ignored.
 - FE React JS/JSX + Vite đã chạy. Login và Home dùng API thật: restore/logout, verified gate, list/create Workspace, server search tên/mô tả và ngày tạo, cursor/load more. Xem [FE README](../../FE/README.md), [thiết kế](../sds/FE-FOUNDATION-v0.1.md), [QA mới](../qa/FE-AUTH-HOME-CHECK.md).
-- FE Home chưa mở Project/Board; không coi prototype Task/comment là implementation React. Google control FE mới chưa kiểm live; Google login BE thật đã từng có /auth/me 200 do chủ dự án kiểm. SMTP từng accepted email thử, Inbox/Spam chưa xác nhận; không chạy worker SMTP trong increment FE này.
+- FE Home đã mở Workspace→Project: list Dự án search/ngày/trạng thái server, Member list chỉ đọc, Owner tạo/đổi tên/archive/reopen Project. [Thiết kế](../sds/FE-WORKSPACE-PROJECT-v0.1.md), [QA](../qa/FE-WORKSPACE-PROJECT-CHECK.md). Project hiện tổng quan, chưa Board; không coi prototype Task/comment là implementation React. Google control FE mới chưa kiểm live; Google login BE thật đã từng có /auth/me 200 do chủ dự án kiểm. SMTP từng accepted email thử, Inbox/Spam chưa xác nhận; không chạy worker SMTP trong increment FE này.
 - Visual hiện hành kem/tím theo [Stitch review](../ui-ux/FIGMA-STITCH-REVIEW-v0.1.md), [prototype](../ui-ux/stitch-review/README.md). Figma đã có foundations/components/navigation/Home trên trang mới; Starter quota chặn ba màn còn lại. Tiếp tục từ ledger khi có lượt gọi, không tạo duplicate; chưa visual QA toàn canvas.
 
 ## Thứ tự triển khai tiếp
 
-1. Nối Workspace context/Project list và routing vào FE thật; loading/empty/error/mất quyền, Owner controls theo API. Giữ shell/visual chung.
+1. Workspace context/Project list và routing đã nối, kiểm quyền/CAS. Tiếp tục nối Board vào Project route, giữ shell/visual chung và hoàn thiện phục hồi filters khi back.
 2. Nối Board/Task/Comment và My Tasks, expectedVersion/conflict/archive/quyền; xử lý G02 identity lịch sử và G03 member picker trước polished UI. Chọn editor chung sau khi kiểm envelope/validation.
 3. Hoàn thiện signup/verify-link/recovery, Account/link/Settings/Invitations và Notifications. G01 credential capabilities cần trước phân nhánh Account UI; không tự link Google trùng email. Terms/Privacy nội dung thật trước mở đăng ký/public release.
-4. Bổ sung English UI, shared error/validation mapping và server filters các danh sách còn thiếu theo [gap log](../ui-ux/UI-API-GAPS-v0.1.md). Workspace filters đã có; G04 chưa đóng toàn bộ.
+4. Bổ sung English UI, shared error/validation mapping và server filters các danh sách còn thiếu theo [gap log](../ui-ux/UI-API-GAPS-v0.1.md). Workspace/Project filters đã có; Member/Invitation/Notification trong G04 vẫn mở.
 5. Google GIS mới và SMTP/outbox tới Inbox/Spam kiểm live riêng; production secrets/rotation, HTTPS/cookie topology, shared limiter/proxy, retention/purge/backup và NFR. Local replica set không thay production.
 
 Storage/resources vẫn Upcoming; announcements là phase riêng. Không tự mở upload/payment/roles mới vì layout. Idempotency keys cho create chưa có: chặn double submit/no auto retry ở FE.

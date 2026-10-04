@@ -3,6 +3,9 @@ import { createApi } from "../lib/api.js";
 import { messageFor } from "../lib/messages.js";
 import Login from "../features/auth/Login.jsx";
 import Home from "../features/workspaces/Home.jsx";
+import Workspace from "../features/projects/Workspace.jsx";
+import Project from "../features/projects/Project.jsx";
+import { readRoute } from "./routes.js";
 let sessionListener = () => {};
 const origin = import.meta.env.VITE_API_ORIGIN ?? "http://localhost:4000";
 export const api = createApi({
@@ -24,6 +27,12 @@ for (const method of ["login", "google", "logout"]) {
   };
 }
 export default function App() {
+  const [route, setRoute] = useState(() => readRoute(location.hash));
+  useEffect(() => {
+    const changed = () => setRoute(readRoute(location.hash));
+    window.addEventListener("hashchange", changed);
+    return () => window.removeEventListener("hashchange", changed);
+  }, []);
   const [user, setUser] = useState(null),
     [ready, setReady] = useState(false),
     [error, setError] = useState(""),
@@ -80,7 +89,7 @@ export default function App() {
           <span>W</span>Workflow
         </a>
         <nav>
-          <a className="active" href="#home">
+          <a className={route.kind === "home" ? "active" : ""} href="#home">
             ⌂ Trang chủ
           </a>
         </nav>
@@ -113,6 +122,10 @@ export default function App() {
             </p>
             <Verify api={api} />
           </main>
+        ) : route.kind === "workspace" ? (
+          <Workspace key={user.id + route.id} api={api} id={route.id} />
+        ) : route.kind === "project" ? (
+          <Project key={user.id + route.id} api={api} id={route.id} />
         ) : (
           <Home key={user.id} api={api} user={user} />
         )}

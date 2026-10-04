@@ -102,7 +102,7 @@ export function createMongoWorkStore({ now = () => new Date() } = {}) {
   return {
     projects: (claims, workspaceId, page) => run(claims, async (context) => {
       context = await scope(context, workspaceId);
-      const criteria = { workspaceId: context.workspace._id, ...(page.state !== 'all' ? { state: page.state } : {}) };
+      const criteria = { workspaceId: context.workspace._id, ...(page.state !== 'all' ? { state: page.state } : {}), ...(page.filters?.length ? { $and: page.filters } : {}) };
       const records = await Project.collection.find({ ...criteria, ...after(page) }, { session: context.tx }).sort({ createdAt: -1, _id: -1 }).limit(page.limit + 1).toArray();
       return { ...paged(records, page.limit, projectResponse), total: await Project.collection.countDocuments(criteria, { session: context.tx }) };
     }),

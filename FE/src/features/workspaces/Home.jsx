@@ -201,7 +201,9 @@ export default function Home({ api, user }) {
             <span className="badge">
               {w.role === "owner" ? "Chủ sở hữu" : "Thành viên"}
             </span>
-            <h2>{w.name}</h2>
+            <h2>
+              <a href={`#workspace/${w.id}`}>{w.name}</a>
+            </h2>
             <p>{plain(w.description) || "Không gian để cùng nhau làm việc."}</p>
             <p className="muted">
               Tạo{" "}

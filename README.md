@@ -2,6 +2,8 @@
 
 Dự án portfolio cộng tác nhóm nhỏ: User → Workspace → Project → Task.
 
+Increment FE mới nhất 04/10/2026: Home→Workspace→Project, danh sách thành viên, Owner tạo/đổi tên/archive/reopen Dự án và server search/ngày/trạng thái. [QA](docs/qa/FE-WORKSPACE-PROJECT-CHECK.md). Board/Task FE tiếp theo.
+
 Cập nhật 04/10/2026: **FE React đã chạy** Login/Home với dữ liệu BE thật, list/create/search và bộ lọc ngày tạo Workspace. Mở localhost:5173 theo [FE README](FE/README.md); [QA mới](docs/qa/FE-AUTH-HOME-CHECK.md), [trạng thái hiện hành](docs/project/NEXT-STEPS.md). Workspace→Project/Board/Task FE là increment kế tiếp; các ghi nhận chưa frontend/Figma bên dưới là lịch sử.
 
 Trạng thái 03/10/2026: BE JavaScript/Express/Mongoose có 13 models, health/editor validation, JWT sessions và account flows (signup, verify/reset/change password, Google login/link, encrypted email outbox). 40 tests thông thường và 40 integration tests đạt trên MongoDB replica set local. Google login thật đã có kết quả /auth/me 200 do chủ dự án kiểm; SMTP accepted email thử, Inbox còn xác nhận. Profile/global settings và Workspace/Invitations BE đã triển khai; Project/Task/Comment, Board và My Tasks đã có API; Notifications và work-email dispatcher đã có; frontend và vận hành tiếp theo. Repo GitHub private minhpham1909/collaborative-workflow-platform, phát triển trên dev; SRS chưa baseline v1.0. Xem [Accounts/QA](docs/qa/AUTH-ACCOUNTS-CHECK.md).

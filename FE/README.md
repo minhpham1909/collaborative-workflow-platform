@@ -27,6 +27,9 @@ pnpm build
 - Đăng nhập email/password; access token chỉ trong memory, refresh cookie HttpOnly; reload khôi phục phiên, đăng xuất và đồng bộ thay đổi phiên giữa tab.
 - Google control dùng challenge/nonce BE và Google Identity Services. Tài khoản đã đăng ký/liên kết được sử dụng theo contract. Chưa có UI link account; đăng ký Google mới chưa mở khi Terms UI/nội dung chưa hoàn thiện. Không tự nhận consent hoặc tự link tài khoản trùng email.
 - Home: danh sách Workspace có quyền hiện tại, mới tạo trước, search tên/mô tả trên server, ngày tạo theo Việt Nam, cursor/load more, tạo Workspace bằng tên; trạng thái loading/empty/error.
-- Workspace cards hiện chỉ hiển thị dữ liệu; chưa mở Project/Board. Các màn này, My Tasks, Settings, signup/recovery, editor chung và English UI triển khai ở increment tiếp theo.
+- Workspace cards mở Workspace thật: danh sách Dự án search/lọc ngày/trạng thái trên server, tạo Dự án Owner, danh sách thành viên có pagination. Chi tiết Dự án hỗ trợ Owner đổi tên/lưu trữ/mở lại và conflict expectedVersion. Reload link trực tiếp giữ ngữ cảnh.
+- Board/Task, My Tasks, quản lý Members/Invitations/Settings, signup/recovery, editor chung và English UI triển khai ở increment tiếp theo. Mô tả hiện đọc plainText an toàn, chưa render rich text hoặc có editor.
 
 Font Plus Jakarta Sans self-hosted; license trong `public/fonts/OFL.txt`. Không cài UI kit, router, editor hoặc thư viện form ở increment này. [Thiết kế FE](../docs/sds/FE-FOUNDATION-v0.1.md), [QA](../docs/qa/FE-AUTH-HOME-CHECK.md).
+
+[Workspace/Project increment](../docs/sds/FE-WORKSPACE-PROJECT-v0.1.md), [QA Workspace/Project](../docs/qa/FE-WORKSPACE-PROJECT-CHECK.md). Hash navigation nhỏ dùng Home/Workspace/Project; chưa chọn routing library.

@@ -1,0 +1,180 @@
+import { useEffect, useRef, useState } from "react";
+import NameDialog from "../../components/NameDialog.jsx";
+import { messageFor } from "../../lib/messages.js";
+
+export default function Project({ api, id }) {
+  const [project, setProject] = useState(null),
+    [workspace, setWorkspace] = useState(null),
+    [error, setError] = useState(""),
+    [busy, setBusy] = useState(true),
+    [editing, setEditing] = useState(false),
+    [revision, setRevision] = useState(0),
+    [notice, setNotice] = useState("");
+  const pending = useRef(false);
+  useEffect(() => {
+    let live = true;
+    setBusy(true);
+    setError("");
+    setProject(null);
+    setWorkspace(null);
+    (async () => {
+      try {
+        const data = await api.request(`/projects/${id}`);
+        const context = await api.request(
+          `/workspaces/${data.project.workspaceId}`,
+        );
+        if (live) {
+          setProject(data.project);
+          setWorkspace(context.workspace);
+        }
+      } catch (e) {
+        if (live) setError(messageFor(e));
+      } finally {
+        if (live) setBusy(false);
+      }
+    })();
+    return () => {
+      live = false;
+    };
+  }, [id, revision]);
+  async function changeState() {
+    if (pending.current) return;
+    const state = project.state === "active" ? "archived" : "active";
+    if (
+      !confirm(
+        state === "archived"
+          ? "Lưu trữ Dự án? Mọi Task và bình luận sẽ chuyển sang chỉ đọc."
+          : "Mở lại Dự án để tiếp tục làm việc?",
+      )
+    )
+      return;
+    pending.current = true;
+    setBusy(true);
+    setError("");
+    try {
+      const result = await api.request(`/projects/${id}/state`, {
+        method: "PATCH",
+        body: { expectedVersion: project.version, state },
+      });
+      setProject(result.project);
+      setNotice(
+        state === "archived" ? "Đã lưu trữ Dự án." : "Đã mở lại Dự án.",
+      );
+    } catch (e) {
+      setError(
+        e.status
+          ? messageFor(e)
+          : "Chưa xác nhận kết quả. Tải lại dữ liệu trước khi thao tác lại.",
+      );
+      if (e.status === 403 || e.status === 404) {
+        setProject(null);
+        setWorkspace(null);
+      }
+    } finally {
+      pending.current = false;
+      setBusy(false);
+    }
+  }
+  return (
+    <main>
+      <p className="breadcrumbs">
+        <a href="#home">Trang chủ</a>
+        {workspace && (
+          <>
+            {" "}
+            / <a href={`#workspace/${workspace.id}`}>{workspace.name}</a>
+          </>
+        )}{" "}
+        / Dự án
+      </p>
+      <button
+        disabled={busy}
+        onClick={() => {
+          setEditing(false);
+          setNotice("");
+          setRevision((v) => v + 1);
+        }}
+      >
+        Làm mới Dự án
+      </button>
+      {error && (
+        <div role="alert" className="error">
+          {error}{" "}
+          <button
+            disabled={busy}
+            onClick={() => {
+              setEditing(false);
+              setNotice("");
+              setRevision((v) => v + 1);
+            }}
+          >
+            Tải lại dữ liệu
+          </button>
+        </div>
+      )}
+      {notice && <p role="status">{notice}</p>}
+      {busy && <p role="status">Đang xử lý Dự án…</p>}
+      {project && (
+        <>
+          <section className="hero">
+            <div>
+              <small>DỰ ÁN CỦA ĐỘI NGŨ</small>
+              <h1>{project.name}</h1>
+              <span className="badge">
+                {project.state === "archived"
+                  ? "Đã lưu trữ · Chỉ đọc"
+                  : "Đang hoạt động"}
+              </span>
+            </div>
+            {workspace.role === "owner" && (
+              <div className="buttons">
+                {project.state === "active" && (
+                  <button disabled={busy} onClick={() => setEditing(true)}>
+                    Đổi tên
+                  </button>
+                )}
+                <button disabled={busy} onClick={changeState}>
+                  {project.state === "active"
+                    ? "Lưu trữ Dự án"
+                    : "Mở lại Dự án"}
+                </button>
+              </div>
+            )}
+          </section>
+          {project.state === "archived" && (
+            <p className="archive-banner">
+              Dự án chỉ đọc. Owner có thể mở lại để tiếp tục chỉnh sửa.
+            </p>
+          )}
+          <section className="project-info">
+            <h2>Tổng quan Dự án</h2>
+            <p className="description">
+              {project.description?.plainText || "Dự án chưa có mô tả."}
+            </p>
+            <p className="muted">
+              Tạo{" "}
+              {new Date(project.createdAt).toLocaleDateString("vi-VN", {
+                timeZone: "Asia/Ho_Chi_Minh",
+              })}
+            </p>
+          </section>
+        </>
+      )}
+      {editing && project && (
+        <NameDialog
+          title="Đổi tên Dự án"
+          initial={project.name}
+          onClose={() => setEditing(false)}
+          onSave={async (name) => {
+            const data = await api.request(`/projects/${id}`, {
+              method: "PATCH",
+              body: { expectedVersion: project.version, name },
+            });
+            setProject(data.project);
+            setNotice("Đã cập nhật tên Dự án.");
+          }}
+        />
+      )}
+    </main>
+  );
+}

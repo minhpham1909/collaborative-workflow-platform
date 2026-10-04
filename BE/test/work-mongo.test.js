@@ -70,6 +70,24 @@ test('Project, Task, Comment and scoped queries on real MongoDB/HTTP', { skip: !
       const response = await http(1, `/projects/${outsiderProject.id}`); assert.equal(response.status, 404);
       assert.ok(!JSON.stringify(await response.json()).includes('Secret'));
     });
+    await t.test('Project search/date/lifecycle filters apply before cursor and total within Workspace', async () => {
+      const a = (await service.createProject(claims[0], workspace.id, { name: 'Sáng Tạo A', description: content('Nội dung riêng') })).project;
+      const b = (await service.createProject(claims[0], workspace.id, { name: 'Sáng Tạo B' })).project;
+      await Project.collection.updateOne({_id:O(a.id)},{$set:{createdAt:new Date('2026-10-03T16:59:59Z')}});
+      await Project.collection.updateOne({_id:O(b.id)},{$set:{createdAt:new Date('2026-10-03T17:00:00Z')}});
+      const first = await service.projects(claims[1],workspace.id,{q:'sang tao',limit:'1'});
+      assert.equal(first.total,2);assert.ok(first.nextCursor);
+      const next = await service.projects(claims[1],workspace.id,{q:'sang tao',limit:'1',cursor:first.nextCursor});
+      assert.equal(next.total,2);assert.deepEqual(new Set([...first.items,...next.items].map(p=>p.id)),new Set([a.id,b.id]));
+      const day=await service.projects(claims[1],workspace.id,{q:'sang tao',from:'2026-10-04',to:'2026-10-04'});assert.deepEqual(day.items.map(p=>p.id),[b.id]);
+      assert.deepEqual((await service.projects(claims[1],workspace.id,{q:'noi dung rieng'})).items.map(p=>p.id),[a.id]);
+      await service.state(claims[0],b.id,{expectedVersion:b.version,state:'archived'});
+      assert.equal((await service.projects(claims[1],workspace.id,{q:'sang tao'})).total,1);
+      assert.equal((await service.projects(claims[1],workspace.id,{q:'sang tao',state:'archived'})).total,1);
+      assert.equal((await http(1,`/workspaces/${workspace.id}/projects?state=all&q=Secret`)).status,200);
+      assert.equal((await service.projects(claims[1],workspace.id,{state:'all',q:'Secret'})).total,0);
+      await Project.collection.deleteMany({_id:{$in:[O(a.id),O(b.id)]}});
+    });
     await t.test('Task matrix, derived content, assignee membership, no-op and stale writes', async () => {
       task = await createTask({ title: 'Đề xuất dự án', description: content('Nội dung 👋'), assigneeId: String(users[2]._id), dueAt: '2020-01-01T00:00:00.000Z' });
       assert.equal(task.overdue, true); assert.equal(task.description.plainText, 'Nội dung 👋'); assert.equal(task.permissions.edit, true);
