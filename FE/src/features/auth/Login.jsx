@@ -26,6 +26,7 @@ export default function Login({ api, connectionError, retry }) {
           nonce: challenge.nonce,
           auto_select: false,
           callback: async ({ credential }) => {
+            if (!live) return;
             setBusy(true);
             setError("");
             try {
@@ -144,6 +145,10 @@ export default function Login({ api, connectionError, retry }) {
             {busy ? "Đang đăng nhập…" : "Đăng nhập"}
           </button>
         </form>
+        <p>
+          <a href="#recover">Quên mật khẩu?</a> ·{" "}
+          <a href="#register">Tạo tài khoản thử nghiệm</a>
+        </p>
         <div className="divider">hoặc</div>
         <button
           disabled={busy || googleEnabled}

@@ -96,12 +96,112 @@ test("failed logout does not falsely discard local account", async () => {
   await assert.rejects(api.logout());
   assert.deepEqual(users, [{ id: "one" }]);
 });
-test('password change uses fresh CSRF and installs the rotated access token without storage',async()=>{
- const seen=[];let user;const api=createApi({origin:'http://api',onSession:v=>user=v,fetcher:async(url,options)=>{seen.push({url,options});if(url.endsWith('/auth/login'))return response({accessToken:'old-access',user:{id:'own'}});if(url.endsWith('/auth/csrf'))return response({csrfToken:'fresh'});if(url.endsWith('/auth/password/change'))return response({accessToken:'new-access',user:{id:'own',version:1}});return response({ok:true});}});
- await api.login({});await api.changePassword({currentPassword:'old password test',password:'new password test'});await api.request('/users/me');
- assert.equal(user.version,1);assert.equal(seen[2].options.headers.Authorization,'Bearer old-access');assert.equal(seen[2].options.headers['X-CSRF-Token'],'fresh');assert.equal(seen[3].options.headers.Authorization,'Bearer new-access');assert.equal(seen.filter(v=>v.url.endsWith('/auth/password/change')).length,1);
+test("password change uses fresh CSRF and installs the rotated access token without storage", async () => {
+  const seen = [];
+  let user;
+  const api = createApi({
+    origin: "http://api",
+    onSession: (v) => (user = v),
+    fetcher: async (url, options) => {
+      seen.push({ url, options });
+      if (url.endsWith("/auth/login"))
+        return response({ accessToken: "old-access", user: { id: "own" } });
+      if (url.endsWith("/auth/csrf")) return response({ csrfToken: "fresh" });
+      if (url.endsWith("/auth/password/change"))
+        return response({
+          accessToken: "new-access",
+          user: { id: "own", version: 1 },
+        });
+      return response({ ok: true });
+    },
+  });
+  await api.login({});
+  await api.changePassword({
+    currentPassword: "old password test",
+    password: "new password test",
+  });
+  await api.request("/users/me");
+  assert.equal(user.version, 1);
+  assert.equal(seen[2].options.headers.Authorization, "Bearer old-access");
+  assert.equal(seen[2].options.headers["X-CSRF-Token"], "fresh");
+  assert.equal(seen[3].options.headers.Authorization, "Bearer new-access");
+  assert.equal(
+    seen.filter((v) => v.url.endsWith("/auth/password/change")).length,
+    1,
+  );
 });
-test('queued password change cannot apply to a replaced session',async()=>{
- let release,calls=0;const api=createApi({origin:'http://api',lock:fn=>new Promise(resolve=>{release=()=>resolve(fn());}),fetcher:async(url)=>{if(url.endsWith('/auth/login'))return response({accessToken:'old',user:{id:'one'}});calls++;return response({});}});
- await api.login({});const pending=api.changePassword({});api.clear();release();await assert.rejects(pending,/SESSION_CHANGED/);assert.equal(calls,0);
+test("queued password change cannot apply to a replaced session", async () => {
+  let release,
+    calls = 0;
+  const api = createApi({
+    origin: "http://api",
+    lock: (fn) =>
+      new Promise((resolve) => {
+        release = () => resolve(fn());
+      }),
+    fetcher: async (url) => {
+      if (url.endsWith("/auth/login"))
+        return response({ accessToken: "old", user: { id: "one" } });
+      calls++;
+      return response({});
+    },
+  });
+  await api.login({});
+  const pending = api.changePassword({});
+  api.clear();
+  release();
+  await assert.rejects(pending, /SESSION_CHANGED/);
+  assert.equal(calls, 0);
+});
+test("password reset clears the local session only after server confirmation", async () => {
+  const users = [];
+  let fail = true;
+  const calls = [];
+  const api = createApi({
+    origin: "http://api",
+    onSession: (u) => users.push(u),
+    fetcher: async (url, opts) => {
+      calls.push(url);
+      if (url.endsWith("/auth/login"))
+        return response({ accessToken: "test", user: { id: "own" } });
+      if (url.endsWith("/auth/password/reset"))
+        return fail
+          ? response({ error: { code: "INVALID_TOKEN" } }, 400)
+          : response({ code: "PASSWORD_RESET", requiresLogin: true });
+      return response({});
+    },
+  });
+  await api.login({});
+  await assert.rejects(
+    api.resetPassword({ token: "fixture", password: "test password" }),
+  );
+  assert.equal(users.length, 1);
+  fail = false;
+  await api.resetPassword({ token: "fixture", password: "test password" });
+  assert.equal(users.at(-1), null);
+  assert.equal(
+    calls.filter((u) => u.endsWith("/auth/password/reset")).length,
+    2,
+  );
+});
+test("queued password reset is canceled when the session changes before execution", async () => {
+  let run;
+  const calls = [];
+  const api = createApi({
+    origin: "http://api",
+    lock: (fn) =>
+      new Promise((resolve) => {
+        run = () => resolve(fn());
+      }),
+    fetcher: async (url) => {
+      calls.push(url);
+      return response({ accessToken: "a", user: { id: "own" } });
+    },
+  });
+  await api.login({});
+  const reset = api.resetPassword({});
+  api.clear();
+  run();
+  await assert.rejects(reset, { code: "SESSION_CHANGED" });
+  assert.equal(calls.length, 1);
 });

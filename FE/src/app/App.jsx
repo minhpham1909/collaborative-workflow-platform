@@ -11,6 +11,8 @@ import { readRoute } from "./routes.js";
 import Settings from "../features/settings/Settings.jsx";
 import Avatar from "../components/Avatar.jsx";
 import Invite from "../features/projects/Invite.jsx";
+import AccountFlow from "../features/auth/AccountFlow.jsx";
+import { consumeAuthLink } from "../lib/auth-links.js";
 import Notifications, {
   InboxBadge,
 } from "../features/notifications/Notifications.jsx";
@@ -26,7 +28,13 @@ const channel =
   typeof BroadcastChannel === "function"
     ? new BroadcastChannel("workflow-session")
     : null;
-for (const method of ["login", "google", "logout", "changePassword"]) {
+for (const method of [
+  "login",
+  "google",
+  "logout",
+  "changePassword",
+  "resetPassword",
+]) {
   const original = api[method];
   api[method] = async (...args) => {
     const result = await original(...args);
@@ -34,22 +42,25 @@ for (const method of ["login", "google", "logout", "changePassword"]) {
     return result;
   };
 }
-function consumeInvite() {
-  if (!location.hash.startsWith("#token=")) return null;
-  const token = new URLSearchParams(location.hash.slice(1)).get("token");
-  history.replaceState(null, "", "/#invite");
-  return /^[a-f0-9]{64}$/.test(token ?? "") ? token : "";
-}
-const initialInvite = consumeInvite();
+const initialLink = consumeAuthLink(location, history);
 export default function App() {
-  const [inviteToken, setInviteToken] = useState(initialInvite);
+  const [inviteToken, setInviteToken] = useState(
+    initialLink?.kind === "invite" ? initialLink.token : null,
+  );
+  const [accountToken, setAccountToken] = useState(
+    initialLink && initialLink.kind !== "invite" ? initialLink : null,
+  );
   const [route, setRoute] = useState(() => readRoute(location.hash));
   useEffect(() => {
     const changed = () => {
-      const token = consumeInvite();
-      if (token !== null) setInviteToken(token);
+      const link = consumeAuthLink(location, history);
+      if (link?.kind === "invite") setInviteToken(link.token);
+      else if (link) setAccountToken(link);
       const next = readRoute(location.hash);
-      if (next.kind !== "invite") setInviteToken(null);
+      if (!["invite", "register", "recover", "login"].includes(next.kind))
+        setInviteToken(null);
+      if (!["verify-email", "reset-password"].includes(next.kind))
+        setAccountToken(null);
       setRoute(next);
     };
     window.addEventListener("hashchange", changed);
@@ -102,6 +113,22 @@ export default function App() {
       <main className="auth-page">
         <p role="status">Đang kiểm tra phiên đăng nhập…</p>
       </main>
+    );
+  if (
+    ["register", "recover", "verify-email", "reset-password"].includes(
+      route.kind,
+    )
+  )
+    return (
+      <AccountFlow
+        key={route.kind}
+        api={api}
+        mode={route.kind}
+        token={accountToken?.kind === route.kind ? accountToken.token : null}
+        user={user}
+        onTokenUsed={() => setAccountToken(null)}
+        loginHref={inviteToken ? "#invite" : user ? "#home" : "#login"}
+      />
     );
   if (!user) return <Login api={api} connectionError={error} retry={start} />;
   return (

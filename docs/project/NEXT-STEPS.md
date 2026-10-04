@@ -4,7 +4,9 @@ Cập nhật 04/10/2026. Yêu cầu trực tiếp của chủ dự án có ưu t
 
 ## Hiện tại
 
-Increment mới nhất: [Cài đặt Workspace/Email riêng FE](../sds/FE-WORKSPACE-SETTINGS-v0.1.md) đã nối Owner name/rich description, own overrides/reset/effective state và guards/CAS. [QA](../qa/FE-WORKSPACE-SETTINGS-CHECK.md). Signup/verify/recovery, English và routing polish tiếp theo.
+Increment mới nhất: [Đăng ký/Xác minh/Khôi phục FE](../sds/FE-REGISTRATION-RECOVERY-v0.1.md) đã nối signup email local với draft policies/consent, verify/reset link scrub/explicit action, generic recovery và reset session clear. [QA](../qa/FE-REGISTRATION-RECOVERY-CHECK.md). Kiểm trực tiếp Google/SMTP để sau theo yêu cầu; chỉ chạy kiểm tự động fixtures.
+
+Increment trước: [Cài đặt Workspace/Email riêng FE](../sds/FE-WORKSPACE-SETTINGS-v0.1.md) đã nối Owner name/rich description, own overrides/reset/effective state và guards/CAS. [QA](../qa/FE-WORKSPACE-SETTINGS-CHECK.md). Signup/verify/recovery, English và routing polish tiếp theo.
 
 Increment trước: [Thành viên/Lời mời Workspace FE](../sds/FE-TEAM-INVITATIONS-v0.1.md) đã nối Owner invite/revoke/retry/remove/transfer, Member leave, LINK login-intent/accept và server search/time. [QA](../qa/FE-TEAM-INVITATIONS-CHECK.md). Cài đặt nhóm và Workspace email overrides tiếp theo.
 
@@ -24,7 +26,7 @@ Increment trước 04/10/2026: [Board/Task/Comments/My Tasks FE](../sds/FE-TASKS
 
 1. Workspace/Project/Board/Task/Comment/My Tasks đã nối, kiểm quyền/CAS. Tiếp tục routing/panel và phục hồi filters khi back, draft transitions trước release.
 2. Identity DTO G02 đã có creator/assignee/author kể cả lịch sử trong scope; G03 server search Members đã có; picker Task vẫn cần nối search. Editor chung Task/Comment đã chọn Tiptap 3.31.4; Workspace đã dùng editor chung; Project description tiếp theo.
-3. Account/Settings và Notifications đã nối. Members/Invitations đã nối. Cài đặt nhóm/Workspace email overrides đã nối. Tiếp tục signup/verify-link/recovery. G01 capabilities đã có; không tự link Google trùng email. Terms/Privacy nội dung thật trước mở đăng ký/public release.
+3. Account/Settings và Notifications đã nối. Members/Invitations đã nối. Cài đặt nhóm/Workspace email overrides đã nối. Signup email/verify-link/recovery đã nối cho local. Tiếp tục policy thật/Google signup, English và routing polish. G01 capabilities đã có; không tự link Google trùng email. Terms/Privacy nội dung thật trước mở đăng ký/public release.
 4. Bổ sung English UI, shared error/validation mapping và server filters các danh sách còn thiếu theo [gap log](../ui-ux/UI-API-GAPS-v0.1.md). Workspace/Project filters đã có; Member/Invitation/Notification đã có query; time theo expiresAt Invitation còn đề xuất riêng.
 5. Google GIS mới và SMTP/outbox tới Inbox/Spam kiểm live riêng; production secrets/rotation, HTTPS/cookie topology, shared limiter/proxy, retention/purge/backup và NFR. Local replica set không thay production.
 

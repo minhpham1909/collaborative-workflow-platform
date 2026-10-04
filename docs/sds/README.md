@@ -57,3 +57,5 @@ Increment hiện hành: [Workspace/Invitations API](WORKSPACE-INVITATIONS-API-v0
 [Team / Invitations FE](FE-TEAM-INVITATIONS-v0.1.md): scoped search/time và các thao tác quản lý membership/lời mời, LINK intent/accept.
 
 [Cài đặt Workspace / own email overrides FE](FE-WORKSPACE-SETTINGS-v0.1.md): shared editor, scope/version, inheritance/reset và draft guards.
+
+[Registration / verification / recovery FE](FE-REGISTRATION-RECOVERY-v0.1.md): local consent, auth link routing/token scrub, generic recovery và reset session clear.

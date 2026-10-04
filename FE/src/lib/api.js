@@ -93,6 +93,19 @@ export function createApi({
     request,
     restore,
     clear,
+    async resetPassword(body) {
+      const generation = epoch;
+      return lock(async () => {
+        if (generation !== epoch) throw new ApiError("SESSION_CHANGED", 401);
+        const data = await raw("/auth/password/reset", {
+          method: "POST",
+          body,
+        });
+        if (generation !== epoch) throw new ApiError("SESSION_CHANGED", 401);
+        clear();
+        return data;
+      });
+    },
     async changePassword(body) {
       if (!access) await restore();
       const generation = epoch;

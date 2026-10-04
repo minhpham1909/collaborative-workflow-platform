@@ -1,5 +1,9 @@
 const messages = {
   INVALID_CREDENTIALS: "Email hoặc mật khẩu không đúng.",
+  ACCOUNT_UNAVAILABLE:
+    "Không thể đăng ký với thông tin này. Bạn có thể đăng nhập hoặc yêu cầu khôi phục mật khẩu.",
+  INVALID_TOKEN:
+    "Liên kết không còn hợp lệ, đã dùng hoặc đã hết hạn. Yêu cầu liên kết mới.",
   INVALID_INPUT: "Thông tin chưa hợp lệ. Vui lòng kiểm tra lại.",
   EMAIL_VERIFICATION_REQUIRED: "Bạn cần xác minh email trước khi làm việc.",
   ACCOUNT_LINK_REQUIRED:

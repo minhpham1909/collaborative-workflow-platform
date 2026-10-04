@@ -24,6 +24,8 @@ pnpm build
 
 ## Phạm vi hiện tại
 
+Auth: signup email với consent bản nháp local, xác minh/đặt lại mật khẩu qua token link scrub URL, khôi phục generic và login lại sau reset. [Thiết kế](../docs/sds/FE-REGISTRATION-RECOVERY-v0.1.md), [QA](../docs/qa/FE-REGISTRATION-RECOVERY-CHECK.md). Kiểm trực tiếp Google/SMTP thật để sau; không coi draft policies là bản public release.
+
 Workspace Cài đặt nhóm: Owner sửa tên/mô tả bằng shared editor. Email của tôi trong nhóm: inherit/on/off theo từng sự kiện, giá trị hiệu lực và reset. [Thiết kế](../docs/sds/FE-WORKSPACE-SETTINGS-v0.1.md), [QA](../docs/qa/FE-WORKSPACE-SETTINGS-CHECK.md).
 
 Workspace Thành viên/Lời mời: quản lý Owner remove/transfer/invite/revoke/retry, Member leave, server search/time và nhận link sau login. [Thiết kế](../docs/sds/FE-TEAM-INVITATIONS-v0.1.md), [QA](../docs/qa/FE-TEAM-INVITATIONS-CHECK.md). Không tự chạy SMTP worker.
@@ -37,7 +39,7 @@ Notifications inbox/detail, badge chưa đọc, read/read-all, search/thời gia
 - Home: danh sách Workspace có quyền hiện tại, mới tạo trước, search tên/mô tả trên server, ngày tạo theo Việt Nam, cursor/load more, tạo Workspace bằng tên; trạng thái loading/empty/error.
 - Workspace cards mở Workspace thật: danh sách Dự án search/lọc ngày/trạng thái trên server, tạo Dự án Owner, danh sách thành viên có pagination. Chi tiết Dự án hỗ trợ Owner đổi tên/lưu trữ/mở lại và conflict expectedVersion. Reload link trực tiếp giữ ngữ cảnh.
 - Board/Task/Comments/My Tasks đã nối API thật: search/thời gian/cursor, status/quyền, CAS, Task create/edit/delete và author-only Comment edit/delete. Editor chung Tiptap cho Task/Comment; deadline nhập giờ Việt Nam. [Thiết kế](../docs/sds/FE-TASKS-v0.1.md), [QA](../docs/qa/FE-TASKS-CHECK.md).
-- Signup/recovery, English UI và editor mô tả Project còn tiếp theo. Task toàn trang, chưa panel/autosave/drag, phục hồi filters khi back hoặc mọi draft transition.
+- Policy thật/Google signup, English UI và editor mô tả Project còn tiếp theo. Task toàn trang, chưa panel/autosave/drag, phục hồi filters khi back hoặc mọi draft transition.
 
 Font Plus Jakarta Sans self-hosted; license trong `public/fonts/OFL.txt`. Chưa cài UI kit, routing/form library; editor Tiptap pin 3.31.4. [Thiết kế nền](../docs/sds/FE-FOUNDATION-v0.1.md), [QA Auth/Home](../docs/qa/FE-AUTH-HOME-CHECK.md).
 
