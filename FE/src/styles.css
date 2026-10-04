@@ -647,3 +647,28 @@ h1 {
     grid-template-columns: 1fr;
   }
 }
+.notification-row {
+  background: white;
+  border: 1px solid #ece5e0;
+  border-radius: 20px;
+  padding: 22px;
+  margin: 14px 0;
+  overflow-wrap: anywhere;
+}
+.notification-row.unread {
+  border-left: 5px solid #9375d5;
+  background: #fffcff;
+}
+.notification-row h2 {
+  font-size: 20px;
+}
+.inbox-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #e9ddfb;
+  font-size: 12px;
+}
+nav + nav {
+  margin-top: 12px;
+}

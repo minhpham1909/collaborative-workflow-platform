@@ -4,6 +4,8 @@ Cập nhật 04/10/2026. Yêu cầu trực tiếp của chủ dự án có ưu t
 
 ## Hiện tại
 
+Increment mới nhất: [Notifications FE](../sds/FE-NOTIFICATIONS-v0.1.md) đã nối inbox/detail/badge, search/time/read/read-all và EMAIL invitation accept; [QA](../qa/FE-NOTIFICATIONS-CHECK.md). Account/Settings và quản lý Members/Invitations tiếp theo. Notification search correctness đã kiểm, performance scan tập lớn còn NFR.
+
 Increment mới nhất 04/10/2026: [Board/Task/Comments/My Tasks FE](../sds/FE-TASKS-v0.1.md) đã nối API thật, shared editor Tiptap, identity DTO và quyền/CAS. [QA](../qa/FE-TASKS-CHECK.md). Các ghi nhận chưa Board bên dưới là mốc Workspace trước increment này.
 
 - Repo private minhpham1909/collaborative-workflow-platform, phát triển trên dev; main giữ mốc nền.

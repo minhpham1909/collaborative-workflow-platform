@@ -24,6 +24,8 @@ pnpm build
 
 ## Phạm vi hiện tại
 
+Notifications inbox/detail, badge chưa đọc, read/read-all, search/thời gian và accept EMAIL invitation đã nối BE. Unverified được xem own inbox, accept vẫn cần verified. [Thiết kế](../docs/sds/FE-NOTIFICATIONS-v0.1.md), [QA](../docs/qa/FE-NOTIFICATIONS-CHECK.md).
+
 - Đăng nhập email/password; access token chỉ trong memory, refresh cookie HttpOnly; reload khôi phục phiên, đăng xuất và đồng bộ thay đổi phiên giữa tab.
 - Google control dùng challenge/nonce BE và Google Identity Services. Tài khoản đã đăng ký/liên kết được sử dụng theo contract. Chưa có UI link account; đăng ký Google mới chưa mở khi Terms UI/nội dung chưa hoàn thiện. Không tự nhận consent hoặc tự link tài khoản trùng email.
 - Home: danh sách Workspace có quyền hiện tại, mới tạo trước, search tên/mô tả trên server, ngày tạo theo Việt Nam, cursor/load more, tạo Workspace bằng tên; trạng thái loading/empty/error.

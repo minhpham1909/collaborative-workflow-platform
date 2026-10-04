@@ -1,5 +1,7 @@
 # Trạng thái kiểm tra
 
+[FE Notifications](FE-NOTIFICATIONS-CHECK.md) — 3 unit/8 integration, browser inbox/read/cutoff/privacy và unverified→verified invitation gate/accept đạt; không SMTP thật.
+
 [FE Task screens](FE-TASKS-CHECK.md): build, 6 FE tests, 10 Work Mongo/HTTP và browser thực Board/Task/Comments/My Tasks đạt; chưa Google/SMTP live hoặc nghiệm thu toàn sản phẩm.
 
 [FE Workspace/Project](FE-WORKSPACE-PROJECT-CHECK.md): browser qua BE/Mongo thật, Owner/Member, CAS/mất quyền và 10 Work integration tests đã đạt; scope không gồm Board FE/SMTP/Google live.

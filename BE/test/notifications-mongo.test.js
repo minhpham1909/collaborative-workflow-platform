@@ -63,8 +63,10 @@ test('Notifications privacy/read lifecycle and work email eligibility on MongoDB
       const task = await createTask('Never leak title'); const note = (await inbox.list(auths[1], {})).items[0];
       await workspaces.leave(auths[1], workspace.id, { expectedVersion: (await member()).version });
       const hidden = (await inbox.get(auths[1], note.id)).notification; assert.equal(hidden.available, false); assert.equal(hidden.payload, null); assert.equal(hidden.target, null);
+      const search=await inbox.list(auths[1],{q:'Never leak title'});assert.equal(search.total,0);assert.equal(search.unreadCount,0);assert.equal(search.cutoff,null);
       assert.ok(!JSON.stringify(await inbox.list(auths[1], {})).includes('Private Workspace'));
       await workspaces.accept(auths[1], { token: linkToken }); assert.equal((await inbox.get(auths[1], note.id)).notification.available, true);
+      assert.equal((await inbox.list(auths[1],{q:'Never leak title'})).total,1);
       const fresh = (await work.getTask(auths[0], task.id)).task; await work.deleteTask(auths[0], task.id, { expectedVersion: fresh.version });
       assert.equal((await inbox.get(auths[1], note.id)).notification.available, false);
       assert.equal((await inbox.list(auths[1], {})).unreadCount, 2); // Masked records remain returned/countable.
@@ -87,6 +89,18 @@ test('Notifications privacy/read lifecycle and work email eligibility on MongoDB
       const accepted = await http(3, `/invitations/${invitation.invitation.id}/accept`, 'POST', {}); assert.equal(accepted.status, 200); assert.equal((await accepted.json()).code, 'WORKSPACE_JOINED');
       assert.equal((await inbox.get(auths[3], list.items[0].id)).notification.available, false);
       const link = await workspaces.invite(auths[0], workspace.id, { type: 'LINK' }); await assert.rejects(workspaces.acceptById(auths[2], link.invitation.id, {}), /INVITATION_UNAVAILABLE/u);
+    });
+    await t.test('Masked search/date pagination and signed filtered read-all remain scoped', async () => {
+      const a=await createTask('Sáng Tạo inbox one'),b=await createTask('Sáng Tạo inbox two');
+      await Notification.collection.updateMany({taskId:O(a.id)},{$set:{createdAt:new Date('2026-10-03T16:59:59Z')}});
+      await Notification.collection.updateMany({taskId:O(b.id)},{$set:{createdAt:new Date('2026-10-03T17:00:00Z')}});
+      const first=await inbox.list(auths[1],{q:'sang tao inbox',limit:'1'});assert.equal(first.total,2);assert.ok(first.nextCursor);
+      const next=await inbox.list(auths[1],{q:'sang tao inbox',limit:'1',cursor:first.nextCursor});assert.equal(next.total,2);assert.equal(next.nextCursor,null);assert.notEqual(first.items[0].id,next.items[0].id);
+      const day=await inbox.list(auths[1],{q:'sang tao inbox',from:'2026-10-04',to:'2026-10-04'});assert.equal(day.total,1);assert.equal(day.items[0].target.taskId,b.id);
+      assert.equal((await inbox.readAll(auths[1],{cutoff:day.cutoff})).markedCount,1);
+      const left=await inbox.list(auths[1],{q:'sang tao inbox',read:'unread'});assert.equal(left.total,1);assert.equal(left.items[0].target.taskId,a.id);
+      assert.equal((await http(1,'/notifications?from=2026-10-05&to=2026-10-04')).status,400);
+      const ids=[O(a.id),O(b.id)];await Notification.collection.deleteMany({taskId:{$in:ids}});await EmailOutbox.collection.deleteMany({taskId:{$in:ids}});await Task.collection.deleteMany({_id:{$in:ids}});
     });
     await t.test('Work worker rechecks settings, filters event types and cancels deleted/left', async () => {
       // Cancel this suite's older jobs so assertions concern the fresh delivery only.

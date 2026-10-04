@@ -1,5 +1,7 @@
 # Gap log giữa screen review và BE
 
+Notifications 04/10/2026: G04 phần Notification đã có search/time sau masking, counts/cursor và cutoff filters; FE đã nối. Member/Invitation management lists vẫn mở. [Thiết kế](../sds/FE-NOTIFICATIONS-v0.1.md); search scan chưa nghiệm thu NFR.
+
 Increment Task FE 04/10/2026: G02 đã bổ sung identity allowlist vào Task/Comment DTO sau scoped guards, kể cả historical references, không email/credentials. G03 picker có pagination/load more, server search vẫn mở. [Thiết kế](../sds/FE-TASKS-v0.1.md), [QA](../qa/FE-TASKS-CHECK.md). Các hàng phía dưới mô tả gap gốc trước implementation.
 
 Increment Workspace/Project 04/10/2026: phần Project trong G04 đã có server q/from/to cùng state/cursor/total, nối UI và kiểm Mongo/HTTP. Member tab hiện read/pagination, chưa search/time; Member/Invitation/Notification vẫn mở. [QA](../qa/FE-WORKSPACE-PROJECT-CHECK.md).

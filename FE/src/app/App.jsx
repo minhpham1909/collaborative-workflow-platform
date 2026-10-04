@@ -8,6 +8,9 @@ import Project from "../features/projects/Project.jsx";
 import TaskList from "../features/tasks/TaskList.jsx";
 import TaskDetail from "../features/tasks/TaskDetail.jsx";
 import { readRoute } from "./routes.js";
+import Notifications, {
+  InboxBadge,
+} from "../features/notifications/Notifications.jsx";
 let sessionListener = () => {};
 const origin = import.meta.env.VITE_API_ORIGIN ?? "http://localhost:4000";
 export const api = createApi({
@@ -100,6 +103,18 @@ export default function App() {
             ✓ Công việc của tôi
           </a>
         </nav>
+        <nav>
+          <a
+            className={
+              ["notifications", "notification"].includes(route.kind)
+                ? "active"
+                : ""
+            }
+            href="#notifications"
+          >
+            ♧ Thông báo <InboxBadge key={user.id} api={api} userId={user.id} />
+          </a>
+        </nav>
         <p className="aside-note">
           Không gian cho những ý tưởng trở thành công việc.
         </p>
@@ -120,7 +135,14 @@ export default function App() {
             {error}
           </p>
         )}
-        {!user.emailVerified ? (
+        {["notifications", "notification"].includes(route.kind) ? (
+          <Notifications
+            key={user.id + (route.id ?? "inbox")}
+            api={api}
+            id={route.id}
+            user={user}
+          />
+        ) : !user.emailVerified ? (
           <main>
             <h1>Xác minh email để bắt đầu</h1>
             <p>

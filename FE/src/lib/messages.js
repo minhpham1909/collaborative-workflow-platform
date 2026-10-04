@@ -8,6 +8,8 @@ const messages = {
     "Tài khoản Google mới cần đồng ý điều khoản trước khi tiếp tục.",
   RATE_LIMITED: "Bạn thao tác quá nhanh. Vui lòng thử lại sau.",
   WORKSPACE_UNAVAILABLE: "Workspace không còn khả dụng với quyền hiện tại.",
+  NOTIFICATION_UNAVAILABLE: "Thông báo không còn khả dụng.",
+  INVITATION_UNAVAILABLE: "Lời mời không còn khả dụng hoặc đã hết hạn.",
   RESOURCE_UNAVAILABLE: "Nội dung không còn khả dụng với quyền hiện tại.",
   OWNER_REQUIRED: "Thao tác này chỉ dành cho chủ sở hữu Workspace.",
   TASK_EDIT_FORBIDDEN: "Bạn không có quyền sửa hoặc xóa Task này.",

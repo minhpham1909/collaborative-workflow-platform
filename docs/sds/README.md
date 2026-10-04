@@ -1,5 +1,7 @@
 # Chuẩn bị SDS
 
+[FE Notifications](FE-NOTIFICATIONS-v0.1.md) — inbox/badge/read và invitation accept, query extension/privacy/performance boundary, 04/10/2026.
+
 [FE Board/Task/Comments/My Tasks](FE-TASKS-v0.1.md) đã nối 04/10/2026, shared Tiptap editor và identity DTO.
 
 Increment 04/10/2026: [FE Workspace/Project](FE-WORKSPACE-PROJECT-v0.1.md) — navigation, Project server filters, Member list và Owner lifecycle đã nối; Board/Task UI tiếp theo.

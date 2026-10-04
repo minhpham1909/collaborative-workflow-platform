@@ -1,5 +1,7 @@
 # Notifications và work email — increment BE
 
+Cập nhật 04/10/2026: FE inbox/detail/badge/read/accept đã nối; GET list thêm q/from/to, search sau quyền/masking; unreadCount theo category/search/date không theo read filter. Cutoff HMAC v2 bind q/from/to, read-all kiểm lại matches trong phạm vi biên. [Thiết kế/giới hạn performance](FE-NOTIFICATIONS-v0.1.md), [QA](../qa/FE-NOTIFICATIONS-CHECK.md). Những đoạn chỉ category/read phía dưới giữ mốc BE trước extension.
+
 Ngày 03/10/2026. Nối với [Work API](PROJECT-TASK-COMMENT-API-v0.1.md) và [Workspace API](WORKSPACE-INVITATIONS-API-v0.1.md). Chủ dự án đã chọn: gia nhập lại thì thông báo cũ hiển thị theo quyền hiện tại, nếu Task vẫn khả dụng. Không ghi snapshot quyền hoặc che vĩnh viễn sau lần rời.
 
 ## Inbox
