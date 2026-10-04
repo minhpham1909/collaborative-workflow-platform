@@ -2,6 +2,8 @@
 
 Dự án portfolio cộng tác nhóm nhỏ: User → Workspace → Project → Task.
 
+Cập nhật 04/10/2026: **FE React đã chạy** Login/Home với dữ liệu BE thật, list/create/search và bộ lọc ngày tạo Workspace. Mở localhost:5173 theo [FE README](FE/README.md); [QA mới](docs/qa/FE-AUTH-HOME-CHECK.md), [trạng thái hiện hành](docs/project/NEXT-STEPS.md). Workspace→Project/Board/Task FE là increment kế tiếp; các ghi nhận chưa frontend/Figma bên dưới là lịch sử.
+
 Trạng thái 03/10/2026: BE JavaScript/Express/Mongoose có 13 models, health/editor validation, JWT sessions và account flows (signup, verify/reset/change password, Google login/link, encrypted email outbox). 40 tests thông thường và 40 integration tests đạt trên MongoDB replica set local. Google login thật đã có kết quả /auth/me 200 do chủ dự án kiểm; SMTP accepted email thử, Inbox còn xác nhận. Profile/global settings và Workspace/Invitations BE đã triển khai; Project/Task/Comment, Board và My Tasks đã có API; Notifications và work-email dispatcher đã có; frontend và vận hành tiếp theo. Repo GitHub private minhpham1909/collaborative-workflow-platform, phát triển trên dev; SRS chưa baseline v1.0. Xem [Accounts/QA](docs/qa/AUTH-ACCOUNTS-CHECK.md).
 
 ## Tài liệu chính
@@ -37,7 +39,7 @@ Cập nhật 03/10/2026: nhóm nghiệp vụ 1–3 đã duyệt, nhóm 4–5 t�
 | `docs/ui-ux` | Luồng màn hình và wireframes |
 | `docs/qa` | Kế hoạch kiểm tra và bằng chứng |
 | `assets/brand`, `assets/references` | Tài nguyên và nguồn tham khảo |
-| `FE`, `BE` | Skeleton frontend và backend đã bootstrap |
+| `FE`, `BE` | React frontend và Express backend, package/lockfile riêng |
 | `packages/contracts` | Vị trí dự kiến nếu duyệt hợp đồng dùng chung |
 | `scripts` | Công cụ kiểm tra tài liệu local |
 | `infra` | Cấu hình môi trường sau khi chọn cách triển khai |
@@ -54,7 +56,7 @@ Chạy từ root dự án trong PowerShell:
 
 Lệnh đầu kiểm tra cấu trúc JSON, 35 UC liên tục, ID trùng, FR/BR/AC/OD bị thiếu, tham chiếu FR ↔ UC và nội dung UC giữa JSON/Markdown. Lệnh thứ hai tạo lại traceability sau khi kiểm tra thành công. Đây là kiểm tra tài liệu, không phải kiểm thử nghiệp vụ hay chứng nhận SRS đã được duyệt.
 
-Không cần cài dependencies cho công cụ tài liệu. Chạy backend/tests từ BE theo README riêng, dùng Node 24.x và pnpm 11.19.0. Chưa tạo root workspace hoặc frontend package.
+Không cần cài dependencies cho công cụ tài liệu. Chạy backend/tests từ BE và frontend từ FE theo README riêng, dùng Node 24.x và pnpm 11.19.0. Chưa tạo root workspace.
 
 ## Quy trình tiếp tục
 

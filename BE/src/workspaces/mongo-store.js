@@ -65,7 +65,7 @@ export function createMongoWorkspaceStore({ config, now = () => new Date() }) {
   return {
     list: (claims, page) => run(claims, async (user, tx) => {
       const records = await Workspace.collection.aggregate([
-        { $match: mongoAfter(page.after) },
+        { $match: { $and: [mongoAfter(page.after), ...(page.filters ?? [])] } },
         { $lookup: { from: 'workspace_memberships', let: { workspace: '$_id' }, pipeline: [{ $match: { userId: user._id, state: 'active', $expr: { $eq: ['$workspaceId', '$$workspace'] } } }], as: 'membership' } },
         { $unwind: '$membership' }, { $sort: { createdAt: -1, _id: -1 } }, { $limit: page.limit + 1 },
       ], { session: tx }).toArray();

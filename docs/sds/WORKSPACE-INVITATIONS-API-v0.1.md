@@ -1,5 +1,7 @@
 # Workspace / Invitations API v0.1
 
+Cập nhật 04/10/2026: FE Login/Home đã chạy; Project/Task/Notifications API đã có ở các contracts riêng. Các ghi nhận chưa có API/FE bên dưới là mốc increment 03/10. GET /workspaces hiện nhận thêm `q` (tối đa 200 ký tự/20 từ), `from`, `to` (YYYY-MM-DD): mỗi từ khớp tên hoặc description.plainText, không phân biệt dấu; khoảng ngày tạo Việt Nam inclusive. Query/filter không hợp lệ trả 400. Membership active được lọc trước sort/limit/cursor. Không trả total hoặc stats giả; [FE/QA](../qa/FE-AUTH-HOME-CHECK.md).
+
 Ngày 03/10/2026. BE implementation theo UC-04 đến UC-12, BR ownership/membership/invitation và UC-33 Workspace email override. [QA](../qa/WORKSPACE-INVITATIONS-CHECK.md). Chưa có FE sản phẩm, Project/Task APIs hoặc Notifications inbox APIs.
 
 ## Transport và quyền

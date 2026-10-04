@@ -44,6 +44,19 @@ test('Workspace membership/invitation lifecycle on real MongoDB and HTTP', { ski
     server = createApp({ authService: auth, authConfig: config, workspaceService: service }).listen(0, '127.0.0.1'); await once(server, 'listening');
     const base = `http://127.0.0.1:${server.address().port}`;
     const http = (index, path, method = 'GET', body, extra = {}) => fetch(base + path, { method, headers: { Origin: config.webOrigin, 'Content-Type': 'application/json', ...(index !== null ? { Authorization: `Bearer ${logins[index].accessToken}` } : {}), ...extra }, ...(body !== undefined ? { body: JSON.stringify(body) } : {}) });
+    await t.test('Server-side name search/time/cursor only returns current memberships', async () => {
+      const first=await create(`${prefix} Sáng Tạo One`), second=await create(`${prefix} Sáng Tạo Two`);
+      const hidden=await service.create(identities[2],{name:`${prefix} Sáng Tạo Hidden`});workspaceIds.push(new mongoose.Types.ObjectId(hidden.workspace.id));
+      const firstPage=await service.list(identities[0],{q:`${prefix} sang tao`,limit:'1'});assert.equal(firstPage.items.length,1);assert.ok(firstPage.nextCursor);
+      const secondPage=await service.list(identities[0],{q:`${prefix} sang tao`,limit:'1',cursor:firstPage.nextCursor});assert.equal(secondPage.items.length,1);assert.equal(secondPage.nextCursor,null);
+      assert.deepEqual(new Set([...firstPage.items,...secondPage.items].map(w=>w.id)),new Set([first.id,second.id]));
+      await Workspace.collection.updateOne({_id:new mongoose.Types.ObjectId(first.id)},{$set:{createdAt:new Date('2026-10-03T16:59:59.000Z')}});
+      await Workspace.collection.updateOne({_id:new mongoose.Types.ObjectId(second.id)},{$set:{createdAt:new Date('2026-10-03T17:00:00.000Z')}});
+      const day=await service.list(identities[0],{q:prefix,from:'2026-10-04',to:'2026-10-04'});assert.deepEqual(day.items.map(w=>w.id),[second.id]);
+      assert.equal((await http(0,'/workspaces?from=2026-10-05&to=2026-10-04')).status,400);
+      // Isolate this case so pre-existing lifecycle tests retain their assumptions.
+      const ids=[first.id,second.id,hidden.workspace.id].map(id=>new mongoose.Types.ObjectId(id));await WorkspaceMembership.collection.deleteMany({workspaceId:{$in:ids}});await Workspace.collection.deleteMany({_id:{$in:ids}});
+    });
     await t.test('Atomic create, verified gate, ownership, rich text, privacy and pagination', async () => {
       assert.equal((await http(4, '/workspaces', 'POST', { name: 'Unverified' })).status, 403);
       await assert.rejects(service.create(identities[4], { name: 'Unverified direct' }), /EMAIL_VERIFICATION_REQUIRED/u);

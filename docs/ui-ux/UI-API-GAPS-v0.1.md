@@ -1,5 +1,7 @@
 # Gap log giữa screen review và BE
 
+Cập nhật 04/10/2026: G04 đã xử lý phần Workspace bằng server search tên/mô tả và ngày tạo, trước pagination/membership scope. Project/Member/Invitation/Notification vẫn mở. G09 có mapping tiếng Việt cho lát cắt Login/Home; catalog song ngữ đầy đủ còn tiếp theo. G06 được giảm rủi ro bằng chặn double submit/no auto retry ở FE, chưa có BE idempotency. [FE foundation](../sds/FE-FOUNDATION-v0.1.md).
+
 03/10/2026. Rà source routes/DTO hiện tại, không coi BE có endpoint là screen đã đủ dữ liệu. Đây là đề xuất xử lý trước khi nối FE, không implementation mới trong lượt phân tích UI. [Screen spec](SCREEN-SPEC-v0.2.md), [flows](SCREEN-FLOWS-v0.2.md).
 
 ## Đã có để thiết kế lõi

@@ -1,5 +1,7 @@
 # Hướng tech stack — JavaScript
 
+Cập nhật implementation 04/10/2026: BE đã có API; FE React JS/JSX + Vite đã bootstrap và chạy Login/Home. Phiên bản/cấu trúc hiện hành tại [FE foundation](FE-FOUNDATION-v0.1.md). Các ghi nhận chưa cài dependencies bên dưới giữ lịch sử hướng thiết kế ban đầu.
+
 Ngày 03/10/2026. Nguồn: chủ dự án cho biết quen JS + Express + Mongoose và React JS/JSX hơn TS/NestJS. Điều chỉnh hướng thiết kế theo nền tảng quen thuộc; chưa cài dependencies hoặc chốt toàn bộ thư viện/phiên bản/provider.
 
 ## Nền tảng thiết kế

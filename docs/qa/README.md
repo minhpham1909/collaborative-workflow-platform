@@ -1,5 +1,7 @@
 # Trạng thái kiểm tra
 
+04/10/2026: [FE Auth/Home check](FE-AUTH-HOME-CHECK.md) — build, 4 FE client tests, 2 BE query tests, 11 Workspace Mongo/HTTP tests và browser FE→BE→Mongo riêng đã đạt. Google control mới/SMTP live chưa kiểm lại; chưa nghiệm thu full sản phẩm.
+
 Hiện hành: [Auth/accounts check](AUTH-ACCOUNTS-CHECK.md): 31 tests thông thường và 8 integration tests đạt trên MongoDB local; Google/SMTP thật và FE chưa nghiệm thu. [Auth/session check](AUTH-SESSION-CHECK.md) giữ mốc lịch sử.
 
 Cập nhật 03/10/2026: [backend foundation check](BACKEND-FOUNDATION-CHECK.md) ghi 16 tests schema/editor/HTTP đạt và dependency audit không báo vulnerability. Chưa kiểm thử database/index/transaction/auth nghiệp vụ hoặc FE thực tế.
