@@ -10,11 +10,24 @@ export default function DescriptionPreview({ value, label, limit }) {
   return (
     <div className="description-preview">
       {long && !expanded && <p className="description-excerpt">{text}</p>}
-      <div id={panelId} hidden={long && !expanded}>
+      <div
+        id={panelId}
+        hidden={long && !expanded}
+        className={long ? "description-full" : undefined}
+        role={long && expanded ? "region" : undefined}
+        aria-label={long && expanded ? `${label} — nội dung đầy đủ` : undefined}
+        aria-describedby={long && expanded ? `${panelId}-hint` : undefined}
+        tabIndex={long && expanded ? 0 : undefined}
+      >
         {(!long || expanded) && (
           <RichEditor readOnly value={value} label={label} limit={limit} />
         )}
       </div>
+      {long && expanded && (
+        <p id={`${panelId}-hint`} className="muted description-scroll-hint">
+          Cuộn trong khung để đọc toàn bộ nội dung.
+        </p>
+      )}
       {long && (
         <button
           type="button"

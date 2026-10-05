@@ -30,6 +30,19 @@ export default function AppHeader({ route, user, api, busy, logout }) {
   }, []);
   return (
     <header className="app-header">
+      <button
+        type="button"
+        className="skip-link"
+        onClick={() => {
+          const main = document.querySelector(".shell main");
+          if (!main) return;
+          main.setAttribute("tabindex", "-1");
+          main.focus({ preventScroll: true });
+          main.scrollIntoView({ block: "start" });
+        }}
+      >
+        Đi đến nội dung chính
+      </button>
       <a className="brand" href="#home">
         <span>W</span>Workflow
       </a>

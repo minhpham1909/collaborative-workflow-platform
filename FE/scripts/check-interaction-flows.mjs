@@ -502,6 +502,18 @@ try {
   });
   await page.setViewportSize({ width: 375, height: 900 });
   assert.ok(
+    await page.locator(".editor-toolbar button").evaluateAll((nodes) =>
+      nodes.every((node) => {
+        const rect = node.getBoundingClientRect();
+        return (
+          rect.width >= 44 &&
+          rect.height >= 44 &&
+          Boolean(node.getAttribute("aria-label"))
+        );
+      }),
+    ),
+  );
+  assert.ok(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= innerWidth + 1,
     ),
@@ -515,11 +527,13 @@ try {
   await page
     .getByRole("textbox", { name: "Mô tả Task", exact: true })
     .fill("Nội dung tiếng Việt 😊");
-  await page.getByRole("button", { name: "H2", exact: true }).click();
+  await page.getByRole("button", { name: "Tiêu đề 2", exact: true }).click();
   await page
     .getByRole("textbox", { name: "Mô tả Task", exact: true })
     .press("Control+a");
-  await page.getByRole("button", { name: "Link", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Chèn hoặc sửa liên kết", exact: true })
+    .click();
   await page
     .getByLabel("Đường dẫn", { exact: true })
     .fill("https://example.com");

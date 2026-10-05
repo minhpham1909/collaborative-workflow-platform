@@ -152,6 +152,25 @@ try {
       })),
     },
   };
+  const longLink = "https://example.com/" + "tai-nguyen-dai-".repeat(70);
+  description.document.content.push({
+    type: "paragraph",
+    content: [
+      {
+        type: "text",
+        text: "Tiếng Việt có dấu ✨ — kế hoạch sáng tạo\nDòng tiếp theo: ",
+      },
+      {
+        type: "text",
+        text: longLink,
+        marks: [{ type: "link", attrs: { href: longLink } }],
+      },
+    ],
+  });
+  await workspaces.update(identity, workspace.id, {
+    expectedVersion: workspace.version,
+    description,
+  });
   await work.updateProject(identity, project.id, {
     expectedVersion: project.version,
     description,
@@ -165,6 +184,38 @@ try {
   const page = await pageFor(owner.email);
   const errors = [];
   page.on("pageerror", (e) => errors.push(e.message));
+  const beforeSkip = page.url();
+  await page
+    .getByRole("button", { name: "Đi đến nội dung chính", exact: true })
+    .focus();
+  await page.keyboard.press("Enter");
+  assert.equal(
+    await page.evaluate(() => document.activeElement.tagName),
+    "MAIN",
+  );
+  assert.equal(page.url(), beforeSkip);
+  await page.locator(".workspace-card h2 a").first().focus();
+  await page.keyboard.press("Enter");
+  await page.locator(".project-card").waitFor();
+  const projectCTA = page.locator(".project-card .pill-link").first();
+  await projectCTA.scrollIntoViewIfNeeded();
+  assert.equal(
+    await projectCTA.evaluate((node) => {
+      const r = node.getBoundingClientRect();
+      return node.contains(
+        document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2),
+      );
+    }),
+    true,
+  );
+  await page.locator(".project-card h2 a").first().focus();
+  await page.keyboard.press("Enter");
+  await page
+    .getByRole("heading", { name: "Bảng công việc", exact: true })
+    .waitFor();
+  await page.locator(".board-task h3 a").first().focus();
+  await page.keyboard.press("Enter");
+  await page.getByRole("heading", { name: task.title, exact: true }).waitFor();
   await page.goto("http://localhost:5173/#workspace/" + workspace.id);
   await page.locator(".project-card").waitFor();
   await page.locator(".project-card").click({ position: { x: 20, y: 20 } });
@@ -235,10 +286,10 @@ try {
   ]) {
     await page.goto("http://localhost:5173/" + hash);
     await page.locator(ready).first().waitFor();
-    for (const width of [1440, 375]) {
+    for (const width of [1440, 1280, 390]) {
       await page.setViewportSize({ width, height: 900 });
       if (
-        width === 375 &&
+        width === 390 &&
         (await page.locator('input[type="search"]').count())
       ) {
         const searchBox = await page
@@ -249,6 +300,55 @@ try {
           searchBox.width >= 250,
           name + " search field remains usable",
         );
+      }
+      if (name === "workspace" || name === "board") {
+        const expand = page.getByRole("button", {
+          name: "Đọc toàn bộ mô tả",
+          exact: true,
+        });
+        await expand.click();
+        const region = page.locator('.description-full[role="region"]');
+        await region.waitFor();
+        assert.ok(
+          await region.evaluate(
+            (node) =>
+              node.scrollHeight > node.clientHeight && node.clientHeight <= 361,
+          ),
+        );
+        await region.focus();
+        await page.keyboard.press("End");
+        await page.waitForFunction(
+          () => document.querySelector(".description-full").scrollTop > 0,
+        );
+        assert.equal(await region.locator("a").getAttribute("href"), longLink);
+        await page.screenshot({
+          path: `.local/design-review/${name}-expanded-${width}.png`,
+          fullPage: true,
+        });
+        await page
+          .getByRole("button", { name: "Thu gọn mô tả", exact: true })
+          .click();
+        assert.equal(await region.count(), 0);
+        if (name === "board")
+          assert.equal(
+            await page
+              .getByRole("button", {
+                name: "Chỉnh sửa mô tả Dự án",
+                exact: true,
+              })
+              .isVisible(),
+            true,
+          );
+        else
+          assert.equal(
+            await page
+              .getByRole("button", {
+                name: "Chỉnh sửa mô tả Workspace",
+                exact: true,
+              })
+              .isVisible(),
+            true,
+          );
       }
       await page.screenshot({
         path: ".local/design-review/" + name + "-" + width + ".png",
@@ -265,7 +365,7 @@ try {
   }
   assert.deepEqual(errors, []);
   console.log(
-    "PASS: whole Project/Task card navigation, long description expand/collapse, inbox loading/error/retry/empty; 7 screens at 1440/375px without overflow or page errors. Isolated data; no SMTP/provider calls.",
+    "PASS: mouse/keyboard card navigation, CTA hit test, skip-to-main without route change, bounded long descriptions/keyboard scroll/long links/Vietnamese; inbox states; 7 screens at 1440/1280/390px without overflow/page errors. Isolated data; no SMTP/provider calls.",
   );
 } finally {
   await browser?.close();

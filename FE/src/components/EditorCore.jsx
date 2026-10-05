@@ -17,6 +17,7 @@ export default function RichEditor({
   limit = 10000,
 }) {
   const latest = useRef(onChange);
+  const container = useRef(null);
   latest.current = onChange;
   const [text, setText] = useState(""),
     [error, setError] = useState("");
@@ -41,6 +42,7 @@ export default function RichEditor({
         role: "textbox",
         "aria-label": label,
         "aria-multiline": "true",
+        "aria-readonly": String(readOnly),
       },
     },
     onUpdate: ({ editor }) => {
@@ -51,6 +53,9 @@ export default function RichEditor({
   });
   useEffect(() => {
     editor?.setEditable(!readOnly, false);
+    container.current
+      ?.querySelector(".tiptap")
+      ?.setAttribute("aria-readonly", String(readOnly));
   }, [readOnly, editor]);
   useEffect(() => {
     if (editor && readOnly)
@@ -83,9 +88,16 @@ export default function RichEditor({
     editor.chain().focus().extendMarkRange("link").setLink({ href }).run();
   }
   return (
-    <div className={"rich-editor" + (readOnly ? " read-only" : "")}>
+    <div
+      ref={container}
+      className={"rich-editor" + (readOnly ? " read-only" : "")}
+    >
       {!readOnly && (
-        <div className="editor-toolbar" aria-label={"Định dạng " + label}>
+        <div
+          className="editor-toolbar"
+          role="group"
+          aria-label={"Định dạng " + label}
+        >
           {[
             ["B", () => editor.chain().focus().toggleBold().run()],
             ["I", () => editor.chain().focus().toggleItalic().run()],
@@ -106,7 +118,13 @@ export default function RichEditor({
             ["↶", () => editor.chain().focus().undo().run()],
             ["↷", () => editor.chain().focus().redo().run()],
           ].map(([name, run]) => (
-            <button key={name} type="button" onClick={run}>
+            <button
+              key={name}
+              type="button"
+              onClick={run}
+              aria-label={toolbarLabels[name]}
+              title={toolbarLabels[name]}
+            >
               {name}
             </button>
           ))}
@@ -122,3 +140,17 @@ export default function RichEditor({
     </div>
   );
 }
+const toolbarLabels = {
+  B: "Đậm",
+  I: "Nghiêng",
+  U: "Gạch chân",
+  H1: "Tiêu đề 1",
+  H2: "Tiêu đề 2",
+  "Nội dung": "Văn bản thường",
+  "• List": "Danh sách dấu đầu dòng",
+  "1. List": "Danh sách đánh số",
+  Link: "Chèn hoặc sửa liên kết",
+  "😊": "Thêm emoji",
+  "↶": "Hoàn tác",
+  "↷": "Làm lại",
+};

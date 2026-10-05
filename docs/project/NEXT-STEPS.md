@@ -1,5 +1,7 @@
 # Trạng thái và bước tiếp theo
 
+05/10/2026 — **P3 Đạt gate**: skip-to-main, focus/toolbar targets, description dài có vùng cuộn và CTA luôn thấy; keyboard/card/CTA và 7 màn tại 1440/1280/390px đạt. 5 browser fixtures, 12 FE tests/build đạt. [QA P3](../qa/FE-P3-INTERACTION-CHECK.md). Bước tiếp theo P4; các đoạn dưới là lịch sử. Không bật mail worker.
+
 05/10/2026 — **P2 Đạt gate**: nền dialog chung và states/feedback hoàn thiện trên các cụm; thêm regression bàn phím/dialog lồng, assignee rời nhóm, Workspace scope mất quyền và Inbox loading/error/retry/empty. 8 browser fixtures, 12 FE tests và build 113 modules đạt. [QA hiện hành](../qa/FE-COMPONENTS-CHECK.md) và [kế hoạch](../project/UI-UX-UPGRADE-PLAN.md) ghi ngoại lệ và giới hạn. Bước tiếp theo P3; chưa nghiệm thu toàn bộ UI hoặc providers thật. Các đoạn dưới là lịch sử increment.
 
 Increment tiếp theo 05/10: WorkspacePicker My Tasks có server search/phân trang/retry, giữ selection và reset/counter đúng; tên đăng ký/hồ sơ/tạo/cài đặt Workspace dùng FormField. Picker >20 items và Account/Settings/Navigation/Interactions fixtures, build 111 modules/12 FE tests đạt. Tiếp tục P2 với nền dialog và states/feedback; không chuyển P3. Xem [QA component hiện hành](../qa/FE-COMPONENTS-CHECK.md).

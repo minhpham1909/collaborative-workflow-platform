@@ -1466,7 +1466,8 @@ button:hover {
 input:not([type="checkbox"]):focus-visible,
 select:focus-visible,
 textarea:focus-visible {
-  outline: 0;
+  outline: 2px solid var(--studio-purple);
+  outline-offset: 2px;
   border-color: var(--studio-purple);
   box-shadow: 0 0 0 2px var(--studio-focus);
 }
@@ -1695,5 +1696,76 @@ textarea:focus-visible {
 @media (prefers-reduced-motion: reduce) {
   button {
     transition: none;
+  }
+}
+
+/* P3: keyboard access and bounded long-form content. */
+.skip-link {
+  position: fixed;
+  top: 12px;
+  left: 16px;
+  z-index: 1300;
+  transform: translateY(-180%);
+  background: #fff;
+}
+.skip-link:focus-visible {
+  transform: translateY(0);
+}
+.description-full {
+  max-height: min(360px, 50dvh);
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: 4px;
+  scrollbar-gutter: stable;
+}
+.description-full:focus-visible,
+.tiptap:focus-visible,
+summary:focus-visible {
+  outline: 2px solid var(--studio-purple);
+  outline-offset: 2px;
+}
+.description-full .rich-editor {
+  margin-block: 0;
+}
+.description-scroll-hint {
+  font-size: 12px;
+  margin: 8px 4px;
+}
+.editor-toolbar button {
+  min-width: 40px;
+  min-height: 40px;
+}
+.description-toggle {
+  min-height: 40px;
+  padding-inline: 8px;
+}
+.buttons > a,
+.app-footer nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+}
+.filter-panel .filters .check {
+  min-height: 44px;
+}
+@media (max-width: 640px) {
+  .editor-toolbar button,
+  .description-toggle,
+  .buttons > a,
+  .app-footer nav a {
+    min-height: 44px;
+  }
+  .editor-toolbar button {
+    min-width: 44px;
+  }
+  .password-control button,
+  .system-toast button {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
+  }
+  .form-field .password-control input:not([type="checkbox"]) {
+    padding-right: 58px;
   }
 }

@@ -2,7 +2,7 @@
 
 Ngày 04/10/2026. Theo yêu cầu chủ dự án: đánh giá từng bước hoàn thành đến đâu rồi mới chuyển bước tiếp theo. Mốc code khởi đầu: `29c8ffa` trên dev.
 
-Yêu cầu bổ sung: dùng skill ui-ux để rà và tối ưu trực tiếp màn hiện có, bỏ wireframe. [Increment giao diện đã thực hiện](../qa/UI-DESIGN-REVIEW-2026-10-04.md) giữ brand, có kiểm 6 màn ở 1440/375px. Sau đó [regression điều hướng](../qa/FE-DRAFT-NAVIGATION-CHECK.md) đã sửa NAV-01 và đóng gate audit P1 trong phạm vi kiểm; P2 tiếp theo đã đạt gate theo [QA component](../qa/FE-COMPONENTS-CHECK.md); chưa nghiệm thu P3–P6 hoặc toàn sản phẩm.
+Yêu cầu bổ sung: dùng skill ui-ux để rà và tối ưu trực tiếp màn hiện có, bỏ wireframe. [Increment giao diện đã thực hiện](../qa/UI-DESIGN-REVIEW-2026-10-04.md) giữ brand, có kiểm 6 màn ở 1440/375px. Sau đó [regression điều hướng](../qa/FE-DRAFT-NAVIGATION-CHECK.md) đã sửa NAV-01 và đóng gate audit P1 trong phạm vi kiểm; P2 tiếp theo đã đạt gate theo [QA component](../qa/FE-COMPONENTS-CHECK.md); P3 đã đạt theo [QA tương tác](../qa/FE-P3-INTERACTION-CHECK.md); chưa nghiệm thu P4–P6 hoặc toàn sản phẩm.
 
 ## Cách triển khai và đánh giá
 
@@ -19,7 +19,7 @@ Yêu cầu bổ sung: dùng skill ui-ux để rà và tối ưu trực tiếp m�
 |---|---|---|---|
 | P1 — Audit luồng | Ma trận hành vi và danh sách lỗi có ưu tiên | Đạt gate audit | [Audit P1](../qa/UI-UX-FLOW-AUDIT.md) và [QA điều hướng](../qa/FE-DRAFT-NAVIGATION-CHECK.md): lỗi chặn đã sửa trong phạm vi fixture; giới hạn tương thích và provider live được ghi riêng |
 | P2 — Component dùng chung | Form/dialog/picker/feedback thống nhất | Đạt gate P2 | [Quy ước](../ui-ux/COMPONENT-INTERACTION-RULES.md) và [QA](../qa/FE-COMPONENTS-CHECK.md): FormField/password/pickers, nền dialog và feedback đã áp dụng; 8 browser fixtures, 12 tests/build đạt; native controls và phạm vi kế tiếp được ghi rõ |
-| P3 — Tương tác và nội dung dài | Vùng bấm, focus, thu gọn mô tả, bố cục dễ dùng | Chưa nghiệm thu giai đoạn | Đã có preview mô tả và click toàn thẻ Workspace/Project/Task; còn kiểm toàn hệ thống theo gate P3 |
+| P3 — Tương tác và nội dung dài | Vùng bấm, focus, thu gọn mô tả, bố cục dễ dùng | Đạt gate P3 | [QA P3](../qa/FE-P3-INTERACTION-CHECK.md): keyboard/card/CTA, focus/toolbar, bounded description và 7 màn tại 1440/1280/390px đạt |
 | P4 — Điều hướng và bản nháp | Back/Forward/hash/link giữ đúng dữ liệu và context | Chưa nghiệm thu giai đoạn | Guard chung đã triển khai để sửa NAV-01; còn quy ước filters/context và giới hạn fallback history |
 | P5 — Thiết kế khôi phục Task | Quy tắc và thiết kế restore được chốt | Chưa bắt đầu; có quyết định mới cần chốt | Soft delete đã có; chưa có thùng rác/restore/retention/purge |
 | P6 — Hoàn thiện visual | Các cụm màn đồng bộ theo Stitch và được review | Chưa bắt đầu giai đoạn | Có nền Jakarta/kem-tím và màn Stitch; chưa nghiệm thu visual toàn hệ thống |
@@ -69,10 +69,10 @@ Rà card/link/icon/menu và trạng thái focus/hover/disabled. Thiết kế Wor
 
 Tiêu chí chuyển P4:
 
-- [ ] Card và CTA không che nhau; vùng thao tác dùng được bằng chuột và bàn phím.
-- [ ] Focus rõ, label cho icon buttons đầy đủ; trạng thái disabled/read-only dễ nhận biết.
-- [ ] Mô tả dài thu gọn/mở rộng và chỉnh sửa được, không làm mất dữ liệu hoặc đẩy bố cục vỡ.
-- [ ] Không tràn ngang ngoài vùng cuộn chủ đích; các thao tác cốt lõi dùng được ở ba kích thước kiểm.
+- [x] Card và CTA không che nhau; vùng thao tác dùng được bằng chuột và bàn phím.
+- [x] Focus rõ, label cho icon buttons đầy đủ; trạng thái disabled/read-only dễ nhận biết.
+- [x] Mô tả dài thu gọn/mở rộng và chỉnh sửa được, không làm mất dữ liệu hoặc đẩy bố cục vỡ.
+- [x] Không tràn ngang ngoài vùng cuộn chủ đích; các thao tác cốt lõi dùng được ở ba kích thước kiểm.
 
 ## P4 — Điều hướng, lịch sử và bảo vệ bản nháp
 
@@ -125,4 +125,4 @@ Tiêu chí hoàn thành kế hoạch:
 | Quyết định | Quy tắc đã có hoặc câu hỏi mới thực sự cần chủ dự án chốt |
 | Chuyển bước | Có/Không và căn cứ theo tiêu chí bên trên |
 
-Bước hiện tại: P2 Đạt gate (05/10/2026), xem [QA hoàn thiện](../qa/FE-COMPONENTS-CHECK.md) và [quy ước](../ui-ux/COMPONENT-INTERACTION-RULES.md). Đủ điều kiện bắt đầu P3; chưa nghiệm thu P3. Native controls/editor counter/inline success giữ riêng có lý do. Toolbar editor mobile/skip link còn audit P3, shell/typography còn P6. P1 đạt gate audit; không coi guard bản nháp là autosave/backup hoặc nghiệm thu P4.
+Bước hiện tại: P3 Đạt gate ngày 05/10/2026 theo [QA P3](../qa/FE-P3-INTERACTION-CHECK.md); đủ điều kiện bắt đầu P4. P1/P2 đạt trong phạm vi đã ghi; P4–P6 và providers thật chưa nghiệm thu. Không coi draft guard là autosave/backup.

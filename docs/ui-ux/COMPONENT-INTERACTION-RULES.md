@@ -49,5 +49,5 @@ Cập nhật 05/10/2026. P2 đạt gate trong phạm vi ứng dụng hiện có;
 - Giữ select/date native để dùng bàn phím và nhập thời gian ổn định; không thêm calendar/combobox mới trong P2. Styling và vùng bấm toàn hệ thống tiếp tục P3/P6. Native consent required vẫn là điều kiện submit.
 - Inline success dành cho Settings/Task/Auth/Inbox vì người dùng cần biết kết quả trong ngữ cảnh; toast dành cho phản hồi ngắn. Team LINK phải giữ kết quả đến khi người dùng đóng, không dùng toast biến mất.
 - Confirm bỏ draft đơn giản có thể dùng fallback “Hủy”/“Xác nhận” kèm thông điệp nói rõ tác động; các action nguy hiểm và guard route có nhãn cụ thể. Không đổi ngữ nghĩa confirm vì thống nhất style.
-- P3 còn audit vùng bấm/focus, gồm skip link và toolbar editor mobile; P4 còn filters/context và fallback history; P5 restore/retention/purge; P6 hierarchy/typography/visual và English. Đây không phải lỗi chặn nền component P2.
+- [P3 đã đạt gate](../qa/FE-P3-INTERACTION-CHECK.md), gồm skip-to-main và toolbar editor mobile; P4 còn filters/context và fallback history; P5 restore/retention/purge; P6 hierarchy/typography/visual và English. Đây không phải lỗi chặn nền component P2.
 - Google/SMTP thật, screen reader đầy đủ, mọi tổ hợp trạng thái ở mọi kích thước và performance dữ liệu lớn chưa nghiệm thu. P2 đạt không đồng nghĩa toàn sản phẩm release-ready.
