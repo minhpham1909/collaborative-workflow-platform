@@ -4,7 +4,7 @@ import { useDraftGuard } from "../../lib/draft-navigation.js";
 import { useEffect, useRef, useState } from "react";
 import { messageFor } from "../../lib/messages.js";
 import { loadGoogle } from "../../lib/google.js";
-export default function Login({ api, connectionError, retry }) {
+export default function Login({ api, connectionError, retry, embedded = false }) {
   const [email, setEmail] = useState(""),
     [password, setPassword] = useState(""),
     [busy, setBusy] = useState(false),
@@ -98,9 +98,10 @@ export default function Login({ api, connectionError, retry }) {
       setBusy(false);
     }
   }
+  const Container = embedded ? "section" : "main";
   return (
-    <main className="auth-page">
-      <section className="auth-story">
+    <Container className={embedded ? "invite-login" : "auth-page"}>
+      {!embedded && <section className="auth-story">
         <a className="brand" href="#home">
           <span>W</span>Workflow
         </a>
@@ -119,7 +120,7 @@ export default function Login({ api, connectionError, retry }) {
           <span>↗</span>
           <span>✓</span>
         </div>
-      </section>
+      </section>}
       <section className="auth-form">
         <h2>Chào bạn trở lại ✨</h2>
         <p>Đăng nhập để mở không gian làm việc của bạn.</p>
@@ -174,6 +175,6 @@ export default function Login({ api, connectionError, retry }) {
         </button>
         <div ref={googleTarget} className="google-target" />
       </section>
-    </main>
+    </Container>
   );
 }

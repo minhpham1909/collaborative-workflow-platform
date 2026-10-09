@@ -127,7 +127,7 @@ try {
   });
   if (process.env.WORKFLOW_DEBUG) console.log("Checking Home dialog");
   await page
-    .getByRole("button", { name: "+ Tạo Workspace", exact: true })
+    .getByRole("button", { name: "Tạo Workspace", exact: true })
     .click();
   assert.equal(
     await page
@@ -171,6 +171,7 @@ try {
     );
   await page.getByLabel("Tên Workspace", { exact: true }).fill("   ");
   await page
+    .locator(".dialog")
     .getByRole("button", { name: "Tạo Workspace", exact: true })
     .click();
   assert.equal(
@@ -233,7 +234,7 @@ try {
   );
   assert.equal(
     await page
-      .getByRole("button", { name: "+ Tạo Workspace", exact: true })
+      .getByRole("button", { name: "Tạo Workspace", exact: true })
       .evaluate((n) => n === document.activeElement),
     true,
   );
@@ -260,7 +261,7 @@ try {
         .innerText()
     ).includes("nguyên tắc"),
   );
-  await page.getByRole("link", { name: "Xem Dự án →" }).click();
+  await page.locator(".project-card").click({ position: { x: 10, y: 10 } });
   await page
     .getByRole("heading", { name: "Bảng công việc", exact: true })
     .waitFor();
@@ -619,18 +620,18 @@ try {
     .getByRole("link", { name: "Công việc của tôi", exact: false })
     .click();
   await memberPage
-    .getByRole("link", { name: "Task đồng đội cập nhật" })
+    .getByRole("link", { name: "Task đồng đội cập nhật", exact: true })
     .waitFor();
   const filtered = memberPage.waitForResponse(
     (r) => r.url().includes("/my-tasks?") && r.url().includes("workspaceId="),
   );
-  await memberPage.getByRole("button", { name: /^Bộ lọc/ }).click();
+  await memberPage.getByRole("button", { name: /^Lọc nâng cao/ }).click();
   await memberPage
     .getByLabel("Workspace", { exact: true })
     .selectOption(workspace.id);
   await filtered;
   await memberPage
-    .getByRole("link", { name: "Task đồng đội cập nhật" })
+    .getByRole("link", { name: "Mở toàn trang Task đồng đội cập nhật", exact: true })
     .click();
   await memberPage
     .getByRole("heading", { name: "Task đồng đội cập nhật" })
@@ -680,7 +681,7 @@ try {
     .waitFor();
   await memberPage.getByLabel("Trạng thái Task").selectOption("done");
   await memberPage
-    .getByRole("link", { name: "Task đồng đội cập nhật" })
+    .getByRole("link", { name: "Task đồng đội cập nhật", exact: true })
     .waitFor();
   await page.getByRole("button", { name: "Làm mới Task" }).click();
   await page.getByText("Bình luận của assignee", { exact: true }).waitFor();
@@ -691,6 +692,7 @@ try {
     1,
   );
   await page
+    .locator(".comment").filter({ hasText: "Bình luận đã sửa" })
     .getByRole("button", { name: "Xóa bình luận", exact: true })
     .click();
   await page
@@ -707,7 +709,7 @@ try {
   });
   await page.getByRole("button", { name: "Làm mới Task" }).click();
   await page
-    .getByText("Dự án đã lưu trữ · Task và bình luận chỉ đọc.", { exact: true })
+    .getByText("Dự án hoặc Workspace đang lưu trữ. Nội dung chỉ đọc; người có quyền vẫn có thể gỡ bình luận vi phạm.", { exact: true })
     .waitFor();
   assert.equal(
     await page.getByRole("button", { name: "Sửa Task", exact: true }).count(),
@@ -728,6 +730,8 @@ try {
   await page.getByRole("button", { name: "Làm mới Task" }).click();
   await page.getByRole("button", { name: "Sửa Task", exact: true }).waitFor();
   await page.getByLabel("Trạng thái", { exact: true }).selectOption("todo");
+  await page.locator(".system-dialog input").fill("Kiểm tra lại trước khi bàn giao");
+  await page.locator(".system-dialog button.primary").click();
   await page
     .getByRole("status")
     .filter({ hasText: "Đã đổi trạng thái" })
@@ -738,6 +742,7 @@ try {
     });
   await page.getByRole("link", { name: "Thiết kế Bloom", exact: true }).click();
   await page.locator(".board-column.todo .task-card").first().waitFor();
+  await page.waitForFunction(() => document.querySelector('.board')?.getAttribute('aria-busy') === 'false');
   assert.equal(await page.locator(".board-column.todo .task-card").count(), 12);
   await page
     .getByRole("button", { name: "Tải thêm Chưa làm", exact: true })
@@ -825,6 +830,7 @@ try {
     "PASS: whole Workspace card, shared/Project descriptions, nested dialogs/Escape/draft retention, safe link input, toast, React/Express/Mongo Board/create/detail/editor/comments, author rights, assignee status/My Tasks, CAS draft, archived read-only, per-column load more, deleted unavailable, no overflow/page errors. No SMTP/provider calls.",
   );
 } catch (error) {
+  if (browser) for (const context of browser.contexts()) for (const failedPage of context.pages()) { await failedPage.screenshot({ path: '.local/interaction-failure.png', fullPage: true }); console.log('Fixture failure URL: ' + failedPage.url()); console.log((await failedPage.locator('main').allTextContents()).join('\n').slice(-2200)); }
   console.error(error);
   throw error;
 } finally {

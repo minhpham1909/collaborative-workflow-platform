@@ -1,0 +1,28 @@
+.shell main.studio-notifications { padding:28px 32px 40px; color:var(--wf-ink); }
+.studio-notifications .notification-hero { background:var(--wf-surface); border:1px solid var(--wf-border); border-radius:22px; padding:26px; margin-bottom:24px; gap:24px; align-items:center; }
+.notification-hero h1 { font-size:clamp(26px,3vw,34px); line-height:1.4; margin:10px 0; text-wrap:balance; }
+.notification-hero small { font-size:12px; color:var(--wf-primary); }.notification-hero p { font-size:14px; line-height:1.8; color:var(--wf-muted); text-wrap:pretty; }
+.notification-hero .buttons { flex-shrink:0; flex-wrap:wrap; justify-content:flex-end; }
+.notification-quick { display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin:20px 0; }
+.notification-quick button { font-size:13px; border-radius:999px; }.notification-quick button[aria-pressed=true] { background:var(--wf-primary); border-color:var(--wf-primary); color:white; }
+.notification-quick a { margin-left:auto; min-height:44px; display:flex; align-items:center; font-size:13px; }
+.notification-preferences { font-size:13px; color:var(--wf-muted); line-height:1.8; }.notification-preferences a { display:inline-flex; min-height:44px; align-items:center; }
+.notification-filter-fields { border:0; padding:0; min-width:0; margin:0; }
+.studio-notifications .filter-panel { padding:14px; background:var(--wf-surface); border:1px solid var(--wf-border); border-radius:18px; margin:0 0 18px; }
+.studio-notifications .filter-panel .compact-filter-bar { display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end; padding:0; margin:0; }
+.studio-notifications .compact-filter-bar > label { flex:0 1 180px; min-width:150px; }.studio-notifications .compact-filter-bar > label:has(input[type=search]) { flex:1 1 260px; min-width:200px; }
+.studio-notifications .compact-filter-bar > button { flex-shrink:0; }
+.studio-notifications > .muted,.studio-notifications .filter-sort { font-size:13px; line-height:1.8; }
+.notification-group { margin:26px 0; }.notification-group-heading { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:14px; }
+.notification-group-heading h2 { font-size:16px; margin:0; }.notification-group-heading p { font-size:13px; color:var(--wf-muted); margin:0; }
+.studio-notifications .studio-note { display:flex; align-items:flex-start; gap:18px; border:1px solid var(--wf-border); background:var(--wf-soft); padding:24px; border-radius:18px; margin:12px 0; }
+.studio-notifications .studio-note.unread { background:var(--wf-surface); border-left:4px solid var(--wf-primary); }
+.note-icon { width:44px; height:44px; flex:0 0 44px; border-radius:14px; display:grid; place-items:center; background:var(--wf-lavender); color:var(--wf-primary); }
+.category-work .note-icon { background:var(--wf-mint); color:#126047; }.note-icon .ui-icon { width:22px; height:22px; }
+.note-body { min-width:0; flex:1; }.note-category { font-size:12px; color:var(--wf-primary); margin:0 0 8px; }
+.studio-note h2,.studio-note h3 { font-size:18px; line-height:1.6; margin:10px 0; overflow-wrap:anywhere; text-wrap:pretty; }
+.studio-note p { font-size:14px; line-height:1.8; color:var(--wf-muted); margin:8px 0; overflow-wrap:anywhere; text-wrap:pretty; }
+.studio-note p.muted { font-size:12px; }.studio-note .buttons { flex-wrap:wrap; gap:10px; margin-top:18px; }.studio-note .buttons a { display:inline-flex; align-items:center; justify-content:center; min-height:44px; border-radius:999px; padding:8px 14px; background:var(--wf-hover); text-decoration:none; font-size:13px; }
+.studio-note .buttons button { font-size:13px; border-radius:999px; }
+@media(max-width:1100px) { .studio-notifications .notification-hero { flex-direction:column; align-items:flex-start; }.notification-hero .buttons { justify-content:flex-start; } }
+@media(max-width:650px) { .shell main.studio-notifications { padding:20px 16px 28px; }.studio-notifications .notification-hero { padding:20px; }.studio-notifications .studio-note { gap:12px; padding:18px 14px; }.note-icon { width:36px; height:36px; flex-basis:36px; }.note-icon .ui-icon { width:18px; height:18px; }.studio-note h2,.studio-note h3 { font-size:16px; }.studio-note .buttons { margin-left:-48px; }.notification-quick a { margin-left:0; }.studio-notifications .compact-filter-bar > label { flex:1 1 100%; } }

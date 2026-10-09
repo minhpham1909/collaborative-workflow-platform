@@ -2,15 +2,21 @@ import { InlineMessage, LoadingState } from "../components/Feedback.jsx";
 import EmailVerificationActions from "../components/EmailVerificationActions.jsx";
 import AppFooter from "../components/AppFooter.jsx";
 import AppHeader from "../components/AppHeader.jsx";
-import { useEffect, useRef, useState } from "react";
+import AppSidebar from "../components/AppSidebar.jsx";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createApi } from "../lib/api.js";
 import { messageFor } from "../lib/messages.js";
 import Login from "../features/auth/Login.jsx";
 import Home from "../features/workspaces/Home.jsx";
+import Organizations from "../features/organizations/Organizations.jsx";
+import Organization from "../features/organizations/Organization.jsx";
 import Workspace from "../features/projects/Workspace.jsx";
+import OrganizationTeam from "../features/organizations/OrganizationTeam.jsx";
 import Project from "../features/projects/Project.jsx";
-import TaskList from "../features/tasks/TaskList.jsx";
+import MyTasks from "../features/tasks/MyTasks.jsx";
 import TaskDetail from "../features/tasks/TaskDetail.jsx";
+import SharedProjects from "../features/projects/SharedProjects.jsx";
+import { notify } from "../components/NotificationProvider.jsx";
 import { readRoute } from "./routes.js";
 import Settings from "../features/settings/Settings.jsx";
 import {
@@ -21,7 +27,7 @@ import {
 
 import Invite from "../features/projects/Invite.jsx";
 import AccountFlow from "../features/auth/AccountFlow.jsx";
-import { consumeAuthLink } from "../lib/auth-links.js";
+import { consumeAuthLink, isInvitationKind, invitationDestination } from "../lib/auth-links.js";
 import Notifications from "../features/notifications/Notifications.jsx";
 let sessionListener = () => {};
 const origin = import.meta.env.VITE_API_ORIGIN ?? "http://localhost:4000";
@@ -51,21 +57,23 @@ for (const method of [
 }
 const initialLink = consumeAuthLink(location, history);
 export default function App() {
-  const [inviteToken, setInviteToken] = useState(
-    initialLink?.kind === "invite" ? initialLink.token : null,
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const closeMobile = useCallback(() => setMobileOpen(false), []);
+  const [inviteIntent, setInviteIntent] = useState(
+    isInvitationKind(initialLink?.kind) ? initialLink : null,
   );
   const [accountToken, setAccountToken] = useState(
-    initialLink && initialLink.kind !== "invite" ? initialLink : null,
+    initialLink && !isInvitationKind(initialLink.kind) ? initialLink : null,
   );
   const [route, setRoute] = useState(() => readRoute(location.hash));
   useEffect(() => {
     const changed = () => {
       const link = consumeAuthLink(location, history);
-      if (link?.kind === "invite") setInviteToken(link.token);
+      if (isInvitationKind(link?.kind)) setInviteIntent(link);
       else if (link) setAccountToken(link);
       const next = readRoute(location.hash);
-      if (!["invite", "register", "recover", "login"].includes(next.kind))
-        setInviteToken(null);
+      if (!isInvitationKind(next.kind) && !["register", "recover", "login", "verify-email", "reset-password"].includes(next.kind))
+        setInviteIntent(null);
       if (!["verify-email", "reset-password"].includes(next.kind))
         setAccountToken(null);
       setRoute(next);
@@ -77,6 +85,13 @@ export default function App() {
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false);
   const logoutPending = useRef(false);
+  function acceptedInvitation(result) {
+    const kind = inviteIntent?.kind ?? route.kind;
+    const destination = invitationDestination(kind, result);
+    setInviteIntent(null);
+    notify(kind === "project-invite" ? "Đã tham gia Project với quyền Guest." : kind === "organization-invite" ? "Đã tham gia tổ chức." : "Đã tham gia Workspace.");
+    location.hash = destination;
+  }
   useDraftGuard({ dirty: false, busy });
   async function start() {
     setError("");
@@ -142,12 +157,19 @@ export default function App() {
         token={accountToken?.kind === route.kind ? accountToken.token : null}
         user={user}
         onTokenUsed={() => setAccountToken(null)}
-        loginHref={inviteToken ? "#invite" : user ? "#home" : "#login"}
+        loginHref={inviteIntent ? `#${inviteIntent.kind}` : user ? "#home" : "#login"}
       />
     );
-  if (!user) return <Login api={api} connectionError={error} retry={start} />;
+  if (!user) {
+    if (isInvitationKind(route.kind)) return <Invite kind={route.kind} api={api} token={inviteIntent?.kind === route.kind ? inviteIntent.token : null} user={null}
+      onAccepted={acceptedInvitation} authPanel={<Login api={api} connectionError={error} retry={start} embedded />} />;
+    if (inviteIntent && route.kind === "login") return <Invite kind={inviteIntent.kind} api={api} token={inviteIntent.token} user={null}
+      onAccepted={acceptedInvitation} authPanel={<Login api={api} connectionError={error} retry={start} embedded />} />;
+    return <Login api={api} connectionError={error} retry={start} />;
+  }
   return (
     <div className="shell">
+      <AppSidebar route={route} user={user} api={api} mobileOpen={mobileOpen} closeMobile={closeMobile} />
       <div>
         <AppHeader
           route={route}
@@ -155,18 +177,20 @@ export default function App() {
           api={api}
           busy={busy}
           logout={logout}
+          openMobile={() => setMobileOpen(true)}
+          mobileOpen={mobileOpen}
         />
         {error && <InlineMessage>{error}</InlineMessage>}
-        {route.kind === "invite" ? (
+        {isInvitationKind(route.kind) || (route.kind === "login" && inviteIntent) ? (
           <Invite
-            key={user.id + (inviteToken ?? "")}
+            key={user.id + (inviteIntent?.kind ?? route.kind)}
             api={api}
-            token={inviteToken}
+            kind={inviteIntent?.kind ?? route.kind}
+            token={inviteIntent?.kind === route.kind || route.kind === "login" ? inviteIntent?.token : null}
             user={user}
-            onAccepted={(id) => {
-              setInviteToken(null);
-              location.hash = `workspace/${id}`;
-            }}
+            onAccepted={acceptedInvitation}
+            onSwitchAccount={logout}
+            accountBusy={busy}
           />
         ) : route.kind === "settings" ? (
           <Settings
@@ -192,12 +216,16 @@ export default function App() {
             </p>
             <EmailVerificationActions api={api} />
           </main>
+        ) : route.kind === "organizations" ? (
+          <Organizations key={user.id} api={api} />
+        ) : route.kind === "organization" ? (
+          route.section === 'team' ? <OrganizationTeam key={user.id + route.id} api={api} id={route.id} user={user} /> : <Organization key={user.id + route.id} api={api} id={route.id} />
+        ) : route.kind === "shared" ? (
+          <SharedProjects key={user.id} api={api} />
         ) : route.kind === "task" ? (
           <TaskDetail key={user.id + route.id} api={api} id={route.id} />
         ) : route.kind === "mine" ? (
-          <main>
-            <TaskList key={user.id} api={api} mine />
-          </main>
+          <MyTasks key={user.id} api={api} />
         ) : route.kind === "workspace" ? (
           <Workspace key={user.id + route.id} api={api} id={route.id} />
         ) : route.kind === "project" ? (
@@ -206,6 +234,7 @@ export default function App() {
             api={api}
             id={route.id}
             user={user}
+            section={route.section}
           />
         ) : (
           <Home key={user.id} api={api} user={user} />

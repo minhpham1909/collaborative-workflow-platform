@@ -1,0 +1,107 @@
+import assert from 'node:assert/strict';
+import { createRequire } from 'node:module';
+import { once } from 'node:events';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { spawn } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+const require = createRequire(import.meta.url);
+const { chromium } = require(process.env.WORKFLOW_PLAYWRIGHT_MODULE || 'playwright');
+const { MongoMemoryReplSet } = await import('../../BE/node_modules/mongodb-memory-server-core/lib/index.js');
+const { default: mongoose } = await import('../../BE/node_modules/mongoose/index.js');
+const { models, User, OrganizationMembership, Workspace, WorkspaceMembership, OrganizationInvitation } = await import('../../BE/src/models/index.js');
+const { createApp } = await import('../../BE/src/app.js');
+const { createAuthService } = await import('../../BE/src/auth/service.js');
+const { createMongoAuthStore } = await import('../../BE/src/auth/mongo-store.js');
+const { hashPassword } = await import('../../BE/src/auth/passwords.js');
+const { createWorkspaceService } = await import('../../BE/src/workspaces/service.js');
+const { createMongoWorkspaceStore } = await import('../../BE/src/workspaces/mongo-store.js');
+const { createWorkService } = await import('../../BE/src/work/service.js');
+const { createMongoWorkStore } = await import('../../BE/src/work/mongo-store.js');
+const { createOrganizationService } = await import('../../BE/src/organizations/service.js');
+const { createMongoOrganizationStore } = await import('../../BE/src/organizations/mongo-store.js');
+const { createNotificationsService } = await import('../../BE/src/notifications/service.js');
+const { createMongoNotificationsStore } = await import('../../BE/src/notifications/mongo-store.js');
+const { cutoffCodec } = await import('../../BE/src/notifications/input.js');
+const { testConfig } = await import('../../BE/test-support/auth-store.js');
+const out = fileURLToPath(new URL('../../.local/stitch-team-management/', import.meta.url)); await mkdir(out, { recursive: true });
+let repl, server, browser; const errors = [];
+try {
+  repl = await MongoMemoryReplSet.create({ binary: { version: '8.0.17', downloadDir: fileURLToPath(new URL('../../.local/mongodb-binaries/', import.meta.url)) }, replSet: { count: 1, storageEngine: 'wiredTiger', ip: '127.0.0.1' } });
+  await mongoose.connect(repl.getUri('workflow_fe_stitch_team_management_test'));
+  for (const model of Object.values(models)) await model.createIndexes();
+  const config = { ...testConfig(), webOrigin: 'http://localhost:5173', secureCookies: false }, password = 'Organization browser fixture password', hash = await hashPassword(password);
+  const auth = await createAuthService({ store: createMongoAuthStore(), config }), organizations = createOrganizationService({ store: createMongoOrganizationStore({ config }) }), workspaces = createWorkspaceService({ store: createMongoWorkspaceStore({ config }) }), work = createWorkService({ store: createMongoWorkStore({ config }) });
+  const users = [], auths = [];
+  for (let index = 0; index < 4; index++) { const user = new User({ email: `org-ui-${index}@example.com`, displayName: ['Minh', 'Lan', 'Hải', 'Bình'][index], passwordHash: hash, emailVerifiedAt: new Date(), termsAcceptance: { version: 'test', acceptedAt: new Date() } }); await user.save(); users.push(user); auths.push(await auth.authenticate((await auth.login({ email: user.email, password })).accessToken)); }
+  const org = (await organizations.create(auths[0], { name: 'Studio Sài Gòn' })).organization;
+  const memberOrg = (await organizations.create(auths[3], { name: 'Hà Nội Creative Lab' })).organization;
+  const privateOrg = (await organizations.create(auths[3], { name: 'Private hidden organization' })).organization;
+  for (const [owner, member, target] of [[0, 1, org], [0, 2, org], [3, 0, memberOrg], [3, 1, privateOrg]]) { const invite = await organizations.invite(auths[owner], target.id, { email: users[member].email }); await organizations.acceptInvitationById(auths[member], invite.invitation.id, {}); }
+  const adminMembership = await OrganizationMembership.collection.findOne({ organizationId: new mongoose.Types.ObjectId(org.id), userId: users[2]._id });
+  await organizations.role(auths[0], org.id, users[2].id, { expectedVersion: adminMembership.version, role: 'admin' });
+  const first = (await organizations.createWorkspace(auths[0], org.id, { name: 'Brand & Packaging Lab' })).workspace;
+  const second = (await organizations.createWorkspace(auths[0], org.id, { name: 'Digital Experience' })).workspace;
+  const archived = (await organizations.createWorkspace(auths[0], org.id, { name: 'Tài liệu Onboarding' })).workspace;
+  await workspaces.state(auths[0], archived.id, { expectedVersion: archived.version, state: 'archived', confirmName: archived.name, reason: 'Fixture archived' });
+  await organizations.addMember(auths[0], org.id, first.id, { expectedVersion: first.version, userId: users[1].id });
+  await work.createProject(auths[0], first.id, { name: 'Brand project' });
+  await workspaces.create(auths[0], { name: 'Standalone outside organization' });
+  const cutoff = cutoffCodec(config.accessKeyHex);
+  server = createApp({ authService: auth, authConfig: config, workspaceService: workspaces, workService: work, organizationService: organizations, notificationsService: createNotificationsService({ store: createMongoNotificationsStore({ cutoff }), cutoff }) }).listen(0, '127.0.0.1'); await once(server, 'listening');
+  const origin = `http://127.0.0.1:${server.address().port}`;
+  browser = await chromium.launch({ executablePath: process.env.WORKFLOW_BROWSER_EXECUTABLE, headless: true });
+  let fail = false, delay = false, lostInviteResponse = false, lostRoleResponse = false;
+  async function pageFor(index) {
+    const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+    await context.route('http://localhost:4000/**', async route => {
+      if (fail && route.request().url().includes(`/organizations/${org.id}/members?`)) return route.abort();
+      if (delay && route.request().url().includes(`/organizations/${org.id}/members?`)) await new Promise(resolve => setTimeout(resolve, new URL(route.request().url()).searchParams.get('q') === 'Lan' ? 900 : 50));
+      const response = await route.fetch({ url: route.request().url().replace('http://localhost:4000', origin) });
+      if (lostInviteResponse && route.request().method() === 'POST' && route.request().url().endsWith('/invitations')) { lostInviteResponse = false, lostRoleResponse = false; return route.abort(); }
+      if (lostRoleResponse && route.request().method() === 'PATCH' && route.request().url().endsWith('/role')) { lostRoleResponse = false; return route.abort(); }
+      await route.fulfill({ response });
+    });
+    const page = await context.newPage(); page.setDefaultTimeout(15000); page.on('pageerror', error => errors.push(error.message));
+    await page.goto('http://localhost:5173/'); await page.getByLabel('Email', { exact: true }).fill(users[index].email); await page.getByLabel('Mật khẩu', { exact: true }).fill(password); await page.getByRole('button', { name: 'Đăng nhập', exact: true }).click();
+    await page.locator('.studio-home').waitFor(); await page.goto('http://localhost:5173/#organizations'); await page.locator('.organization-page').waitFor(); return page;
+  }
+  const ownerPage = await pageFor(0); await ownerPage.goto(`http://localhost:5173/#organization/${org.id}/team`);
+  await ownerPage.getByRole('button', { name: 'Đổi vai trò Lan', exact: true }).waitFor();
+  await ownerPage.getByRole('button', { name: 'Đổi vai trò Lan', exact: true }).click(); await ownerPage.getByLabel('Vai trò mới', { exact: true }).selectOption('admin'); await ownerPage.getByRole('dialog').screenshot({ path: `${out}/role-dialog.png` }); await ownerPage.getByRole('dialog').getByRole('button', { name: 'Lưu quyền', exact: true }).click(); await ownerPage.getByRole('dialog').waitFor({ state: 'hidden' });
+  assert.equal((await OrganizationMembership.collection.findOne({ organizationId: new mongoose.Types.ObjectId(org.id), userId: users[1]._id })).role, 'admin');
+  await ownerPage.getByRole('button', { name: 'Đổi vai trò Lan', exact: true }).click(); await ownerPage.getByLabel('Vai trò mới', { exact: true }).selectOption('member'); await ownerPage.getByRole('dialog').getByRole('button', { name: 'Lưu quyền', exact: true }).click(); await ownerPage.getByRole('dialog').waitFor({ state: 'hidden' });
+  await ownerPage.getByRole('button', { name: 'Phân bổ Workspace cho Lan', exact: true }).click(); await ownerPage.getByLabel('Workspace', { exact: true }).selectOption(second.id); await ownerPage.getByRole('dialog').getByRole('button', { name: 'Lưu quyền', exact: true }).click(); await ownerPage.getByRole('dialog').waitFor({ state: 'hidden' }); assert.equal(await WorkspaceMembership.collection.countDocuments({ workspaceId: new mongoose.Types.ObjectId(second.id), userId: users[1]._id, state: 'active' }), 1);
+  await ownerPage.getByRole('button', { name: 'Phân bổ Workspace cho Lan', exact: true }).click(); await ownerPage.getByLabel('Quyền trong Workspace', { exact: true }).selectOption('manager'); await ownerPage.getByLabel('Workspace', { exact: true }).selectOption(archived.id); await ownerPage.getByRole('dialog').screenshot({ path: `${out}/manager-dialog.png` }); await ownerPage.getByRole('dialog').getByRole('button', { name: 'Lưu quyền', exact: true }).click(); await ownerPage.getByRole('dialog').waitFor({ state: 'hidden' }); const updatedWorkspace = await Workspace.collection.findOne({ _id: new mongoose.Types.ObjectId(archived.id) }); assert.equal(String(updatedWorkspace.managerId), users[1].id); assert.equal(updatedWorkspace.state, 'archived'); assert.equal((await OrganizationMembership.collection.findOne({ organizationId: new mongoose.Types.ObjectId(org.id), userId: users[1]._id })).role, 'member');
+  await ownerPage.getByRole('button', { name: 'Nhật ký', exact: true }).click(); await ownerPage.getByRole('heading', { name: 'Nhật ký quản trị', exact: true }).waitFor(); await ownerPage.locator('.audit-list').getByText('Thay Manager', { exact: true }).waitFor(); assert.ok((await ownerPage.locator('.audit-list').innerText()).includes('Minh → Lan')); await ownerPage.screenshot({ path: `${out}/audit-1440.png`, fullPage: true });
+  await ownerPage.getByRole('button', { name: 'Thành viên', exact: true }).click(); await ownerPage.getByRole('button', { name: 'Đổi vai trò Lan', exact: true }).waitFor();
+  while (await ownerPage.getByRole('button', { name: 'Đóng thông báo', exact: true }).count()) await ownerPage.getByRole('button', { name: 'Đóng thông báo', exact: true }).first().click();
+  for(const width of [1440,1280,1024,768,375]) { await ownerPage.setViewportSize({ width, height: 1000 }); await ownerPage.screenshot({ path: `${out}/management-${width}.png`, fullPage: true }); assert.ok(await ownerPage.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), `Management overflow ${width}`); }
+  await ownerPage.setViewportSize({ width: 1440, height: 1000 });
+  await ownerPage.getByRole('button', { name: 'Đổi vai trò Lan', exact: true }).click(); await ownerPage.getByLabel('Vai trò mới', { exact: true }).selectOption('admin'); const previous = await OrganizationMembership.collection.findOne({ organizationId: new mongoose.Types.ObjectId(org.id), userId: users[1]._id }); await organizations.role(auths[0], org.id, users[1].id, { expectedVersion: previous.version, role: 'admin' }); await ownerPage.getByRole('dialog').getByRole('button', { name: 'Lưu quyền', exact: true }).click(); await ownerPage.getByRole('dialog').getByText('Dữ liệu đã được người khác thay đổi. Tải lại trước khi lưu tiếp.', { exact: true }).waitFor(); assert.equal(await ownerPage.getByLabel('Vai trò mới', { exact: true }).inputValue(), 'admin'); await ownerPage.getByRole('dialog').getByRole('button', { name: 'Hủy', exact: true }).click(); await ownerPage.locator('.system-dialog button.primary').click();
+  const after = await OrganizationMembership.collection.findOne({ organizationId: new mongoose.Types.ObjectId(org.id), userId: users[1]._id }); await organizations.role(auths[0], org.id, users[1].id, { expectedVersion: after.version, role: 'member' }); await ownerPage.getByRole('button', { name: 'Làm mới', exact: true }).click(); await ownerPage.getByRole('button', { name: 'Chuyển Owner cho Lan', exact: true }).waitFor();
+  const adminPage = await pageFor(2); await adminPage.goto(`http://localhost:5173/#organization/${org.id}/team`); await adminPage.getByRole('button', { name: 'Phân bổ Workspace cho Hải', exact: true }).waitFor(); assert.equal(await adminPage.getByRole('button', { name: /^Đổi vai trò/ }).count(), 0); assert.equal(await adminPage.getByRole('button', { name: /^Chuyển Owner/ }).count(), 0);
+  await adminPage.getByRole('button', { name: 'Phân bổ Workspace cho Hải', exact: true }).click(); await adminPage.getByLabel('Quyền trong Workspace', { exact: true }).selectOption('manager'); await adminPage.getByLabel('Workspace', { exact: true }).selectOption(second.id); const oldAdmin = await OrganizationMembership.collection.findOne({ organizationId: new mongoose.Types.ObjectId(org.id), userId: users[2]._id }); await organizations.role(auths[0], org.id, users[2].id, { expectedVersion: oldAdmin.version, role: 'member' }); await adminPage.getByRole('dialog').getByRole('button', { name: 'Lưu quyền', exact: true }).click(); await adminPage.getByRole('dialog').getByText('Thao tác này cần quyền Chủ sở hữu hoặc Quản trị viên tổ chức hiện tại. Tải lại để kiểm tra quyền.', { exact: true }).waitFor(); assert.equal(await adminPage.getByLabel('Workspace', { exact: true }).inputValue(), second.id); assert.equal(String((await Workspace.collection.findOne({ _id: new mongoose.Types.ObjectId(second.id) })).managerId), users[0].id); await adminPage.getByRole('dialog').getByRole('button', { name: 'Hủy', exact: true }).click(); await adminPage.locator('.system-dialog button.primary').click();
+  await ownerPage.getByRole('button', { name: 'Làm mới', exact: true }).click(); await ownerPage.getByRole('button', { name: 'Đổi vai trò Lan', exact: true }).click(); await ownerPage.getByLabel('Vai trò mới', { exact: true }).selectOption('admin'); lostRoleResponse = true; await ownerPage.getByRole('dialog').getByRole('button', { name: 'Lưu quyền', exact: true }).click(); await ownerPage.getByRole('dialog').getByText('Chưa rõ thay đổi quyền đã được lưu. Đóng form và tải lại dữ liệu trước khi gửi tiếp.', { exact: true }).waitFor(); assert.equal(await ownerPage.getByRole('dialog').getByRole('button', { name: 'Lưu quyền', exact: true }).isDisabled(), true); await ownerPage.getByRole('dialog').getByRole('button', { name: 'Hủy', exact: true }).click(); await ownerPage.locator('.system-dialog button.primary').click(); const committed = await OrganizationMembership.collection.findOne({ organizationId: new mongoose.Types.ObjectId(org.id), userId: users[1]._id }); assert.equal(committed.role, 'admin'); await organizations.role(auths[0], org.id, users[1].id, { expectedVersion: committed.version, role: 'member' }); await ownerPage.getByRole('button', { name: 'Làm mới', exact: true }).click(); await ownerPage.getByRole('button', { name: 'Chuyển Owner cho Lan', exact: true }).waitFor();
+  await ownerPage.getByRole('button', { name: 'Chuyển Owner cho Lan', exact: true }).click(); const transfer = ownerPage.getByRole('dialog'); assert.equal(await transfer.getByRole('button', { name: 'Chuyển Owner', exact: true }).isDisabled(), true); await ownerPage.getByLabel('Nhập tên tổ chức để xác nhận', { exact: true }).fill(org.name); await transfer.screenshot({ path: `${out}/transfer-dialog.png` }); await transfer.getByRole('button', { name: 'Chuyển Owner', exact: true }).click(); await transfer.waitFor({ state: 'hidden' }); await ownerPage.waitForFunction(() => ![...document.querySelectorAll('button')].some(button => button.textContent === 'Nhật ký')); assert.equal(await ownerPage.getByRole('button', { name: /^Đổi vai trò/ }).count(), 0); await assert.rejects(organizations.audit(auths[0], org.id, {}), /ORGANIZATION_ADMIN_REQUIRED/);
+  const newOwner = await pageFor(1); await newOwner.goto(`http://localhost:5173/#organization/${org.id}/team`); await newOwner.getByRole('button', { name: 'Đổi vai trò Minh', exact: true }).waitFor(); assert.equal(await newOwner.getByRole('button', { name: 'Chuyển Owner cho Lan', exact: true }).count(), 0);
+  const currentOrg = (await organizations.get(auths[1], org.id)).organization; await organizations.transfer(auths[1], org.id, { expectedVersion: currentOrg.version, memberId: users[0].id });
+  assert.deepEqual(errors, []);
+  if (process.env.WORKFLOW_SKILL_PROBE === '1') {
+    let source = await readFile('C:/Users/Acer/.agents/skills/ui-ux/scripts/probe.mjs', 'utf8');
+    source = source.replace('chromium.launch();', 'chromium.launch({ executablePath: process.env.WORKFLOW_BROWSER_EXECUTABLE });');
+    const setup = `async function fixtureSetup(context) {
+      await context.route('http://localhost:4000/**', async route => { const response = await route.fetch({ url: route.request().url().replace('http://localhost:4000', process.env.WORKFLOW_FIXTURE_API) }); await route.fulfill({ response }); });
+      const response = await fetch(process.env.WORKFLOW_FIXTURE_API + '/auth/login', { method: 'POST', headers: { Origin: 'http://localhost:5173', 'Content-Type': 'application/json' }, body: JSON.stringify({ email: process.env.WORKFLOW_FIXTURE_EMAIL, password: process.env.WORKFLOW_FIXTURE_PASSWORD }) });
+      if (!response.ok) throw new Error('FIXTURE_LOGIN_FAILED');
+      const cookie = response.headers.get('set-cookie').split(';')[0], pivot = cookie.indexOf('=');
+      await context.addCookies([{ name: cookie.slice(0,pivot), value: cookie.slice(pivot+1), domain: 'localhost', path: '/auth', httpOnly: true, secure: false, sameSite: 'Strict' }]);
+    }\n`;
+    source = source.replace('async function probeWidth(', setup + 'async function probeWidth(').replaceAll('const page = await context.newPage();', 'await fixtureSetup(context); const page = await context.newPage();');
+    const file = `${out}/probe-fixture.mjs`; await writeFile(file, source);
+    for (const [key, url] of [['management', `http://localhost:5173/#organization/${org.id}/team`]]) {
+      const child = spawn(process.execPath, [file, url, '--widths', '375,768,1024,1280,1440', '--wait', '1800', '--pw', 'C:/Users/Acer/.cache/codex-runtimes/codex-primary-runtime/dependencies/node', '--out', `${out}/probe-${key}`], { stdio: 'inherit', env: { ...process.env, WORKFLOW_FIXTURE_API: origin, WORKFLOW_FIXTURE_EMAIL: users[0].email, WORKFLOW_FIXTURE_PASSWORD: password } });
+      assert.equal(await new Promise(resolve => child.once('exit', resolve)), 0);
+    }
+  }
+  console.log(`PASS S4b: role/CAS/draft, Workspace admission without acceptance, archived Manager recovery/preserved Org role, audit identities, Admin matrix, typed ownership transfer/new Owner/old Owner loses management, 5 widths. Screens: ${out}. No live DB/providers.`);
+} finally { await browser?.close(); if (server) await new Promise(resolve => server.close(resolve)); await mongoose.disconnect(); await repl?.stop(); }
