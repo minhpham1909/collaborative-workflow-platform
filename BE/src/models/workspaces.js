@@ -2,9 +2,18 @@ import { coreSchema, ref, integer, nullableDate, nullableString, digest, choice,
 import { canonicalEmail } from './accounts.js';
 
 export const workspaceSchema = coreSchema({
-  ownerId: ref('User'), name: singleLine(200), description: richText(), mutationRevision: integer(),
+  ownerId: ref('User', true), organizationId: { ...ref('Organization', true), immutable: true },
+  managerId: ref('User', true), name: singleLine(200), description: richText(), mutationRevision: integer(),
+  state: choice(['active', 'archived'], 'active'), archivedAt: nullableDate(), archivedBy: ref('User', true),
 }, { privateFields: ['mutationRevision'] });
 contentHook(workspaceSchema, 'description', 'workspace');
+workspaceSchema.pre('validate', function () {
+  if (this.state === 'active' && (this.archivedAt || this.archivedBy)) this.invalidate('state', 'Active Workspace has no archive metadata');
+  if (this.state === 'archived' && (!this.archivedAt || !this.archivedBy)) this.invalidate('state', 'Archived Workspace requires metadata');
+  if (this.organizationId ? (this.ownerId !== null || !this.managerId) : (!this.ownerId || this.managerId !== null)) {
+    this.invalidate('ownerId', 'Standalone requires an owner; attached requires a manager and organization ownership');
+  }
+});
 
 export const membershipSchema = coreSchema({
   workspaceId: { ...ref('Workspace'), immutable: true }, userId: { ...ref('User'), immutable: true },

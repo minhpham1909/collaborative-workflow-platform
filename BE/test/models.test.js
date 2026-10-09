@@ -16,8 +16,21 @@ const content = (value) => ({ ...emptyRichText(), document: { type: 'doc', conte
 const user = () => ({ displayName: 'Nguyễn An 👋', email: 'An@Example.com', termsAcceptance: { version: 'v1', acceptedAt: now } });
 const task = () => ({ workspaceId, projectId, createdBy: ownerId, title: 'Task mới', description: content('Tiếng Việt') });
 
-test('all 13 core models validate representative typed fixtures without DB', async () => {
+test('all 27 core models validate representative typed fixtures without DB', async () => {
   const fixtures = {
+    WorkspaceLifecycleAudit: { workspaceId, actorId: ownerId, previousState: "active", state: "archived", reason: "Đóng nhóm", resourceVersion: 1 },
+    TaskPurgeAudit: { workspaceId, projectId, taskId, deletedAt: now, purgedAt: now },
+    TaskReopenRequest: { workspaceId, projectId, taskId, requesterId: ownerId, reason: "Thiếu kiểm thử", targetStatus: "todo" },
+    ProjectLabel: { workspaceId, projectId, createdBy: ownerId, name: "Thiết kế", nameKey: "thiết kế" },
+    TaskActivity: { workspaceId, projectId, taskId, actorId: ownerId, action: "created", taskVersion: 0 },
+    AccessBan: { scopeType: 'workspace', scopeId: workspaceId, workspaceId, userId: ownerId, reason: 'Fixture moderation', imposedBy: ownerId, imposedAt: now },
+    ModerationAction: { scopeType: 'workspace', scopeId: workspaceId, workspaceId, workspaceIds: [workspaceId], actorId: ownerId, targetUserId: ownerId, action: 'ban', reason: 'Fixture moderation', cutoff: now },
+    Organization: { ownerId, name: 'Studio' }, OrganizationMembership: { organizationId: workspaceId, userId: ownerId, joinedAt: now },
+    OrganizationAudit: { organizationId: workspaceId, actorId: ownerId, targetUserId: ownerId, action: 'member_role_changed', previousRole: 'member', role: 'admin' },
+    OrganizationInvitation: { organizationId: workspaceId, createdBy: ownerId, email: 'member@example.com', emailCanonical: 'member@example.com', tokenHash: hash, expiresAt: now },
+    ProjectGuest: { workspaceId, projectId, userId: ownerId, grantedBy: ownerId, joinedAt: now },
+    ProjectGuestInvitation: { workspaceId, projectId, createdBy: ownerId, type: 'LINK', tokenHash: hash, expiresAt: now },
+    ProjectAccessAudit: { workspaceId, projectId, actorId: ownerId, action: 'lead_changed', targetUserId: ownerId },
     User: user(), AuthIdentity: { userId: ownerId, provider: 'google', providerSubject: 'google-sub', lastLoginAt: now },
     Session: { userId: ownerId, refreshTokenHash: hash, expiresAt: now, lastSeenAt: now },
     AuthToken: { userId: ownerId, purpose: 'verify_email', tokenHash: hash, expiresAt: now },
@@ -29,7 +42,7 @@ test('all 13 core models validate representative typed fixtures without DB', asy
     Notification: { workspaceId, taskId, recipientId: ownerId, eventId: 'event-1', category: 'work', changes: ['assignment'] },
     EmailOutbox: { userId: ownerId, workspaceId, taskId, eventId: 'event-1', recipientKey: 'user:1', category: 'work', templateKey: 'task_changed', eventTypes: ['assignment'], nextAttemptAt: now },
   };
-  assert.equal(Object.keys(models).length, 13);
+  assert.equal(Object.keys(models).length, 27);
   for (const [name, fixture] of Object.entries(fixtures)) await new models[name](fixture).validate();
 });
 test('Google-only account allowed; defaults match approved email preferences; no email auto-link', async () => {

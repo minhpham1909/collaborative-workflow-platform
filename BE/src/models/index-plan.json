@@ -66,7 +66,16 @@
       }
     }
   ],
-  "workspaces": [],
+  "workspaces": [
+    {
+      "name": "workspace_organization_list",
+      "keys": {
+        "organizationId": 1,
+        "createdAt": -1,
+        "_id": -1
+      }
+    }
+  ],
   "workspace_memberships": [
     {
       "name": "membership_pair_unique",
@@ -120,6 +129,18 @@
         "createdAt": -1,
         "_id": -1
       }
+    },
+    {
+      "name": "project_task_prefix_unique",
+      "keys": {
+        "taskPrefix": 1
+      },
+      "unique": true,
+      "partialFilter": {
+        "taskPrefix": {
+          "$type": "string"
+        }
+      }
     }
   ],
   "tasks": [
@@ -152,6 +173,42 @@
         "workspaceId": 1,
         "assigneeId": 1,
         "status": 1
+      },
+      "partialFilter": {
+        "deletedAt": null
+      }
+    },
+    {
+      "name": "task_code_unique",
+      "keys": {
+        "code": 1
+      },
+      "unique": true,
+      "partialFilter": {
+        "code": {
+          "$type": "string"
+        }
+      }
+    },
+    {
+      "name": "task_retention_due",
+      "keys": {
+        "purgeAt": 1,
+        "_id": 1
+      },
+      "partialFilter": {
+        "purgeAt": {
+          "$type": "date"
+        }
+      }
+    },
+    {
+      "name": "task_project_chronological",
+      "keys": {
+        "projectId": 1,
+        "workspaceId": 1,
+        "createdAt": -1,
+        "_id": -1
       },
       "partialFilter": {
         "deletedAt": null
@@ -235,6 +292,229 @@
         "expiresAt": 1
       },
       "name": "auth_challenge_user_expiry"
+    }
+  ],
+  "organizations": [
+    {
+      "name": "organization_owner_list",
+      "keys": {
+        "ownerId": 1,
+        "createdAt": -1,
+        "_id": -1
+      }
+    }
+  ],
+  "organization_memberships": [
+    {
+      "name": "organization_membership_pair_unique",
+      "keys": {
+        "organizationId": 1,
+        "userId": 1
+      },
+      "unique": true
+    },
+    {
+      "name": "organization_membership_user_access",
+      "keys": {
+        "userId": 1,
+        "state": 1,
+        "organizationId": 1
+      }
+    }
+  ],
+  "organization_audit": [
+    {
+      "name": "organization_audit_list",
+      "keys": {
+        "organizationId": 1,
+        "createdAt": -1,
+        "_id": -1
+      }
+    }
+  ],
+  "organization_invitations": [
+    {
+      "name": "organization_invitation_token_unique",
+      "keys": {
+        "tokenHash": 1
+      },
+      "unique": true
+    },
+    {
+      "name": "organization_invitation_list",
+      "keys": {
+        "organizationId": 1,
+        "createdAt": -1,
+        "_id": -1
+      }
+    }
+  ],
+  "project_guests": [
+    {
+      "name": "project_guest_pair_unique",
+      "keys": {
+        "projectId": 1,
+        "userId": 1
+      },
+      "unique": true
+    },
+    {
+      "name": "project_guest_user_list",
+      "keys": {
+        "userId": 1,
+        "state": 1,
+        "projectId": 1
+      }
+    }
+  ],
+  "project_guest_invitations": [
+    {
+      "name": "project_guest_invitation_token_unique",
+      "keys": {
+        "tokenHash": 1
+      },
+      "unique": true
+    },
+    {
+      "name": "project_guest_invitation_list",
+      "keys": {
+        "projectId": 1,
+        "createdAt": -1,
+        "_id": -1
+      }
+    }
+  ],
+  "project_access_audit": [
+    {
+      "name": "project_access_audit_list",
+      "keys": {
+        "projectId": 1,
+        "createdAt": -1,
+        "_id": -1
+      }
+    }
+  ],
+  "access_bans": [
+    {
+      "name": "access_ban_scope_user_unique",
+      "keys": {
+        "scopeType": 1,
+        "scopeId": 1,
+        "userId": 1
+      },
+      "unique": true
+    },
+    {
+      "name": "access_ban_user_active",
+      "keys": {
+        "userId": 1,
+        "state": 1,
+        "scopeType": 1,
+        "scopeId": 1
+      }
+    }
+  ],
+  "moderation_actions": [
+    {
+      "name": "moderation_scope_history",
+      "keys": {
+        "scopeType": 1,
+        "scopeId": 1,
+        "createdAt": -1,
+        "_id": -1
+      }
+    },
+    {
+      "name": "moderation_pending",
+      "keys": {
+        "state": 1,
+        "leaseUntil": 1,
+        "createdAt": 1
+      }
+    }
+  ],
+  "project_labels": [
+    {
+      "name": "project_label_name_unique",
+      "keys": {
+        "projectId": 1,
+        "nameKey": 1
+      },
+      "unique": true
+    },
+    {
+      "name": "project_label_list",
+      "keys": {
+        "projectId": 1,
+        "createdAt": -1,
+        "_id": -1
+      }
+    }
+  ],
+  "task_activity": [
+    {
+      "name": "task_activity_page",
+      "keys": {
+        "taskId": 1,
+        "createdAt": -1,
+        "_id": -1
+      }
+    },
+    {
+      "name": "task_activity_version_unique",
+      "keys": {
+        "taskId": 1,
+        "taskVersion": 1
+      },
+      "unique": true
+    }
+  ],
+  "task_reopen_requests": [
+    {
+      "name": "task_reopen_pending_unique",
+      "keys": {
+        "taskId": 1
+      },
+      "unique": true,
+      "partialFilter": {
+        "state": "pending"
+      }
+    },
+    {
+      "name": "task_reopen_requester_rate",
+      "keys": {
+        "taskId": 1,
+        "requesterId": 1,
+        "createdAt": -1
+      }
+    },
+    {
+      "name": "task_reopen_project_queue",
+      "keys": {
+        "projectId": 1,
+        "state": 1,
+        "createdAt": -1,
+        "_id": -1
+      }
+    }
+  ],
+  "workspace_lifecycle_audit": [
+    {
+      "name": "workspace_lifecycle_history",
+      "keys": {
+        "workspaceId": 1,
+        "createdAt": -1,
+        "_id": -1
+      }
+    }
+  ],
+  "task_purge_audit": [
+    {
+      "name": "task_purge_unique",
+      "keys": {
+        "taskId": 1
+      },
+      "unique": true
     }
   ]
 }
