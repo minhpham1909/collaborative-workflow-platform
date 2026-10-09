@@ -1,9 +1,11 @@
 import { InlineMessage, LoadingState } from "../components/Feedback.jsx";
 import EmailVerificationActions from "../components/EmailVerificationActions.jsx";
+import {AuthLanguageSwitch,localizeAuth,useAuthLocale} from '../features/auth/AuthLocale.jsx';
+import {translateAuthText} from '../features/auth/auth-translations.js';
 import AppFooter from "../components/AppFooter.jsx";
 import AppHeader from "../components/AppHeader.jsx";
 import AppSidebar from "../components/AppSidebar.jsx";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { createApi } from "../lib/api.js";
 import { messageFor } from "../lib/messages.js";
 import Login from "../features/auth/Login.jsx";
@@ -18,7 +20,7 @@ import TaskDetail from "../features/tasks/TaskDetail.jsx";
 import SharedProjects from "../features/projects/SharedProjects.jsx";
 import { notify } from "../components/NotificationProvider.jsx";
 import { readRoute } from "./routes.js";
-import Settings from "../features/settings/Settings.jsx";
+const Settings=lazy(()=>import('../features/settings/Settings.jsx'));
 import {
   installDraftNavigation,
   mayLeaveDrafts,
@@ -57,6 +59,7 @@ for (const method of [
 }
 const initialLink = consumeAuthLink(location, history);
 export default function App() {
+  const {locale}=useAuthLocale();const t=value=>translateAuthText(value,locale);
   const [mobileOpen, setMobileOpen] = useState(false);
   const closeMobile = useCallback(() => setMobileOpen(false), []);
   const [inviteIntent, setInviteIntent] = useState(
@@ -92,7 +95,7 @@ export default function App() {
     notify(kind === "project-invite" ? "Đã tham gia Project với quyền Guest." : kind === "organization-invite" ? "Đã tham gia tổ chức." : "Đã tham gia Workspace.");
     location.hash = destination;
   }
-  useDraftGuard({ dirty: false, busy });
+  useDraftGuard({ dirty: false, busy, busyMessage:t('Đang xử lý yêu cầu. Vui lòng chờ kết quả trước khi rời trang.') });
   async function start() {
     setError("");
     setReady(false);
@@ -193,13 +196,13 @@ export default function App() {
             accountBusy={busy}
           />
         ) : route.kind === "settings" ? (
-          <Settings
+          <Suspense fallback={<main><LoadingState>Đang tải cài đặt…</LoadingState></main>}><Settings
             key={user.id}
             api={api}
             onUser={(value) =>
               setUser((old) => (old?.id === value.id ? value : old))
             }
-          />
+          /></Suspense>
         ) : ["notifications", "notification"].includes(route.kind) ? (
           <Notifications
             key={user.id + (route.id ?? "inbox")}
@@ -208,14 +211,15 @@ export default function App() {
             user={user}
           />
         ) : !user.emailVerified ? (
-          <main>
+          localizeAuth(<main lang={locale}>
             <h1>Xác minh email để bắt đầu</h1>
             <p>
-              Kiểm tra hộp thư của {user.email}. Sau khi xác minh, tải lại thông
+              Kiểm tra hộp thư của <span translate="no">{user.email}</span>. Sau khi xác minh, tải lại thông
               tin tài khoản.
             </p>
+            <AuthLanguageSwitch/>
             <EmailVerificationActions api={api} />
-          </main>
+          </main>,locale)
         ) : route.kind === "organizations" ? (
           <Organizations key={user.id} api={api} />
         ) : route.kind === "organization" ? (

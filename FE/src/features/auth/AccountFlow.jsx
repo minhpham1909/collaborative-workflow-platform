@@ -1,3 +1,4 @@
+import {translateAuthText} from "./auth-translations.js";
 import {localizeAuth,useAuthLocale} from "./AuthLocale.jsx";
 import AuthFrame from "./AuthFrame.jsx";
 import EmailVerificationActions from '../../components/EmailVerificationActions.jsx';
@@ -57,7 +58,7 @@ export default function AccountFlow({
   onTokenUsed,
   loginHref,
 }) {
-  const {locale}=useAuthLocale();
+  const {locale}=useAuthLocale();const t=value=>translateAuthText(value,locale);
   const [name, setName] = useState(""),
     [email, setEmail] = useState(""),
     [password, setPassword] = useState(""),
@@ -74,7 +75,7 @@ export default function AccountFlow({
   useDraftGuard({
     dirty: !success && Boolean(name || email || password || repeat || terms),
     busy:busy||googleRunning,
-    message: "Bỏ thông tin tài khoản đang nhập?",
+    message:t("Bỏ thông tin tài khoản đang nhập?"),dialogOptions:{title:t("Xác nhận thao tác"),confirmLabel:t("Bỏ thay đổi"),cancelLabel:t("Ở lại")},busyMessage:t("Đang xử lý yêu cầu. Vui lòng chờ kết quả trước khi rời trang."),
   });
   useEffect(() => {
     if (!token) return;

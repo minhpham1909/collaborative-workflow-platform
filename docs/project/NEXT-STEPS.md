@@ -1,5 +1,7 @@
 # Trạng thái và bước tiếp theo
 
+09/10/2026 — **Settings/shared accountVi/En gate đạt; S10 hoàn tất trong scope**: protected name/email/value, independent UI/email locale, localized account guards/verify gate, lazySettings. [QA](../qa/UI-STITCH-S10-CHECK.md), [contract](../ui-ux/SETTINGS-AUTH-S10-CONTRACT.md): FE17/build155, settings/Auth/core/C2 regression PASS,3tabs/5width/probe0 Hỏng. **TiếpS11 Task trash/restore**; toàn siteVi/En/S12 còn kiểm. Mỗi đợt commit/pushdev; no API/schema/providers/queues dev.
+
 09/10/2026 — **S10b2 Auth Google signup +Vi/En đạt trong scope**: signup commit56afd10; AuthLocale/5 screens/embedded login/Google/policy/validation/hints, không đổi request values hoặc email locale. FE17/build154, browserVi/En/Google/C2,5width/probe0 Hỏng. Tiếp coverageVi/En Settings/shared guards và kiểm toàn siteS12; chưa tính toànS10/app đã dịch đủ. Mỗi increment commit/pushdev; no providers/queues/schema dev.
 
 09/10/2026 — **S10b2 Google signup increment đạt**: consent/nonce/version, draft discard, Google-only, external verify, no auto-link, stale terms reset, unknown lock/readback; fake SDK/verifier/real API/temp DB, C2/FE16/build152/probe PASS. Tiếp AuthVi/En trong S10b2; chưa toàn S10. Mỗi increment commit/pushdev, không actual providers/queues.

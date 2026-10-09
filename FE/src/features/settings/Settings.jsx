@@ -4,6 +4,8 @@ import FormField from "../../components/FormField.jsx";
 import { useDraftGuard } from "../../lib/draft-navigation.js";
 import { confirmDialog } from "../../components/NotificationProvider.jsx";
 import { useEffect, useRef, useState } from "react";
+import {AuthLanguageSwitch,localizeAuth,useAuthLocale} from "../auth/AuthLocale.jsx";
+import {translateAuthText} from "../auth/auth-translations.js";
 import Avatar from "../../components/Avatar.jsx";
 import Icon from '../../components/Icon.jsx';
 import { messageFor } from "../../lib/messages.js";
@@ -21,6 +23,7 @@ const names = {
   status: "Trạng thái Task thay đổi",
 };
 export default function Settings({ api, onUser }) {
+  const {locale}=useAuthLocale();const t=value=>translateAuthText(value,locale);
   const [data, setData] = useState(null),
     [tab, setTab] = useState("profile"),
     [error, setError] = useState(""),
@@ -54,18 +57,19 @@ export default function Settings({ api, onUser }) {
   useDraftGuard({
     dirty: dirty,
     busy: saving,
-    message: "Bỏ thay đổi tài khoản chưa lưu?",
+    message:t("Bỏ thay đổi tài khoản chưa lưu?"),
+    dialogOptions:{title:t("Xác nhận thao tác"),confirmLabel:t("Bỏ thay đổi"),cancelLabel:t("Ở lại")},busyMessage:t("Đang xử lý yêu cầu. Vui lòng chờ kết quả trước khi rời trang."),
   });
 
   const leave = async () =>
-    !dirty || (await confirmDialog("Bỏ thay đổi cài đặt chưa lưu?"));
+    !dirty || (await confirmDialog(t("Bỏ thay đổi cài đặt chưa lưu?"),{title:t("Xác nhận thao tác"),confirmLabel:t("Xác nhận"),cancelLabel:t("Hủy")}));
   function saved(user) {
     setData((old) => ({ ...old, user }));
     onUser(user);
     setDirty(false);
   }
   return (
-    <main className="settings-page studio-settings">
+    localizeAuth(<main lang={locale} className="settings-page studio-settings">
       <section className="hero settings-hero">
         <div>
           <small>TÙY CHỈNH KHÔNG GIAN CỦA BẠN</small>
@@ -84,6 +88,7 @@ export default function Settings({ api, onUser }) {
           Tải lại tài khoản
         </button>
       </section>
+      <AuthLanguageSwitch disabled={saving}/>
       <div className="tabs">
         {[
           ["profile", "Hồ sơ"],
@@ -92,6 +97,7 @@ export default function Settings({ api, onUser }) {
         ].map(([value, label]) => (
           <button
             key={value}
+            aria-label={t(label)}
             disabled={saving}
             aria-pressed={tab === value}
             onClick={async () => {
@@ -101,14 +107,14 @@ export default function Settings({ api, onUser }) {
               }
             }}
           >
-            {label}
+            <span className="settings-tab-full">{label}</span><span className="settings-tab-compact">{value==='preferences'?'Email':value==='security'?'Bảo mật':label}</span>
           </button>
         ))}
       </div>
       {busy && <LoadingState>Đang tải tài khoản…</LoadingState>}
       {error && <InlineMessage>{error}<button disabled={busy} onClick={()=>setRevision(value=>value+1)}>Thử tải tài khoản lại</button></InlineMessage>}
       <div className="settings-layout">
-      {data && <aside className="settings-identity" aria-label="Tổng quan tài khoản"><div className="settings-identity-cover"/><Avatar user={data.user}/><h2>{data.user.displayName}</h2><p>{data.user.email}</p><span className={'account-verification '+(data.user.emailVerified?'verified':'')}><Icon name={data.user.emailVerified?'check':'bell'}/>{data.user.emailVerified?'Email đã xác minh':'Email chưa xác minh'}</span><dl><div><dt>Đăng nhập</dt><dd>{data.account.hasLocalPassword?'Email và mật khẩu':'Google'}</dd></div><div><dt>Google</dt><dd>{data.account.googleLinked?'Đã liên kết':'Chưa liên kết'}</dd></div><div><dt>Giờ hiển thị</dt><dd>Giờ Việt Nam · GMT+7</dd></div></dl><p className="identity-explanation">Ảnh dùng từ Google đã liên kết hoặc chữ cái tên. Vai trò quản lý được cấp riêng trong từng không gian.</p></aside>}
+      {data && <aside className="settings-identity" aria-label="Tổng quan tài khoản"><div className="settings-identity-cover"/><Avatar user={data.user}/><h2 translate="no">{data.user.displayName}</h2><p translate="no">{data.user.email}</p><span className={'account-verification '+(data.user.emailVerified?'verified':'')}><Icon name={data.user.emailVerified?'check':'bell'}/>{data.user.emailVerified?'Email đã xác minh':'Email chưa xác minh'}</span><dl><div><dt>Đăng nhập</dt><dd>{data.account.hasLocalPassword?'Email và mật khẩu':'Google'}</dd></div><div><dt>Google</dt><dd>{data.account.googleLinked?'Đã liên kết':'Chưa liên kết'}</dd></div><div><dt>Giờ hiển thị</dt><dd>Giờ Việt Nam · GMT+7</dd></div></dl><p className="identity-explanation">Ảnh dùng từ Google đã liên kết hoặc chữ cái tên. Vai trò quản lý được cấp riêng trong từng không gian.</p></aside>}
       <div className="settings-content">
       {data &&
         (tab === "security" ? (
@@ -132,10 +138,11 @@ export default function Settings({ api, onUser }) {
             onSaving={setSaving}
           />
         ))}</div></div>
-    </main>
+    </main>,locale)
   );
 }
 function EditSettings({ api, data, tab, onUser, onDirty, onSaving }) {
+  const {locale:displayLocale}=useAuthLocale();
   const [name, setName] = useState(data.user.displayName),
     [locale, setLocale] = useState(data.user.locale ?? ""),
     [prefs, setPrefs] = useState({ ...data.user.emailPreferences }),
@@ -194,7 +201,7 @@ function EditSettings({ api, data, tab, onUser, onDirty, onSaving }) {
     }
   }
   return (
-    <section className="project-info settings-card">
+    localizeAuth(<section className="project-info settings-card">
       <form onSubmit={submit}>
         <fieldset disabled={busy || uncertain}>
           {tab === "profile" ? (
@@ -204,7 +211,7 @@ function EditSettings({ api, data, tab, onUser, onDirty, onSaving }) {
                 <div>
                   <h2>Hồ sơ của bạn</h2>
                   <p>
-                    {data.user.email} ·{" "}
+                    <span translate="no">{data.user.email}</span><br/>
                     {data.user.emailVerified ? "Đã xác minh" : "Chưa xác minh"}
                   </p>
                 </div>
@@ -297,10 +304,11 @@ function EditSettings({ api, data, tab, onUser, onDirty, onSaving }) {
         {error && <InlineMessage>{error}</InlineMessage>}
         {note && <InlineMessage tone="info">{note}</InlineMessage>}
       </form>
-    </section>
+    </section>,displayLocale)
   );
 }
 function Security({ api, data, onUser, onDirty, onSaving, reload }) {
+  const {locale}=useAuthLocale();
   const [fieldErrors, setFieldErrors] = useState({});
   const [current, setCurrent] = useState(""),
     [password, setPassword] = useState(""),
@@ -366,7 +374,7 @@ function Security({ api, data, onUser, onDirty, onSaving, reload }) {
           theme: "outline",
           size: "large",
           text: "continue_with",
-          locale: "vi",
+          locale,
           width: 300,
         });
       } catch (e) {
@@ -438,7 +446,7 @@ function Security({ api, data, onUser, onDirty, onSaving, reload }) {
     }
   }
   return (
-    <>
+    localizeAuth(<>
       <section className="project-info settings-card">
         <h2>Phương thức đăng nhập</h2>
         <p className="login-method">
@@ -562,6 +570,6 @@ function Security({ api, data, onUser, onDirty, onSaving, reload }) {
           {!data.user.emailVerified && <InlineMessage>Xác minh email trước khi liên kết Google.</InlineMessage>}
         </section>
       )}
-    </>
+    </>,locale)
   );
 }

@@ -6,6 +6,7 @@ import { messageFor } from "../../lib/messages.js";
 import {AuthLanguageSwitch,localizeAuth,useAuthLocale} from "./AuthLocale.jsx";
 import AuthFrame from "./AuthFrame.jsx";
 import { loadGoogle } from "../../lib/google.js";
+import {translateAuthText} from './auth-translations.js';
 export default function Login({ api, connectionError, retry, embedded = false }) {
   const {locale}=useAuthLocale();
   const [email, setEmail] = useState(""),
@@ -16,7 +17,7 @@ export default function Login({ api, connectionError, retry, embedded = false })
   const googleTarget = useRef(null);
   const pending = useRef(false);
   const [passwordError, setPasswordError] = useState("");
-  useDraftGuard({ dirty: false, busy });
+  useDraftGuard({ dirty: false, busy, busyMessage:translateAuthText('Đang xử lý yêu cầu. Vui lòng chờ kết quả trước khi rời trang.',locale) });
   useEffect(() => {
     if (!googleEnabled) return;
     let live = true;
@@ -103,7 +104,7 @@ export default function Login({ api, connectionError, retry, embedded = false })
   }
   const Container = embedded ? "section" : AuthFrame;
   return (
-    <Container className="invite-login" {...(!embedded?{busy:busy||googleEnabled}:{})}>
+    <Container className="invite-login" lang={locale} {...(!embedded?{busy:busy||googleEnabled}:{})}>
       {embedded ? <section className="auth-form">{content()}</section> : content()}
     </Container>
   );

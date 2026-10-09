@@ -28,7 +28,7 @@ const {cutoffCodec}=await import('../../BE/src/notifications/input.js');
 const {createDeliveryCrypto}=await import('../../BE/src/auth/delivery-crypto.js');
 const {testConfig}=await import('../../BE/test-support/auth-store.js');
 const out=fileURLToPath(new URL('../../.local/auth-locale/',import.meta.url));await mkdir(out,{recursive:true});
-let repl,server,browser,origin;const errors=[];
+let repl,server,browser,origin,closing=false;const errors=[];
 try {
   repl=await MongoMemoryReplSet.create({binary:{version:'8.0.17',downloadDir:fileURLToPath(new URL('../../.local/mongodb-binaries/',import.meta.url))},instanceOpts:[{launchTimeout:30000}],replSet:{count:1,storageEngine:'wiredTiger',ip:'127.0.0.1'}});
   await mongoose.connect(repl.getUri('workflow_fe_auth_locale_test'));for(const model of Object.values(models))await model.createIndexes();
@@ -38,12 +38,12 @@ try {
   const user=new User({email:'auth-existing@example.com',displayName:'Minh',passwordHash:hash,emailVerifiedAt:new Date(),termsAcceptance:{version:'test',acceptedAt:new Date()}});await user.save();await AuthIdentity.create({userId:user.id,provider:'google',providerSubject:'fixture-auth-google',lastLoginAt:new Date()});
   const accountsService=createAccountsService({store:createMongoAccountStore(),config,verifyGoogle:async()=>({subject:'fixture-auth-google',email:user.email,displayName:'Minh',authoritativeEmail:true,picture:null})});
   function app(){return createApp({authService:auth,authConfig:config,accountsService,usersService,workspaceService:workspaces,workService:work,organizationService:organizations,notificationsService});}
-  async function rotate(){if(server)await new Promise(resolve=>server.close(resolve));server=app().listen(0,'127.0.0.1');await once(server,'listening');origin='http://127.0.0.1:'+server.address().port;}await rotate();
+  async function rotate(){const previous=server;server=app().listen(0,'127.0.0.1');await once(server,'listening');origin='http://127.0.0.1:'+server.address().port;if(previous)await new Promise(resolve=>previous.close(resolve));}await rotate();
   browser=await chromium.launch({executablePath:process.env.WORKFLOW_BROWSER_EXECUTABLE,headless:true});let lostRegister=false,lostReset=false,failCaps=false;const writes=[];
   async function pageFor(url){
     const context=await browser.newContext({viewport:{width:1440,height:1000}});
     await context.addInitScript(()=>{window.google={accounts:{id:{initialize(options){window.fixtureGoogleCallback=options.callback;},renderButton(target){const button=document.createElement('button');button.type='button';button.textContent='Google fixture';button.onclick=()=>window.fixtureGoogleCallback({credential:'fixture-google'});target.append(button);}}}};});
-    await context.route('http://localhost:4000/**',async route=>{const path=new URL(route.request().url()).pathname,method=route.request().method();if(failCaps&&path==='/auth/capabilities'){failCaps=false;return route.abort();}const response=await route.fetch({url:route.request().url().replace('http://localhost:4000',origin)});if(method==='POST')writes.push(path);if(lostRegister&&path==='/auth/register'){lostRegister=false;return route.abort();}if(lostReset&&path==='/auth/password/reset'){lostReset=false;return route.abort();}await route.fulfill({response});});
+    await context.route('http://localhost:4000/**',async route=>{const path=new URL(route.request().url()).pathname,method=route.request().method();if(failCaps&&path==='/auth/capabilities'){failCaps=false;return route.abort();}const relayOrigin=origin;let response;try{response=await route.fetch({url:route.request().url().replace('http://localhost:4000',relayOrigin)});}catch(error){if(closing||relayOrigin!==origin)return route.abort().catch(()=>{});throw new Error('Fixture request failed: '+method+' '+path);}if(method==='POST')writes.push(path);if(lostRegister&&path==='/auth/register'){lostRegister=false;return route.abort();}if(lostReset&&path==='/auth/password/reset'){lostReset=false;return route.abort();}await route.fulfill({response});});
     const page=await context.newPage();page.setDefaultTimeout(15000);page.on('pageerror',error=>errors.push(error.message));await page.goto(url);return page;
   }
   const crypto=createDeliveryCrypto(config.mailKeyHex);
@@ -71,4 +71,4 @@ try {
   }
   console.log('PASS Auth Vi/En: draft/value preservation, password visibility labels, persistence/lang attribute,5 English screens/5 widths, translated Google discard dialog/error, and S10b1:5 auth screens/5 widths, register/verify gate, single-use/expired tokens, generic recovery, lost reset/register lock without retry, caps retry, linked Google login via fake SDK/verifier; real API/temp DB, no SMTP providers.');
 }catch(error){console.log('Page errors:',errors);if(browser)for(const context of browser.contexts())for(const page of context.pages()){await page.screenshot({path:`${out}/failure.png`,fullPage:true});console.log((await page.locator('main').allTextContents()).join('\n').slice(-2000));}throw error;}
-finally{await browser?.close();if(server)await new Promise(resolve=>server.close(resolve));await mongoose.disconnect();await repl?.stop();}
+finally{closing=true;await browser?.close();if(server)await new Promise(resolve=>server.close(resolve));await mongoose.disconnect();await repl?.stop();}

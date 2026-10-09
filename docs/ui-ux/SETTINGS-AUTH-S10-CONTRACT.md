@@ -45,3 +45,11 @@ AuthLocaleProvider và text catalogue cho5 Auth screens, embedded Login, GoogleR
 React presentation tree dịch static text và label/hint/error/aria-label, không sửa DOM ngoài React, không đụng controlled value/ID/version/href/callback/request body. FormField render callback vẫn giữ props/id; PasswordField có visibilityLabels tùy chọn, mặc địnhVi giữ trang cũ. Live messages giữ keysVi rồi dịch ở render nên đổi ngôn ngữ không làm mất draft. Lang controls khóa khi submit/chọn Google; có cancel picker trước submit, SDK renderButton dùng locale đã chọn.
 
 Google discard confirmation có labels/messageVi/En; shared history/draft dialogs khác vẫn dùng labels chung chưa dịch hết, cần audit sau. Settings, outer invitation cards, app verified gate và S1–S9 không tự được coi là dịch đủ vì Auth cóEn. Vì gateVi/En còn ngoài Auth, chưa đánh dấu toàn S10/app hoàn tất; tiếp language coverage Settings/shared guards rồiS12 toàn ứng dụng.
+
+## Settings/shared account locale gate (09/10)
+
+Settings3 tabs/summary/validation/error/Google/password/preference labels dùng chung account UI locale, không tự PATCH mail locale. Người dùng tự đổi preferred email language nếu muốn. Username/email được bảo vệ bằng translate=no, controlled values/API enums/callbacks giữ nguyên; translator giữ whitespace quanh dynamic data. Dữ liệu như tên “Mật khẩu” không đổi thành “Password”.
+
+Profile/private `main lang` và app email-verify gate đúngVi/En. Manual tab/reload confirms có message/title/buttons đúng locale. useDraftGuard thêm optional dialogOptions/busyMessage cho account screens; các trang cũ không truyền vẫn giữ mặc địnhVi. Bảo vệ toàn bộ history/route/locale các màn khác vẫn thuộcS12.
+
+Mobile tabs dùng nhãn ngắn nhưng aria-label đầy đủ để không wrap/orphan; email và trạng thái verify tách dòng. Settings lazy-loaded cùng Suspense để tăng dictionary không đẩy entry chunk vượt500kB; không nâng chunk warning limit. S10 đạt scope Account/Auth; shell/outer invitations/work screens/site toàn bộ chưa được tuyên bố bilingual hoặc production-ready.

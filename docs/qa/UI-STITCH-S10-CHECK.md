@@ -1,6 +1,6 @@
 # S10 — Settings/Auth QA
 
-09/10/2026: **S10a/S10b1 đạt; S10b2 Google signup/locale còn mở**. [Contract](../ui-ux/SETTINGS-AUTH-S10-CONTRACT.md).
+09/10/2026: **S10 đạt trong scope Account/Auth**; locale ngoài cụm còn kiểm S12. [Contract](../ui-ux/SETTINGS-AUTH-S10-CONTRACT.md).
 
 - Settings theo Stitch profile summary + tabs/content card, Google avatar/initials thật, phương thức login dựa capability. Không job title/bio/Pro/counts/achievements/2FA/theme hoặc upload fake.
 - `FE/scripts/check-stitch-settings.mjs` real React/Express/temp Mongo PASS: blank name không PATCH; tab cancel giữ draft; CAS giữ draft và reload/discard; profile response cập nhật; email prefs/locale lưu; password mismatch không POST, current password sai giữ retry, success thu hồi session khác và current reload được; lost profile response chỉ1 write/readback, Google wrong-email rejection, lost Google-link response lock/readback linked; Google-only không password form, unverified không link; GET lỗi clear/retry.
@@ -32,3 +32,11 @@ check-google-signup.mjs real API/temp DB + fake Google SDK/verifier PASS, consen
 - FE17 unit/build154 PASS; translation test line-wrapped keys/VI preservation/unknown opaque strings. Google signup regression (consent/stale version/no auto-link/unknown) và C2 invitation regression PASS. Shared PasswordField/EmailVerificationActions defaultVi không đổi cho trang cũ.
 - Screens `.local/auth-locale/{mode}-en-{width}.png`; probe `.local/auth-locale/probe-auth-{width}/report.json`:0 Hỏng/console sạch/smallTap0/no overflow. Focus/native checkbox/warm border/long policy paragraphs là Gu exceptions. Locale switch khóa khi đang submit/chọn Google; cancel picker trước ghi được phép.
 - Chỉ localStorageUI preference, không secrets. Không dịch data/request values, không sửa BE/schema/API hoặc email preference. Settings/outer invitation/verified app gate/shared draft dialog/full site chưa dịch đủ; gate đó còn tiếp theo, không tínhS10 đạt toàn bộ.
+
+## Settings/shared account locale gate
+
+- `check-settings-locale.mjs` PASS: S10a regression đầy đủ + EN3 tabs/5width, đổi locale giữ draft/data, tênMật khẩu không bị dịch, locale UI không đổi stored email preference, lưu preference chỉ khi action explicit, English tab-discard/navigation guard Cancel/Stay/Undo giữ đúng, reload persistence/validation, app unverified gate/resend labels English giữ email thật.
+- Auth Vi/En regression PASS; core interaction và C2 invitation regression PASS sau optional guard changes, defaultsVi vẫn tương thích. Fixture rotation mở successor trước drain predecessor; relay catch chỉ bỏ requests đã stale/đang cleanup và sanitizes error để không dump fixture JWT. Không đổi HTTP limiter hoặc bỏ assertions business.
+- EN screenshots `.local/settings-locale/{profile,preferences,security}-en-{width}.png`; probe `.local/settings-locale/probe-mine-{width}/report.json`:0 Hỏng/console sạch/no overflow/wrappedControls rỗng. Mobile full labels accessible trongaria-label, visible short labels tránh wrap; data email/verify không orphan punctuation.
+- FE17 unit/build155 PASS, whitespace-preservation unit cho dynamic text boundaries. Lazy Settings chunk ~13.7kB +CSS5.5kB; entry~491kB thay vì503kB, không chỉnh warning threshold. Không API/schema/data/providers/queues dev.
+- S10 gate scopedAccount/Auth đạt; toàn shell/workspace/project/tasks/outer invitation/site dictionary vẫn S12. Không suy toàn ứng dụng bilingual từ hai cụm đã dịch.
