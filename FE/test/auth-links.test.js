@@ -13,6 +13,9 @@ test('Organization routes accept only a valid local id and retain existing invit
   assert.deepEqual(readRoute('#project/' + 'a'.repeat(24) + '/manage'), { kind: 'project', id: 'a'.repeat(24), section: 'manage' });
   assert.equal(readRoute('#project/not-an-id/manage').kind, 'home');
   assert.equal(readRoute('#project/' + 'a'.repeat(24) + '/manage/extra').kind, 'home');
+  assert.deepEqual(readRoute('#project/' + 'a'.repeat(24) + '/trash'), { kind: 'project', id: 'a'.repeat(24), section: 'trash' });
+  assert.equal(readRoute('#project/not-an-id/trash').kind, 'home');
+  assert.equal(readRoute('#project/' + 'a'.repeat(24) + '/trash/extra').kind, 'home');
 });
 test("Auth mail links are scoped by path and scrub tokens before rendering", () => {
   for (const [pathname, kind] of [

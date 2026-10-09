@@ -12,6 +12,7 @@ import { messageFor } from "../../lib/messages.js";
 import TaskList from "../tasks/TaskList.jsx";
 import ProjectOverview from './ProjectOverview.jsx';
 import ProjectManagement from './ProjectManagement.jsx';
+import ProjectTrash from './ProjectTrash.jsx';
 import TaskPanel from '../tasks/TaskPanel.jsx';
 import { workspaceRoleLabel } from '../../lib/ui-copy.js';
 import { isUncertainMutation } from '../../lib/mutation-outcome.js';
@@ -34,6 +35,7 @@ export default function Project({ api, id, user, section }) {
   const unavailable = error => { setProject(null); setWorkspace(null); setError(messageFor(error)); };
   const pending = useRef(false);
   const showManagement = managing && Boolean(project?.permissions?.manageAccess || project?.permissions?.manageLabels);
+  const showTrash = section === 'trash';
   useEffect(() => {
     let live = true;
     setBusy(true);
@@ -179,6 +181,7 @@ export default function Project({ api, id, user, section }) {
               >
                 Làm mới Dự án
               </button>
+              {project.accessRole !== 'guest' && <a className="project-trash-link" href={`#project/${id}${showTrash ? '' : '/trash'}`} aria-current={showTrash ? 'page' : undefined}>{showTrash ? 'Về Board' : 'Thùng rác Task'}</a>}
               {(project.permissions?.manageAccess || project.permissions?.manageLabels) && <button disabled={busy || uncertain || editingDescription || taskComposing} onClick={() => { location.hash = `project/${id}${showManagement ? '' : '/manage'}`; }}>{showManagement ? 'Về Board' : 'Quản lý Project'}</button>}
               {project.permissions?.manageProject && (
                 <>
@@ -202,13 +205,13 @@ export default function Project({ api, id, user, section }) {
               )}
             </div>
           </section>
-          {!showManagement && <ProjectOverview data={statistics} />}
+          {!showManagement && !showTrash && <ProjectOverview data={statistics} />}
           {(project.readOnly ?? project.state === "archived") && (
             <InlineMessage tone="info" className="archive-banner">
               Dự án hoặc Workspace đang được lưu trữ nên chỉ đọc. Quản lý cần mở lại phạm vi tương ứng để tiếp tục chỉnh sửa.
             </InlineMessage>
           )}
-          <section className="project-info project-scope">
+          {!showTrash && <section className="project-info project-scope">
             <div className="section-heading">
               <h2>Mục tiêu & mô tả Dự án</h2>
               {project.state === "active" &&
@@ -249,9 +252,10 @@ export default function Project({ api, id, user, section }) {
                 )}
               </div>
             )}
-          </section>
-          {showManagement && <ProjectManagement api={api} project={project} onContext={setProject} onUnavailable={unavailable} />}
-          {!editingDescription && !showManagement && (
+          </section>}
+          {showTrash && <ProjectTrash key={id} api={api} project={project} onContext={setProject} onUnavailable={unavailable} onBusyChange={setTaskComposing} />}
+          {showManagement && !showTrash && <ProjectManagement api={api} project={project} onContext={setProject} onUnavailable={unavailable} />}
+          {!editingDescription && !showManagement && !showTrash && (
             <TaskList
               api={api}
               project={project}

@@ -1,0 +1,96 @@
+// Isolated S11 browser/API/database check; never uses personal accounts or development queues.
+import assert from 'node:assert/strict';
+import { createRequire } from 'node:module';
+import { once } from 'node:events';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { spawn } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+const require = createRequire(import.meta.url);
+const { chromium } = require(process.env.WORKFLOW_PLAYWRIGHT_MODULE || 'playwright');
+const { MongoMemoryReplSet } = await import('../../BE/node_modules/mongodb-memory-server-core/lib/index.js');
+const { default: mongoose } = await import('../../BE/node_modules/mongoose/index.js');
+const { models, User, WorkspaceMembership, Task, ProjectGuest } = await import('../../BE/src/models/index.js');
+const { createApp } = await import('../../BE/src/app.js');
+const { createAuthService } = await import('../../BE/src/auth/service.js');
+const { createMongoAuthStore } = await import('../../BE/src/auth/mongo-store.js');
+const { hashPassword } = await import('../../BE/src/auth/passwords.js');
+const { createWorkspaceService } = await import('../../BE/src/workspaces/service.js');
+const { createMongoWorkspaceStore } = await import('../../BE/src/workspaces/mongo-store.js');
+const { createWorkService } = await import('../../BE/src/work/service.js');
+const { createMongoWorkStore } = await import('../../BE/src/work/mongo-store.js');
+const { createNotificationsService } = await import('../../BE/src/notifications/service.js');
+const { createMongoNotificationsStore } = await import('../../BE/src/notifications/mongo-store.js');
+const { cutoffCodec } = await import('../../BE/src/notifications/input.js');
+const { testConfig } = await import('../../BE/test-support/auth-store.js');
+const out = fileURLToPath(new URL('../../.local/stitch-trash/', import.meta.url)); await mkdir(out, { recursive: true });
+let repl, server, browser, origin, closing = false; const errors = [];
+try {
+  repl = await MongoMemoryReplSet.create({ binary: { version: '8.0.17', downloadDir: fileURLToPath(new URL('../../.local/mongodb-binaries/', import.meta.url)) }, instanceOpts: [{ launchTimeout: 30000 }], replSet: { count: 1, storageEngine: 'wiredTiger', ip: '127.0.0.1' } });
+  await mongoose.connect(repl.getUri('workflow_fe_trash_test')); for (const model of Object.values(models)) await model.createIndexes();
+  const config = { ...testConfig(), webOrigin: 'http://localhost:5173', secureCookies: false }, password = 'Trash browser fixture password', hash = await hashPassword(password);
+  const auth = await createAuthService({ store: createMongoAuthStore(), config }), workspaces = createWorkspaceService({ store: createMongoWorkspaceStore({ config }) }), work = createWorkService({ store: createMongoWorkStore({ config }) });
+  const cutoff = cutoffCodec(config.accessKeyHex), notificationsService = createNotificationsService({ store: createMongoNotificationsStore({ cutoff }), cutoff });
+  const app = () => createApp({ authService: auth, authConfig: config, workspaceService: workspaces, workService: work, notificationsService });
+  async function rotate() { const previous = server; server = app().listen(0, '127.0.0.1'); await once(server, 'listening'); origin = 'http://127.0.0.1:' + server.address().port; if (previous) await new Promise(resolve => previous.close(resolve)); } await rotate();
+  const users = [], claims = [];
+  for (let i = 0; i < 4; i++) { const user = await User.create({ email: `trash-${i}@example.com`, displayName: ['Minh', 'Lan', 'Hải', 'Guest'][i], passwordHash: hash, emailVerifiedAt: new Date(), termsAcceptance: { version: 'test', acceptedAt: new Date() } }); users.push(user); claims.push(await auth.authenticate((await auth.login({ email: user.email, password })).accessToken)); }
+  const workspace = (await workspaces.create(claims[0], { name: 'Sáng Tạo Studio' })).workspace;
+  for (const user of users.slice(1, 3)) await WorkspaceMembership.create({ workspaceId: workspace.id, userId: user.id, joinedAt: new Date() });
+  let project = (await work.createProject(claims[0], workspace.id, { name: 'Website Bloom', icon: 'palette' })).project;
+  project = (await work.lead(claims[0], project.id, { expectedVersion: project.version, leadId: users[2].id })).project;
+  await ProjectGuest.create({ workspaceId: workspace.id, projectId: project.id, userId: users[3].id, grantedBy: users[0].id, joinedAt: new Date() });
+  async function deleted(title, creator = 0) { const task = (await work.createTask(claims[creator], project.id, { title })).task; await work.deleteTask(claims[creator], task.id, { expectedVersion: task.version }); return task; }
+  for (let i = 0; i < 21; i++) await deleted('Tài liệu nháp ' + i);
+  const expired = await deleted('Thiết kế đã hết hạn'); await Task.collection.updateOne({ _id: new mongoose.Types.ObjectId(expired.id) }, { $set: { purgeAt: new Date(Date.now() - 1000) } });
+  const legacy = await Task.create({ workspaceId: workspace.id, projectId: project.id, createdBy: users[0].id, title: 'Tài liệu cũ chưa có lịch', deletedAt: new Date(), deletedBy: users[0].id });
+  const conflict = await deleted('Rà soát phiên bản'), unknown = await deleted('Phục hồi mất phản hồi'), own = await deleted('Bản nháp của Lan', 1);
+  let rich = (await work.createTask(claims[0], project.id, { title: 'Đặc tả typography', assigneeId: users[1].id, priority: 'high', description: { format: 'prosemirror-json', schemaVersion: 1, document: { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Mô tả giữ nguyên sau khi phục hồi.' }] }] } } })).task;
+  rich = (await work.checklist(claims[0], rich.id, { expectedVersion: rich.version, items: [{ text: 'Giữ checklist' }] })).task;
+  await work.deleteTask(claims[0], rich.id, { expectedVersion: rich.version });
+  browser = await chromium.launch({ executablePath: process.env.WORKFLOW_BROWSER_EXECUTABLE, headless: true }); let failLoad = false, loseRestore = false, delayRestore = false, restoreWrites = 0;
+  async function pageFor(index, route = 'trash') {
+    const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+    const login = await fetch(origin + '/auth/login', { method: 'POST', headers: { Origin: config.webOrigin, 'Content-Type': 'application/json' }, body: JSON.stringify({ email: users[index].email, password }) }); assert.equal(login.status, 200);
+    const cookie = login.headers.get('set-cookie').split(';')[0], pivot = cookie.indexOf('='); await context.addCookies([{ name: cookie.slice(0, pivot), value: cookie.slice(pivot + 1), domain: 'localhost', path: '/auth', httpOnly: true, secure: false, sameSite: 'Strict' }]);
+    await context.route('http://localhost:4000/**', async route => {
+      const path = new URL(route.request().url()).pathname, method = route.request().method();
+      if (failLoad && path.endsWith('/trash')) { failLoad = false; return route.abort(); }
+      if (method === 'POST' && path.endsWith('/restore')) { restoreWrites++; if (delayRestore) await new Promise(resolve => setTimeout(resolve, 800)); }
+      const relay = origin; let response; try { response = await route.fetch({ url: route.request().url().replace('http://localhost:4000', relay) }); } catch { if (closing || relay !== origin) return route.abort().catch(() => {}); throw new Error('Fixture request failed: ' + method + ' ' + path); }
+      if (loseRestore && path.endsWith('/restore')) { loseRestore = false; return route.abort(); }
+      await route.fulfill({ response });
+    });
+    const page = await context.newPage(); page.setDefaultTimeout(15000); page.on('pageerror', error => errors.push(error.message)); await page.goto(`http://localhost:5173/#project/${project.id}${route ? '/' + route : ''}`); return page;
+  }
+  const owner = await pageFor(0); await owner.getByRole('heading', { name: /Thùng rác Task/ }).waitFor(); await owner.locator('.trash-list > li').first().waitFor(); assert.equal(await owner.locator('.trash-list > li').count(), 20);
+  await owner.getByRole('button', { name: 'Tải thêm Task đã xóa', exact: true }).click(); await owner.locator('.trash-list > li').filter({ hasText: 'Tài liệu nháp 0' }).waitFor(); assert.equal(await owner.locator('.trash-list > li').count(), 27);
+  await owner.getByRole('button', { name: 'Phục hồi Task: Thiết kế đã hết hạn', exact: true }).isDisabled().then(value => assert.equal(value, true));
+  await owner.getByText('Dữ liệu cũ · Chưa có lịch xóa tự động', { exact: true }).waitFor(); assert.equal((await Task.findById(legacy.id)).purgeAt, null);
+  await owner.getByRole('button', { name: 'Xem Task đã xóa: Đặc tả typography', exact: true }).click(); const detail = owner.getByRole('dialog', { name: 'Task trong thùng rác' }); await detail.getByText('Mô tả giữ nguyên sau khi phục hồi.', { exact: true }).waitFor(); await detail.getByText('○ Giữ checklist', { exact: true }).waitFor(); await owner.keyboard.press('Escape'); await detail.waitFor({ state: 'hidden' }); assert.equal(await owner.getByRole('button', { name: 'Xem Task đã xóa: Đặc tả typography', exact: true }).evaluate(node => node === document.activeElement), true);
+  await owner.getByRole('button', { name: 'Phục hồi Task: Đặc tả typography', exact: true }).click(); await owner.getByRole('dialog').getByRole('button', { name: 'Giữ trong thùng rác', exact: true }).click(); assert.equal(restoreWrites, 0);
+  // Assignee has left since deletion: the restore service clears the invalid assignment.
+  await WorkspaceMembership.collection.deleteOne({ workspaceId: new mongoose.Types.ObjectId(workspace.id), userId: users[1]._id });
+  delayRestore = true; await owner.getByRole('button', { name: 'Phục hồi Task: Đặc tả typography', exact: true }).click(); await owner.getByRole('dialog').getByRole('button', { name: 'Phục hồi Task', exact: true }).click(); await owner.getByRole('button', { name: 'Làm mới Dự án', exact: true }).isDisabled().then(value => assert.equal(value, true)); await owner.getByText('Đã phục hồi “Đặc tả typography”. Task đã trở lại Board.', { exact: false }).waitFor(); delayRestore = false; assert.equal(restoreWrites, 1); const restored = await Task.findById(rich.id); assert.equal(restored.deletedAt, null); assert.equal(restored.assigneeId, null); assert.equal(restored.checklist.length, 1); assert.equal(restored.code, rich.code);
+  await WorkspaceMembership.create({ workspaceId: workspace.id, userId: users[1].id, joinedAt: new Date() });
+  await Task.collection.updateOne({ _id: new mongoose.Types.ObjectId(conflict.id) }, { $inc: { version: 1 } }); await owner.getByRole('button', { name: 'Phục hồi Task: Rà soát phiên bản', exact: true }).click(); await owner.getByRole('dialog').getByRole('button', { name: 'Phục hồi Task', exact: true }).click(); await owner.getByText('Dữ liệu đã được người khác thay đổi. Tải lại trước khi lưu tiếp.', { exact: true }).waitFor(); assert.ok((await Task.findById(conflict.id)).deletedAt); assert.equal(await owner.getByRole('button', { name: 'Phục hồi Task: Rà soát phiên bản', exact: true }).isDisabled(), true); await owner.getByRole('button', { name: 'Tải lại thùng rác', exact: true }).click(); await owner.getByRole('button', { name: 'Phục hồi Task: Rà soát phiên bản', exact: true }).waitFor();
+  loseRestore = true; await owner.getByRole('button', { name: 'Phục hồi Task: Phục hồi mất phản hồi', exact: true }).click(); await owner.getByRole('dialog').getByRole('button', { name: 'Phục hồi Task', exact: true }).click(); await owner.getByText(/Chưa xác nhận kết quả phục hồi/).waitFor(); assert.equal((await Task.findById(unknown.id)).deletedAt, null); assert.equal(await owner.getByRole('button', { name: 'Phục hồi Task: Phục hồi mất phản hồi', exact: true }).isDisabled(), true); await owner.getByRole('button', { name: 'Tải lại thùng rác', exact: true }).click(); await owner.locator('.project-trash[aria-busy="false"] .trash-list > li').first().waitFor(); assert.equal(await owner.getByRole('button', { name: 'Phục hồi Task: Phục hồi mất phản hồi', exact: true }).count(), 0);
+  failLoad = true; await owner.getByRole('button', { name: 'Tải lại thùng rác', exact: true }).click(); await owner.getByText('Chưa kết nối được hệ thống. Vui lòng thử lại.', { exact: true }).waitFor(); assert.equal(await owner.locator('.trash-list > li').count(), 0); await owner.getByRole('button', { name: 'Tải lại thùng rác', exact: true }).click(); await owner.locator('.trash-list > li').first().waitFor();
+  await rotate(); const member = await pageFor(1); await member.locator('.trash-list > li').first().waitFor(); assert.equal(await member.locator('.trash-list > li').count(), 1); await member.getByText('Bản nháp của Lan', { exact: true }).waitFor();
+  const lead = await pageFor(2); await lead.locator('.trash-list > li').first().waitFor(); assert.equal(await lead.locator('.trash-list > li').count(), 20);
+  const guest = await pageFor(3); await guest.getByText('Guest không có quyền xem thùng rác Project.', { exact: false }).waitFor(); assert.equal(await guest.locator('.trash-list > li').count(), 0); assert.equal(await guest.getByRole('link', { name: 'Thùng rác Task', exact: true }).count(), 0);
+  const latest = (await work.getProject(claims[0], project.id)).project; await work.state(claims[0], project.id, { expectedVersion: latest.version, state: 'archived' }); await owner.getByRole('button', { name: 'Tải lại thùng rác', exact: true }).click(); await owner.getByText('Cần mở lại Project và Workspace', { exact: true }).first().waitFor(); assert.equal(await owner.getByRole('button', { name: 'Phục hồi Task: Bản nháp của Lan', exact: true }).isDisabled(), true);
+  const archived = (await work.getProject(claims[0], project.id)).project; await work.state(claims[0], project.id, { expectedVersion: archived.version, state: 'active' }); const wsNow = (await workspaces.get(claims[0], workspace.id)).workspace; await workspaces.state(claims[0], workspace.id, { expectedVersion: wsNow.version, state: 'archived', confirmName: wsNow.name, reason: 'Fixture archive' }); await owner.getByRole('button', { name: 'Tải lại thùng rác', exact: true }).click(); await owner.getByText('Cần mở lại Project và Workspace', { exact: true }).first().waitFor();
+  const wsArchived = (await workspaces.get(claims[0], workspace.id)).workspace; await workspaces.state(claims[0], workspace.id, { expectedVersion: wsArchived.version, state: 'active', confirmName: wsArchived.name, reason: 'Fixture reopen' });
+  await WorkspaceMembership.collection.deleteOne({ workspaceId: new mongoose.Types.ObjectId(workspace.id), userId: users[1]._id }); await member.getByRole('button', { name: 'Tải lại thùng rác', exact: true }).click(); await member.locator('.project-trash').waitFor({ state: 'hidden' }); assert.equal(await member.getByText('Bản nháp của Lan', { exact: true }).count(), 0);
+  await rotate(); await owner.getByRole('button', { name: 'Tải lại thùng rác', exact: true }).click(); await owner.locator('.trash-list > li').first().waitFor();
+  for (const width of [375, 768, 1024, 1280, 1440]) { await owner.setViewportSize({ width, height: 1000 }); await owner.screenshot({ path: `${out}/trash-${width}.png`, fullPage: true }); assert.equal(await owner.evaluate(() => document.documentElement.scrollWidth > innerWidth), false); await owner.getByRole('button', { name: 'Xem Task đã xóa: Bản nháp của Lan', exact: true }).click(); await owner.screenshot({ path: `${out}/detail-${width}.png` }); assert.equal(await owner.evaluate(() => document.documentElement.scrollWidth > innerWidth), false); await owner.getByRole('button', { name: 'Đóng chi tiết', exact: true }).click(); }
+  const emptyProject = (await work.createProject(claims[0], workspace.id, {name:'Empty Project'})).project; await owner.goto(`http://localhost:5173/#project/${emptyProject.id}/trash`); await owner.getByRole('heading',{name:'Không có Task trong thùng rác',exact:true}).waitFor(); await owner.goto(`http://localhost:5173/#project/${project.id}/trash`); await owner.locator('.trash-list > li').first().waitFor();
+  assert.deepEqual(errors, []);
+  if (process.env.WORKFLOW_SKILL_PROBE === '1') {
+    let source = await readFile('C:/Users/Acer/.agents/skills/ui-ux/scripts/probe.mjs', 'utf8'); source = source.replace('chromium.launch();', 'chromium.launch({ executablePath: process.env.WORKFLOW_BROWSER_EXECUTABLE });');
+    const setup = `async function fixtureSetup(context) { await context.route('http://localhost:4000/**', async route => { const response = await route.fetch({url: route.request().url().replace('http://localhost:4000', process.env.WORKFLOW_FIXTURE_API)}); await route.fulfill({response}); }); const response = await fetch(process.env.WORKFLOW_FIXTURE_API+'/auth/login', {method:'POST',headers:{Origin:'http://localhost:5173','Content-Type':'application/json'},body:JSON.stringify({email:process.env.WORKFLOW_FIXTURE_EMAIL,password:process.env.WORKFLOW_FIXTURE_PASSWORD})}); if(!response.ok) throw new Error('FIXTURE_LOGIN_FAILED'); const cookie=response.headers.get('set-cookie').split(';')[0],pivot=cookie.indexOf('='); await context.addCookies([{name:cookie.slice(0,pivot),value:cookie.slice(pivot+1),domain:'localhost',path:'/auth',httpOnly:true,secure:false,sameSite:'Strict'}]); }\n`;
+    source = source.replace('async function probeWidth(', setup+'async function probeWidth(').replaceAll('const page = await context.newPage();', 'await fixtureSetup(context); const page = await context.newPage();').replaceAll('await context.close();', "await context.unrouteAll({behavior:'ignoreErrors'});await context.close();"); const file=out+'/probe-fixture.mjs'; await writeFile(file,source);
+    for (const width of [375,768,1024,1280,1440]) { const fixture=app().listen(0,'127.0.0.1'); await once(fixture,'listening'); const child=spawn(process.execPath,[file,`http://localhost:5173/#project/${project.id}/trash`,'--widths',String(width),'--wait','1800','--pw','C:/Users/Acer/.cache/codex-runtimes/codex-primary-runtime/dependencies/node','--out',out+'/probe-'+width],{stdio:'inherit',env:{...process.env,WORKFLOW_FIXTURE_API:'http://127.0.0.1:'+fixture.address().port,WORKFLOW_FIXTURE_EMAIL:users[0].email,WORKFLOW_FIXTURE_PASSWORD:password}}); const result=await new Promise(resolve=>child.once('exit',resolve)); await new Promise(resolve=>fixture.close(resolve)); assert.equal(result,0); }
+  }
+  console.log('PASS S11 real API/temp DB: paging, owner/creator/Lead/Guest scopes, read-only detail/focus, cancel/restore/CAS/unknown/network retry, invalid assignee, parent archives/access loss,5 widths, no real data/SMTP/purge.');
+} catch(error) { if(browser) for(const context of browser.contexts()) for(const page of context.pages()) { await page.screenshot({path: out+'/failure.png'}); console.log((await page.locator('main').allTextContents()).join(' ').slice(-2000)); } throw error; } finally { closing=true; await browser?.close(); if(server) await new Promise(resolve=>server.close(resolve)); await mongoose.disconnect(); await repl?.stop(); }

@@ -1,6 +1,6 @@
 # Tiến độ nâng cấp UI theo Stitch
 
-Cập nhật09/10/2026 sau gate S10 Account/Auth, đối chiếu [plan cụm](STITCH-UI-CLUSTER-PLAN-v0.1.md) và QA từng cụm. **10/12 mốc S đạt gate — khoảng83% số mốc**, không phải83% khối lượng hoặc83% sản phẩm hoàn thiện. F0 có gate nền/pilot riêng, không cộng vào12 mốc.
+Cập nhật09/10/2026 sau gate S11 Task trash/restore, đối chiếu [plan cụm](STITCH-UI-CLUSTER-PLAN-v0.1.md) và QA từng cụm. **11/12 mốc S đạt gate — khoảng92% số mốc**, không phải92% khối lượng hoặc92% sản phẩm hoàn thiện. F0 có gate nền/pilot riêng, không cộng vào12 mốc.
 
 | Mốc | Phạm vi | Trạng thái |
 | --- | --- | --- |
@@ -15,10 +15,10 @@ Cập nhật09/10/2026 sau gate S10 Account/Auth, đối chiếu [plan cụm](ST
 | S8 | My Tasks grouped rows/scoped filters/return context | Đạt |
 | S9 | Notifications inbox + public invitations3 scope | Đạt9a/9b |
 | S10 | Account/settings và Auth flows | Đạt scopeAccount/Auth; full site localeS12 |
-| S11 | Thùng rác/khôi phục Task | Chưa nâng cấp cụm |
+| S11 | Thùng rác/khôi phục Task | Đạt scope list/detail/restore; không purge thủ công |
 | S12 | Regression toàn app, navigation/draft, Vi/En, responsive/performance | Chưa nghiệm thu tổng thể |
 
-Các chức năng Auth/settings đã có, “chưa nâng cấp cụm” nghĩa chưa qua gate UI mới. S10a đã đạt profile/email/security/Google link;10b login/register/verify/recovery/reset và locale. S11 cần biểu diễn expiry30 ngày/legacy-unscheduled/read-only/restore conditions đúng API, không CTA purge chưa mở. S12 cần kiểm xuyên các scope/role/history/drafts và bản dịch đầy đủ.
+Các chức năng Auth/settings đã có, “chưa nâng cấp cụm” nghĩa chưa qua gate UI mới. S10a đã đạt profile/email/security/Google link;10b login/register/verify/recovery/reset và locale. S11 đã biểu diễn expiry30 ngày/legacy-unscheduled/read-only/restore conditions đúng API, không CTA purge chưa mở. S12 cần kiểm xuyên các scope/role/history/drafts và bản dịch đầy đủ.
 
 [QA S09](../qa/UI-STITCH-S09-CHECK.md) ghi validation cuối: FE16/build148, real browser/C2 regression,3 public variants ×5 widths, authenticated probe0 Hỏng. Existing BE/queues/dev data không đổi trong S9b.
 
@@ -31,3 +31,6 @@ S10b1:5 Auth screens đã qua real browser/probe và C2 regression; tiếpS10b2 
 S10b2 Auth: Google signup +5 flowsVi/En đã đạt có2 commit riêng. Settings/shared/app gate và toàn site chưa dịch đủ; không tính10/12 hoặc toàn app bilingual. Tiếp language coverage còn thiếu, sau đóS11/S12 theo gate.
 
 Gate Settings/shared account locale đã đạt; S10 hoàn tất phạm viAccount/Auth, tổng mốc10/12. Các ghi chú9/12 trước đây là checkpoint lịch sử, không trạng thái hiện tại. TiếpS11 trash/restore; toàn siteVi/En ởS12 vẫn chưa hoàn tất.
+
+
+S11 đạt list/detail/restore gate: [QA](../qa/UI-STITCH-S11-CHECK.md). Các checkpoint10/12 ở trên là lịch sử; trạng thái hiện tại11/12. Tiếp S12 regression/navigation/drafts/Vi-En/responsive/performance; chưa nghiệm thu toàn app.

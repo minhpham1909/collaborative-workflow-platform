@@ -68,7 +68,7 @@ Chỉ **một cụm Đang làm**. Tối đa một màn chính + các dialog/sect
 | S8 | My Tasks | Rows/groups overdue/today/upcoming/no deadline/completed; compact workspace/status/priority/label/time filters | Assigned/current membership only; groupCounts full-filter không đếm trang; overdue/Done/Vietnam bounds; tới Task giữ origin context | Đạt09/10 — QA S08 |
 | S9 | Notifications / invitation entry | 9a Inbox/read-all/search/time; 9b WS/Org/Project public invitation variants | Không lộ target mất quyền; đúng category/signed read-all; invite email/link rõ scope; intent qua auth/verify, token scrub | 9a/9b đạt09/10 — QA S09 |
 | S10 | Settings + Auth | 10a profile/email/security/Google link; 10b login/register/verify/recovery/reset/personal locale | Không auto-link email; Google-only không bịa password requirement; email prefs/WS overrides giữ; Vi/En routes cần dịch đủ | Đạt scope Account/Auth; full site localeS12 |
-| S11 | Trash & restore | Project trash list/detail/restore, expiry/legacy-unscheduled/parent readonly | Restore theo capability/current assignee/version; không replay; expired lý do rõ. Không CTA purge thủ công khi chưa có API/quyền | Chưa bắt đầu |
+| S11 | Trash & restore | Project trash list/detail/restore, expiry/legacy-unscheduled/parent readonly | Restore theo capability/current assignee/version; không replay; expired lý do rõ. Không CTA purge thủ công khi chưa có API/quyền | Đạt scope S11; QA UI-STITCH-S11-CHECK.md |
 | S12 | Regression toàn bộ | Scope switch/Guest/2 Org+standalone, drawer routes/drafts, localization, responsive, assets/perf | Không blocker UX/data/privacy; điểm deferred có record; docs không claim production acceptance | Chưa bắt đầu |
 
 Thứ tự S9/S10 nằm sau visual cụm công việc nhưng auth/invite hành vi được regression **mỗi lần sửa shell/router/shared dialog**, không đợi cuối mới kiểm.
@@ -155,3 +155,6 @@ Plan này là nguồn trạng thái mới cho đợt Stitch/core-expanded UI; k�
 09/10/2026: S10b2 Auth signup/Vi-En increment đạt: [QA](../qa/UI-STITCH-S10-CHECK.md). FE17/build154, real API/fake Google/Vi-En/C2 regression,5width/probe0 Hỏng. Shared/Settings/site localization gate còn, chưa toàn S10 hoặc toàn UI. Signup commit56afd10; locale commit riêng theo workflow.
 
 09/10/2026: Settings/shared account locale gate đạt, S10 hoàn tất trong scopeAccount/Auth: [QA](../qa/UI-STITCH-S10-CHECK.md). FE17/build155, S10a/EN Settings/Auth/core/C2 regressions PASS,3tabs/5width/probe0 Hỏng. Full-site language coverage vẫnS12. TiếpS11 Task trash/restore; không BE/schema/queues dev.
+
+
+09/10/2026: S11 Task trash/list/detail/restore đạt: [QA](../qa/UI-STITCH-S11-CHECK.md), [contract](../ui-ux/TASK-TRASH-S11-CONTRACT.md). FE17/build157, BE8 retention integration trên DB tạm, browser/core/C2 và5width/probe0 Hỏng. TiếpS12;11/12 mốc UI, không whole-site bilingual/production acceptance hoặc queues dev.
