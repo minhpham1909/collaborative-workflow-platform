@@ -1,7 +1,7 @@
 import { InlineMessage } from "./Feedback.jsx";
 import { useRef, useState } from "react";
 import { messageFor } from "../lib/messages.js";
-export default function EmailVerificationActions({ api }) {
+export default function EmailVerificationActions({ api, translate = value=>value }) {
   const [note, setNote] = useState(""),
     [busy, setBusy] = useState(false);
   const pending = useRef(false);
@@ -30,12 +30,12 @@ export default function EmailVerificationActions({ api }) {
   return (
     <>
       <button disabled={busy} onClick={() => run("resend")}>
-        Gửi lại email xác minh
+        {translate('Gửi lại email xác minh')}
       </button>{" "}
       <button disabled={busy} onClick={() => run("reload")}>
-        Đã xác minh · Tải lại
+        {translate('Đã xác minh · Tải lại')}
       </button>
-      <InlineMessage tone="info">{note}</InlineMessage>
+      <InlineMessage tone="info">{translate(note)}</InlineMessage>
     </>
   );
 }

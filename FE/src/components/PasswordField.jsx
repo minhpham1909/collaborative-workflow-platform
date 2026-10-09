@@ -2,7 +2,7 @@ import { useState } from "react";
 import FormField from "./FormField.jsx";
 import Icon from "./Icon.jsx";
 
-export default function PasswordField({ label, hint, error, ...inputProps }) {
+export default function PasswordField({ label, hint, error, visibilityLabels = {show:'Hiện',hide:'Ẩn'}, ...inputProps }) {
   const [visible, setVisible] = useState(false);
   return (
     <FormField label={label} hint={hint} error={error}>
@@ -16,7 +16,7 @@ export default function PasswordField({ label, hint, error, ...inputProps }) {
           <button
             type="button"
             disabled={inputProps.disabled}
-            aria-label={`${visible ? "Ẩn" : "Hiện"} ${label.toLocaleLowerCase("vi")}`}
+            aria-label={`${visible ? visibilityLabels.hide : visibilityLabels.show} ${label.toLocaleLowerCase("vi")}`}
             aria-pressed={visible}
             onClick={() => setVisible((value) => !value)}
           >

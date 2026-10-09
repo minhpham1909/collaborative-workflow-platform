@@ -7,8 +7,9 @@ import "./foundation.css";
 import "./features/workspaces/home.css";
 import "./features/organizations/organizations.css";
 import NotificationProvider from "./components/NotificationProvider.jsx";
+import {AuthLocaleProvider} from './features/auth/AuthLocale.jsx';
 createRoot(document.getElementById("root")).render(
   <NotificationProvider>
-    <App />
+    <AuthLocaleProvider><App /></AuthLocaleProvider>
   </NotificationProvider>,
 );

@@ -3,9 +3,11 @@ import PasswordField from "../../components/PasswordField.jsx";
 import { useDraftGuard } from "../../lib/draft-navigation.js";
 import { useEffect, useRef, useState } from "react";
 import { messageFor } from "../../lib/messages.js";
+import {AuthLanguageSwitch,localizeAuth,useAuthLocale} from "./AuthLocale.jsx";
 import AuthFrame from "./AuthFrame.jsx";
 import { loadGoogle } from "../../lib/google.js";
 export default function Login({ api, connectionError, retry, embedded = false }) {
+  const {locale}=useAuthLocale();
   const [email, setEmail] = useState(""),
     [password, setPassword] = useState(""),
     [busy, setBusy] = useState(false),
@@ -56,7 +58,7 @@ export default function Login({ api, connectionError, retry, embedded = false })
           theme: "outline",
           size: "large",
           text: "signin_with",
-          locale: "vi",
+          locale,
           width: 300,
         });
       } catch (e) {
@@ -101,11 +103,11 @@ export default function Login({ api, connectionError, retry, embedded = false })
   }
   const Container = embedded ? "section" : AuthFrame;
   return (
-    <Container className="invite-login">
+    <Container className="invite-login" {...(!embedded?{busy:busy||googleEnabled}:{})}>
       {embedded ? <section className="auth-form">{content()}</section> : content()}
     </Container>
   );
-  function content() { return <>
+  function content() { return localizeAuth(<>{embedded&&<AuthLanguageSwitch disabled={busy||googleEnabled}/>}
         <h2>Chào bạn trở lại ✨</h2>
         <p>Đăng nhập để mở không gian làm việc của bạn.</p>
         {connectionError && (
@@ -157,6 +159,6 @@ export default function Login({ api, connectionError, retry, embedded = false })
         >
           Tiếp tục với Google
         </button>
-        <div ref={googleTarget} className="google-target" />
-    </>; }
+        {googleEnabled&&<button type="button" disabled={busy} onClick={()=>setGoogleEnabled(false)}>Đóng chọn Google</button>}<div ref={googleTarget} className="google-target" />
+    </>,locale); }
 }

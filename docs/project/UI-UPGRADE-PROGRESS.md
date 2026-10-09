@@ -1,6 +1,6 @@
 # Tiến độ nâng cấp UI theo Stitch
 
-Cập nhật09/10/2026 sau S10b1, đối chiếu [plan cụm](STITCH-UI-CLUSTER-PLAN-v0.1.md) và QA từng cụm. **9/12 mốc S đạt gate — 75% số mốc**, không phải75% khối lượng hoặc75% sản phẩm hoàn thiện. F0 có gate nền/pilot riêng, không cộng vào12 mốc.
+Cập nhật09/10/2026 sau S10b2 Auth, đối chiếu [plan cụm](STITCH-UI-CLUSTER-PLAN-v0.1.md) và QA từng cụm. **9/12 mốc S đạt gate — 75% số mốc**, không phải75% khối lượng hoặc75% sản phẩm hoàn thiện. F0 có gate nền/pilot riêng, không cộng vào12 mốc.
 
 | Mốc | Phạm vi | Trạng thái |
 | --- | --- | --- |
@@ -14,7 +14,7 @@ Cập nhật09/10/2026 sau S10b1, đối chiếu [plan cụm](STITCH-UI-CLUSTER-
 | S7 | Task panel/fullpage, checklist/comments/activity/reopen | Đạt7a/7b |
 | S8 | My Tasks grouped rows/scoped filters/return context | Đạt |
 | S9 | Notifications inbox + public invitations3 scope | Đạt9a/9b |
-| S10 | Account/settings và Auth flows | 10a/10b1 đạt;10b2 tiếp theo |
+| S10 | Account/settings và Auth flows | 10a/10b1/10b2 Auth đạt; locale ngoài Auth còn gate |
 | S11 | Thùng rác/khôi phục Task | Chưa nâng cấp cụm |
 | S12 | Regression toàn app, navigation/draft, Vi/En, responsive/performance | Chưa nghiệm thu tổng thể |
 
@@ -27,3 +27,5 @@ Các chức năng Auth/settings đã có, “chưa nâng cấp cụm” nghĩa c
 S10a: [QA](../qa/UI-STITCH-S10-CHECK.md), profile/preferences/security3tabs/5width, current-session rotation và Google capability/unknown readback đạt với verifier/SDK fixture; tiếp10b. S10 vẫn chưa hoàn tất, số mốc hoàn tất vẫn9/12.
 
 S10b1:5 Auth screens đã qua real browser/probe và C2 regression; tiếpS10b2 Google signup/locale. Mỗi increment code commit/pushdev theo [workflow](DEVELOPMENT-WORKFLOW.md). S10 chưa toàn gate; vẫn9/12 mốc hoàn tất.
+
+S10b2 Auth: Google signup +5 flowsVi/En đã đạt có2 commit riêng. Settings/shared/app gate và toàn site chưa dịch đủ; không tính10/12 hoặc toàn app bilingual. Tiếp language coverage còn thiếu, sau đóS11/S12 theo gate.

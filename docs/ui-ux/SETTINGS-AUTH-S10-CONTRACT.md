@@ -37,3 +37,11 @@ S10b2: language scope/copy; Google new-account terms/UI cần xét tiếp theo b
 ## S10b2 — Google signup (09/10)
 
 GoogleRegister chỉ cho bắt đầu khi caps/consent hiện tại đủ; chọn Google sau xác nhận bỏ draft local, khóa form khi chọn/submit, cancel trước callback được phép. api.google gửi credential/termsAccepted/termsVersion từ version đã consent; nonce/challenge/verified claims/unique email-identity/transactions vẫn BE. Email Google authoritative cho verify theo backend; external không authoritative phải verify. Không password cho user mới Google-only, không auto-link local email trùng. Known errors retry nonce mới, TERMS_REQUIRED refresh caps/reset consent; unknown kết quả khóa write và đọc lại qua login. Success giữ invite intent qua continuation link, không auto-accept. Draft policy local không biến thành production policy. Locale tiếp sau.
+
+## S10b2 — Auth Vi/En increment
+
+AuthLocaleProvider và text catalogue cho5 Auth screens, embedded Login, GoogleRegister, trial-policy copy, validation/errors/hints và password visibility labels. Selector riêng trên AuthFrame/embedded Login; `main lang` đúng theo lựa chọn. Chỉ lưu `workflow.auth.locale` (`vi`/`en`), không token/credential; không PATCH email preference hoặc account locale tự động.
+
+React presentation tree dịch static text và label/hint/error/aria-label, không sửa DOM ngoài React, không đụng controlled value/ID/version/href/callback/request body. FormField render callback vẫn giữ props/id; PasswordField có visibilityLabels tùy chọn, mặc địnhVi giữ trang cũ. Live messages giữ keysVi rồi dịch ở render nên đổi ngôn ngữ không làm mất draft. Lang controls khóa khi submit/chọn Google; có cancel picker trước submit, SDK renderButton dùng locale đã chọn.
+
+Google discard confirmation có labels/messageVi/En; shared history/draft dialogs khác vẫn dùng labels chung chưa dịch hết, cần audit sau. Settings, outer invitation cards, app verified gate và S1–S9 không tự được coi là dịch đủ vì Auth cóEn. Vì gateVi/En còn ngoài Auth, chưa đánh dấu toàn S10/app hoàn tất; tiếp language coverage Settings/shared guards rồiS12 toàn ứng dụng.

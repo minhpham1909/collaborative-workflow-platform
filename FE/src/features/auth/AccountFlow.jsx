@@ -1,3 +1,4 @@
+import {localizeAuth,useAuthLocale} from "./AuthLocale.jsx";
 import AuthFrame from "./AuthFrame.jsx";
 import EmailVerificationActions from '../../components/EmailVerificationActions.jsx';
 import GoogleRegister from './GoogleRegister.jsx';
@@ -16,8 +17,9 @@ const titles = {
   "reset-password": "Tạo mật khẩu mới",
 };
 function DraftPolicies({ version }) {
+  const {locale}=useAuthLocale();
   return (
-    <section className="policy-draft">
+    localizeAuth(<section className="policy-draft">
       <p>
         <strong>Điều khoản & Quyền riêng tư — bản nháp thử nghiệm local</strong>{" "}
         · {version}
@@ -44,7 +46,7 @@ function DraftPolicies({ version }) {
           nháp này chưa phải chính sách cho dịch vụ công khai.
         </p>
       </details>
-    </section>
+    </section>,locale)
   );
 }
 export default function AccountFlow({
@@ -55,6 +57,7 @@ export default function AccountFlow({
   onTokenUsed,
   loginHref,
 }) {
+  const {locale}=useAuthLocale();
   const [name, setName] = useState(""),
     [email, setEmail] = useState(""),
     [password, setPassword] = useState(""),
@@ -207,7 +210,7 @@ export default function AccountFlow({
     }
   }
   return (
-    <AuthFrame mode={mode}>
+    localizeAuth(<AuthFrame mode={mode} busy={busy||googleRunning}>
         <h2>{titles[mode]}</h2>
         {success ? (
           <>
@@ -357,6 +360,6 @@ export default function AccountFlow({
             <a href={loginHref}>Về đăng nhập</a>
           </p>
         )}
-    </AuthFrame>
+    </AuthFrame>,locale)
   );
 }

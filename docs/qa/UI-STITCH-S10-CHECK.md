@@ -25,3 +25,10 @@
 09/10/2026: GoogleRegister nối API có sẵn, consent/version bắt buộc, Google-only không password, exact-email không auto-link, email không authoritative vẫn verify. Draft email/mật khẩu phải xác nhận bỏ trước chuyển; lỗi commit-unknown khóa cả hai phương thức, readback login không tạo lại user. Thay termsVersion giữa thao tác bị rollback; reload capabilities buộc consent lại.
 
 check-google-signup.mjs real API/temp DB + fake Google SDK/verifier PASS, consent/draft/rejection/authoritative-external/stale terms/unknown/readback,5width no overflow; probe0 Hỏng/console sạch. C2 regression, FE16/build152 PASS. Không Google/SMTP thật, không BE/schema/queues dev. Locale còn increment tiếp; chưa toàn S10.
+
+## S10b2 — AuthVi/En
+
+- `check-auth-locale.mjs` PASS: full S10b1 flows, VI→EN→VI giữ email/password và visibility state, lang attribute/persistence,5 English modes ×5 widths, labels/validation/Google discard dialog En, same consent/password/token API semantics. SDK/verifier fake cho Google login, không actual providers. Registration english probe dùng session scoped fixture/default limiter; public screenshots/flow riêng.
+- FE17 unit/build154 PASS; translation test line-wrapped keys/VI preservation/unknown opaque strings. Google signup regression (consent/stale version/no auto-link/unknown) và C2 invitation regression PASS. Shared PasswordField/EmailVerificationActions defaultVi không đổi cho trang cũ.
+- Screens `.local/auth-locale/{mode}-en-{width}.png`; probe `.local/auth-locale/probe-auth-{width}/report.json`:0 Hỏng/console sạch/smallTap0/no overflow. Focus/native checkbox/warm border/long policy paragraphs là Gu exceptions. Locale switch khóa khi đang submit/chọn Google; cancel picker trước ghi được phép.
+- Chỉ localStorageUI preference, không secrets. Không dịch data/request values, không sửa BE/schema/API hoặc email preference. Settings/outer invitation/verified app gate/shared draft dialog/full site chưa dịch đủ; gate đó còn tiếp theo, không tínhS10 đạt toàn bộ.
