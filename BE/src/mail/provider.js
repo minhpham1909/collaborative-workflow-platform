@@ -4,6 +4,10 @@ import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
 
 export function mailContent(mail) {
+  if (mail.purpose === 'project_guest_invitation') return { subject: 'Lời mời xem dự án / Project Guest invitation',
+    text: ['Lời mời xem dự án / Project Guest invitation', mail.workspaceName, mail.projectName, 'Vai trò / Role: Guest — chỉ xem và bình luận / view and comment only', mail.url].join('\n') };
+  if (mail.purpose === 'organization_invitation') return { subject: 'Lời mời tổ chức / Organization invitation',
+    text: ['Lời mời tổ chức / Organization invitation', mail.organizationName, ...(mail.workspaceName ? [`Workspace: ${mail.workspaceName}`] : []), 'Vai trò / Role: Member', mail.url].join('\n') };
   if (mail.purpose === 'work') {
     const english = mail.locale === 'en';
     const labels = english ? { assignment: 'Assignment changed', comment: 'New comment', content: 'Task details changed', status: 'Status changed' } : { assignment: 'Thay đổi phân công', comment: 'Bình luận mới', content: 'Thay đổi nội dung công việc', status: 'Thay đổi trạng thái' };

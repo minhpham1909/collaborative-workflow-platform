@@ -1,6 +1,7 @@
 import { inputObject } from '../auth/account-input.js';
 import { objectId, expectedVersion, pageInput, fail } from '../workspaces/input.js';
 import { normalizeRichText, CONTENT_LIMITS } from '../content/rich-text.js';
+import { reasonInput } from '../moderation/input.js';
 
 export const statuses = ['todo', 'in_progress', 'done'];
 function text(value, max) {
@@ -28,10 +29,18 @@ export function stateInput(input) {
   return { state: input.state, expectedVersion: expectedVersion(input) };
 }
 export function taskInput(input, edit = false) {
-  inputObject(input, ['title', 'description', 'assigneeId', 'dueAt', ...(edit ? ['expectedVersion'] : [])]);
+  inputObject(input, ['title', 'description', 'assigneeId', 'dueAt', 'priority', 'labelIds', ...(edit ? ['expectedVersion'] : [])]);
   const fields = {};
   if (!edit || Object.hasOwn(input, 'title')) fields.title = text(input.title, 300);
   if (Object.hasOwn(input, 'description')) fields.description = rich(input.description, 'task');
+  if (Object.hasOwn(input, 'priority')) {
+    if (!['low', 'medium', 'high'].includes(input.priority)) fail();
+    fields.priority = input.priority;
+  }
+  if (Object.hasOwn(input, 'labelIds')) {
+    if (!Array.isArray(input.labelIds) || input.labelIds.length > 20 || new Set(input.labelIds).size !== input.labelIds.length) fail();
+    fields.labelIds = input.labelIds.map(objectId);
+  }
   if (Object.hasOwn(input, 'assigneeId')) fields.assigneeId = input.assigneeId === null ? null : objectId(input.assigneeId);
   if (Object.hasOwn(input, 'dueAt')) {
     if (input.dueAt === null) fields.dueAt = null;
@@ -46,13 +55,65 @@ export function taskInput(input, edit = false) {
   return { fields, ...(edit ? { expectedVersion: expectedVersion(input) } : {}) };
 }
 export function statusInput(input) {
-  inputObject(input, ['expectedVersion', 'status']);
+  inputObject(input, ['expectedVersion', 'status', 'confirmIncompleteChecklist', 'reason']);
   if (!statuses.includes(input.status)) fail();
-  return { status: input.status, expectedVersion: expectedVersion(input) };
+  if (input.confirmIncompleteChecklist !== undefined && typeof input.confirmIncompleteChecklist !== 'boolean') fail();
+  return { status: input.status, expectedVersion: expectedVersion(input), confirmIncompleteChecklist: input.confirmIncompleteChecklist === true, ...(input.reason === undefined ? {} : { reason: reasonInput(input.reason) }) };
+}
+export function reopenInput(input) {
+  inputObject(input, ['expectedVersion', 'reason', 'targetStatus']);
+  if (!['todo', 'in_progress'].includes(input.targetStatus)) fail();
+  return { expectedVersion: expectedVersion(input), reason: reasonInput(input.reason), targetStatus: input.targetStatus };
+}
+export function reopenReviewInput(input) {
+  inputObject(input, ['expectedVersion', 'expectedTaskVersion', 'decision', 'reason']);
+  if (!['approve', 'reject'].includes(input.decision) || !Number.isSafeInteger(input.expectedTaskVersion) || input.expectedTaskVersion < 0) fail();
+  return { expectedVersion: expectedVersion(input), expectedTaskVersion: input.expectedTaskVersion, decision: input.decision, reason: reasonInput(input.reason) };
+}
+export function statisticsInput(query) {
+  inputObject(query, ['from', 'to']);
+  const from = query.from === undefined ? null : vietnamDay(query.from);
+  const to = query.to === undefined ? null : vietnamDay(query.to);
+  if (from && to && from > to) fail();
+  return { from, to: to && new Date(to.getTime() + 86400_000) };
+}
+export function labelInput(input, edit = false) {
+  inputObject(input, ['name', 'color', ...(edit ? ['expectedVersion', 'archived'] : [])]);
+  const fields = {};
+  if (!edit || Object.hasOwn(input, 'name')) { fields.name = text(input.name, 60); fields.nameKey = fields.name.normalize('NFC').toLowerCase(); }
+  if (Object.hasOwn(input, 'color')) { if (!['lavender', 'coral', 'mint', 'blue', 'amber', 'gray'].includes(input.color)) fail(); fields.color = input.color; }
+  if (Object.hasOwn(input, 'archived')) { if (typeof input.archived !== 'boolean') fail(); fields.archived = input.archived; }
+  if (edit && !Object.keys(fields).length) fail();
+  return { fields, ...(edit ? { expectedVersion: expectedVersion(input) } : {}) };
+}
+export function checklistInput(input) {
+  inputObject(input, ['expectedVersion', 'items']);
+  if (!Array.isArray(input.items) || input.items.length > 100) fail();
+  const items = input.items.map(item => {
+    inputObject(item, ['id', 'text']);
+    if (item.id !== undefined && (typeof item.id !== 'string' || !/^[a-f0-9-]{36}$/u.test(item.id))) fail();
+    return { ...(item.id ? { id: item.id } : {}), text: text(item.text, 300) };
+  });
+  if (new Set(items.filter(item => item.id).map(item => item.id)).size !== items.filter(item => item.id).length) fail();
+  return { items, expectedVersion: expectedVersion(input) };
+}
+export function checklistTickInput(input) {
+  inputObject(input, ['expectedVersion', 'checked']);
+  if (typeof input.checked !== 'boolean') fail();
+  return { checked: input.checked, expectedVersion: expectedVersion(input) };
+}
+export function leadInput(input) {
+  inputObject(input, ['leadId', 'expectedVersion']);
+  if (!Object.hasOwn(input, 'leadId')) fail();
+  return { leadId: input.leadId === null ? null : objectId(input.leadId), expectedVersion: expectedVersion(input) };
 }
 export function commentInput(input, edit = false) {
   inputObject(input, ['content', ...(edit ? ['expectedVersion'] : [])]);
   return { fields: { content: rich(input.content, 'comment', true) }, ...(edit ? { expectedVersion: expectedVersion(input) } : {}) };
+}
+export function commentDeleteInput(input) {
+  inputObject(input, ['expectedVersion', 'reason']);
+  return { expectedVersion: expectedVersion(input), ...(input.reason === undefined ? {} : { reason: reasonInput(input.reason) }) };
 }
 export function lifecyclePage(query, defaultState = 'active') {
   inputObject(query, ['limit', 'cursor', 'state']);
@@ -78,7 +139,8 @@ export function vietnamDay(value) {
   return new Date(date.getTime() - 7 * 3600_000);
 }
 export function taskQuery(query, mine = false) {
-  inputObject(query, ['limit', 'cursor', 'status', 'q', 'timeField', 'from', 'to', 'overdue', ...(mine ? ['state', 'workspaceId'] : [])]);
+  inputObject(query, ['limit', 'cursor', 'status', 'q', 'timeField', 'from', 'to', 'overdue', 'priority', 'labelId', ...(mine ? ['state', 'workspaceId', 'projectId'] : [])]);
+  if (query.priority !== undefined && !['low', 'medium', 'high'].includes(query.priority)) fail();
   const status = query.status ?? (mine ? 'open' : 'all');
   if (![...statuses, 'all', 'open'].includes(status)) fail();
   const state = query.state ?? 'active';
@@ -89,5 +151,5 @@ export function taskQuery(query, mine = false) {
   const from = query.from === undefined ? null : vietnamDay(query.from);
   const to = query.to === undefined ? null : vietnamDay(query.to);
   if (from && to && from > to) fail();
-  return { ...pageInput({ limit: query.limit, cursor: query.cursor }), status, state, patterns: searchPatterns(query.q), timeField, from, to: to && new Date(to.getTime() + 86400_000), overdue: query.overdue, workspaceId: query.workspaceId === undefined ? null : objectId(query.workspaceId) };
+  return { ...pageInput({ limit: query.limit, cursor: query.cursor }), status, state, patterns: searchPatterns(query.q), timeField, from, to: to && new Date(to.getTime() + 86400_000), overdue: query.overdue, priority: query.priority, labelId: query.labelId === undefined ? null : objectId(query.labelId), workspaceId: query.workspaceId === undefined ? null : objectId(query.workspaceId), projectId: mine && query.projectId !== undefined ? objectId(query.projectId) : null };
 }

@@ -8,10 +8,14 @@ import {
   WorkspaceInvitation,
   Task,
   Project,
+  Organization, OrganizationInvitation, ProjectGuestInvitation,
 } from "../models/index.js";
 import { AuthError } from "../auth/errors.js";
 import { paged } from "../workspaces/response.js";
 import { inboxQuery } from "./input.js";
+import { workspaceAccess } from '../organizations/workspace-access.js';
+import { projectAccess } from '../work/project-access.js';
+import { assertNotBanned } from '../moderation/guard.js';
 
 const id = (value) => new mongoose.Types.ObjectId(value);
 const unavailable = () => {
@@ -57,32 +61,55 @@ export function createMongoNotificationsStore({
       payload: null,
       target: null,
     };
+    if (value.category === 'organization_invitation') {
+      try { await assertNotBanned(user._id, { organizationId: value.organizationId }, tx); }
+      catch (error) { if (error instanceof AuthError) return base; throw error; }
+      const invitation = await OrganizationInvitation.collection.findOne({ _id: value.organizationInvitationId, organizationId: value.organizationId,
+        emailCanonical: user.emailCanonical, revokedAt: null, acceptedAt: null, expiresAt: { $gt: now() } }, { session: tx });
+      if (!invitation) return base;
+      const organization = await Organization.collection.findOne({ _id: value.organizationId }, { session: tx });
+      const workspace = invitation.workspaceId && await Workspace.collection.findOne({ _id: invitation.workspaceId, organizationId: value.organizationId }, { session: tx });
+      if (!organization || (invitation.workspaceId && !workspace)) return base;
+      const inviter = await User.collection.findOne({ _id: invitation.createdBy }, { session: tx, projection: { displayName: 1 } });
+      return { ...base, available: true, code: 'ORGANIZATION_INVITATION',
+        payload: { organizationName: organization.name, workspaceName: workspace?.name ?? null, inviterDisplayName: inviter?.displayName ?? 'Unavailable User', role: 'member', expiresAt: invitation.expiresAt },
+        target: { type: 'organization_invitation', invitationId: String(invitation._id) } };
+    }
     const workspace = await Workspace.collection.findOne(
       { _id: value.workspaceId },
       { session: tx },
     );
     if (!workspace) return base;
+    try { await assertNotBanned(user._id, { organizationId: workspace.organizationId, workspaceId: workspace._id, projectId: value.projectId }, tx); }
+    catch (error) { if (error instanceof AuthError) return base; throw error; }
+    if (value.category === 'project_invitation') {
+      const invitation = await ProjectGuestInvitation.collection.findOne({ _id: value.projectInvitationId, projectId: value.projectId, workspaceId: workspace._id,
+        type: 'EMAIL', emailCanonical: user.emailCanonical, revokedAt: null, acceptedAt: null, expiresAt: { $gt: now() } }, { session: tx });
+      const project = invitation && await Project.collection.findOne({ _id: value.projectId, workspaceId: workspace._id }, { session: tx });
+      if (!project || (workspace.organizationId && !await Organization.collection.findOne({ _id: workspace.organizationId }, { session: tx }))) return base;
+      const inviter = await User.collection.findOne({ _id: invitation.createdBy }, { session: tx, projection: { displayName: 1 } });
+      return { ...base, available: true, code: 'PROJECT_GUEST_INVITATION',
+        payload: { projectName: project.name, workspaceName: workspace.name, inviterDisplayName: inviter?.displayName ?? 'Unavailable User', role: 'guest', expiresAt: invitation.expiresAt },
+        target: { type: 'project_invitation', invitationId: String(invitation._id) } };
+    }
+    if (value.category === 'membership') {
+      if (!user.emailVerifiedAt) return base;
+      try { await workspaceAccess(workspace, user._id, tx, { requireMember: true }); }
+      catch (error) { if (error instanceof AuthError) return base; throw error; }
+      return { ...base, available: true, code: 'WORKSPACE_MEMBER_ADDED', changes: [],
+        payload: { workspaceName: value.payload.workspaceName, actorDisplayName: value.payload.actorDisplayName },
+        target: { type: 'workspace', workspaceId: String(workspace._id) } };
+    }
     if (value.category === "work") {
-      if (
-        !user.emailVerifiedAt ||
-        !(await WorkspaceMembership.collection.findOne(
-          { workspaceId: workspace._id, userId: user._id, state: "active" },
-          { session: tx },
-        ))
-      )
-        return base;
+      if (!user.emailVerifiedAt) return base;
       const task = await Task.collection.findOne(
         { _id: value.taskId, workspaceId: workspace._id, deletedAt: null },
         { session: tx },
       );
-      if (
-        !task ||
-        !(await Project.collection.findOne(
-          { _id: task.projectId, workspaceId: workspace._id },
-          { session: tx },
-        ))
-      )
-        return base;
+      const project = task && await Project.collection.findOne({ _id: task.projectId, workspaceId: workspace._id }, { session: tx });
+      if (!project) return base;
+      try { await projectAccess(workspace, project, user._id, tx); }
+      catch (error) { if (error instanceof AuthError) return base; throw error; }
       return {
         ...base,
         available: true,

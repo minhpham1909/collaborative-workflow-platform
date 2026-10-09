@@ -18,7 +18,7 @@ export function inboxQuery(query) {
   const category = query.category ?? "all";
   if (
     !["all", "unread", "read"].includes(read) ||
-    !["all", "work", "invitation"].includes(category)
+    !["all", "work", "invitation", "membership", "organization_invitation", "project_invitation"].includes(category)
   )
     fail();
   const from = query.from === undefined ? null : vietnamDay(query.from),
@@ -81,7 +81,7 @@ export function cutoffCodec(keyHex) {
         inboxQuery({ ...value.filters, category: value.category });
         if (
           value.sub !== sub ||
-          !["all", "work", "invitation"].includes(value.category) ||
+          !["all", "work", "invitation", "membership", "organization_invitation", "project_invitation"].includes(value.category) ||
           new Date(value.at).toISOString() !== value.at
         )
           fail();

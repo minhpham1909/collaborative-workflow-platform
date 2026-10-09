@@ -2,10 +2,12 @@ import express from 'express';
 import { createAuthRouter } from './auth/http.js';
 import { createUsersRouter } from './users/http.js';
 import { createWorkspaceRouter, createInvitationRouter } from './workspaces/http.js';
-import { createWorkRouter } from './work/http.js';
+import { createWorkRouter, createProjectInvitationRouter } from './work/http.js';
 import { createNotificationsRouter } from './notifications/http.js';
+import { createOrganizationRouter, createOrganizationInvitationRouter } from './organizations/http.js';
+import { createModerationRouter } from './moderation/http.js';
 
-export function createApp({ isReady = () => false, authService, authConfig, accountsService, usersService, workspaceService, workService, notificationsService } = {}) {
+export function createApp({ isReady = () => false, authService, authConfig, accountsService, usersService, workspaceService, workService, notificationsService, organizationService, moderationService } = {}) {
   const app = express();
   app.disable('x-powered-by');
   app.set('trust proxy', false);
@@ -21,8 +23,12 @@ export function createApp({ isReady = () => false, authService, authConfig, acco
   });
   if (authService && authConfig) app.use('/auth', createAuthRouter({ service: authService, config: authConfig, accounts: accountsService }));
   if (authService && authConfig && usersService) app.use('/users', createUsersRouter({ service: usersService, authService, config: authConfig }));
+  if (authService && authConfig && organizationService) app.use('/organizations', createOrganizationRouter({ service: organizationService, authService, config: authConfig }));
+  if (authService && authConfig && organizationService) app.use('/organization-invitations', createOrganizationInvitationRouter({ service: organizationService, authService, config: authConfig }));
+  if (authService && authConfig && moderationService) app.use('/moderation', createModerationRouter({ service: moderationService, authService, config: authConfig }));
   if (authService && authConfig && notificationsService) app.use('/notifications', createNotificationsRouter({ service: notificationsService, authService, config: authConfig }));
   if (authService && authConfig && workService) app.use(createWorkRouter({ service: workService, authService, config: authConfig }));
+  if (authService && authConfig && workService) app.use('/project-invitations', createProjectInvitationRouter({ service: workService, authService, config: authConfig }));
   if (authService && authConfig && workspaceService) {
     app.use('/workspaces', createWorkspaceRouter({ service: workspaceService, authService, config: authConfig }));
     app.use('/invitations', createInvitationRouter({ service: workspaceService, authService, config: authConfig }));

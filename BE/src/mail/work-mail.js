@@ -1,6 +1,9 @@
 import mongoose from 'mongoose';
 import { randomUUID } from 'node:crypto';
 import { EmailOutbox, Workspace, WorkspaceMembership, User, Task, Project } from '../models/index.js';
+import { workspaceAccess } from '../organizations/workspace-access.js';
+import { AuthError } from '../auth/errors.js';
+import { assertNotBanned } from '../moderation/guard.js';
 
 export async function dispatchWorkMail({ config, send, now = () => new Date() }) {
   const time = now(); const leaseToken = randomUUID();
@@ -14,7 +17,12 @@ export async function dispatchWorkMail({ config, send, now = () => new Date() })
       const recipient = await User.collection.findOne({ _id: job.userId }, { session: tx });
       const membership = await WorkspaceMembership.collection.findOne({ workspaceId: job.workspaceId, userId: job.userId, state: 'active' }, { session: tx });
       const task = await Task.collection.findOne({ _id: job.taskId, workspaceId: job.workspaceId, deletedAt: null }, { session: tx });
-      if (!workspace || !recipient?.emailVerifiedAt || !membership || !task || !await Project.collection.findOne({ _id: task.projectId, workspaceId: workspace._id }, { session: tx })) return null;
+      if (!workspace || workspace.state === 'archived' || !recipient?.emailVerifiedAt || !membership || !task || !await Project.collection.findOne({ _id: task.projectId, workspaceId: workspace._id }, { session: tx })) return null;
+      try {
+        await assertNotBanned(job.userId, { organizationId: workspace.organizationId, workspaceId: workspace._id, projectId: task.projectId }, tx);
+        await workspaceAccess(workspace, job.userId, tx, { requireMember: true });
+      }
+      catch (error) { if (error instanceof AuthError) return null; throw error; }
       const eventTypes = job.eventTypes.filter((type) => membership.emailOverrides[type] === 'on' || (membership.emailOverrides[type] === 'inherit' && recipient.emailPreferences[type]));
       if (!eventTypes.length || !await EmailOutbox.collection.findOne({ _id: job._id, state: 'processing', leaseToken, leaseUntil: { $gt: now() } }, { session: tx })) return null;
       return { eventId: job.eventId, deliveryKey: String(job._id), to: recipient.emailCanonical, purpose: 'work', locale: recipient.locale ?? 'vi', eventTypes, taskTitle: task.title, workspaceName: workspace.name, ...(eventTypes.includes('status') ? { previousStatus: job.payload.previousStatus, status: job.payload.status } : {}), url: `${config.webOrigin}/tasks/${task._id}` };

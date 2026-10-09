@@ -19,6 +19,12 @@ export function workspaceFields(input, editing = false) {
   return { fields, ...(editing ? { expectedVersion: expectedVersion(input) } : {}) };
 }
 export function versionInput(input) { inputObject(input, ['expectedVersion']); return expectedVersion(input); }
+export function workspaceStateInput(input) {
+  inputObject(input, ['expectedVersion', 'state', 'confirmName', 'reason']);
+  if (!['active', 'archived'].includes(input.state) || typeof input.confirmName !== 'string' || input.confirmName.length > 200) fail();
+  if (typeof input.reason !== 'string' || !input.reason.trim() || input.reason.length > 2000 || /[\u0000-\u001f\u007f\u2028\u2029]/u.test(input.reason)) fail();
+  return { expectedVersion: expectedVersion(input), state: input.state, confirmName: input.confirmName, reason: input.reason.trim() };
+}
 export function transferInput(input) { inputObject(input, ['expectedVersion', 'memberId']); return { expectedVersion: expectedVersion(input), memberId: objectId(input.memberId) }; }
 export function invitationInput(input) {
   inputObject(input, ['type', 'email']);

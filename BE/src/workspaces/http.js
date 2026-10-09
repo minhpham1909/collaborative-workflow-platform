@@ -20,6 +20,7 @@ export function createWorkspaceRouter({ service, authService, config }) {
   value.post('/', createRateLimiter({ limit: 10 }), async (req, res) => res.status(201).json(await service.create(req.auth, req.body)));
   value.get('/:workspaceId', async (req, res) => res.json(await service.get(req.auth, req.params.workspaceId)));
   value.patch('/:workspaceId', async (req, res) => res.json(await service.update(req.auth, req.params.workspaceId, req.body)));
+  value.patch('/:workspaceId/state', async (req, res) => res.json(await service.state(req.auth, req.params.workspaceId, req.body)));
   value.get('/:workspaceId/members', async (req, res) => res.json(await service.members(req.auth, req.params.workspaceId, req.query)));
   value.post('/:workspaceId/leave', async (req, res) => res.json(await service.leave(req.auth, req.params.workspaceId, req.body)));
   value.post('/:workspaceId/members/:memberId/remove', async (req, res) => res.json(await service.remove(req.auth, req.params.workspaceId, req.params.memberId, req.body)));
