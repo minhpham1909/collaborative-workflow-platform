@@ -49,3 +49,6 @@ temp/
 /dumps/
 /infra/mongodb/data/
 /infra/mongodb/logs/
+
+# Keep extracted design references; raw download archives stay local
+/assets/ui_design/**/*.zip
