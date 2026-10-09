@@ -1,5 +1,7 @@
 # Đặc tả yêu cầu Collaborative Workflow Platform
 
+> 05/10/2026: mô hình mở rộng D1–D5 được tổng hợp tại [CORE-EXPANSION-v0.3](CORE-EXPANSION-v0.3.md). Bản v0.2 dưới đây giữ nền/lịch sử; Approved của delta định hướng thay thế các quyền và vòng đời được chỉ rõ. Proposed/Open không tự ghi đè quyết định cũ. use-cases.json và implementation chưa được chuyển toàn bộ sang mô hình tổ chức; xem [kế hoạch core](../project/CORE-EXPANSION-PLAN.md).
+
 Phiên bản: 0.2 | Ngày: 01/10/2026 | Trạng thái: Chờ rà soát và thông qua
 
 Cập nhật review local 01/10/2026: chủ dự án đã duyệt OD-01/02/03 gồm chi tiết assignee/Archived/tái gia nhập, email override từng loại/kế thừa/reset và deadline/overdue. Các quyết định khác vẫn cần duyệt; chưa lập baseline v1.0.

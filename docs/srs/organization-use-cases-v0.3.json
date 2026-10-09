@@ -1,0 +1,562 @@
+[
+  {
+    "id": "UC-ORG-01",
+    "name": "Tạo tổ chức",
+    "actor": "Verified User",
+    "rules": [
+      "EX-01",
+      "EX-03"
+    ],
+    "api": "POST /organizations",
+    "pre": "Phiên và xác minh email hợp lệ",
+    "steps": [
+      "Nhập name",
+      "Tạo Organization và owner membership trong transaction"
+    ],
+    "post": "Một owner, role membership không chứa ownership",
+    "test": "atomic owner membership, bounded list and cross-organization privacy"
+  },
+  {
+    "id": "UC-ORG-02",
+    "name": "Xem tổ chức theo phạm vi",
+    "actor": "Org Member/Owner/Admin",
+    "rules": [
+      "EX-03",
+      "EX-08"
+    ],
+    "api": "GET /organizations; GET /organizations/:id",
+    "pre": "Org membership active",
+    "steps": [
+      "Lọc quyền trước phân trang",
+      "Tính role từ ownerId và membership DB"
+    ],
+    "post": "Không lộ tổ chức khác hoặc private mutationRevision",
+    "test": "membership revocation, stale auth version and unverified user are denied at store"
+  },
+  {
+    "id": "UC-ORG-03",
+    "name": "Tạo Workspace trực thuộc",
+    "actor": "Org Owner/Admin",
+    "rules": [
+      "EX-01",
+      "EX-06"
+    ],
+    "api": "POST /organizations/:id/workspaces",
+    "pre": "Org role quản trị còn hiệu lực",
+    "steps": [
+      "Tạo Workspace organizationId/managerId, ownerId null",
+      "Tạo creator Workspace membership atomic"
+    ],
+    "post": "Tổ chức sở hữu Workspace, creator quản lý và làm việc tại đó",
+    "test": "attached Workspace access covers Admin/Manager, work, inbox/mail and independent scope"
+  },
+  {
+    "id": "UC-ORG-04",
+    "name": "Xem Workspace và công việc trực thuộc",
+    "actor": "Org Owner/Admin; Workspace Manager/Member",
+    "rules": [
+      "EX-06",
+      "EX-07",
+      "EX-08"
+    ],
+    "api": "GET /organizations/:id/workspaces; existing Workspace/Work routes",
+    "pre": "Active organization chain; membership Workspace trừ quyền quản trị cấp tổ chức",
+    "steps": [
+      "Kiểm Organization và Workspace cùng phạm vi",
+      "Admin quản trị không tự có quyền nhận Task hoặc email override"
+    ],
+    "post": "Legacy standalone giữ owner quyền hiện tại",
+    "test": "attached Workspace access covers Admin/Manager, work, inbox/mail and independent scope"
+  },
+  {
+    "id": "UC-ORG-05",
+    "name": "Xem thành viên tổ chức",
+    "actor": "Org Member/Owner/Admin",
+    "rules": [
+      "EX-03",
+      "EX-08"
+    ],
+    "api": "GET /organizations/:id/members",
+    "pre": "Org membership active",
+    "steps": [
+      "Search/date/cursor theo joinedAt",
+      "Chỉ trả tên/avatar/role/version, không email hoặc thông tin bảo mật"
+    ],
+    "post": "Danh sách trong tổ chức hiện tại",
+    "test": "management API preserves layered roles, logs changes and notifies assigned members"
+  },
+  {
+    "id": "UC-ORG-06",
+    "name": "Cấp hoặc thu hồi Admin",
+    "actor": "Org Owner",
+    "rules": [
+      "EX-03",
+      "EX-04"
+    ],
+    "api": "PATCH /organizations/:id/members/:userId/role",
+    "pre": "Target active/verified, không phải owner; expectedVersion membership",
+    "steps": [
+      "Chỉ admin/member, chặn tự cấp từ Member/Admin",
+      "CAS role và audit atomic"
+    ],
+    "post": "Vai trò Workspace độc lập không bị xóa; quyền quản trị mới có hiệu lực từ DB",
+    "test": "management API preserves layered roles, logs changes and notifies assigned members"
+  },
+  {
+    "id": "UC-ORG-07",
+    "name": "Bổ nhiệm hoặc thay Manager",
+    "actor": "Org Owner/Admin",
+    "rules": [
+      "EX-03",
+      "EX-05"
+    ],
+    "api": "PATCH /organizations/:id/workspaces/:workspaceId/manager",
+    "pre": "Workspace thuộc đúng Org; target là Org member active/verified; expectedVersion Workspace",
+    "steps": [
+      "Bảo đảm target là Workspace member",
+      "Đổi managerId, giữ Manager cũ là Member",
+      "Ghi audit, thông báo nếu vừa thêm target"
+    ],
+    "post": "Một Manager chính; Org role của người đó giữ nguyên",
+    "test": "management API preserves layered roles, logs changes and notifies assigned members"
+  },
+  {
+    "id": "UC-ORG-08",
+    "name": "Phân bổ Member nội bộ vào Workspace",
+    "actor": "Org Owner/Admin; Workspace Manager",
+    "rules": [
+      "EX-12"
+    ],
+    "api": "POST /organizations/:id/workspaces/:workspaceId/members",
+    "pre": "Target thuộc Org active/verified, expectedVersion Workspace",
+    "steps": [
+      "Tạo hoặc reactivate membership, reset override nếu reactivate",
+      "Không yêu cầu chấp nhận lại",
+      "Ghi audit và in-app membership notification trong transaction"
+    ],
+    "post": "Không cấp Org membership hoặc role mới; retry/no-op không tạo notification lặp",
+    "test": "management API preserves layered roles, logs changes and notifies assigned members"
+  },
+  {
+    "id": "UC-ORG-09",
+    "name": "Chuyển ownership tổ chức",
+    "actor": "Org Owner",
+    "rules": [
+      "EX-01",
+      "EX-03",
+      "EX-04"
+    ],
+    "api": "PATCH /organizations/:id/ownership",
+    "pre": "Target là Org member active/verified; expectedVersion Organization",
+    "steps": [
+      "CAS ownerId, giữ role membership riêng",
+      "Ghi audit atomic"
+    ],
+    "post": "Owner cũ mất quyền từ ownership, các role được cấp riêng còn giữ; không có hai owner",
+    "test": "management API preserves layered roles, logs changes and notifies assigned members"
+  },
+  {
+    "id": "UC-ORG-10",
+    "name": "Xem nhật ký quản trị",
+    "actor": "Org Owner/Admin",
+    "rules": [
+      "EX-03",
+      "EX-04"
+    ],
+    "api": "GET /organizations/:id/audit",
+    "pre": "Quyền quản trị còn hiệu lực",
+    "steps": [
+      "Lọc organizationId trước pagination",
+      "Trả actor/target/action/role change/time"
+    ],
+    "post": "Không có password/token/Comment content",
+    "test": "management API preserves layered roles, logs changes and notifies assigned members"
+  },
+  {
+    "id": "UC-ORG-11",
+    "name": "Mời Member vào tổ chức qua email",
+    "actor": "Org Owner/Admin",
+    "rules": [
+      "EX-13"
+    ],
+    "api": "POST /organizations/:id/invitations",
+    "pre": "Org management role active; optional Workspace belongs to Org",
+    "steps": [
+      "Validate exact email and reject elevated role",
+      "Queue encrypted mail; notify existing recipient without creating membership"
+    ],
+    "post": "Pending email invitation; no plaintext token in DTO",
+    "test": "email-only Member invitation, public preview, encrypted outbox and in-app recipient scope"
+  },
+  {
+    "id": "UC-ORG-12",
+    "name": "Xem và chấp nhận lời mời tổ chức",
+    "actor": "Invited verified User",
+    "rules": [
+      "EX-13"
+    ],
+    "api": "POST /organization-invitations/preview; POST /organization-invitations/accept; POST /organization-invitations/:id/accept",
+    "pre": "Valid unconsumed invitation, verified exact email for accept",
+    "steps": [
+      "Preview minimal Organization/Workspace scope",
+      "Commit Org membership and optional Workspace in transaction",
+      "Consume invitation, cancel unsent delivery"
+    ],
+    "post": "Member only; existing active roles retained, inactive rejoin does not restore Admin",
+    "test": "concurrent accept-by-ID creates single membership and optional Workspace atomically"
+  },
+  {
+    "id": "UC-ORG-13",
+    "name": "Thu hồi lời mời tổ chức",
+    "actor": "Org Owner/Admin",
+    "rules": [
+      "EX-13"
+    ],
+    "api": "POST /organizations/:id/invitations/:invitationId/revoke",
+    "pre": "Invitation in current Org; CAS version",
+    "steps": [
+      "Serialize against accept",
+      "Mark revoked and cancel unsent outbox"
+    ],
+    "post": "Cannot accept revoked invitation",
+    "test": "unverified, revoked, expired and stale invitations cannot grant access"
+  },
+  {
+    "id": "UC-ORG-14",
+    "name": "Rời tổ chức",
+    "actor": "Org Member/Admin",
+    "rules": [
+      "EX-15"
+    ],
+    "api": "POST /organizations/:id/leave",
+    "pre": "Current membership version; ownership and Manager handoffs completed",
+    "steps": [
+      "Revoke Org and descendant Workspace memberships",
+      "Clear unfinished assignees including Archived; preserve Done/creator/comment",
+      "Cancel queued work mail"
+    ],
+    "post": "Independent Workspaces/account unchanged; rejoin does not restore old assignments",
+    "test": "leave cascades Workspace rights, assignees and queued work email but preserves history and standalone"
+  },
+  {
+    "id": "UC-ORG-15",
+    "name": "Loại Member khỏi tổ chức",
+    "actor": "Org Owner/Admin",
+    "rules": [
+      "EX-15",
+      "EX-17"
+    ],
+    "api": "POST /organizations/:id/members/:userId/remove",
+    "pre": "Owner protected; Admin cannot remove Admin; Manager replacement required; CAS membership",
+    "steps": [
+      "Validate hierarchy and current target",
+      "Apply same exit cascade and audit"
+    ],
+    "post": "Kick does not ban; new valid invitation may rejoin, prior Admin role not automatically restored",
+    "test": "owner/admin protection, Manager handoff and accept/revoke race remain consistent"
+  },
+  {
+    "id": "UC-PACCESS-01",
+    "name": "Assign Project Lead",
+    "actor": "Workspace Owner/Manager; Org Owner/Admin",
+    "rules": [
+      "EX-31"
+    ],
+    "api": "PATCH /projects/:id/lead",
+    "pre": "Active Project, verified target with current Workspace membership, Project CAS",
+    "steps": [
+      "Check parent role and target membership",
+      "Assign/clear leadId, audit change"
+    ],
+    "post": "Lead has Project-scoped Task/description permissions only",
+    "test": "Lead requires current Workspace membership and cannot manage other Projects or Workspace"
+  },
+  {
+    "id": "UC-PACCESS-02",
+    "name": "Invite Project Guest",
+    "actor": "Workspace management",
+    "rules": [
+      "EX-09",
+      "EX-14"
+    ],
+    "api": "POST /projects/:id/guest-invitations",
+    "pre": "Active Project and current management permission",
+    "steps": [
+      "EMAIL exact recipient or reusable LINK, always Guest",
+      "Hash token, queue encrypted EMAIL and recipient Inbox"
+    ],
+    "post": "No membership until verified explicit accept",
+    "test": "Guest EMAIL/LINK acceptance never creates Org/Workspace membership; reads only shared Project"
+  },
+  {
+    "id": "UC-PACCESS-03",
+    "name": "Guest reads/comments shared Project",
+    "actor": "Project Guest",
+    "rules": [
+      "EX-09"
+    ],
+    "api": "GET /shared-projects; existing Project/Task/Board/Comment endpoints",
+    "pre": "Active Project Guest grant, valid parent chain",
+    "steps": [
+      "Read only shared Project",
+      "Write own Comment in Active; reject Task writes and Workspace roster"
+    ],
+    "post": "Creator/Assignee history cannot override Guest-only permissions",
+    "test": "former Creator/Assignee returning as Guest has no inherited Task write permission"
+  },
+  {
+    "id": "UC-PACCESS-04",
+    "name": "Revoke Guest or invitation",
+    "actor": "Workspace management",
+    "rules": [
+      "EX-09",
+      "EX-14",
+      "EX-15"
+    ],
+    "api": "POST /projects/:id/guests/:userId/remove; POST /projects/:id/guest-invitations/:id/revoke",
+    "pre": "Current parent scope and grant/invitation CAS",
+    "steps": [
+      "Revoke grant or invitation separately",
+      "Keep Comments, record access audit"
+    ],
+    "post": "No access from revoked grant; other roles unchanged; link revoke does not remove already joined Guest",
+    "test": "Guest revoke/link revoke and concurrent Lead changes respect CAS and current access"
+  },
+  {
+    "id": "UC-MOD-01",
+    "name": "Scoped Ban and reviewed Comment cleanup",
+    "actor": "Scope management",
+    "rules": [
+      "EX-17",
+      "EX-18",
+      "EX-19"
+    ],
+    "api": "POST /moderation/:type/:id/preview; POST /moderation/:type/:id/bans",
+    "pre": "Verified current scope authority, target below role; signed review for cleanup",
+    "steps": [
+      "Preview count/cutoff and bind selection",
+      "Commit Ban/revoke cascade/job atomic",
+      "Worker deletes scoped author Comments in bounded batches"
+    ],
+    "post": "No new access/accept; no Task/doc deletion; failed cleanup does not rollback Ban",
+    "test": "Project Guest Ban blocks read/accept/list immediately; cleanup batches keep other scopes/content"
+  },
+  {
+    "id": "UC-MOD-02",
+    "name": "Unban and cleanup retry",
+    "actor": "Scope management",
+    "rules": [
+      "EX-17"
+    ],
+    "api": "POST /moderation/:type/:id/bans/:userId/unban; POST /moderation/:type/:id/actions/:id/retry",
+    "pre": "Current role and Ban/action version; failed job for retry",
+    "steps": [
+      "Unban logs decision, does not restore roles/membership/content",
+      "Retry keeps cursor/time/scope selection"
+    ],
+    "post": "Fresh invitation/assignment needed; sibling bans remain effective",
+    "test": "Kick allows valid rejoin; Ban requires unban and never restores membership automatically"
+  },
+  {
+    "id": "UC-MOD-03",
+    "name": "Delete Comment permanently",
+    "actor": "Author in Active; authorized moderator including Archived",
+    "rules": [
+      "EX-10",
+      "EX-11"
+    ],
+    "api": "POST /tasks/:taskId/comments/:id/delete",
+    "pre": "Current Project scope, Comment CAS; reason required for moderation",
+    "steps": [
+      "Validate author/moderator rights",
+      "Delete physical Comment and metadata audit atomic"
+    ],
+    "post": "No body copy or restore; others cannot edit author text",
+    "test": "hard delete is author-only for edits, moderator with reason even Archived, audit never stores body"
+  },
+  {
+    "id": "UC-MOD-04",
+    "name": "Context profile card",
+    "actor": "Project reader",
+    "rules": [
+      "EX-16"
+    ],
+    "api": "GET /projects/:id/people/:userId/profile",
+    "pre": "Reader access; Guest target associated with visible work",
+    "steps": [
+      "Resolve current scoped status/role",
+      "Return name/avatar/departed status, no email/security/other Org data"
+    ],
+    "post": "No long status tag appended to displayName; moderation blocked flag only authorized management",
+    "test": "Organization Ban revokes descendants, archived assignments and Manager slots, not other organizations"
+  },
+  {
+    "id": "UC-TASK-01",
+    "name": "Priority and Project labels",
+    "actor": "Task editor; Project management/Lead",
+    "rules": [
+      "EX-26"
+    ],
+    "api": "POST/PATCH Task; GET/POST/PATCH /projects/:id/labels",
+    "pre": "Current scope/active/CAS; labels belong to Project",
+    "steps": [
+      "Validate typed input and scoped authorization at commit",
+      "Return bounded DTO based on committed data"
+    ],
+    "post": "No Guest writes; archived labels retain history and cannot be assigned",
+    "test": "Project label management, scoped assignment, archive and CAS"
+  },
+  {
+    "id": "UC-TASK-02",
+    "name": "Checklist and Done warning",
+    "actor": "Task editor and Assignee",
+    "rules": [
+      "EX-27"
+    ],
+    "api": "PATCH /tasks/:id/checklist; PATCH /tasks/:id/checklist/:itemId; PATCH /tasks/:id/status",
+    "pre": "Current role/CAS, UUID items; explicit incomplete confirmation",
+    "steps": [
+      "Validate typed input and scoped authorization at commit",
+      "Return bounded DTO based on committed data"
+    ],
+    "post": "Assignee cannot alter structure; changed data requires new confirmation",
+    "test": "Checklist structure/ticks preserve IDs and checked state; races and Done confirmation"
+  },
+  {
+    "id": "UC-TASK-03",
+    "name": "Stable code and completion history",
+    "actor": "Task writer and scoped reader",
+    "rules": [
+      "EX-28",
+      "EX-30"
+    ],
+    "api": "POST /projects/:id/tasks; GET /tasks/:id/activity; Task search",
+    "pre": "Atomic Project counter; unique prefix/code indexes",
+    "steps": [
+      "Validate typed input and scoped authorization at commit",
+      "Return bounded DTO based on committed data"
+    ],
+    "post": "Code never reused; Done no-op keeps timestamp; unknown historical time stays null",
+    "test": "Atomic readable codes, parallel creation, search and no reuse after deletion"
+  },
+  {
+    "id": "UC-TASK-04",
+    "name": "My Tasks deadline groups",
+    "actor": "Current assigned Workspace member",
+    "rules": [
+      "EX-29"
+    ],
+    "api": "GET /my-tasks",
+    "pre": "Current membership/Ban/filter; Vietnam day bounds",
+    "steps": [
+      "Validate typed input and scoped authorization at commit",
+      "Return bounded DTO based on committed data"
+    ],
+    "post": "Counts describe full filtered set, not a cursor page; Board newest sort stays",
+    "test": "My Tasks deadline counts cover filtered full set, not current cursor page"
+  },
+  {
+    "id": "UC-TASK-05",
+    "name": "Request/review Task reopen",
+    "actor": "Current Creator/Assignee and independent scope management",
+    "rules": [
+      "EX-31",
+      "EX-32",
+      "EX-33"
+    ],
+    "api": "POST /tasks/:id/reopen-requests; POST /tasks/:id/reopen-requests/:requestId/review",
+    "pre": "Done Active/current scope; pending unique; CAS Task and Request; bounded reason/rates",
+    "steps": [
+      "Validate current permissions and typed input",
+      "Commit bounded scoped results/transactional mutation"
+    ],
+    "post": "Approve atomically reopens/clears completedAt/revalidates assignee; reject leaves Done; self-review/bypass denied",
+    "test": "BE/test/reopen-mongo.test.js"
+  },
+  {
+    "id": "UC-TASK-06",
+    "name": "Reopen pending lifecycle",
+    "actor": "Parent/membership mutations and scoped readers",
+    "rules": [
+      "EX-15",
+      "EX-17",
+      "EX-32"
+    ],
+    "api": "Lifecycle archive/delete/leave/Ban; scoped request GET",
+    "pre": "Current parent chain/requester relationship/access",
+    "steps": [
+      "Validate current permissions and typed input",
+      "Commit bounded scoped results/transactional mutation"
+    ],
+    "post": "Cancel without replay on rejoin/unban/unarchive; changing Lead keeps request but changes reviewer authority",
+    "test": "BE/test/reopen-mongo.test.js"
+  },
+  {
+    "id": "UC-TASK-07",
+    "name": "Current Project progress/statistics",
+    "actor": "Scoped Project reader including Guest",
+    "rules": [
+      "EX-28",
+      "EX-34"
+    ],
+    "api": "GET /projects/:id/statistics",
+    "pre": "Real current nondeleted Tasks; optional Vietnam calendar period",
+    "steps": [
+      "Validate current permissions and typed input",
+      "Commit bounded scoped results/transactional mutation"
+    ],
+    "post": "No other scope leak; reopened Tasks excluded from current Done/period; legacy completion time unknown retained",
+    "test": "BE/test/reopen-mongo.test.js"
+  },
+  {
+    "id": "UC-LIFE-01",
+    "name": "Workspace Archive and Unarchive",
+    "actor": "Scope management/editor or dedicated worker",
+    "rules": [
+      "EX-20",
+      "EX-23",
+      "EX-24"
+    ],
+    "api": "PATCH /workspaces/:id/state",
+    "pre": "Current scoped management + name/reason/CAS; unarchive valid Manager",
+    "steps": [
+      "Check current authority/state/parent chain",
+      "Commit transaction and scoped metadata audit"
+    ],
+    "post": "Read-only children, Project own state stays; no replay on unarchive",
+    "test": "BE/test/retention-mongo.test.js"
+  },
+  {
+    "id": "UC-LIFE-02",
+    "name": "Task Trash and Restore",
+    "actor": "Scope management/editor or dedicated worker",
+    "rules": [
+      "EX-21",
+      "EX-22"
+    ],
+    "api": "POST /tasks/:id/delete; GET /projects/:id/trash; POST /tasks/:id/restore",
+    "pre": "Current editor; active parent/CAS/before deadline to restore",
+    "steps": [
+      "Check current authority/state/parent chain",
+      "Commit transaction and scoped metadata audit"
+    ],
+    "post": "Preserves code/data/history, validates Assignee, no work event replay",
+    "test": "BE/test/retention-mongo.test.js"
+  },
+  {
+    "id": "UC-LIFE-03",
+    "name": "Automatic retention purge",
+    "actor": "Scope management/editor or dedicated worker",
+    "rules": [
+      "EX-21"
+    ],
+    "api": "Separate retention worker",
+    "pre": "30d expired valid scheduled trash, actual parent chain/version after guard",
+    "steps": [
+      "Check current authority/state/parent chain",
+      "Commit transaction and scoped metadata audit"
+    ],
+    "post": "Atomic scoped children + metadata audit deletion; no reused code; legacy unscheduled skip",
+    "test": "BE/test/retention-mongo.test.js"
+  }
+]

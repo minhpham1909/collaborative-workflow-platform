@@ -206,24 +206,43 @@
     {
       "name": "workspaces",
       "fields": {
-        "ownerId": "ObjectId",
+        "ownerId": "ObjectId|null",
         "name": "String",
         "description": "RichText",
         "version": "Integer",
         "mutationRevision": "Integer",
-        "updatedAt": "Date"
+        "updatedAt": "Date",
+        "organizationId": "ObjectId|null",
+        "managerId": "ObjectId|null",
+        "state": "active|archived",
+        "archivedAt": "Date|null",
+        "archivedBy": "ObjectId|null"
       },
       "privateFields": [
         "mutationRevision"
       ],
       "references": {
-        "ownerId": "users"
+        "ownerId": "users",
+        "organizationId": "organizations",
+        "managerId": "users",
+        "archivedBy": "users"
       },
-      "indexes": [],
+      "indexes": [
+        {
+          "name": "workspace_organization_list",
+          "keys": {
+            "organizationId": 1,
+            "createdAt": -1,
+            "_id": -1
+          }
+        }
+      ],
       "constraints": [
         "Exactly one ownerId and active membership for owner",
         "Role derived; not duplicated on membership",
-        "Description proposed maximum 20000 visible characters"
+        "Description proposed maximum 20000 visible characters",
+        "Standalone has ownerId and no managerId; organization Workspace has organizationId/managerId and no personal ownerId",
+        "Legacy missing organizationId remains standalone"
       ]
     },
     {
@@ -339,13 +358,17 @@
         "archivedAt": "Date|null",
         "archivedBy": "ObjectId|null",
         "version": "Integer",
-        "updatedAt": "Date"
+        "updatedAt": "Date",
+        "leadId": "ObjectId|null",
+        "taskPrefix": "String|null",
+        "taskSequence": "Integer"
       },
       "privateFields": [],
       "references": {
         "workspaceId": "workspaces",
         "createdBy": "users",
-        "archivedBy": "users"
+        "archivedBy": "users",
+        "leadId": "users"
       },
       "indexes": [
         {
@@ -355,6 +378,18 @@
             "state": 1,
             "createdAt": -1,
             "_id": -1
+          }
+        },
+        {
+          "name": "project_task_prefix_unique",
+          "keys": {
+            "taskPrefix": 1
+          },
+          "unique": true,
+          "partialFilter": {
+            "taskPrefix": {
+              "$type": "string"
+            }
           }
         }
       ],
@@ -379,7 +414,13 @@
         "deletedAt": "Date|null",
         "deletedBy": "ObjectId|null",
         "version": "Integer",
-        "updatedAt": "Date"
+        "updatedAt": "Date",
+        "code": "String|null",
+        "priority": "low|medium|high",
+        "labelIds": "ObjectId[]",
+        "checklist": "ChecklistItem[]",
+        "completedAt": "Date|null",
+        "purgeAt": "Date|null"
       },
       "privateFields": [
         "searchText"
@@ -421,6 +462,42 @@
             "workspaceId": 1,
             "assigneeId": 1,
             "status": 1
+          },
+          "partialFilter": {
+            "deletedAt": null
+          }
+        },
+        {
+          "name": "task_code_unique",
+          "keys": {
+            "code": 1
+          },
+          "unique": true,
+          "partialFilter": {
+            "code": {
+              "$type": "string"
+            }
+          }
+        },
+        {
+          "name": "task_retention_due",
+          "keys": {
+            "purgeAt": 1,
+            "_id": 1
+          },
+          "partialFilter": {
+            "purgeAt": {
+              "$type": "date"
+            }
+          }
+        },
+        {
+          "name": "task_project_chronological",
+          "keys": {
+            "projectId": 1,
+            "workspaceId": 1,
+            "createdAt": -1,
+            "_id": -1
           },
           "partialFilter": {
             "deletedAt": null
@@ -477,15 +554,19 @@
       "fields": {
         "recipientId": "ObjectId",
         "eventId": "String",
-        "category": "work|invitation",
-        "workspaceId": "ObjectId",
+        "category": "work|invitation|membership|organization_invitation|project_invitation",
+        "workspaceId": "ObjectId|null",
         "taskId": "ObjectId|null",
         "invitationId": "ObjectId|null",
         "actorId": "ObjectId|null",
         "changes": "BoundedChangeArray",
         "payloadVersion": "Integer",
         "payload": "NotificationPayload",
-        "readAt": "Date|null"
+        "readAt": "Date|null",
+        "organizationId": "ObjectId|null",
+        "organizationInvitationId": "ObjectId|null",
+        "projectId": "ObjectId|null",
+        "projectInvitationId": "ObjectId|null"
       },
       "privateFields": [
         "payload"
@@ -495,7 +576,11 @@
         "workspaceId": "workspaces",
         "taskId": "tasks",
         "invitationId": "workspace_invitations",
-        "actorId": "users"
+        "actorId": "users",
+        "organizationId": "organizations",
+        "organizationInvitationId": "organization_invitations",
+        "projectId": "projects",
+        "projectInvitationId": "project_guest_invitations"
       },
       "indexes": [
         {
@@ -552,7 +637,11 @@
         "providerMessageId": "String|null",
         "lastErrorCode": "String|null",
         "sentAt": "Date|null",
-        "updatedAt": "Date"
+        "updatedAt": "Date",
+        "organizationId": "ObjectId|null",
+        "organizationInvitationId": "ObjectId|null",
+        "projectId": "ObjectId|null",
+        "projectInvitationId": "ObjectId|null"
       },
       "privateFields": [
         "recipientKey",
@@ -565,7 +654,11 @@
         "workspaceId": "workspaces",
         "taskId": "tasks",
         "invitationId": "workspace_invitations",
-        "authTokenId": "auth_tokens"
+        "authTokenId": "auth_tokens",
+        "organizationId": "organizations",
+        "organizationInvitationId": "organization_invitations",
+        "projectId": "projects",
+        "projectInvitationId": "project_guest_invitations"
       },
       "indexes": [
         {
@@ -635,6 +728,591 @@
         "Google nonce is cookie-bound, purpose/user-bound and single-use",
         "Five-minute expiry checked in transaction; no TTL purge yet"
       ]
+    },
+    {
+      "name": "organizations",
+      "fields": {
+        "ownerId": "ObjectId",
+        "name": "String",
+        "mutationRevision": "Integer",
+        "version": "Integer",
+        "updatedAt": "Date"
+      },
+      "privateFields": [
+        "mutationRevision"
+      ],
+      "references": {
+        "ownerId": "users"
+      },
+      "indexes": [
+        {
+          "name": "organization_owner_list",
+          "keys": {
+            "ownerId": 1,
+            "createdAt": -1,
+            "_id": -1
+          }
+        }
+      ],
+      "constraints": [
+        "Ownership derives from ownerId; active owner membership required by store"
+      ]
+    },
+    {
+      "name": "organization_memberships",
+      "fields": {
+        "organizationId": "ObjectId",
+        "userId": "ObjectId",
+        "role": "admin|member",
+        "state": "active|inactive",
+        "joinedAt": "Date",
+        "leftAt": "Date|null",
+        "version": "Integer",
+        "updatedAt": "Date",
+        "membershipGeneration": "Integer",
+        "exitReason": "left|removed|null"
+      },
+      "references": {
+        "organizationId": "organizations",
+        "userId": "users"
+      },
+      "indexes": [
+        {
+          "name": "organization_membership_pair_unique",
+          "keys": {
+            "organizationId": 1,
+            "userId": 1
+          },
+          "unique": true
+        },
+        {
+          "name": "organization_membership_user_access",
+          "keys": {
+            "userId": 1,
+            "state": 1,
+            "organizationId": 1
+          }
+        }
+      ],
+      "constraints": [
+        "Unique organization/user pair",
+        "Owner is derived from Organization, never membership role"
+      ]
+    },
+    {
+      "name": "organization_audit",
+      "fields": {
+        "organizationId": "ObjectId",
+        "actorId": "ObjectId",
+        "targetUserId": "ObjectId|null",
+        "workspaceId": "ObjectId|null",
+        "action": "String",
+        "previousRole": "String|null",
+        "role": "String|null",
+        "previousUserId": "ObjectId|null"
+      },
+      "references": {
+        "organizationId": "organizations",
+        "actorId": "users",
+        "targetUserId": "users",
+        "workspaceId": "workspaces",
+        "previousUserId": "users"
+      },
+      "indexes": [
+        {
+          "name": "organization_audit_list",
+          "keys": {
+            "organizationId": 1,
+            "createdAt": -1,
+            "_id": -1
+          }
+        }
+      ],
+      "constraints": [
+        "No generic query writes; transactional events for management operations"
+      ]
+    },
+    {
+      "name": "organization_invitations",
+      "fields": {
+        "organizationId": "ObjectId",
+        "workspaceId": "ObjectId|null",
+        "createdBy": "ObjectId",
+        "email": "String",
+        "emailCanonical": "String",
+        "tokenHash": "Digest",
+        "expiresAt": "Date",
+        "revokedAt": "Date|null",
+        "acceptedAt": "Date|null",
+        "acceptedBy": "ObjectId|null",
+        "version": "Integer",
+        "updatedAt": "Date"
+      },
+      "privateFields": [
+        "email",
+        "emailCanonical",
+        "tokenHash"
+      ],
+      "references": {
+        "organizationId": "organizations",
+        "workspaceId": "workspaces",
+        "createdBy": "users",
+        "acceptedBy": "users"
+      },
+      "indexes": [
+        {
+          "name": "organization_invitation_token_unique",
+          "keys": {
+            "tokenHash": 1
+          },
+          "unique": true
+        },
+        {
+          "name": "organization_invitation_list",
+          "keys": {
+            "organizationId": 1,
+            "createdAt": -1,
+            "_id": -1
+          }
+        }
+      ],
+      "constraints": [
+        "Email-only single-use, exact verified email",
+        "Member only; optional Workspace must belong to Organization"
+      ]
+    },
+    {
+      "name": "project_guests",
+      "fields": {
+        "workspaceId": "ObjectId",
+        "projectId": "ObjectId",
+        "userId": "ObjectId",
+        "state": "active|inactive",
+        "grantedBy": "ObjectId",
+        "joinedAt": "Date",
+        "revokedAt": "Date|null",
+        "version": "Integer",
+        "updatedAt": "Date"
+      },
+      "references": {
+        "workspaceId": "workspaces",
+        "projectId": "projects",
+        "userId": "users",
+        "grantedBy": "users"
+      },
+      "indexes": [
+        {
+          "name": "project_guest_pair_unique",
+          "keys": {
+            "projectId": 1,
+            "userId": 1
+          },
+          "unique": true
+        },
+        {
+          "name": "project_guest_user_list",
+          "keys": {
+            "userId": 1,
+            "state": 1,
+            "projectId": 1
+          }
+        }
+      ],
+      "constraints": [
+        "Project-scoped authorization and transactional access writes"
+      ]
+    },
+    {
+      "name": "project_guest_invitations",
+      "fields": {
+        "workspaceId": "ObjectId",
+        "projectId": "ObjectId",
+        "createdBy": "ObjectId",
+        "type": "EMAIL|LINK",
+        "email": "String|null",
+        "emailCanonical": "String|null",
+        "tokenHash": "Digest",
+        "expiresAt": "Date",
+        "revokedAt": "Date|null",
+        "acceptedAt": "Date|null",
+        "acceptedBy": "ObjectId|null",
+        "version": "Integer",
+        "updatedAt": "Date"
+      },
+      "references": {
+        "workspaceId": "workspaces",
+        "projectId": "projects",
+        "createdBy": "users",
+        "acceptedBy": "users"
+      },
+      "indexes": [
+        {
+          "name": "project_guest_invitation_token_unique",
+          "keys": {
+            "tokenHash": 1
+          },
+          "unique": true
+        },
+        {
+          "name": "project_guest_invitation_list",
+          "keys": {
+            "projectId": 1,
+            "createdAt": -1,
+            "_id": -1
+          }
+        }
+      ],
+      "constraints": [
+        "Project-scoped authorization and transactional access writes"
+      ],
+      "privateFields": [
+        "email",
+        "emailCanonical",
+        "tokenHash"
+      ]
+    },
+    {
+      "name": "project_access_audit",
+      "fields": {
+        "workspaceId": "ObjectId",
+        "projectId": "ObjectId",
+        "actorId": "ObjectId",
+        "targetUserId": "ObjectId|null",
+        "previousUserId": "ObjectId|null",
+        "action": "String"
+      },
+      "references": {
+        "workspaceId": "workspaces",
+        "projectId": "projects",
+        "actorId": "users",
+        "targetUserId": "users",
+        "previousUserId": "users"
+      },
+      "indexes": [
+        {
+          "name": "project_access_audit_list",
+          "keys": {
+            "projectId": 1,
+            "createdAt": -1,
+            "_id": -1
+          }
+        }
+      ],
+      "constraints": [
+        "Project-scoped authorization and transactional access writes"
+      ]
+    },
+    {
+      "name": "access_bans",
+      "fields": {
+        "scopeType": "organization|workspace|project",
+        "scopeId": "ObjectId",
+        "organizationId": "ObjectId|null",
+        "workspaceId": "ObjectId|null",
+        "projectId": "ObjectId|null",
+        "userId": "ObjectId",
+        "state": "active|revoked",
+        "reason": "String",
+        "imposedBy": "ObjectId",
+        "imposedAt": "Date",
+        "revokedAt": "Date|null",
+        "revokedBy": "ObjectId|null",
+        "version": "Integer",
+        "updatedAt": "Date"
+      },
+      "references": {
+        "organizationId": "organizations",
+        "workspaceId": "workspaces",
+        "projectId": "projects",
+        "userId": "users",
+        "imposedBy": "users",
+        "revokedBy": "users"
+      },
+      "indexes": [
+        {
+          "name": "access_ban_scope_user_unique",
+          "keys": {
+            "scopeType": 1,
+            "scopeId": 1,
+            "userId": 1
+          },
+          "unique": true
+        },
+        {
+          "name": "access_ban_user_active",
+          "keys": {
+            "userId": 1,
+            "state": 1,
+            "scopeType": 1,
+            "scopeId": 1
+          }
+        }
+      ],
+      "constraints": [
+        "Server-derived scope; CAS; no Comment content in audit"
+      ]
+    },
+    {
+      "name": "moderation_actions",
+      "fields": {
+        "scopeType": "organization|workspace|project",
+        "scopeId": "ObjectId",
+        "organizationId": "ObjectId|null",
+        "workspaceId": "ObjectId|null",
+        "projectId": "ObjectId|null",
+        "actorId": "ObjectId",
+        "targetUserId": "ObjectId",
+        "banId": "ObjectId|null",
+        "commentId": "ObjectId|null",
+        "action": "ban|unban|comment_deleted",
+        "reason": "String",
+        "cleanup": "none|1|3|7|30|all",
+        "from": "Date|null",
+        "cutoff": "Date",
+        "workspaceIds": "ObjectId[]",
+        "takeoverWorkspaceIds": "ObjectId[]",
+        "state": "pending|processing|completed|failed",
+        "matchedCount": "Integer",
+        "deletedCount": "Integer",
+        "attempts": "Integer",
+        "lastId": "ObjectId|null",
+        "leaseToken": "String|null",
+        "leaseUntil": "Date|null",
+        "lastErrorCode": "String|null",
+        "version": "Integer",
+        "updatedAt": "Date"
+      },
+      "references": {
+        "organizationId": "organizations",
+        "workspaceId": "workspaces",
+        "projectId": "projects",
+        "actorId": "users",
+        "targetUserId": "users",
+        "banId": "access_bans",
+        "commentId": "task_comments"
+      },
+      "indexes": [
+        {
+          "name": "moderation_scope_history",
+          "keys": {
+            "scopeType": 1,
+            "scopeId": 1,
+            "createdAt": -1,
+            "_id": -1
+          }
+        },
+        {
+          "name": "moderation_pending",
+          "keys": {
+            "state": 1,
+            "leaseUntil": 1,
+            "createdAt": 1
+          }
+        }
+      ],
+      "constraints": [
+        "Server-derived scope; CAS; no Comment content in audit"
+      ]
+    },
+    {
+      "name": "project_labels",
+      "fields": {
+        "workspaceId": "ObjectId",
+        "projectId": "ObjectId",
+        "createdBy": "ObjectId",
+        "name": "String",
+        "nameKey": "String",
+        "color": "String",
+        "archivedAt": "Date|null",
+        "version": "Integer",
+        "updatedAt": "Date"
+      },
+      "references": {
+        "workspaceId": "workspaces",
+        "projectId": "projects",
+        "createdBy": "users"
+      },
+      "indexes": [
+        {
+          "name": "project_label_name_unique",
+          "keys": {
+            "projectId": 1,
+            "nameKey": 1
+          },
+          "unique": true
+        },
+        {
+          "name": "project_label_list",
+          "keys": {
+            "projectId": 1,
+            "createdAt": -1,
+            "_id": -1
+          }
+        }
+      ],
+      "constraints": [
+        "Names unique per Project including archived labels; archive keeps historic Task association"
+      ]
+    },
+    {
+      "name": "task_activity",
+      "fields": {
+        "workspaceId": "ObjectId",
+        "projectId": "ObjectId",
+        "taskId": "ObjectId",
+        "actorId": "ObjectId",
+        "action": "String",
+        "taskVersion": "Integer",
+        "fields": "String[]",
+        "previousStatus": "String|null",
+        "status": "String|null",
+        "reason": "String|null",
+        "reopenRequestId": "ObjectId|null"
+      },
+      "references": {
+        "workspaceId": "workspaces",
+        "projectId": "projects",
+        "taskId": "tasks",
+        "actorId": "users",
+        "reopenRequestId": "task_reopen_requests"
+      },
+      "indexes": [
+        {
+          "name": "task_activity_page",
+          "keys": {
+            "taskId": 1,
+            "createdAt": -1,
+            "_id": -1
+          }
+        },
+        {
+          "name": "task_activity_version_unique",
+          "keys": {
+            "taskId": 1,
+            "taskVersion": 1
+          },
+          "unique": true
+        }
+      ],
+      "constraints": [
+        "Append-only scoped audit, no content snapshots; one event per task mutation version"
+      ]
+    },
+    {
+      "name": "task_reopen_requests",
+      "fields": {
+        "workspaceId": "ObjectId",
+        "projectId": "ObjectId",
+        "taskId": "ObjectId",
+        "requesterId": "ObjectId",
+        "reason": "String",
+        "targetStatus": "todo|in_progress",
+        "state": "pending|approved|rejected|cancelled",
+        "resolvedAt": "Date|null",
+        "resolvedBy": "ObjectId|null",
+        "resolutionReason": "String|null",
+        "version": "Integer",
+        "updatedAt": "Date"
+      },
+      "references": {
+        "workspaceId": "workspaces",
+        "projectId": "projects",
+        "taskId": "tasks",
+        "requesterId": "users",
+        "resolvedBy": "users"
+      },
+      "indexes": [
+        {
+          "name": "task_reopen_pending_unique",
+          "keys": {
+            "taskId": 1
+          },
+          "unique": true,
+          "partialFilter": {
+            "state": "pending"
+          }
+        },
+        {
+          "name": "task_reopen_requester_rate",
+          "keys": {
+            "taskId": 1,
+            "requesterId": 1,
+            "createdAt": -1
+          }
+        },
+        {
+          "name": "task_reopen_project_queue",
+          "keys": {
+            "projectId": 1,
+            "state": 1,
+            "createdAt": -1,
+            "_id": -1
+          }
+        }
+      ],
+      "constraints": [
+        "One pending per Task",
+        "No self review; limits 24h after rejection and 3 submissions per rolling7d; history not deleted on resolution"
+      ]
+    },
+    {
+      "name": "workspace_lifecycle_audit",
+      "fields": {
+        "workspaceId": "ObjectId",
+        "actorId": "ObjectId",
+        "previousState": "String",
+        "state": "String",
+        "reason": "String",
+        "resourceVersion": "Integer"
+      },
+      "references": {
+        "workspaceId": "workspaces",
+        "actorId": "users"
+      },
+      "indexes": [
+        {
+          "name": "workspace_lifecycle_history",
+          "keys": {
+            "workspaceId": 1,
+            "createdAt": -1,
+            "_id": -1
+          }
+        }
+      ],
+      "constraints": [
+        "Archive state changes only; no Project state cascade"
+      ]
+    },
+    {
+      "name": "task_purge_audit",
+      "fields": {
+        "workspaceId": "ObjectId",
+        "projectId": "ObjectId",
+        "taskId": "ObjectId",
+        "actorId": "ObjectId|null",
+        "code": "String|null",
+        "deletedAt": "Date",
+        "purgedAt": "Date",
+        "mode": "retention|manual"
+      },
+      "references": {
+        "workspaceId": "workspaces",
+        "projectId": "projects",
+        "taskId": "tasks",
+        "actorId": "users"
+      },
+      "indexes": [
+        {
+          "name": "task_purge_unique",
+          "keys": {
+            "taskId": 1
+          },
+          "unique": true
+        }
+      ],
+      "constraints": [
+        "No Task title/body; metadata only; one audit per purged Task"
+      ]
     }
   ],
   "sharedTypes": {
@@ -694,5 +1372,10 @@
     "notification-after-rejoin",
     "NFR-page-size-idempotency",
     "database-email-provider-and-backup"
-  ]
+  ],
+  "extensions": {
+    "coreExpansion": "0.3-C3-increment-1",
+    "note": "New organization Workspaces supported; no automatic transfer or backfill of existing Workspaces",
+    "deployment": "Additive indexes on local dev; no ownership/data migration; production not deployed"
+  }
 }

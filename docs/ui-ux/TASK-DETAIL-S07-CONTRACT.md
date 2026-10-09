@@ -1,0 +1,13 @@
+# S7 — Task detail
+
+09/10/2026: phần7a full page/panel/checklist/discussion/activity và7b request/review reopen đạt trong phạm vi S7.
+
+- Full page `#task/:id` và panel từ Board dùng cùng TaskDetail. Panel kiểm task.projectId khớp Project mở, focus/inert/Escape, link Toàn trang và breadcrumb về Board. Modified-click vẫn dùng link thật. Đóng panel refresh Board cùng bộ lọc; giữ rows khi same-scope refresh để restore focus.
+- Metadata hiển thị code/priority/labels/assignee/creator/Vietnam dates/current completion, không backfill legacy thiếu code/date. Project/WS Archived đọc-only, comment moderation exceptions theo BE permissions.
+- Checklist structure: PATCH tasks/:id/checklist expectedVersion/items{id?,text}; tối đa100 mục,300 ký tự/mục. Giữ server ID để giữ checked; new row chỉ gửi text, local React key không vào payload. Assignee chỉ tick PATCH checklist/:itemId expectedVersion/checked; Guest không write. Chuyển Done incomplete có cancel/confirm theo core.
+- Edit checklist và comment composer loại trừ nhau ở UI. Pending guard, known rejection giữ draft, unknown outcome khóa gửi và đóng/readback. Không tự retry mutation. Delete/status navigation chỉ sau request kết thúc, không tự vướng busy draft guard.
+- Comments giữ editor5000/author edit/current moderator hard-delete reason và Archived exceptions; không reply/mention/upload giả. Scope và CAS kiểm lại BE.
+- Activity GET limit/cursor, newest/task version/action/changed fields/status transition/actor/date/reason theo current scope. Tải khi mở, không HTTP polling/tải lại vô cớ; Guest reason/request references redact do BE. Không phục dựng lịch sử chưa tồn tại.
+- Panel cho hủy pending reads; pending writes/draft phải được xử lý trước rời. History/hash coverage toàn diện vẫn kiểm ởS12; panel state không thêm history entry riêng. Restore/trash UI thuộcS11.
+
+7b: POST request với expectedVersion/reason/targetStatus(todo hoặc in_progress); không đổi trạng thái trước duyệt. GET lịch sử phân trang, tự mở khi có pending; GET Project queue chỉ current manager/Lead. Review dùng request.version và task.version độc lập, reason bắt buộc; cấm tự duyệt. Có pending thì status selector bị khóa để dùng review; khi không có pending, manager có thể mở trực tiếp với lý do theo core. Cooldown24h sau rejected cho mỗi requester/Task và tối đa3 request trong7 ngày, không giới hạn số reopen suốt vòng đời. Cancellation do Archive/mất quyền/Task unavailable hiển thị theo kết quả server, không báo approve thành công. Known rejection giữ draft; unknown outcome khóa gửi, đóng và reload/readback trước làm tiếp, không retry mutation. Project permission manageReopen phản ánh Active và quyền quản lý sẵn có.

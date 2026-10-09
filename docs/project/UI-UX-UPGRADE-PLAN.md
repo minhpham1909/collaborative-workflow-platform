@@ -126,3 +126,7 @@ Tiêu chí hoàn thành kế hoạch:
 | Chuyển bước | Có/Không và căn cứ theo tiêu chí bên trên |
 
 Bước hiện tại: P3 Đạt gate ngày 05/10/2026 theo [QA P3](../qa/FE-P3-INTERACTION-CHECK.md); đủ điều kiện bắt đầu P4. P1/P2 đạt trong phạm vi đã ghi; P4–P6 và providers thật chưa nghiệm thu. Không coi draft guard là autosave/backup.
+
+## Đợt UI sau core expansion
+
+05/10/2026: kế hoạch P1–P6 phía trên giữ làm lịch sử/regression. Trạng thái và thứ tự sửa các cụm mới theo [STITCH-UI-CLUSTER-PLAN-v0.1.md](STITCH-UI-CLUSTER-PLAN-v0.1.md), dựa Stitch local + core C1–C6 hiện tại. Không đọc ghi nhận soft-delete/restore cũ như hiện trạng backend mới. Lượt lập plan chưa sửa/QA visual các cụm mới.

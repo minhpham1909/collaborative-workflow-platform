@@ -1,5 +1,9 @@
 # Decision register
 
+## Mở rộng D1–D5 — 05/10/2026
+
+Nguồn trực tiếp: trao đổi chủ dự án; xem [CORE-EXPANSION-v0.3](../srs/CORE-EXPANSION-v0.3.md) cho quyết định EX-01–34 và phần Proposed/Open. Hướng mới hỗ trợ Organization bên cạnh Workspace độc lập, scoped roles, Guest, Kick/Ban mọi loại thành viên, hard-delete Comment (thay gỡ mềm), trash tự purge 30 ngày, Task enrichment và reopen có duyệt. Quyền Org Owner/Admin toàn nội dung và admin tự làm Workspace Manager đã duyệt. Ưu tiên core BE trước UI theo Stitch. Chưa có code/API mới; không đọc quyết định nghiệp vụ thành bằng chứng triển khai. D4 phạm vi xóa Workspace/Project và transfer còn mở, không tự suy thành approved.
+
 ## Quyết định trực tiếp 03/10/2026 — đăng nhập và Google link
 
 - **Approved:** giữ email/password và Google optional, không chuyển sang username. Google-only không cần password riêng.
