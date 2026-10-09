@@ -29,3 +29,24 @@ node --env-file=.env scripts/check-live-smtp.js --send-to YOUR_AUTHORIZED_EMAIL
 ```
 
 Lệnh thứ hai gửi1 email thật mỗi lần chạy. Không đặt vào CI hoặc test suite mặc định. Nếu kết quả chưa rõ, kiểm tra report/mailbox trước khi chủ động chạy lại. Không dùng `mail:once`/worker để thay thế vì chúng có thể chọn job dev cũ.
+
+## S12b — Email nghiệp vụ và hành động qua link
+
+09/10/2026: thêm `FE/scripts/check-mail-lifecycle.mjs`. Default không gửi thư, chỉ preflight full React/Express/MongoMemoryReplSet. Chế độ `--send-to ONE_EMAIL` opt-in gửi tối đa4 thư qua production dispatchers/provider tới đúng1 mailbox đã được cho phép, không tự retry. FE riênglocalhost5188/API port tạm/test keys/database tạm, giữ dev5173/4000/27018 và OS Mongo27017. Kiểm tra port trước khi chạy và đóng môi trường thử sau kiểm.
+
+- Preflight PASS, rồi live SMTP PASS:4 thư verify/reset/Workspace invite/assignment, mỗi event1attempt được SMTP accepted. Sinh outbox từ nghiệp vụ thật, claim/lease/context/revalidation thật; sent payload encrypted được xóa. Không kết nối MONGODB_URI của dev hoặc gọi dispatcher trên hàng đợi cũ.
+- Trình duyệt mở URL từ cùng production mail payload đã đưa tới SMTP khi fixture còn hoạt động: signup qua FE → verification không tự consume khi chỉ mở, scrub token, click xác minh, reuse400; recovery → reset mật khẩu, login mật khẩu cũ bị từ chối, JWT phiên cũ vô hiệu; invitation → login bằng đúng email, không auto-accept, explicit accept → đúng Workspace; assignment → mở đúng Task.
+- **Phát hiện và sửa lỗi BE link email công việc**: `/tasks/:id` không được router FE nhận, đổi sang `/#task/:id`. Thêm assertion integration chống tái phát. API `/tasks/:id` giữ nguyên; chỉ sửa web link trong thư.
+- Negative gates không gửi thêm thư: token auth hết hạn bị cancelled; Member rời Workspace trước dispatch thì work job cancelled. BE27 integration PASS/0 skip gồm accounts/notifications/workspaces: prefs/override/event filtering, expiry/revoke/exact-email/single-use, leases/cancellation/session/auth/Origin và privacy.
+- Page errors0; ảnh Task mở qua email ở `.local/mail-lifecycle/task-link.png`. Report ignored `.local/mail-lifecycle/{timestamp}.json` chỉ kết quả/metadata, không recipient/password/token/url bearer. Không ghi link/token vào Git/log.
+- **Chủ dự án đã xác nhận đủ4 thư trong Inbox.** Test link lấy URL từ production send payload, không đọc/click hộp thư qua mail client. Không gọi đây là tự động kiểm toàn tuyến mailbox UI.
+- Token/link dùng fixture riêng, đã tiêu thụ khi kiểm và môi trường đã đóng. Không yêu cầu user click lại link thử, không thay đổi tài khoản thật cùng địa chỉ email. Đây là regression nghiệp vụ +SMTP thật, chưa phải deployment production acceptance.
+
+Chạy từ root dự án với Node/Playwright runtime đã cấu hình:
+
+```text
+node FE/scripts/check-mail-lifecycle.mjs
+node --env-file=BE/.env FE/scripts/check-mail-lifecycle.mjs --send-to YOUR_AUTHORIZED_EMAIL
+```
+
+S12 vẫn đang thực hiện: Org/Project invitation variants đã có fixture regression nhưng chưa gửi SMTP thật trongS12b; whole-siteVi/En/navigation/performance còn gate. Không tự gửi thêm thư hoặc bật worker nền để hoàn thành các phần đó.
