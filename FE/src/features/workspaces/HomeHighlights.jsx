@@ -27,7 +27,7 @@ export function useHomeHighlights(api, revision = 0) {
         api.request(
           `/my-tasks?limit=3&status=open&state=active&timeField=dueAt&from=${day}&to=${day}`,
         ),
-        api.request("/my-tasks?limit=1&status=open&state=active&overdue=true"),
+        api.request("/my-tasks?limit=3&status=open&state=active&overdue=true"),
         api.request("/notifications?limit=1&read=unread"),
       ]);
       if (live && token === sequence)
@@ -78,114 +78,23 @@ export function HomeDay({ data }) {
     </p>
   );
 }
-export default function HomeHighlights({ data }) {
+export default function HomeHighlights({ data, compact = false }) {
   const note = data.inbox?.items?.[0];
-  return (
-    <section className="home-highlights" aria-label="Tổng quan cá nhân hôm nay">
-      <article className="highlight-card">
-        <div className="highlight-heading">
-          <span className="highlight-icon">
-            <Icon name="tasks" />
-          </span>
-          <div>
-            <h2>
-              Nhiệm vụ ưu tiên trong ngày{" "}
-              {data.today && (
-                <span className="count-pill">{data.today.total} việc</span>
-              )}
-            </h2>
-            <p>
-              Task được giao cho bạn, chưa xong và đến hạn hôm nay · Giờ Việt
-              Nam.
-            </p>
-          </div>
-          <a className="pill-link" href="#mine">
-            Xem công việc →
-          </a>
-        </div>
-        {data.today === undefined ? (
-          <LoadingState>Đang tải công việc…</LoadingState>
-        ) : data.today === null ? (
-          <InlineMessage>
-            Chưa tải được công việc. Mở Công việc của tôi để thử lại.
-          </InlineMessage>
-        ) : data.today.total === 0 ? (
-          <p className="highlight-empty">
-            Hôm nay bạn không có Task đến hạn. Một chút không gian cho ý tưởng
-            mới ✨
-          </p>
-        ) : (
-          <ul className="priority-tasks">
-            {data.today.items.map((task) => (
-              <li key={task.id}>
-                <a href={`#task/${task.id}`}>{task.title}</a>
-                <span>
-                  {task.workspaceName} ·{" "}
-                  {new Date(task.dueAt).toLocaleTimeString("vi-VN", {
-                    timeZone: "Asia/Ho_Chi_Minh",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
-        {data.overdue && data.overdue.total > 0 && (
-          <p className="overdue-hint">
-            Cần chú ý:{" "}
-            <a href="#mine">{data.overdue.total} Task đang quá hạn</a>.
-          </p>
-        )}
-      </article>
-      <article className="highlight-card notification-highlight">
-        <div className="highlight-heading">
-          <span className="highlight-icon">
-            <Icon name="bell" />
-          </span>
-          <div>
-            <h2>
-              Thông báo mới{" "}
-              {data.inbox && (
-                <span className="count-pill coral-pill">
-                  {data.inbox.unreadCount}
-                </span>
-              )}
-            </h2>
-            <p>Cập nhật từ những nhóm bạn tham gia.</p>
-          </div>
-        </div>
-        {data.inbox === undefined ? (
-          <LoadingState>Đang tải thông báo…</LoadingState>
-        ) : data.inbox === null ? (
-          <InlineMessage>
-            Chưa tải được thông báo. Mở danh sách thông báo để thử lại.
-          </InlineMessage>
-        ) : note ? (
-          <a className="latest-notification" href={`#notification/${note.id}`}>
-            <strong>
-              {note.available
-                ? (note.payload?.taskTitle ??
-                  `Lời mời tham gia ${note.payload?.workspaceName}`)
-                : "Nội dung không còn khả dụng"}
-            </strong>
-            <span>
-              {new Date(note.createdAt).toLocaleString("vi-VN", {
-                timeZone: "Asia/Ho_Chi_Minh",
-                hour: "2-digit",
-                minute: "2-digit",
-                day: "numeric",
-                month: "numeric",
-              })}
-            </span>
-          </a>
-        ) : (
-          <p>Bạn đã xem hết thông báo.</p>
-        )}
-        <a className="highlight-more" href="#notifications">
-          Xem tất cả thông báo →
-        </a>
-      </article>
-    </section>
-  );
+  if (compact) return <section className="home-overview" aria-label="Tổng quan cá nhân hôm nay">
+    {[['calendar', 'Đến hạn hôm nay', data.today?.total, 'Công việc chưa hoàn thành', 'lavender'], ['tasks', 'Đang quá hạn', data.overdue?.total, 'Cần kiểm tra và xử lý', 'coral'], ['bell', 'Thông báo chưa đọc', data.inbox?.unreadCount, 'Cập nhật từ nhóm của bạn', 'mint']].map(([icon, label, count, hint, tone]) => <a className={`home-overview-card accent-${tone}`} href={icon === 'bell' ? '#notifications' : '#mine'} key={label}><div><span>{label}</span><strong>{count ?? '—'}</strong><small>{hint}</small></div><span className="home-overview-icon"><Icon name={icon} /></span></a>)}
+  </section>;
+  const seen = new Set();
+  const tasks = [...(data.overdue?.items ?? []), ...(data.today?.items ?? [])].filter(task => { if (seen.has(task.id)) return false; seen.add(task.id); return true; });
+  return <section className="home-highlights home-attention">
+    <article className="highlight-card"><div className="highlight-heading"><span className="highlight-icon"><Icon name="tasks" /></span><div><h2>Việc cần chú ý</h2><p>Quá hạn hoặc đến hạn hôm nay · Được giao cho bạn</p></div><a className="home-text-link" href="#mine">Xem công việc →</a></div>
+      {data.today === undefined || data.overdue === undefined ? <LoadingState>Đang tải công việc…</LoadingState> : <>
+        {(data.today === null || data.overdue === null) && <InlineMessage>Chưa tải được một phần công việc. <a href="#mine">Mở Công việc của tôi để thử lại.</a></InlineMessage>}
+        {tasks.length ? <ul className="priority-tasks">{tasks.map(task => <li key={task.id}><div><small>{task.code ?? 'Công việc'} · {task.projectName}</small><a href={`#task/${task.id}`}>{task.title}</a><span>{task.workspaceName}</span></div><span className={task.overdue ? 'attention-deadline overdue' : 'attention-deadline'}>{task.overdue ? 'Quá hạn' : 'Hôm nay'} · {new Date(task.dueAt).toLocaleTimeString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh', hour: '2-digit', minute: '2-digit' })}</span></li>)}</ul> : data.today && data.overdue && <p className="highlight-empty">Bạn không có công việc quá hạn hoặc đến hạn hôm nay.</p>}
+      </>}
+    </article>
+    <article className="highlight-card notification-highlight"><div className="highlight-heading"><span className="highlight-icon"><Icon name="bell" /></span><div><h2>Thông báo mới</h2><p>Những cập nhật cần bạn xem.</p></div></div>
+      {data.inbox === undefined ? <LoadingState>Đang tải thông báo…</LoadingState> : data.inbox === null ? <InlineMessage>Chưa tải được thông báo. <a href="#notifications">Thử lại trong danh sách thông báo.</a></InlineMessage> : note ? <a className="latest-notification" href={`#notification/${note.id}`}><strong>{note.available ? note.payload?.taskTitle ?? `Lời mời tham gia ${note.payload?.workspaceName ?? note.payload?.organizationName ?? note.payload?.projectName ?? 'không gian làm việc'}` : 'Nội dung không còn khả dụng'}</strong><span>{new Date(note.createdAt).toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh', day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' })}</span></a> : <p className="highlight-empty">Bạn đã xem hết thông báo.</p>}
+      <a className="home-text-link" href="#notifications">Xem tất cả thông báo →</a>
+    </article>
+  </section>;
 }

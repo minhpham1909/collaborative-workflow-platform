@@ -4,7 +4,10 @@ import {
   LoadingState,
 } from "../../components/Feedback.jsx";
 import { useDraftGuard } from "../../lib/draft-navigation.js";
-import { confirmDialog } from "../../components/NotificationProvider.jsx";
+import { confirmDialog, notify } from "../../components/NotificationProvider.jsx";
+import { workspaceRoleLabel } from "../../lib/ui-copy.js";
+import WorkspaceStateDialog from "./WorkspaceStateDialog.jsx";
+import "./workspace.css";
 import Icon from "../../components/Icon.jsx";
 import StudioCover from "../../components/StudioCover.jsx";
 import FilterPanel from "../../components/FilterPanel.jsx";
@@ -26,9 +29,13 @@ export default function Workspace({ api, id }) {
     [busy, setBusy] = useState(true),
     [error, setError] = useState(""),
     [creating, setCreating] = useState(false),
+    [changingState, setChangingState] = useState(false),
+    [editing, setEditing] = useState(null),
     [revision, setRevision] = useState(0),
     [dirty, setDirty] = useState(false),
     [saving, setSaving] = useState(false);
+  const canManage = workspace?.permissions?.manage === true;
+  const canCreate = workspace?.permissions?.createProject === true;
   async function changeTab(value) {
     if (
       !saving &&
@@ -103,7 +110,7 @@ export default function Workspace({ api, id }) {
   return (
     <main className="studio-workspace">
       <p className="breadcrumbs">
-        <a href="#home">Trang chủ</a> / Workspace
+        <a href="#home">Trang chủ</a>{workspace?.organizationId && <> / <a href={`#organization/${workspace.organizationId}`}>Tổ chức</a></>} / Workspace
       </p>
       {error && (
         <InlineMessage>
@@ -115,15 +122,13 @@ export default function Workspace({ api, id }) {
         <>
           <section className="hero workspace-hero">
             <div>
-              <small>KHÔNG GIAN CỦA ĐỘI NGŨ</small>
+              <small className="home-eyebrow">KHÔNG GIAN CỦA ĐỘI NGŨ</small>
               <h1>{workspace.name}</h1>
-              <span className="badge">
-                {workspace.role === "owner" ? "Chủ sở hữu" : "Thành viên"}
-              </span>
+              <div className="workspace-meta"><span className="badge">{workspaceRoleLabel(workspace.role)}</span><span>{workspace.state === "archived" ? "Đã lưu trữ · Chỉ đọc" : "Đang hoạt động"}</span></div>
               <div className="workspace-description">
                 <div className="section-heading">
                   <strong>Mô tả Workspace</strong>
-                  {workspace.role === "owner" && tab !== "settings" && (
+                  {workspace.permissions?.edit && tab !== "settings" && (
                     <button
                       disabled={saving}
                       onClick={() => changeTab("settings")}
@@ -142,23 +147,28 @@ export default function Workspace({ api, id }) {
                 ) : (
                   <p className="muted">
                     Workspace chưa có mô tả.{" "}
-                    {workspace.role === "owner"
+                    {canManage
                       ? "Thêm mục tiêu và cách làm việc của nhóm trong Cài đặt nhóm."
-                      : "Chủ sở hữu có thể bổ sung mô tả cho nhóm."}
+                      : "Người quản lý có thể bổ sung mô tả cho nhóm."}
                   </p>
                 )}
               </div>
             </div>
-            {workspace.role === "owner" && tab === "projects" && (
+            <div className="workspace-actions">
+            {tab === "projects" && <button disabled={busy || saving || dirty} onClick={() => setRevision(v => v + 1)}><Icon name="refresh" />Làm mới</button>}
+            {canCreate && tab === "projects" && (
               <button
                 className="primary"
                 disabled={busy}
                 onClick={() => setCreating(true)}
               >
-                + Tạo Dự án
+                <Icon name="plus" />Tạo Dự án
               </button>
             )}
+            {workspace.permissions?.changeState && <button disabled={busy || saving || dirty} onClick={() => setChangingState(true)}><Icon name="archive" />{workspace.state === "archived" ? "Mở lại Workspace" : "Lưu trữ Workspace"}</button>}
+            </div>
           </section>
+          {workspace.state === "archived" && <InlineMessage tone="info">Workspace đang lưu trữ. Dự án và Task bên trong chỉ đọc; mở lại Workspace không thay đổi trạng thái riêng của từng Dự án.</InlineMessage>}
           <div className="tabs workspace-tabs" aria-label="Nội dung Workspace">
             <button
               aria-pressed={tab === "projects"}
@@ -174,7 +184,7 @@ export default function Workspace({ api, id }) {
             >
               Thành viên
             </button>
-            {workspace.role === "owner" && (
+            {canManage && !workspace.organizationId && (
               <button
                 aria-pressed={tab === "invitations"}
                 disabled={saving}
@@ -183,7 +193,7 @@ export default function Workspace({ api, id }) {
                 Lời mời
               </button>
             )}
-            {workspace.role === "owner" && (
+            {canManage && (
               <button
                 disabled={saving}
                 aria-pressed={tab === "settings"}
@@ -192,13 +202,13 @@ export default function Workspace({ api, id }) {
                 Cài đặt nhóm
               </button>
             )}
-            <button
+            {workspace.permissions?.emailPreferences && <button
               disabled={saving}
               aria-pressed={tab === "email"}
               onClick={() => changeTab("email")}
             >
               Email của tôi trong nhóm
-            </button>
+            </button>}
           </div>
         </>
       )}
@@ -209,6 +219,7 @@ export default function Workspace({ api, id }) {
           id={id}
           invitations={tab === "invitations"}
           onContext={setWorkspace}
+          onUnavailable={error => { setWorkspace(null); setError(messageFor(error)); }}
         />
       )}
       {["settings", "email"].includes(tab) && workspace && (
@@ -224,7 +235,8 @@ export default function Workspace({ api, id }) {
       )}
       {tab === "projects" && (
         <>
-          <FilterPanel compact>
+          <div className="workspace-collection-heading"><h2>Dự án trong Workspace</h2><span className="muted">{data.total !== undefined ? `${data.total} kết quả` : ""}</span></div>
+          <FilterPanel compact advancedLabel="Thời gian">
             <label>
               Tìm theo tên hoặc mô tả Dự án
               <input
@@ -237,7 +249,7 @@ export default function Workspace({ api, id }) {
             </label>
             <label>
               Trạng thái
-              <select value={state} onChange={(e) => setState(e.target.value)}>
+              <select aria-label="Trạng thái Dự án" value={state} onChange={(e) => setState(e.target.value)}>
                 <option value="active">Đang hoạt động</option>
                 <option value="archived">Đã lưu trữ</option>
                 <option value="all">Tất cả</option>
@@ -271,8 +283,7 @@ export default function Workspace({ api, id }) {
             </button>
           </FilterPanel>
           <p className="muted">
-            Mới tạo trước · Ngày theo giờ Việt Nam
-            {data.total !== undefined ? ` · ${data.total} Dự án phù hợp` : ""}
+            Ngày tạo theo giờ Việt Nam · Tiến độ tính trên toàn Dự án, không gồm Task trong thùng rác
           </p>
           {invalid && (
             <InlineMessage>
@@ -294,25 +305,25 @@ export default function Workspace({ api, id }) {
                 <article
                   className={
                     "card project-card" +
-                    (item.state === "archived" ? " archived-card" : "")
+                    (item.readOnly ? " archived-card" : "")
                   }
                   key={item.id}
                 >
                   <StudioCover
                     id={item.id}
                     project
-                    archived={item.state === "archived"}
+                    archived={item.readOnly}
                   >
                     <span
                       className={
                         "badge " +
-                        (item.state === "archived"
+                        (item.readOnly
                           ? "state-archived"
                           : "state-active")
                       }
                     >
-                      {item.state === "archived"
-                        ? "Đã lưu trữ · Chỉ đọc"
+                      {item.readOnly
+                        ? (item.state === "archived" ? "Dự án lưu trữ · Chỉ đọc" : "Workspace lưu trữ · Chỉ đọc")
                         : "Đang hoạt động"}
                     </span>
                   </StudioCover>
@@ -329,18 +340,15 @@ export default function Workspace({ api, id }) {
                       {item.description?.plainText ||
                         "Không gian để biến ý tưởng thành công việc."}
                     </p>
+                    {item.taskSummary && <div className="project-progress"><div><span>{item.taskSummary.done}/{item.taskSummary.total} Task hoàn thành</span><strong>{item.taskSummary.progressPercent}%</strong></div><progress aria-label={`Tiến độ ${item.name}`} value={item.taskSummary.progressPercent} max="100" /></div>}
                     <p className="muted">
                       Tạo{" "}
                       {new Date(item.createdAt).toLocaleDateString("vi-VN", {
                         timeZone: "Asia/Ho_Chi_Minh",
                       })}
                     </p>
-                    <a
-                      className="card-link pill-link"
-                      href={`#project/${item.id}`}
-                    >
-                      Xem Dự án →
-                    </a>
+                    <div className="project-card-actions"><span className="card-link pill-link" aria-hidden="true">{item.readOnly ? "Xem Dự án" : "Vào Bảng Kanban"} <Icon name="chevron-right" /></span>
+                    {!item.readOnly && item.permissions?.manageProject && <button aria-label={`Sửa tên và biểu tượng ${item.name}`} onClick={() => setEditing(item)}>Chỉnh sửa</button>}</div>
                   </div>
                 </article>
               ) : (
@@ -371,7 +379,7 @@ export default function Workspace({ api, id }) {
               </h2>
               <p>
                 {tab === "projects"
-                  ? "Tạo Dự án mới hoặc thay đổi bộ lọc."
+                  ? (canCreate ? "Tạo Dự án đầu tiên hoặc thay đổi bộ lọc để tìm công việc của nhóm." : "Thay đổi bộ lọc hoặc liên hệ người quản lý để tạo Dự án.")
                   : "Danh sách chỉ gồm thành viên đang trong Workspace."}
               </p>
             </EmptyState>
@@ -386,10 +394,13 @@ export default function Workspace({ api, id }) {
           )}
         </>
       )}
-      {creating && workspace?.role === "owner" && (
+      {changingState && workspace && <WorkspaceStateDialog api={api} workspace={workspace} onSaved={value => { setWorkspace(value); setRevision(v => v + 1); }} onClose={uncertain => { setChangingState(false); if (uncertain) setRevision(v => v + 1); }} />}
+      {editing && <NameDialog title="Chỉnh sửa Dự án" initial={editing.name} initialIcon={editing.icon ?? "folder"} withIcon onClose={uncertain => { setEditing(null); if (uncertain) setRevision(v => v + 1); }} onSave={async (name, icon) => { await api.request(`/projects/${editing.id}`, { method: "PATCH", body: { expectedVersion: editing.version, name, icon } }); setRevision(v => v + 1); notify("Đã cập nhật Dự án."); }} />}
+      {creating && canCreate && (
         <NameDialog
           title="Tạo Dự án"
           withIcon
+          submitLabel="Tạo Dự án"
           onClose={(uncertain) => {
             setCreating(false);
             if (uncertain) setRevision((v) => v + 1);
@@ -404,6 +415,7 @@ export default function Workspace({ api, id }) {
             setFrom("");
             setTo("");
             setRevision((v) => v + 1);
+            notify("Đã tạo Dự án.");
           }}
         />
       )}

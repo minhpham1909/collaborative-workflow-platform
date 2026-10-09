@@ -8,6 +8,7 @@ import {
   confirmDialog,
   notify,
 } from "../../components/NotificationProvider.jsx";
+import { homeCopy, workspaceRoleLabel } from "../../lib/ui-copy.js";
 import HomeHighlights, {
   HomeDay,
   useHomeHighlights,
@@ -28,11 +29,12 @@ function plain(node) {
   return (node.content ?? []).map(plain).join(" ");
 }
 export default function Home({ api, user }) {
+  const [role, setRole] = useState("all"), [state, setState] = useState("all"), [view, setView] = useState("grid");
   const [q, setQ] = useState(""),
     [from, setFrom] = useState(""),
     [to, setTo] = useState(""),
     [data, setData] = useState({ items: [], nextCursor: null }),
-    [busy, setBusy] = useState(false),
+    [busy, setBusy] = useState(true),
     [error, setError] = useState(""),
     [refresh, setRefresh] = useState(0),
     [creating, setCreating] = useState(false),
@@ -51,7 +53,7 @@ export default function Home({ api, user }) {
   const highlights = useHomeHighlights(api, refresh);
   const invalid = from && to && from > to;
   const query = new URLSearchParams({
-    limit: "12",
+    limit: "12", role, state,
     ...(q.trim() ? { q: q.trim() } : {}),
     ...(from ? { from } : {}),
     ...(to ? { to } : {}),
@@ -74,7 +76,7 @@ export default function Home({ api, user }) {
       }
     } catch (e) {
       if (token === generation.current) {
-        setData({ items: [], nextCursor: null });
+        if (!cursor) setData({ items: [], nextCursor: null });
         setError(messageFor(e));
       }
     } finally {
@@ -83,6 +85,8 @@ export default function Home({ api, user }) {
   }
   useEffect(() => {
     const token = ++generation.current;
+    setData({ items: [], nextCursor: null });
+    setError("");
     if (invalid) {
       setBusy(false);
       return;
@@ -94,6 +98,14 @@ export default function Home({ api, user }) {
       generation.current++;
     };
   }, [query, refresh, invalid]);
+  useEffect(() => {
+    const search = event => {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k' && !creating) {
+        event.preventDefault(); document.getElementById('home-search')?.focus();
+      }
+    };
+    window.addEventListener('keydown', search); return () => window.removeEventListener('keydown', search);
+  }, [creating]);
   const panel = useRef(null);
   const closeDialog = useRef(() => {});
   closeDialog.current = async () => {
@@ -113,6 +125,8 @@ export default function Home({ api, user }) {
         setQ("");
         setFrom("");
         setTo("");
+        setRole("all");
+        setState("all");
         setRefresh((v) => v + 1);
       }
     }
@@ -135,6 +149,7 @@ export default function Home({ api, user }) {
       await api.request("/workspaces", { method: "POST", body: { name } });
       setCreating(false);
       setName("");
+      setQ(""); setFrom(""); setTo(""); setRole("all"); setState("all");
       notify("Đã tạo Workspace.");
       setRefresh((v) => v + 1);
     } catch (e) {
@@ -154,7 +169,7 @@ export default function Home({ api, user }) {
       <section className="hero studio-home-hero">
         <div>
           <small>KHÔNG GIAN LÀM VIỆC CỦA BẠN</small>
-          <h1>Chào {user.displayName}, hôm nay mình cùng làm gì? ✨</h1>
+          <h1>{homeCopy.vi.greeting.replace("{name}", user.displayName)}</h1>
           <HomeDay data={highlights} />
           <p>
             Chọn một Workspace để bắt đầu. Cùng đội ngũ biến ý tưởng thành công
@@ -170,19 +185,29 @@ export default function Home({ api, user }) {
             setCreating(true);
           }}
         >
-          + Tạo Workspace
+          <Icon name="plus" /> Tạo Workspace
         </button>
       </section>
-      <FilterPanel compact>
+      <HomeHighlights data={highlights} compact />
+      <div className="home-collection-header"><div><p className="home-eyebrow">CÙNG NHAU LÀM VIỆC</p><h2>Workspace của bạn <span className="home-count">{data.total ?? '—'}</span></h2></div><div className="home-view-switch" role="group" aria-label="Cách xem Workspace"><button aria-label="Xem Workspace dạng thẻ" aria-pressed={view === 'grid'} onClick={() => setView('grid')}><Icon name="grid" /></button><button aria-label="Xem Workspace dạng danh sách" aria-pressed={view === 'list'} onClick={() => setView('list')}><Icon name="list" /></button></div></div>
+      <div className="home-filters">
+      <FilterPanel compact advancedLabel="Thời gian">
         <label>
           Tìm theo tên hoặc mô tả Workspace
           <input
+            id="home-search"
+            aria-keyshortcuts="Control+K Meta+K"
             type="search"
             placeholder="Nhập để tìm kiếm…"
             maxLength={200}
             value={q}
             onChange={(e) => setQ(e.target.value)}
           />
+        </label>
+        <label>Trạng thái Workspace
+          <select value={state} onChange={event => setState(event.target.value)}>
+            <option value="all">Tất cả trạng thái</option><option value="active">Đang hoạt động</option><option value="archived">Đã lưu trữ</option>
+          </select>
         </label>
         <label>
           Từ ngày tạo
@@ -204,7 +229,7 @@ export default function Home({ api, user }) {
           onClick={() => {
             setQ("");
             setFrom("");
-            setTo("");
+            setTo(""); setRole("all"); setState("all");
           }}
         >
           Xóa bộ lọc
@@ -213,12 +238,16 @@ export default function Home({ api, user }) {
           Làm mới
         </button>
       </FilterPanel>
+      <div className="home-role-filters" role="group" aria-label="Lọc quyền Workspace">
+        {[['all', 'Tất cả'], ['managed', 'Tôi quản lý'], ['member', 'Thành viên']].map(([key, label]) => <button key={key} aria-pressed={role === key} onClick={() => setRole(key)}>{label}<span>{data.roleCounts?.[key] ?? '—'}</span></button>)}
+        {(q || from || to || state !== 'all' || role !== 'all') && <span className="home-filter-summary">Đang áp dụng bộ lọc{from || to ? ` · ${from || 'Từ đầu'} → ${to || 'Hiện tại'}` : ''}</span>}
+      </div></div>
       {invalid && (
         <InlineMessage>
           Ngày bắt đầu phải trước hoặc bằng ngày kết thúc.
         </InlineMessage>
       )}
-      <p className="muted">Mới tạo trước · Ngày theo giờ Việt Nam</p>
+
       {error && (
         <InlineMessage>
           {error}{" "}
@@ -226,67 +255,27 @@ export default function Home({ api, user }) {
         </InlineMessage>
       )}
       {busy && <LoadingState>Đang tải Workspace…</LoadingState>}
-      <div className="section-heading studio-list-heading">
-        <h2>Workspace của bạn</h2>
-        <span className="muted">
-          Không gian cho những ý tưởng cùng phát triển
-        </span>
-      </div>
-      <div className="cards workspace-cards" aria-busy={busy}>
-        {!invalid &&
-          data.items.map((w) => (
-            <article className="card workspace-card" key={w.id}>
-              <span className={"symbol tone-" + studioTone(w.id)}>
-                {["✦", "◇", "↗"][studioTone(w.id)]}
-              </span>
-              <span className="badge">
-                {w.role === "owner" ? "Chủ sở hữu" : "Thành viên"}
-              </span>
-              <h2>
-                <a href={`#workspace/${w.id}`}>{w.name}</a>
-              </h2>
-              <p>
-                {plain(w.description) || "Không gian để cùng nhau làm việc."}
-              </p>
-              <StudioCover id={w.id} />
-              <div className="workspace-metrics">
-                <span>
-                  <Icon name="people" />
-                  <div>
-                    Thành viên<strong>{w.memberCount ?? "—"} người</strong>
-                  </div>
-                </span>
-                <span>
-                  <Icon name="folder" />
-                  <div>
-                    Đang hoạt động
-                    <strong>{w.activeProjectCount ?? "—"} Dự án</strong>
-                  </div>
-                </span>
-              </div>
-              <div className="studio-card-footer">
-                <p className="muted">
-                  Tạo{" "}
-                  {new Date(w.createdAt).toLocaleDateString("vi-VN", {
-                    timeZone: "Asia/Ho_Chi_Minh",
-                  })}
-                </p>
-                <a className="pill-link" href={`#workspace/${w.id}`}>
-                  Mở Workspace <span aria-hidden="true">→</span>
-                </a>
-              </div>
-            </article>
-          ))}
+      <div className={`cards workspace-cards home-workspace-cards view-${view}`} aria-busy={busy}>
+        {!invalid && data.items.map(w => (
+          <article className={`card workspace-card home-workspace-card${w.state === 'archived' ? ' is-archived' : ''}`} key={w.id}>
+            <div className="home-card-media"><StudioCover id={w.id} archived={w.state === 'archived'} /><span className="home-role-badge">{workspaceRoleLabel(w.role)}</span>{w.state === 'archived' && <span className="home-archived-badge"><Icon name="archive" />Chỉ đọc</span>}</div>
+            <div className="home-card-content"><div className="home-card-title"><h2><a href={`#workspace/${w.id}`}>{w.name}</a></h2><span className={'symbol tone-' + studioTone(w.id)}><Icon name={['palette', 'code', 'megaphone'][studioTone(w.id)]} /></span></div>
+              <p className="home-card-description">{plain(w.description) || 'Không gian để cùng nhau làm việc.'}</p>
+              <div className="workspace-metrics"><span><Icon name="people" /><div>Thành viên<strong>{w.memberCount ?? '—'} người</strong></div></span><span><Icon name="folder" /><div>Dự án hoạt động<strong>{w.activeProjectCount ?? '—'} dự án</strong></div></span></div>
+              <div className="studio-card-footer"><p className="muted">Tạo {new Date(w.createdAt).toLocaleDateString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}</p><span className="home-card-action" aria-hidden="true">{w.state === 'archived' ? 'Xem Workspace' : 'Mở Workspace'}<Icon name="chevron-right" /></span></div>
+            </div>
+          </article>
+        ))}
       </div>
       {!busy && !error && !invalid && !data.items.length && (
         <EmptyState>
           <h2>
-            {q || from || to
+            {q || from || to || role !== 'all' || state !== 'all'
               ? "Không có Workspace phù hợp"
               : "Bạn chưa có Workspace"}
           </h2>
           <p>
-            {q || from || to
+            {q || from || to || role !== 'all' || state !== 'all'
               ? "Thử thay đổi từ khóa hoặc bộ lọc."
               : "Tạo Workspace đầu tiên để bắt đầu cùng đội ngũ."}
           </p>
@@ -300,7 +289,7 @@ export default function Home({ api, user }) {
           Tải thêm
         </button>
       )}
-      <HomeHighlights data={highlights} />
+      <HomeHighlights data={highlights} details />
       {creating &&
         createPortal(
           <div className="overlay">

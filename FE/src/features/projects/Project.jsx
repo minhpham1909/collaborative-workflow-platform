@@ -10,8 +10,14 @@ import { useEffect, useRef, useState } from "react";
 import NameDialog from "../../components/NameDialog.jsx";
 import { messageFor } from "../../lib/messages.js";
 import TaskList from "../tasks/TaskList.jsx";
+import ProjectOverview from './ProjectOverview.jsx';
+import ProjectManagement from './ProjectManagement.jsx';
+import TaskPanel from '../tasks/TaskPanel.jsx';
+import { workspaceRoleLabel } from '../../lib/ui-copy.js';
+import { isUncertainMutation } from '../../lib/mutation-outcome.js';
+import './project.css';
 
-export default function Project({ api, id, user }) {
+export default function Project({ api, id, user, section }) {
   const [project, setProject] = useState(null),
     [workspace, setWorkspace] = useState(null),
     [error, setError] = useState(""),
@@ -21,23 +27,29 @@ export default function Project({ api, id, user }) {
     [notice, setNotice] = useState("");
   const [editingDescription, setEditingDescription] = useState(false);
   const [taskComposing, setTaskComposing] = useState(false);
+  const [managing, setManaging] = useState(section === 'manage');
+  const [openTask, setOpenTask] = useState(null), [boardRevision, setBoardRevision] = useState(0);
+  useEffect(() => setManaging(section === 'manage'), [section]);
+  const [statistics, setStatistics] = useState(null), [uncertain, setUncertain] = useState(false);
+  const unavailable = error => { setProject(null); setWorkspace(null); setError(messageFor(error)); };
   const pending = useRef(false);
+  const showManagement = managing && Boolean(project?.permissions?.manageAccess || project?.permissions?.manageLabels);
   useEffect(() => {
     let live = true;
     setBusy(true);
     setError("");
+    setUncertain(false);
     setEditingDescription(false);
     setProject(null);
+    setStatistics(null);
     setWorkspace(null);
     (async () => {
       try {
         const data = await api.request(`/projects/${id}`);
-        const context = await api.request(
-          `/workspaces/${data.project.workspaceId}`,
-        );
+        const context = data.project.accessRole === "guest" ? null : await api.request(`/workspaces/${data.project.workspaceId}`);
         if (live) {
           setProject(data.project);
-          setWorkspace(context.workspace);
+          setWorkspace(context?.workspace ?? null);
         }
       } catch (e) {
         if (live) setError(messageFor(e));
@@ -50,7 +62,7 @@ export default function Project({ api, id, user }) {
     };
   }, [id, revision]);
   async function changeState() {
-    if (pending.current) return;
+    if (pending.current || uncertain || !project.permissions?.manageProject) return;
     const state = project.state === "active" ? "archived" : "active";
     if (
       !(await confirmDialog(
@@ -74,6 +86,7 @@ export default function Project({ api, id, user }) {
         state === "archived" ? "Đã lưu trữ Dự án." : "Đã mở lại Dự án.",
       );
     } catch (e) {
+      setUncertain(isUncertainMutation(e));
       setError(
         e.status
           ? messageFor(e)
@@ -92,8 +105,10 @@ export default function Project({ api, id, user }) {
     <main className="studio-project-page">
       <p className="breadcrumbs">
         <a href="#home">Trang chủ</a>
+        {project?.accessRole === "guest" && <> / <a href="#shared">Dự án được chia sẻ</a> / <span>{project.context?.workspaceName ?? "Project được chia sẻ"}</span></>}
         {workspace && (
           <>
+            {workspace.organizationId && <> / <a href={`#organization/${workspace.organizationId}`}>Tổ chức</a></>}
             {" "}
             / <a href={`#workspace/${workspace.id}`}>{workspace.name}</a>
           </>
@@ -140,11 +155,12 @@ export default function Project({ api, id, user }) {
                 </span>
                 {project.name}
               </h1>
-              <span className={"badge state-" + project.state}>
-                {project.state === "archived"
-                  ? "Đã lưu trữ · Chỉ đọc"
+              <span className={"badge state-" + (project.readOnly ? 'archived' : project.state)}>
+                {project.readOnly
+                  ? (project.state === 'archived' ? "Dự án lưu trữ · Chỉ đọc" : "Workspace lưu trữ · Chỉ đọc")
                   : "Đang hoạt động"}
               </span>
+              <span className="project-role">{project.accessRole === 'guest' ? 'Guest · Xem và bình luận' : project.accessRole === 'lead' ? 'Project Lead' : workspaceRoleLabel(project.accessRole)}</span>
               <span className="project-created muted">
                 Tạo{" "}
                 {new Date(project.createdAt).toLocaleDateString("vi-VN", {
@@ -163,18 +179,19 @@ export default function Project({ api, id, user }) {
               >
                 Làm mới Dự án
               </button>
-              {workspace.role === "owner" && (
+              {(project.permissions?.manageAccess || project.permissions?.manageLabels) && <button disabled={busy || uncertain || editingDescription || taskComposing} onClick={() => { location.hash = `project/${id}${showManagement ? '' : '/manage'}`; }}>{showManagement ? 'Về Board' : 'Quản lý Project'}</button>}
+              {project.permissions?.manageProject && (
                 <>
                   {project.state === "active" && (
                     <button
-                      disabled={busy || editingDescription || taskComposing}
+                      disabled={busy || uncertain || editingDescription || taskComposing}
                       onClick={() => setEditing(true)}
                     >
                       Đổi tên
                     </button>
                   )}
                   <button
-                    disabled={busy || editingDescription || taskComposing}
+                    disabled={busy || uncertain || editingDescription || taskComposing}
                     onClick={changeState}
                   >
                     {project.state === "active"
@@ -185,20 +202,20 @@ export default function Project({ api, id, user }) {
               )}
             </div>
           </section>
-          {project.state === "archived" && (
+          {!showManagement && <ProjectOverview data={statistics} />}
+          {(project.readOnly ?? project.state === "archived") && (
             <InlineMessage tone="info" className="archive-banner">
-              Dự án chỉ đọc. Owner có thể mở lại để tiếp tục chỉnh sửa.
+              Dự án hoặc Workspace đang được lưu trữ nên chỉ đọc. Quản lý cần mở lại phạm vi tương ứng để tiếp tục chỉnh sửa.
             </InlineMessage>
           )}
           <section className="project-info project-scope">
             <div className="section-heading">
               <h2>Mục tiêu & mô tả Dự án</h2>
               {project.state === "active" &&
-                (workspace.role === "owner" ||
-                  project.createdBy === user?.id) &&
+                project.permissions?.editDescription &&
                 !editingDescription && (
                   <button
-                    disabled={taskComposing || busy}
+                    disabled={taskComposing || busy || uncertain}
                     onClick={() => setEditingDescription(true)}
                   >
                     Chỉnh sửa mô tả Dự án
@@ -233,12 +250,19 @@ export default function Project({ api, id, user }) {
               </div>
             )}
           </section>
-          {!editingDescription && (
+          {showManagement && <ProjectManagement api={api} project={project} onContext={setProject} onUnavailable={unavailable} />}
+          {!editingDescription && !showManagement && (
             <TaskList
               api={api}
               project={project}
               workspaceId={project.workspaceId}
               onComposing={setTaskComposing}
+              onProjectContext={setProject}
+              onBoardLoaded={setStatistics}
+              onUnavailable={unavailable}
+              suspended={uncertain}
+              refreshKey={boardRevision}
+              onOpenTask={setOpenTask}
             />
           )}
         </>
@@ -263,6 +287,7 @@ export default function Project({ api, id, user }) {
           }}
         />
       )}
+      {openTask && project && <TaskPanel api={api} id={openTask} projectId={project.id} onClose={() => { setOpenTask(null); setBoardRevision(value => value+1); }} />}
     </main>
   );
 }

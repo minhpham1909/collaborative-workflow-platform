@@ -87,7 +87,7 @@ export default function WorkspaceSettings({
   }
   async function submit(e, reset = false) {
     e?.preventDefault();
-    if (pending.current || uncertain || !snapshot) return;
+    if (pending.current || uncertain || !snapshot || (!emailOnly && !snapshot.permissions?.edit) || (emailOnly && !snapshot.permissions?.emailPreferences)) return;
     if (
       !emailOnly &&
       (!name.trim() ||
@@ -202,9 +202,9 @@ export default function WorkspaceSettings({
       {error && <InlineMessage>{error}</InlineMessage>}
       {note && <InlineMessage tone="info">{note}</InlineMessage>}
       {snapshot &&
-        (!emailOnly && snapshot.role !== "owner" ? (
+        ((!emailOnly && !snapshot.permissions?.edit) || (emailOnly && !snapshot.permissions?.emailPreferences) ? (
           <InlineMessage tone="info">
-            Chỉ chủ sở hữu được sửa thông tin nhóm.
+            {emailOnly ? "Tùy chọn email riêng chỉ dành cho thành viên của Workspace." : snapshot.state === "archived" ? "Workspace đang lưu trữ. Mở lại trước khi sửa tên hoặc mô tả." : "Chỉ người quản lý hiện tại được sửa thông tin nhóm."}
           </InlineMessage>
         ) : (
           <form onSubmit={submit}>

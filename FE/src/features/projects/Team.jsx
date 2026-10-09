@@ -7,6 +7,11 @@ import useDialogFocus from "../../components/useDialogFocus.js";
 import FilterPanel from "../../components/FilterPanel.jsx";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import WorkspaceModeration, { BanDialog } from './WorkspaceModeration.jsx';
+import AddWorkspaceMember from './AddWorkspaceMember.jsx';
+import { workspaceRoleLabel } from '../../lib/ui-copy.js';
+import '../../features/organizations/team.css';
+import './team.css';
 import Avatar from "../../components/Avatar.jsx";
 import { messageFor } from "../../lib/messages.js";
 import { mayLeaveDrafts, useDraftGuard } from "../../lib/draft-navigation.js";
@@ -25,7 +30,7 @@ const delivery = {
   failed: "Gửi thất bại",
   cancelled: "Đã hủy gửi",
 };
-export default function Team({ api, id, invitations, onContext }) {
+export default function Team({ api, id, invitations, onContext, onUnavailable }) {
   const [workspace, setWorkspace] = useState(null),
     [data, setData] = useState({ items: [] }),
     [q, setQ] = useState(""),
@@ -54,7 +59,7 @@ export default function Team({ api, id, invitations, onContext }) {
       if (token !== generation.current) return;
       setWorkspace(context);
       onContext(context);
-      if (invitations && context.role !== "owner") {
+      if (invitations && (!context.permissions?.manage || context.organizationId)) {
         setData({ items: [] });
         setAction(null);
         return;
@@ -73,6 +78,7 @@ export default function Team({ api, id, invitations, onContext }) {
         setData({ items: [] });
         setWorkspace(null);
         setAction(null);
+        if ([401, 403, 404].includes(e.status)) onUnavailable?.(e);
       }
     } finally {
       if (token === generation.current) setBusy(false);
@@ -89,7 +95,7 @@ export default function Team({ api, id, invitations, onContext }) {
       generation.current++;
     };
   }, [id, query, revision]);
-  const owner = workspace?.role === "owner";
+  const owner = workspace?.permissions?.manage === true;
   return (
     <section>
       <div className="section-heading">
@@ -98,7 +104,7 @@ export default function Team({ api, id, invitations, onContext }) {
           <button disabled={busy} onClick={() => setRevision((v) => v + 1)}>
             Làm mới danh sách
           </button>
-          {invitations && owner && (
+          {invitations && workspace?.permissions?.invite && (
             <button
               className="primary"
               disabled={busy}
@@ -107,11 +113,12 @@ export default function Team({ api, id, invitations, onContext }) {
               + Tạo lời mời
             </button>
           )}
+          {!invitations && owner && workspace?.organizationId && workspace.state !== 'archived' && <button className="primary" disabled={busy} onClick={() => setAction({ kind: 'add' })}>Thêm thành viên nội bộ</button>}
         </div>
       </div>
-      {invitations && workspace && !owner ? (
+      {invitations && workspace && (!workspace.permissions?.manage || workspace.organizationId) ? (
         <InlineMessage tone="info">
-          Chỉ chủ sở hữu được quản lý lời mời.
+          Lời mời chỉ được tạo bởi Owner của Workspace độc lập đang hoạt động. Workspace thuộc tổ chức dùng luồng phân bổ thành viên của tổ chức.
         </InlineMessage>
       ) : (
         <>
@@ -135,6 +142,7 @@ export default function Team({ api, id, invitations, onContext }) {
                   Loại lời mời
                   <select
                     aria-label="Loại lời mời"
+                    aria-label="Cách mời"
                     value={type}
                     onChange={(e) => setType(e.target.value)}
                   >
@@ -199,72 +207,7 @@ export default function Team({ api, id, invitations, onContext }) {
           )}
           {error && <InlineMessage>{error}</InlineMessage>}
           {busy && <LoadingState>Đang tải danh sách…</LoadingState>}
-          <div className="cards" aria-busy={busy}>
-            {data.items.map((item) => (
-              <article className="card" key={item.id ?? item.userId}>
-                {invitations ? (
-                  <>
-                    <span className="badge">
-                      {item.type === "EMAIL" ? "Email" : "Liên kết"}
-                    </span>
-                    <h3>{item.email ?? "Liên kết tham gia"}</h3>
-                    <p>{states[item.state]}</p>
-                    <p className="muted">
-                      Tạo {date(item.createdAt)}
-                      <br />
-                      Hết hạn {date(item.expiresAt)}
-                    </p>
-                    {item.emailDelivery && (
-                      <p>Email: {delivery[item.emailDelivery]}</p>
-                    )}
-                    {owner && item.state === "active" && (
-                      <div className="buttons">
-                        <button
-                          disabled={busy}
-                          onClick={() => setAction({ kind: "revoke", item })}
-                        >
-                          Thu hồi
-                        </button>
-                        {item.emailDelivery === "failed" && (
-                          <button
-                            disabled={busy}
-                            onClick={() => setAction({ kind: "retry", item })}
-                          >
-                            Thử gửi lại email
-                          </button>
-                        )}
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <>
-                    <Avatar user={item} />
-                    <h3>{item.displayName}</h3>
-                    <span className="badge">
-                      {item.role === "owner" ? "Chủ sở hữu" : "Thành viên"}
-                    </span>
-                    <p className="muted">Tham gia {date(item.joinedAt)}</p>
-                    {owner && item.role !== "owner" && (
-                      <div className="buttons">
-                        <button
-                          disabled={busy}
-                          onClick={() => setAction({ kind: "remove", item })}
-                        >
-                          Loại khỏi nhóm
-                        </button>
-                        <button
-                          disabled={busy}
-                          onClick={() => setAction({ kind: "transfer", item })}
-                        >
-                          Chuyển quyền sở hữu
-                        </button>
-                      </div>
-                    )}
-                  </>
-                )}
-              </article>
-            ))}
-          </div>
+          <div className="team-table-wrap"><table className="team-table" aria-label={invitations ? 'Lời mời Workspace' : 'Thành viên Workspace'} aria-busy={busy}><thead><tr><th>{invitations ? 'Người nhận / loại' : 'Thành viên'}</th><th>{invitations ? 'Trạng thái' : 'Vai trò Workspace'}</th><th>{invitations ? 'Ngày tạo / hết hạn' : 'Ngày gia nhập'}</th><th>Thao tác</th></tr></thead><tbody>{data.items.map(item => <tr key={item.id ?? item.userId}><td data-label="Thành viên">{invitations ? <strong>{item.email ?? 'Liên kết tham gia'}</strong> : <div className="team-person"><Avatar user={item} /><strong>{item.displayName}</strong></div>}</td><td data-label={invitations ? 'Trạng thái' : 'Vai trò Workspace'}><span className="team-role">{invitations ? states[item.state] : workspaceRoleLabel(item.role)}</span>{invitations && item.emailDelivery && <small>Email: {delivery[item.emailDelivery]}</small>}</td><td data-label="Thời gian">{date(item.joinedAt ?? item.createdAt)}{invitations && <small>Hết hạn {date(item.expiresAt)}</small>}</td><td data-label="Thao tác"><div className="team-member-actions">{invitations ? owner && item.state === 'active' && <><button disabled={busy} onClick={() => setAction({ kind: 'revoke', item })}>Thu hồi</button>{workspace.state !== 'archived' && item.emailDelivery === 'failed' && <button disabled={busy} onClick={() => setAction({ kind: 'retry', item })}>Thử gửi lại email</button>}</> : <>{item.permissions?.remove && <button disabled={busy} onClick={() => setAction({ kind: 'remove', item })}>Gỡ khỏi nhóm</button>}{item.permissions?.ban && <button disabled={busy} onClick={() => setAction({ kind: 'ban', item })}>Chặn truy cập</button>}{item.permissions?.transfer && <button disabled={busy} onClick={() => setAction({ kind: 'transfer', item })}>Chuyển quyền sở hữu</button>}</>}</div></td></tr>)}</tbody></table></div>
           {!busy && !error && !invalid && !data.items.length && (
             <EmptyState>
               Không có {invitations ? "lời mời" : "thành viên"} phù hợp.
@@ -280,10 +223,9 @@ export default function Team({ api, id, invitations, onContext }) {
       {!invitations && workspace && (
         <section className="project-info">
           <h3>Tư cách thành viên của bạn</h3>
-          {owner ? (
+          {!workspace.permissions?.leave ? (
             <p>
-              Để rời nhóm, hãy chuyển quyền sở hữu cho một thành viên hiện tại
-              trước.
+              Owner cần chuyển quyền sở hữu, Manager cần được thay thế trước khi rời. Quản trị tổ chức chưa tham gia Workspace không có membership để rời.
             </p>
           ) : (
             <>
@@ -301,12 +243,16 @@ export default function Team({ api, id, invitations, onContext }) {
           )}
         </section>
       )}
-      {action && workspace && (
+      {!invitations && owner && workspace && <WorkspaceModeration api={api} workspace={workspace} />}
+      {action?.kind === 'ban' && workspace && <BanDialog api={api} workspace={workspace} member={action.item} onClose={() => { setAction(null); setRevision(v => v + 1); }} />}
+      {action?.kind === 'add' && workspace && <AddWorkspaceMember api={api} workspace={workspace} onClose={() => { setAction(null); setRevision(v => v + 1); }} />}
+      {action && !['ban', 'add'].includes(action.kind) && workspace && (
         <TeamAction
           api={api}
           workspace={workspace}
           action={action}
           onClose={() => {
+            if (action.kind === "invite") { setQ(""); setFrom(""); setTo(""); setType("all"); setState("all"); }
             setAction(null);
             setRevision((v) => v + 1);
           }}
@@ -318,6 +264,7 @@ export default function Team({ api, id, invitations, onContext }) {
 function TeamAction({ api, workspace, action, onClose }) {
   const [type, setType] = useState("EMAIL"),
     [email, setEmail] = useState(""),
+    [confirmName, setConfirmName] = useState(""),
     [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
     [result, setResult] = useState(null),
@@ -329,7 +276,7 @@ function TeamAction({ api, workspace, action, onClose }) {
   }, [left, busy]);
   useDraftGuard({
     dirty:
-      action.kind === "invite" && !result && Boolean(email || type !== "EMAIL"),
+      (action.kind === "invite" && !result && Boolean(email || type !== "EMAIL")) || (action.kind === 'transfer' && Boolean(confirmName)),
     busy,
     message: "Bỏ lời mời đang soạn?",
   });
@@ -349,7 +296,7 @@ function TeamAction({ api, workspace, action, onClose }) {
   };
   const explanation = {
     remove:
-      "Người này sẽ mất quyền truy cập. Task chưa Done bị bỏ assignee, kể cả trong Project Archived; Task Done giữ người cũ. Task và bình luận không bị xóa.",
+      "Người này sẽ mất quyền truy cập. Task chưa Done bị bỏ assignee, kể cả trong Project Archived; Task Done giữ người cũ. Task và bình luận không bị xóa. Gỡ khỏi nhóm không chặn dùng lại lời mời còn hiệu lực.",
     transfer:
       "Người này sẽ trở thành Owner; bạn trở thành Member và mất quyền quản lý nhóm/lời mời. Bạn vẫn ở trong nhóm, lời mời còn hiệu lực được giữ.",
     leave:
@@ -361,7 +308,7 @@ function TeamAction({ api, workspace, action, onClose }) {
   useDialogFocus(panel, () => close.current());
   async function submit(e) {
     e.preventDefault();
-    if (pending.current || blocked || result) return;
+    if (pending.current || blocked || result || (action.kind === "transfer" && confirmName !== workspace.name)) return;
     pending.current = true;
     setBusy(true);
     setError("");
@@ -418,7 +365,7 @@ function TeamAction({ api, workspace, action, onClose }) {
       <section
         ref={panel}
         tabIndex={-1}
-        className="dialog"
+        className="dialog workspace-team-dialog"
         role="dialog"
         aria-modal="true"
         aria-labelledby="team-title"
@@ -443,6 +390,7 @@ function TeamAction({ api, workspace, action, onClose }) {
                 <label>
                   Liên kết tham gia
                   <textarea
+                    aria-label="Liên kết tham gia"
                     readOnly
                     value={result.url}
                     onFocus={(e) => e.target.select()}
@@ -478,10 +426,11 @@ function TeamAction({ api, workspace, action, onClose }) {
         ) : (
           <form onSubmit={submit}>
             {action.kind === "invite" ? (
-              <fieldset disabled={busy || blocked}>
+              <fieldset disabled={busy || blocked || (action.kind === "transfer" && confirmName !== workspace.name)}>
                 <label>
                   Cách mời
                   <select
+                    aria-label="Cách mời"
                     value={type}
                     onChange={(e) => setType(e.target.value)}
                   >
@@ -509,6 +458,7 @@ function TeamAction({ api, workspace, action, onClose }) {
             ) : (
               <p>{explanation[action.kind]}</p>
             )}
+            {action.kind === 'transfer' && <label>Nhập tên Workspace để xác nhận<input required maxLength={200} value={confirmName} onChange={event => setConfirmName(event.target.value)} placeholder={workspace.name} /></label>}
             {error && <InlineMessage>{error}</InlineMessage>}
             <div className="buttons">
               <button
@@ -518,7 +468,7 @@ function TeamAction({ api, workspace, action, onClose }) {
               >
                 Đóng
               </button>
-              <button className="primary" disabled={busy || blocked}>
+              <button className="primary" disabled={busy || blocked || (action.kind === "transfer" && confirmName !== workspace.name)}>
                 {busy ? "Đang xử lý…" : titles[action.kind]}
               </button>
             </div>

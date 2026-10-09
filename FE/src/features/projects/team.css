@@ -1,0 +1,9 @@
+.studio-workspace .section-heading > .buttons { flex-wrap: wrap; }
+.workspace-moderation { margin-top: 28px; border-top: 1px solid var(--wf-border); padding-top: 24px; }
+.workspace-moderation > p, .moderation-dialog p { font-size: 14px; line-height: 1.8; color: var(--wf-muted); text-wrap: pretty; }
+.workspace-moderation .team-tabs { flex-wrap: wrap; }
+.moderation-dialog .buttons { flex-wrap: wrap; }
+.studio-workspace .dialog textarea { font-family: inherit; }
+.workspace-moderation .audit-list button { margin-top: 12px; }
+.workspace-team-dialog p { font-size: 14px; line-height: 1.8; }
+.workspace-team-dialog textarea { font-family: inherit; width: 100%; min-height: 110px; padding: 12px; border: 1px solid var(--wf-border); border-radius: 12px; resize: vertical; }
