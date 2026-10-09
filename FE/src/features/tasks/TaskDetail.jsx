@@ -1,14 +1,24 @@
 import { InlineMessage, LoadingState } from "../../components/Feedback.jsx";
-import { confirmDialog } from "../../components/NotificationProvider.jsx";
-import Avatar from "../../components/Avatar.jsx";
+import { confirmDialog, inputDialog } from "../../components/NotificationProvider.jsx";
+import PersonProfile from "../../components/PersonProfile.jsx";
 import { useEffect, useRef, useState } from "react";
 import TaskForm from "./TaskForm.jsx";
 import Comments from "./Comments.jsx";
 import RichEditor from "../../components/RichEditor.jsx";
+import TaskChecklist from './TaskChecklist.jsx';
+import TaskActivity from './TaskActivity.jsx';
+import TaskReopen from './TaskReopen.jsx';
+import { myTaskReturn } from './my-task-filters.js';
+import { isUncertainMutation } from '../../lib/mutation-outcome.js';
+import './task-detail.css';
+import { useDraftGuard } from '../../lib/draft-navigation.js';
 import { messageFor } from "../../lib/messages.js";
 import { statuses, deadline } from "../../lib/content.js";
-export default function TaskDetail({ api, id }) {
+export default function TaskDetail({ api, id, expectedProjectId, onBusyChange, onDeleted, onReturnProject, onReturnMine, returnTo = myTaskReturn() }) {
   const [composing, setComposing] = useState(false);
+  const [checklistComposing, setChecklistComposing] = useState(false), [uncertain, setUncertain] = useState(false);
+  const blocked = composing || checklistComposing;
+  const [deleted, setDeleted] = useState(false);
   const [task, setTask] = useState(null),
     [project, setProject] = useState(null),
     [workspace, setWorkspace] = useState(null),
@@ -18,16 +28,22 @@ export default function TaskDetail({ api, id }) {
     [notice, setNotice] = useState(""),
     [revision, setRevision] = useState(0);
   const pending = useRef(false);
+  useEffect(() => { if (deleted && !busy) { if (onDeleted) onDeleted(); else location.hash = returnTo ?? `project/${task.projectId}`; } }, [deleted, busy]);
+  useDraftGuard({ dirty: false, busy: busy && pending.current, message: 'Task đang xử lý.' });
+  useEffect(() => { onBusyChange?.(busy && pending.current); return () => onBusyChange?.(false); }, [busy, onBusyChange]);
   useEffect(() => {
     let live = true;
     setBusy(true);
     setTask(null);
     setError("");
+    setUncertain(false);
     (async () => {
       try {
-        const t = (await api.request(`/tasks/${id}`)).task,
+        const t = (await api.request(`/tasks/${id}`)).task;
+        if (expectedProjectId && t.projectId !== expectedProjectId) throw Object.assign(new Error('RESOURCE_UNAVAILABLE'), { code: 'RESOURCE_UNAVAILABLE', status: 404 });
+        const
           p = (await api.request(`/projects/${t.projectId}`)).project,
-          w = (await api.request(`/workspaces/${t.workspaceId}`)).workspace;
+          w = p.accessRole === "guest" ? null : (await api.request(`/workspaces/${t.workspaceId}`)).workspace;
         if (live) {
           setTask(t);
           setProject(p);
@@ -48,19 +64,29 @@ export default function TaskDetail({ api, id }) {
     };
   }, [id, revision]);
   async function action(status) {
-    if (pending.current) return;
-    if (
-      !status &&
-      !(await confirmDialog(
-        "Xóa Task khỏi danh sách và ngừng truy cập các bình luận? Dữ liệu được giữ lại trong hệ thống, nhưng ứng dụng hiện chưa hỗ trợ khôi phục.",
-        { title: "Xóa Task?", confirmLabel: "Xóa Task", tone: "danger" },
-      ))
-    )
-      return;
+    if (pending.current || uncertain) return;
     pending.current = true;
     setBusy(true);
     setError("");
     try {
+    let reason, confirmIncompleteChecklist = false;
+    if (task.status === "done" && status && status !== "done") {
+      reason = await inputDialog("Lý do mở lại Task để tiếp tục xử lý", "", { title: "Mở lại Task", inputLabel: "Lý do", maxLength: 2000, confirmLabel: "Mở lại Task" });
+      if (reason === null) return;
+      if (!reason.trim() || reason.length > 2000) { setError("Nhập lý do mở lại, tối đa 2.000 ký tự."); return; }
+    }
+    if (status === "done" && task.status !== "done" && task.checklist?.some(item => !item.checked)) {
+      confirmIncompleteChecklist = await confirmDialog("Checklist vẫn còn mục chưa hoàn thành. Bạn muốn chuyển Task sang Hoàn thành?", { title: "Checklist chưa hoàn thành", confirmLabel: "Vẫn hoàn thành" });
+      if (!confirmIncompleteChecklist) return;
+    }
+    if (
+      !status &&
+      !(await confirmDialog(
+        "Chuyển Task vào thùng rác và ẩn khỏi danh sách cùng bình luận? Dữ liệu được giữ 30 ngày trước khi dọn vĩnh viễn.",
+        { title: "Xóa Task?", confirmLabel: "Xóa Task", tone: "danger" },
+      ))
+    )
+      return;
       const result = await api.request(
         `/tasks/${id}/` + (status ? "status" : "delete"),
         {
@@ -68,14 +94,17 @@ export default function TaskDetail({ api, id }) {
           body: {
             expectedVersion: task.version,
             ...(status ? { status } : {}),
+            ...(reason ? { reason } : {}),
+            ...(confirmIncompleteChecklist ? { confirmIncompleteChecklist: true } : {}),
           },
         },
       );
       if (status) {
         setTask(result.task);
         setNotice("Đã đổi trạng thái Task.");
-      } else location.hash = `project/${task.projectId}`;
+      } else setDeleted(true);
     } catch (e) {
+      setUncertain(isUncertainMutation(e));
       setError(
         e.status
           ? messageFor(e)
@@ -95,6 +124,8 @@ export default function TaskDetail({ api, id }) {
     <main className="studio-task-detail">
       <p className="breadcrumbs">
         <a href="#home">Trang chủ</a>
+        {returnTo && <> / <a href={returnTo} onClick={event=>{if(onReturnMine){event.preventDefault();onReturnMine();}}}>Công việc của tôi</a></>}
+        {project?.accessRole === "guest" && <> / <a href="#shared">Dự án được chia sẻ</a> / <span>{project.context?.workspaceName ?? "Project được chia sẻ"}</span></>}
         {workspace && (
           <>
             {" "}
@@ -104,14 +135,14 @@ export default function TaskDetail({ api, id }) {
         {project && (
           <>
             {" "}
-            / <a href={`#project/${project.id}`}>{project.name}</a>
+            / <a href={`#project/${project.id}`} onClick={event => { if (onReturnProject) { event.preventDefault(); onReturnProject(); } }}>{project.name}</a>
           </>
         )}{" "}
         / Task
       </p>
       {!task && (
         <button
-          disabled={busy || composing}
+          disabled={busy || blocked}
           onClick={async () => {
             setNotice("");
             setRevision((v) => v + 1);
@@ -134,7 +165,7 @@ export default function TaskDetail({ api, id }) {
             {!editing && (
               <div className="buttons">
                 <button
-                  disabled={busy || composing}
+                  disabled={busy || blocked}
                   onClick={async () => {
                     setNotice("");
                     setRevision((v) => v + 1);
@@ -144,23 +175,23 @@ export default function TaskDetail({ api, id }) {
                 </button>
                 {task.permissions.edit && (
                   <button
-                    disabled={busy || composing}
+                    disabled={busy || blocked || uncertain}
                     onClick={() => setEditing(true)}
                   >
                     Sửa Task
                   </button>
                 )}
                 {task.permissions.delete && (
-                  <button disabled={busy || composing} onClick={() => action()}>
+                  <button disabled={busy || blocked || uncertain} onClick={() => action()}>
                     Xóa Task
                   </button>
                 )}
               </div>
             )}
           </section>
-          {project.state === "archived" && (
+          {(project.readOnly ?? project.state === "archived") && (
             <InlineMessage tone="info" className="archive-banner">
-              Dự án đã lưu trữ · Task và bình luận chỉ đọc.
+              Dự án hoặc Workspace đang lưu trữ. Nội dung chỉ đọc; người có quyền vẫn có thể gỡ bình luận vi phạm.
             </InlineMessage>
           )}
           {editing ? (
@@ -182,12 +213,13 @@ export default function TaskDetail({ api, id }) {
           ) : (
             <>
               <section className="project-info">
+                <div className="task-detail-identifiers"><span>{task.code ?? 'Task chưa có mã lịch sử'}</span><span className={'task-priority priority-'+task.priority}>{({low:'Ưu tiên thấp',medium:'Ưu tiên vừa',high:'Ưu tiên cao'})[task.priority]}</span>{task.labels?.map(label => <span key={label.id}>{label.name}{label.archivedAt ? ' · Đã lưu trữ' : ''}</span>)}</div>
                 <div className="task-meta detail-meta-grid">
                   <label>
                     Trạng thái
                     <select
                       aria-label="Trạng thái"
-                      disabled={!task.permissions.status || busy || composing}
+                      disabled={!task.permissions.status || busy || blocked || uncertain || (task.status === 'done' && Boolean(task.pendingReopenRequestId))}
                       value={task.status}
                       onChange={(e) => action(e.target.value)}
                     >
@@ -201,9 +233,7 @@ export default function TaskDetail({ api, id }) {
                   <p className="detail-person">
                     Người thực hiện:{" "}
                     <strong>
-                      {task.assignee && <Avatar user={task.assignee} />}
-                      {task.assignee?.displayName ?? "Chưa phân công"}
-                      {task.assigneeLeft && " · Đã rời"}
+                      {task.assignee ? <PersonProfile api={api} projectId={task.projectId} user={task.assignee} /> : "Chưa phân công"}
                     </strong>
                   </p>
                   <p>
@@ -215,8 +245,7 @@ export default function TaskDetail({ api, id }) {
                   <p className="detail-person">
                     Người tạo:{" "}
                     <strong>
-                      {task.creator && <Avatar user={task.creator} />}
-                      {task.creator?.displayName}
+                      {task.creator && <PersonProfile api={api} projectId={task.projectId} user={task.creator} />}
                     </strong>
                   </p>
                   <p>
@@ -236,6 +265,7 @@ export default function TaskDetail({ api, id }) {
                     </strong>
                   </p>
                 </div>
+                {task.status === 'done' && <p>Hoàn thành: {task.completedAt ? new Date(task.completedAt).toLocaleString('vi-VN', { timeZone:'Asia/Ho_Chi_Minh' }) : 'Chưa ghi nhận ngày hoàn thành'}</p>}
                 <h2>Mô tả</h2>
                 <RichEditor
                   key={task.version}
@@ -244,12 +274,17 @@ export default function TaskDetail({ api, id }) {
                   label="Mô tả Task"
                 />
               </section>
+              <TaskChecklist api={api} task={task} disabled={busy || blocked || uncertain} onComposing={setChecklistComposing} onTask={value => { if (value) setTask(value); else setRevision(v => v+1); }} />
+              {project.accessRole !== 'guest' && <TaskReopen api={api} task={task} disabled={busy || blocked || uncertain} onTask={value => { if (value) setTask(value); else setRevision(v => v+1); }} />}
               <Comments
                 onComposing={setComposing}
                 api={api}
                 taskId={id}
-                readOnly={project.state === "archived"}
+                projectId={project.id}
+                readOnly={project.readOnly ?? project.state === "archived"}
+                disabled={checklistComposing || busy || uncertain}
               />
+              <TaskActivity api={api} task={task} />
             </>
           )}
         </>

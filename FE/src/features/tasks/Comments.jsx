@@ -6,15 +6,16 @@ import {
 import { useDraftGuard } from "../../lib/draft-navigation.js";
 import {
   confirmDialog,
+  inputDialog,
   notify,
 } from "../../components/NotificationProvider.jsx";
-import Avatar from "../../components/Avatar.jsx";
+import PersonProfile from "../../components/PersonProfile.jsx";
 import { isUncertainMutation } from "../../lib/mutation-outcome.js";
 import { useEffect, useRef, useState } from "react";
 import RichEditor from "../../components/RichEditor.jsx";
 import { messageFor } from "../../lib/messages.js";
 import { validateContent } from "../../lib/content.js";
-function Composer({ api, taskId, comment, onDone, onCancel }) {
+function Composer({ api, taskId, comment, onDone, onCancel, disabled = false }) {
   const [content, setContent] = useState(comment?.content),
     [busy, setBusy] = useState(false),
     [uncertain, setUncertain] = useState(false),
@@ -83,7 +84,7 @@ function Composer({ api, taskId, comment, onDone, onCancel }) {
         </button>
         <button
           type="button"
-          disabled={busy}
+          disabled={busy || disabled}
           onClick={async () => {
             if (
               !dirty ||
@@ -102,7 +103,7 @@ function Composer({ api, taskId, comment, onDone, onCancel }) {
     </form>
   );
 }
-export default function Comments({ api, taskId, readOnly, onComposing }) {
+export default function Comments({ api, taskId, projectId, readOnly, disabled = false, onComposing }) {
   const [data, setData] = useState({ items: [] }),
     [busy, setBusy] = useState(true),
     [error, setError] = useState(""),
@@ -111,6 +112,7 @@ export default function Comments({ api, taskId, readOnly, onComposing }) {
     [revision, setRevision] = useState(0);
   const generation = useRef(0),
     pending = useRef(false);
+  useDraftGuard({ dirty: false, busy: busy && pending.current, message: 'Bình luận đang xử lý.' });
   useEffect(() => {
     onComposing?.(Boolean(writing || editing));
     return () => onComposing?.(false);
@@ -147,10 +149,17 @@ export default function Comments({ api, taskId, readOnly, onComposing }) {
     };
   }, [taskId, revision]);
   async function remove(c) {
+    if (pending.current) return;
+    let reason;
+    if (c.permissions.moderate) {
+      reason = await inputDialog("Lý do xóa bình luận vi phạm (không sửa lời tác giả)");
+      if (reason === null) return;
+      if (!reason.trim() || reason.length > 2000) { setError("Nhập lý do xóa từ 1 đến 2000 ký tự."); return; }
+    }
     if (
       pending.current ||
       !(await confirmDialog(
-        "Bình luận sẽ không còn hiển thị trong cuộc thảo luận.",
+        "Xóa hẳn bình luận? Không thể phục hồi nội dung sau khi xóa.",
         {
           title: "Xóa bình luận?",
           confirmLabel: "Xóa bình luận",
@@ -164,7 +173,7 @@ export default function Comments({ api, taskId, readOnly, onComposing }) {
     try {
       await api.request(`/tasks/${taskId}/comments/${c.id}/delete`, {
         method: "POST",
-        body: { expectedVersion: c.version },
+        body: { expectedVersion: c.version, ...(reason ? { reason } : {}) },
       });
       setRevision((v) => v + 1);
     } catch (e) {
@@ -180,12 +189,12 @@ export default function Comments({ api, taskId, readOnly, onComposing }) {
         <h2>Thảo luận {data.total !== undefined && `(${data.total})`}</h2>
         <div className="buttons">
           {!writing && !editing && (
-            <button disabled={busy} onClick={() => setRevision((v) => v + 1)}>
+            <button disabled={busy || disabled} onClick={() => setRevision((v) => v + 1)}>
               Tải lại bình luận
             </button>
           )}
           {!readOnly && !writing && !editing && (
-            <button disabled={busy} onClick={() => setWriting(true)}>
+            <button disabled={busy || disabled} onClick={() => setWriting(true)}>
               + Viết bình luận
             </button>
           )}
@@ -213,8 +222,7 @@ export default function Comments({ api, taskId, readOnly, onComposing }) {
         <article className="comment" key={c.id}>
           <div className="section-title">
             <strong className="comment-author">
-              {c.author && <Avatar user={c.author} />}
-              {c.author?.displayName ?? "Người dùng không còn khả dụng"}
+              {c.author && projectId ? <PersonProfile api={api} projectId={projectId} user={c.author} /> : (c.author?.displayName ?? "Người dùng không còn khả dụng")}
             </strong>
             <span className="muted">
               {new Date(c.createdAt).toLocaleString("vi-VN", {
@@ -243,15 +251,15 @@ export default function Comments({ api, taskId, readOnly, onComposing }) {
               label={"Bình luận của " + c.author?.displayName}
             />
           )}{" "}
-          {!readOnly && !writing && !editing && (
+          {!writing && !editing && (
             <div className="buttons">
-              {c.permissions.edit && (
-                <button disabled={busy} onClick={() => setEditing(c.id)}>
+              {!readOnly && c.permissions.edit && (
+                <button disabled={busy || disabled} onClick={() => setEditing(c.id)}>
                   Sửa bình luận
                 </button>
               )}
               {c.permissions.delete && (
-                <button disabled={busy} onClick={() => remove(c)}>
+                <button disabled={busy || disabled} onClick={() => remove(c)}>
                   Xóa bình luận
                 </button>
               )}
@@ -263,7 +271,7 @@ export default function Comments({ api, taskId, readOnly, onComposing }) {
         <EmptyState>Chưa có bình luận.</EmptyState>
       )}
       {data.nextCursor && !editing && !writing && (
-        <button disabled={busy} onClick={() => load(data.nextCursor)}>
+        <button disabled={busy || disabled} onClick={() => load(data.nextCursor)}>
           Tải thêm bình luận
         </button>
       )}

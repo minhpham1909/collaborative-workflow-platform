@@ -2,6 +2,7 @@ import { InlineMessage } from "../../components/Feedback.jsx";
 import { useDraftGuard } from "../../lib/draft-navigation.js";
 import FormField from "../../components/FormField.jsx";
 import MemberPicker from "../../components/MemberPicker.jsx";
+import TaskLabelPicker from '../../components/TaskLabelPicker.jsx';
 import {
   confirmDialog,
   notify,
@@ -30,6 +31,7 @@ export default function TaskForm({
     [error, setError] = useState(""),
     [dirty, setDirty] = useState(false);
   const pending = useRef(false);
+  const [priority, setPriority] = useState(task?.priority ?? 'medium'), [labelIds, setLabelIds] = useState(task?.labelIds ?? []);
   useDraftGuard({
     dirty: dirty,
     busy: busy,
@@ -65,6 +67,9 @@ export default function TaskForm({
       if (!task || assigneeId !== (task.assigneeId ?? ""))
         body.assigneeId = assigneeId || null;
       if (task) body.expectedVersion = task.version;
+      if (!task || priority !== (task.priority ?? 'medium')) body.priority = priority;
+      const previous = task?.labelIds ?? [];
+      if (!task || previous.length !== labelIds.length || previous.some(id => !labelIds.includes(id))) body.labelIds = labelIds;
       const result = await api.request(
         task ? `/tasks/${task.id}` : `/projects/${projectId}/tasks`,
         { method: task ? "PATCH" : "POST", body },
@@ -128,6 +133,8 @@ export default function TaskForm({
               setDirty(true);
             }}
           />
+          <FormField label="Mức ưu tiên" hint="Ba mức dùng chung trong Project.">{props => <select {...props} value={priority} disabled={busy || uncertain} onChange={event => { setPriority(event.target.value); setDirty(true); }}><option value="low">Thấp</option><option value="medium">Vừa</option><option value="high">Cao</option></select>}</FormField>
+          <TaskLabelPicker api={api} projectId={projectId ?? task?.projectId} value={labelIds} selectedLabels={task?.labels} disabled={busy || uncertain} onChange={value => { setLabelIds(value); setDirty(true); }} />
           <label>
             Deadline · Giờ Việt Nam
             <input

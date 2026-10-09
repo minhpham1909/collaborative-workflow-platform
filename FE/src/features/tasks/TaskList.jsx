@@ -9,7 +9,7 @@ import { useEffect, useRef, useState } from "react";
 import { statuses, deadline } from "../../lib/content.js";
 import { messageFor } from "../../lib/messages.js";
 import TaskForm from "./TaskForm.jsx";
-import Avatar from "../../components/Avatar.jsx";
+import PersonProfile from "../../components/PersonProfile.jsx";
 import Icon from "../../components/Icon.jsx";
 export default function TaskList({
   api,
@@ -17,6 +17,12 @@ export default function TaskList({
   workspaceId,
   mine = false,
   onComposing,
+  onProjectContext,
+  onBoardLoaded,
+  onUnavailable,
+  suspended = false,
+  onOpenTask,
+  refreshKey = 0,
 }) {
   const [workspaceFilter, setWorkspaceFilter] = useState(""),
     [filterReset, setFilterReset] = useState(0);
@@ -32,12 +38,16 @@ export default function TaskList({
     [error, setError] = useState(""),
     [revision, setRevision] = useState(0),
     [creating, setCreating] = useState(false);
+  const [priority, setPriority] = useState('all');
+  const canCreate = !suspended && !mine && !project?.readOnly && project?.permissions?.createTask === true;
+  useEffect(() => { if (!canCreate) setCreating(false); }, [canCreate]);
   useEffect(() => {
     onComposing?.(creating);
     return () => onComposing?.(false);
   }, [creating, onComposing]);
   const generation = useRef(0),
     invalid = from && to && from > to;
+  const lastScope = useRef('');
   const query = new URLSearchParams({
     limit: "12",
     status,
@@ -49,6 +59,7 @@ export default function TaskList({
     ...(from ? { from } : {}),
     ...(to ? { to } : {}),
     ...(overdue ? { overdue: "true" } : {}),
+    ...(!mine && priority !== 'all' ? { priority } : {}),
   }).toString();
   async function load(token = generation.current) {
     setBusy(true);
@@ -57,11 +68,12 @@ export default function TaskList({
       const result = await api.request(
         mine ? "/my-tasks?" + query : `/projects/${project.id}/board?` + query,
       );
-      if (token === generation.current) setData(result);
+      if (token === generation.current) { setData(result); if (!mine) { if (result.project) onProjectContext?.(result.project); onBoardLoaded?.(result.statistics ?? null); } }
     } catch (e) {
       if (token === generation.current) {
         setData(null);
         setError(messageFor(e));
+        if (!mine && [401,403,404].includes(e.status)) onUnavailable?.(e);
       }
     } finally {
       if (token === generation.current) setBusy(false);
@@ -69,7 +81,9 @@ export default function TaskList({
   }
   useEffect(() => {
     const token = ++generation.current;
-    setData(null);
+    const scope = `${project?.id ?? 'mine'}|${query}`;
+    if (lastScope.current !== scope) setData(null);
+    lastScope.current = scope;
     if (invalid) {
       setBusy(false);
       return;
@@ -80,10 +94,11 @@ export default function TaskList({
       clearTimeout(timer);
       generation.current++;
     };
-  }, [query, project?.id, revision]);
+  }, [query, project?.id, revision, refreshKey]);
   async function more(column) {
     const token = generation.current;
     setBusy(true);
+    setError('');
     try {
       const page = mine ? data : data.columns[column];
       const qs = new URLSearchParams(query);
@@ -92,6 +107,7 @@ export default function TaskList({
       const result = await api.request(
         mine ? "/my-tasks?" + qs : `/projects/${project.id}/tasks?` + qs,
       );
+      if (token === generation.current && !mine && result.project) onProjectContext?.(result.project);
       if (token === generation.current)
         setData((old) => {
           const merged = {
@@ -106,7 +122,7 @@ export default function TaskList({
         });
     } catch (e) {
       if (token === generation.current) {
-        setData(null);
+        if ([401,403,404].includes(e.status)) { setData(null); if (!mine) onUnavailable?.(e); }
         setError(messageFor(e));
       }
     } finally {
@@ -126,6 +142,8 @@ export default function TaskList({
       >
         {!mine && (
           <div className="board-task-top">
+            {t.code && <span className="task-code">{t.code}</span>}
+            <span className={'task-priority priority-' + t.priority}>{({ high: 'Ưu tiên cao', medium: 'Ưu tiên vừa', low: 'Ưu tiên thấp' })[t.priority]}</span>
             <span className={"pill status-" + t.status}>
               {statuses[t.status]}
             </span>
@@ -134,7 +152,7 @@ export default function TaskList({
         )}
         <div className="task-summary">
           <h3>
-            <a className="surface-link" href={`#task/${t.id}`}>
+            <a className="surface-link" href={`#task/${t.id}`} onClick={event => { if (!mine && onOpenTask && !event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey) { event.preventDefault(); onOpenTask(t.id); } }}>
               {t.title}
             </a>
           </h3>
@@ -150,20 +168,17 @@ export default function TaskList({
               )}
               <p className="board-assignee">
                 {t.assignee ? (
-                  <Avatar user={t.assignee} />
+                  <PersonProfile api={api} projectId={t.projectId} user={t.assignee} />
                 ) : (
-                  <Icon name="people" />
+                  <><Icon name="people" /><span>Chưa phân công</span></>
                 )}
-                <span>
-                  {t.assignee?.displayName ?? "Chưa phân công"}
-                  {t.assigneeLeft && (
-                    <span className="left-member"> · Đã rời</span>
-                  )}
-                </span>
               </p>
             </>
           )}
         </div>
+        {!mine && t.labels?.length > 0 && <div className="board-labels">{t.labels.map(label => <span key={label.id} className={'label-color-' + label.color}>{label.name}{label.archivedAt ? ' · Đã lưu trữ' : ''}</span>)}</div>}
+        {!mine && t.checklist?.length > 0 && <p className="board-checklist"><Icon name="check" />{t.checklist.filter(item => item.checked).length}/{t.checklist.length} mục checklist</p>}
+        {!mine && t.status === 'done' && <p className="board-completed">{t.completedAt ? `Hoàn thành ${new Date(t.completedAt).toLocaleDateString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}` : 'Chưa ghi nhận ngày hoàn thành'}</p>}
         <div className="task-row-meta">
           <p>
             {mine && (
@@ -204,7 +219,7 @@ export default function TaskList({
           >
             Làm mới công việc
           </button>
-          {!mine && project.state === "active" && (
+          {canCreate && (
             <button
               className="primary"
               disabled={busy || creating}
@@ -215,7 +230,7 @@ export default function TaskList({
           )}
         </div>
       </div>
-      {creating && (
+      {creating && canCreate && (
         <TaskForm
           api={api}
           projectId={project.id}
@@ -226,11 +241,12 @@ export default function TaskList({
           }}
           onDone={() => {
             setCreating(false);
+            setQ(''); setFrom(''); setTo(''); setOverdue(false); setStatus('all'); setPriority('all');
             setRevision((v) => v + 1);
           }}
         />
       )}
-      <FilterPanel compact>
+      <fieldset className="board-filter-fields" disabled={creating}><FilterPanel compact advancedLabel={mine ? 'Bộ lọc' : 'Lọc nâng cao'}>
         <label>
           Tìm Task
           <input
@@ -243,7 +259,7 @@ export default function TaskList({
         </label>
         <label>
           Trạng thái Task
-          <select value={status} onChange={(e) => setStatus(e.target.value)}>
+          <select aria-label="Trạng thái Task" value={status} onChange={(e) => setStatus(e.target.value)}>
             {Object.entries({
               all: "Tất cả",
               open: "Chưa hoàn thành",
@@ -264,6 +280,7 @@ export default function TaskList({
             filterActive={Boolean(workspaceFilter)}
           />
         )}
+        {!mine && <label>Ưu tiên<select aria-label="Ưu tiên" value={priority} onChange={event => setPriority(event.target.value)}><option value="all">Tất cả mức ưu tiên</option><option value="high">Cao</option><option value="medium">Vừa</option><option value="low">Thấp</option></select></label>}
         {mine && (
           <label>
             Dự án
@@ -308,6 +325,7 @@ export default function TaskList({
         <button
           onClick={() => {
             setQ("");
+            setPriority('all');
             setFrom("");
             setTo("");
             setOverdue(false);
@@ -320,7 +338,7 @@ export default function TaskList({
         >
           Xóa bộ lọc Task
         </button>
-      </FilterPanel>
+      </FilterPanel></fieldset>
       <p className="muted">
         Mới tạo trước · Giờ Việt Nam ·{" "}
         {mine
@@ -332,7 +350,7 @@ export default function TaskList({
           Ngày bắt đầu phải trước hoặc bằng ngày kết thúc.
         </InlineMessage>
       )}
-      {error && <InlineMessage>{error}</InlineMessage>}
+      {error && <InlineMessage>{error}<button disabled={busy || creating} onClick={() => setRevision(v => v + 1)}>Thử lại công việc</button></InlineMessage>}
       {busy && <LoadingState>Đang tải công việc…</LoadingState>}
       {data &&
         (mine ? (
@@ -353,7 +371,7 @@ export default function TaskList({
           </>
         ) : (
           <>
-            <div className="board" aria-busy={busy}>
+            <div className="board-scroll" tabIndex={0} role="region" aria-label="Bảng Kanban ba trạng thái"><div className="board" aria-busy={busy}>
               {Object.entries(statuses).map(([column, label]) => (
                 <section
                   className={"board-column " + column}
@@ -390,7 +408,7 @@ export default function TaskList({
                   )}
                 </section>
               ))}
-            </div>
+            </div></div>
             <BoardProgress columns={data.columns} />
           </>
         ))}
