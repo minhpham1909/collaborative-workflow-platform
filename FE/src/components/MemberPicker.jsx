@@ -10,6 +10,7 @@ export default function MemberPicker({
   onChange,
   selectedMember,
   disabled,
+  label = 'Người thực hiện',
 }) {
   const [query, setQuery] = useState("");
   const [data, setData] = useState({ items: [] });
@@ -80,7 +81,7 @@ export default function MemberPicker({
         )}
       </FormField>
       <FormField
-        label="Người thực hiện"
+        label={label}
         hint={
           busy
             ? "Đang tải thành viên…"

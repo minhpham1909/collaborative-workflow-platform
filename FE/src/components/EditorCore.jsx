@@ -22,6 +22,8 @@ export default function RichEditor({
   const [text, setText] = useState(""),
     [error, setError] = useState("");
   const editor = useEditor({
+    // Create after commit: Suspense may discard an initial render before onCreate.
+    immediatelyRender: false,
     extensions: [
       StarterKit.configure({
         codeBlock: false,
@@ -52,13 +54,13 @@ export default function RichEditor({
     onCreate: ({ editor }) => setText(visibleText(editor.getJSON())),
   });
   useEffect(() => {
-    editor?.setEditable(!readOnly, false);
+    if (editor && !editor.isDestroyed) editor.setEditable(!readOnly, false);
     container.current
       ?.querySelector(".tiptap")
       ?.setAttribute("aria-readonly", String(readOnly));
   }, [readOnly, editor]);
   useEffect(() => {
-    if (editor && readOnly)
+    if (editor && !editor.isDestroyed && readOnly)
       editor.commands.setContent(value?.document ?? emptyDocument(), {
         emitUpdate: false,
       });
@@ -69,7 +71,7 @@ export default function RichEditor({
     words = [
       ...new Intl.Segmenter("vi", { granularity: "word" }).segment(text),
     ].filter((s) => s.isWordLike).length;
-  if (!editor) return null;
+  if (!editor || editor.isDestroyed) return null;
   async function link() {
     const href = await inputDialog(
       "Đường dẫn https:// hoặc mailto: (để trống để bỏ liên kết)",

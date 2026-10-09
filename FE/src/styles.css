@@ -25,6 +25,11 @@
   background: #fff8f5;
   font-synthesis: none;
 }
+.person-profile { display: inline-flex; align-items: center; }
+.person-profile-trigger { display: inline-flex; align-items: center; gap: 6px; padding: 4px 0; border: 0; background: transparent; color: inherit; position: relative; z-index: 2; }
+.person-profile-card { position: fixed; inset: auto; margin: 0; width: min(288px, calc(100vw - 32px)); padding: 18px; border: 1px solid #eee6e1; border-radius: 16px; background: #fffaf8; color: #292524; box-shadow: 0 12px 32px #29252418; }
+.person-profile-card > span { display: block; margin-top: 8px; }
+.profile-close { float: right; min-width: 36px; min-height: 36px; padding: 4px; }
 .feedback {
   margin: 12px 0;
   overflow-wrap: anywhere;

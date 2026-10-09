@@ -14,6 +14,9 @@ export default function NameDialog({
   initial = "",
   initialIcon = "folder",
   withIcon = false,
+  label = "Tên Dự án",
+  submitLabel = "Lưu",
+  children,
   onSave,
   onClose,
 }) {
@@ -79,9 +82,10 @@ export default function NameDialog({
         aria-labelledby="name-title"
       >
         <h2 id="name-title">{title}</h2>
+        {children}
         <form onSubmit={submit}>
           <FormField
-            label="Tên Dự án"
+            label={label}
             error={nameError}
             hint="Tối đa 200 ký tự."
           >
@@ -116,7 +120,7 @@ export default function NameDialog({
               Hủy
             </button>
             <button className="primary" disabled={busy || uncertain}>
-              {busy ? "Đang lưu…" : "Lưu"}
+              {busy ? "Đang lưu…" : submitLabel}
             </button>
           </div>
         </form>

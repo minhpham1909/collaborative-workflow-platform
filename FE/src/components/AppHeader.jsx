@@ -1,9 +1,9 @@
 import { useEffect, useRef } from "react";
 import Icon from "./Icon.jsx";
 import Avatar from "./Avatar.jsx";
-import { InboxBadge } from "../features/notifications/Notifications.jsx";
 
-export default function AppHeader({ route, user, api, busy, logout }) {
+
+export default function AppHeader({ route, user, api, busy, logout, openMobile, mobileOpen }) {
   const menu = useRef(null);
   useEffect(() => {
     if (menu.current) menu.current.open = false;
@@ -43,42 +43,9 @@ export default function AppHeader({ route, user, api, busy, logout }) {
       >
         Đi đến nội dung chính
       </button>
-      <a className="brand" href="#home">
-        <span>W</span>Workflow
-      </a>
-      <nav className="app-navigation" aria-label="Điều hướng chính">
-        {[
-          ["home", "Trang chủ", "home"],
-          ["mine", "Công việc của tôi", "tasks"],
-          ["notifications", "Thông báo", "bell"],
-        ].map(([value, label, icon]) => {
-          const active =
-            route.kind === value ||
-            (value === "home" &&
-              ["workspace", "project", "task"].includes(route.kind)) ||
-            (value === "notifications" && route.kind === "notification");
-          return (
-            <a
-              key={value}
-              href={"#" + value}
-              className={active ? "active" : ""}
-              aria-current={
-                active
-                  ? route.kind === value
-                    ? "page"
-                    : "location"
-                  : undefined
-              }
-            >
-              <Icon name={icon} />
-              <span>{label}</span>
-              {value === "notifications" && (
-                <InboxBadge key={user.id} api={api} userId={user.id} />
-              )}
-            </a>
-          );
-        })}
-      </nav>
+      <button type="button" className="mobile-nav-toggle" aria-label="Mở menu điều hướng" aria-expanded={mobileOpen} onClick={openMobile}><Icon name="menu" /></button>
+      <div className="header-location"><span>Workflow</span><Icon name="chevron-right" /><strong>{({ home: 'Trang chủ', organizations: 'Tổ chức & Studio', organization: 'Tổ chức', mine: 'Công việc của tôi', shared: 'Dự án được chia sẻ', notifications: 'Thông báo', notification: 'Thông báo', settings: 'Tài khoản', workspace: 'Workspace', project: 'Dự án', task: 'Công việc' })[route.kind] ?? 'Không gian làm việc'}</strong></div>
+      <a className="header-bell" href="#notifications" aria-label="Mở thông báo" title="Mở thông báo"><Icon name="bell" /></a>
       <details ref={menu} className="account-menu">
         <summary aria-label={`Menu tài khoản của ${user.displayName}`}>
           <Avatar user={user} />

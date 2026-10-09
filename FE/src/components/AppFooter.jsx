@@ -2,9 +2,7 @@ export default function AppFooter() {
   return (
     <footer className="app-footer">
       <div>
-        <span className="footer-mark" aria-hidden="true">
-          W
-        </span>
+        <img className="footer-mark" src="/brand/workflow-logo.svg" alt="" width="20" height="20" />
         © {new Date().getFullYear()} Workflow · Cùng nhau biến ý tưởng thành
         công việc.
       </div>

@@ -17,8 +17,8 @@ const request = (kind, message, initial = "", options = {}) =>
   );
 export const confirmDialog = (message, options) =>
   request("confirm", message, "", options);
-export const inputDialog = (message, initial) =>
-  request("input", message, initial);
+export const inputDialog = (message, initial, options) =>
+  request("input", message, initial, options);
 export const notify = (message, tone = "success") =>
   dispatch?.({ kind: "toast", message, tone, id: crypto.randomUUID() });
 const NotificationContext = createContext(null);
@@ -122,7 +122,7 @@ function SystemDialog({ item, finish }) {
         </span>
         <h2 id="system-dialog-title">
           {item.kind === "input"
-            ? "Thêm liên kết"
+            ? (item.options.title ?? "Thêm liên kết")
             : (item.options.title ?? "Xác nhận thao tác")}
         </h2>
         <p id="system-dialog-message">{item.message}</p>
@@ -134,11 +134,11 @@ function SystemDialog({ item, finish }) {
         >
           {item.kind === "input" && (
             <label>
-              Đường dẫn
+              {item.options.inputLabel ?? "Đường dẫn"}
               <input
                 value={value}
                 onChange={(event) => setValue(event.target.value)}
-                maxLength={2048}
+                maxLength={item.options.maxLength ?? 2048}
               />
             </label>
           )}
@@ -151,7 +151,7 @@ function SystemDialog({ item, finish }) {
             </button>
             <button className="primary">
               {item.kind === "input"
-                ? "Áp dụng"
+                ? (item.options.confirmLabel ?? "Áp dụng")
                 : (item.options.confirmLabel ?? "Xác nhận")}
             </button>
           </div>

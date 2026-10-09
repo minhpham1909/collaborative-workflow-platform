@@ -22,6 +22,7 @@ export default function StudioCover({
       <img
         src={`/images/studio/${(project ? projectCovers : workspaceCovers)[tone]}.jpg`}
         alt=""
+        onError={event => { event.currentTarget.hidden = true; }}
         loading="lazy"
         width="720"
         height="300"

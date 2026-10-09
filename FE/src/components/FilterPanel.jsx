@@ -12,6 +12,7 @@ export default function FilterPanel({
   children,
   compact = false,
   sortLabel = "Mới tạo trước",
+  advancedLabel = "Bộ lọc",
 }) {
   const [open, setOpen] = useState(false);
   const panelId = useId();
@@ -56,7 +57,7 @@ export default function FilterPanel({
             onClick={() => setOpen(!open)}
           >
             <Icon name="filter" />
-            Bộ lọc{count ? ` (${count})` : ""}
+            {advancedLabel}{count ? ` (${count})` : ""}
           </button>
           <span className="filter-sort">Sắp xếp: {sortLabel}</span>
         </div>
