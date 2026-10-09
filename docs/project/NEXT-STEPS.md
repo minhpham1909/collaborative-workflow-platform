@@ -1,5 +1,7 @@
 # Trạng thái và bước tiếp theo
 
+09/10/2026 — **S10a đạt account/settings**: summary +3 tabs profile/email/security; CAS/drafts/unknown readback, password current rotation, Google linked/only/unverified capability. [QA](../qa/UI-STITCH-S10-CHECK.md), [contract](../ui-ux/SETTINGS-AUTH-S10-CONTRACT.md): FE16/build149, browser/fake Google/C2 regression PASS,3tabs/5width/probe0 Hỏng. Git9 baseline commits đã push dev; S10a commit riêng. BE67 unit/113 integration PASS trên DB tạm. **Tiếp S10b auth/login/register/verify/recovery/reset và locale scope**; không actual Google/SMTP/queues/schema/backfill dev.
+
 09/10/2026 — **S9b đạt; S9 hoàn tất trong scope**:3 public invitation variants, auth/verify/account switch, pending/deferred redirect, preview retry/terminal/unknown outcomes, token scrub/memory intent. [QA](../qa/UI-STITCH-S09-CHECK.md), [tiến độ UI](UI-UPGRADE-PROGRESS.md): FE16/build148, browser/C2 regression,3variants/5width, probe0 Hỏng/console sạch, API ready. **Tiếp S10a Tài khoản & Cài đặt**. S1–S9 đạt gate cụm; không BE/schema/queues/providers/backfill dev.
 
 09/10/2026 — **S9a đạt Notifications inbox**: grouped unread/read, compact search/category/time, read-one/signed read-all, pending/unknown write lock/readback, current-scope masking và detail return giữ filters. [QA](../qa/UI-STITCH-S09-CHECK.md), [contract](../ui-ux/NOTIFICATIONS-S09-CONTRACT.md): FE16/build147, BE8, browser/C2 regression PASS,5width/probe0 Hỏng/console sạch, API ready. **Tiếp S9b public invitation entry**. Không SMTP/queues/purge/backfill dev.

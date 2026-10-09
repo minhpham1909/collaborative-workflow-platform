@@ -5,9 +5,11 @@ import { useDraftGuard } from "../../lib/draft-navigation.js";
 import { confirmDialog } from "../../components/NotificationProvider.jsx";
 import { useEffect, useRef, useState } from "react";
 import Avatar from "../../components/Avatar.jsx";
+import Icon from '../../components/Icon.jsx';
 import { messageFor } from "../../lib/messages.js";
 import { loadGoogle } from "../../lib/google.js";
 import { isUncertainMutation } from "../../lib/mutation-outcome.js";
+import './settings.css';
 const validPassword = (value) =>
   [...value].length >= 12 &&
   [...value].length <= 128 &&
@@ -63,8 +65,8 @@ export default function Settings({ api, onUser }) {
     setDirty(false);
   }
   return (
-    <main className="settings-page">
-      <section className="hero">
+    <main className="settings-page studio-settings">
+      <section className="hero settings-hero">
         <div>
           <small>TÙY CHỈNH KHÔNG GIAN CỦA BẠN</small>
           <h1>Tài khoản & Cài đặt cá nhân</h1>
@@ -104,7 +106,10 @@ export default function Settings({ api, onUser }) {
         ))}
       </div>
       {busy && <LoadingState>Đang tải tài khoản…</LoadingState>}
-      {error && <InlineMessage>{error}</InlineMessage>}
+      {error && <InlineMessage>{error}<button disabled={busy} onClick={()=>setRevision(value=>value+1)}>Thử tải tài khoản lại</button></InlineMessage>}
+      <div className="settings-layout">
+      {data && <aside className="settings-identity" aria-label="Tổng quan tài khoản"><div className="settings-identity-cover"/><Avatar user={data.user}/><h2>{data.user.displayName}</h2><p>{data.user.email}</p><span className={'account-verification '+(data.user.emailVerified?'verified':'')}><Icon name={data.user.emailVerified?'check':'bell'}/>{data.user.emailVerified?'Email đã xác minh':'Email chưa xác minh'}</span><dl><div><dt>Đăng nhập</dt><dd>{data.account.hasLocalPassword?'Email và mật khẩu':'Google'}</dd></div><div><dt>Google</dt><dd>{data.account.googleLinked?'Đã liên kết':'Chưa liên kết'}</dd></div><div><dt>Giờ hiển thị</dt><dd>Giờ Việt Nam · GMT+7</dd></div></dl><p className="identity-explanation">Ảnh dùng từ Google đã liên kết hoặc chữ cái tên. Vai trò quản lý được cấp riêng trong từng không gian.</p></aside>}
+      <div className="settings-content">
       {data &&
         (tab === "security" ? (
           <Security
@@ -126,7 +131,7 @@ export default function Settings({ api, onUser }) {
             onDirty={setDirty}
             onSaving={setSaving}
           />
-        ))}
+        ))}</div></div>
     </main>
   );
 }
@@ -140,6 +145,7 @@ function EditSettings({ api, data, tab, onUser, onDirty, onSaving }) {
     [uncertain, setUncertain] = useState(false);
   const pending = useRef(false);
   const [nameError, setNameError] = useState("");
+  useEffect(()=>{onDirty(uncertain || (tab==='profile' ? name!==data.user.displayName : locale!==(data.user.locale??'')||Object.keys(names).some(key=>prefs[key]!==data.user.emailPreferences[key])));},[name,locale,prefs,uncertain,tab,data.user,onDirty]);
   async function submit(e) {
     e.preventDefault();
     if (pending.current || uncertain) return;
@@ -172,6 +178,7 @@ function EditSettings({ api, data, tab, onUser, onDirty, onSaving }) {
         },
       );
       onUser(result.user);
+      setName(result.user.displayName);setLocale(result.user.locale??'');setPrefs({...result.user.emailPreferences});
       setNote("Đã lưu cài đặt.");
     } catch (e) {
       setUncertain(isUncertainMutation(e));
@@ -189,7 +196,7 @@ function EditSettings({ api, data, tab, onUser, onDirty, onSaving }) {
   return (
     <section className="project-info settings-card">
       <form onSubmit={submit}>
-        <fieldset disabled={busy || uncertain} onChange={() => onDirty(true)}>
+        <fieldset disabled={busy || uncertain}>
           {tab === "profile" ? (
             <>
               <div className="account-profile">
@@ -272,8 +279,8 @@ function EditSettings({ api, data, tab, onUser, onDirty, onSaving }) {
                 </select>
               </label>
               <p className="muted">
-                Hiện áp dụng cho email công việc; giao diện hiện dùng tiếng
-                Việt. Email xác minh và bảo mật vẫn được gửi không phụ thuộc tùy
+                Ngôn ngữ ưu tiên áp dụng cho email công việc; bản dịch giao diện
+                chưa đầy đủ. Email xác minh và bảo mật vẫn được gửi không phụ thuộc tùy
                 chọn công việc.
               </p>
             </>
@@ -285,6 +292,7 @@ function EditSettings({ api, data, tab, onUser, onDirty, onSaving }) {
                 ? "Lưu hồ sơ"
                 : "Lưu tùy chọn email"}
           </button>
+          <button type="button" className="settings-undo" onClick={()=>{setName(data.user.displayName);setLocale(data.user.locale??'');setPrefs({...data.user.emailPreferences});setNameError('');setError('');setNote('Đã hoàn tác thay đổi chưa lưu.');}}>Hoàn tác thay đổi</button>
         </fieldset>
         {error && <InlineMessage>{error}</InlineMessage>}
         {note && <InlineMessage tone="info">{note}</InlineMessage>}
@@ -342,8 +350,8 @@ function Security({ api, data, onUser, onDirty, onSaving, reload }) {
               reload();
             } catch (e) {
               if (live) {
-                setError(messageFor(e));
-                setLinking(false);
+                setError(isUncertainMutation(e)?'Chưa xác nhận liên kết Google. Tải lại tài khoản để kiểm tra trước khi gửi tiếp.':messageFor(e));
+                setUncertain(isUncertainMutation(e));setLinking(false);
               }
             } finally {
               pending.current = false;
@@ -374,6 +382,7 @@ function Security({ api, data, onUser, onDirty, onSaving, reload }) {
       target.current?.replaceChildren();
     };
   }, [linking, api]);
+  useEffect(()=>{onDirty(Boolean(current||password||repeat||linkPassword||uncertain));},[current,password,repeat,linkPassword,uncertain,onDirty]);
   useEffect(() => () => onSaving(false), []);
   async function change(e) {
     e.preventDefault();
@@ -440,6 +449,7 @@ function Security({ api, data, onUser, onDirty, onSaving, reload }) {
         <p className="login-method google-method">
           Google: {data.account.googleLinked ? "Đã liên kết" : "Chưa liên kết"}
         </p>
+        {data.account.googleLinked && <p className="security-explanation"><Icon name="check"/>Có thể đăng nhập bằng Google đã liên kết. Hệ thống hiện chưa mở thao tác gỡ liên kết trên giao diện.</p>}
         {data.account.hasLocalPassword && (
           <form className="password-form" onSubmit={change}>
             <h3>Đổi mật khẩu</h3>
@@ -491,6 +501,7 @@ function Security({ api, data, onUser, onDirty, onSaving, reload }) {
               <button className="primary">
                 {busy ? "Đang đổi…" : "Đổi mật khẩu"}
               </button>
+              <button type="button" className="settings-undo" onClick={()=>{setCurrent('');setPassword('');setRepeat('');setLinkPassword('');linkSecret.current='';setError('');setFieldErrors({});}}>Xóa nội dung mật khẩu</button>
             </fieldset>
           </form>
         )}
@@ -513,7 +524,7 @@ function Security({ api, data, onUser, onDirty, onSaving, reload }) {
           <PasswordField
             label="Mật khẩu xác nhận liên kết"
             autoComplete="current-password"
-            disabled={busy || linking}
+            disabled={busy || linking || uncertain || !data.user.emailVerified}
             value={linkPassword}
             onChange={(e) => {
               setLinkPassword(e.target.value);
@@ -521,8 +532,9 @@ function Security({ api, data, onUser, onDirty, onSaving, reload }) {
             }}
           />
           <button
-            disabled={busy || linking}
+            disabled={busy || linking || uncertain || !data.user.emailVerified}
             onClick={() => {
+              if(current||password||repeat){setError('Hãy xóa nội dung đổi mật khẩu trước khi liên kết Google.');return;}
               if (!validPassword(linkPassword)) {
                 setError("Nhập mật khẩu hiện tại hợp lệ để xác nhận.");
                 return;
@@ -547,6 +559,7 @@ function Security({ api, data, onUser, onDirty, onSaving, reload }) {
             </button>
           )}
           <div ref={target} />
+          {!data.user.emailVerified && <InlineMessage>Xác minh email trước khi liên kết Google.</InlineMessage>}
         </section>
       )}
     </>
