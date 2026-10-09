@@ -117,6 +117,7 @@ test('Notifications privacy/read lifecycle and work email eligibility on MongoDB
       const current = await member(); await workspaces.overrides(auths[1], workspace.id, { expectedVersion: current.version, emailOverrides: { content: 'off' } });
       const sent = []; assert.equal((await dispatchWorkMail({ config, send: async (mail) => { sent.push(mail); return 'fake'; } })).state, 'sent');
       assert.deepEqual(sent[0].eventTypes, ['assignment']); assert.equal(sent[0].locale, 'en'); assert.ok(!Object.hasOwn(sent[0], 'status'));
+      assert.equal(sent[0].url, `${config.webOrigin}/#task/${task.id}`);
       const deleted = await createTask('Deleted queued'); await work.deleteTask(auths[0], deleted.id, { expectedVersion: deleted.version });
       assert.equal(await EmailOutbox.collection.countDocuments({ taskId: new mongoose.Types.ObjectId(deleted.id), state: 'pending' }), 0);
       assert.equal((await dispatchWorkMail({ config, send: async () => { throw new Error('Must not send'); } })).state, 'idle');

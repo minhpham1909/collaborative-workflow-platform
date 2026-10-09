@@ -25,7 +25,7 @@ export async function dispatchWorkMail({ config, send, now = () => new Date() })
       catch (error) { if (error instanceof AuthError) return null; throw error; }
       const eventTypes = job.eventTypes.filter((type) => membership.emailOverrides[type] === 'on' || (membership.emailOverrides[type] === 'inherit' && recipient.emailPreferences[type]));
       if (!eventTypes.length || !await EmailOutbox.collection.findOne({ _id: job._id, state: 'processing', leaseToken, leaseUntil: { $gt: now() } }, { session: tx })) return null;
-      return { eventId: job.eventId, deliveryKey: String(job._id), to: recipient.emailCanonical, purpose: 'work', locale: recipient.locale ?? 'vi', eventTypes, taskTitle: task.title, workspaceName: workspace.name, ...(eventTypes.includes('status') ? { previousStatus: job.payload.previousStatus, status: job.payload.status } : {}), url: `${config.webOrigin}/tasks/${task._id}` };
+      return { eventId: job.eventId, deliveryKey: String(job._id), to: recipient.emailCanonical, purpose: 'work', locale: recipient.locale ?? 'vi', eventTypes, taskTitle: task.title, workspaceName: workspace.name, ...(eventTypes.includes('status') ? { previousStatus: job.payload.previousStatus, status: job.payload.status } : {}), url: `${config.webOrigin}/#task/${task._id}` };
     });
     if (!delivery) { const result = await finish({ state: 'cancelled', encryptedDeliveryData: null }); return { state: result.modifiedCount === 1 ? 'cancelled' : 'lease_lost' }; }
     const providerMessageId = await send(delivery);
