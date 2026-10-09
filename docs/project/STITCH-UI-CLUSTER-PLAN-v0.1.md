@@ -67,7 +67,7 @@ Chỉ **một cụm Đang làm**. Tối đa một màn chính + các dialog/sect
 | S7 | Task detail / thảo luận | 7a drawer/full page/editor/checklist/comments/activity; 7b request/review/direct reopen | Assignee tick không sửa cấu trúc; Done incomplete confirm; reopen reason/independent review/rates/CAS; Comment author/moderator đúng | 7a và7b đạt 09/10 |
 | S8 | My Tasks | Rows/groups overdue/today/upcoming/no deadline/completed; compact workspace/status/priority/label/time filters | Assigned/current membership only; groupCounts full-filter không đếm trang; overdue/Done/Vietnam bounds; tới Task giữ origin context | Đạt09/10 — QA S08 |
 | S9 | Notifications / invitation entry | 9a Inbox/read-all/search/time; 9b WS/Org/Project public invitation variants | Không lộ target mất quyền; đúng category/signed read-all; invite email/link rõ scope; intent qua auth/verify, token scrub | 9a/9b đạt09/10 — QA S09 |
-| S10 | Settings + Auth | 10a profile/email/security/Google link; 10b login/register/verify/recovery/reset/personal locale | Không auto-link email; Google-only không bịa password requirement; email prefs/WS overrides giữ; Vi/En routes cần dịch đủ | 10a đạt09/10;10b tiếp theo |
+| S10 | Settings + Auth | 10a profile/email/security/Google link; 10b login/register/verify/recovery/reset/personal locale | Không auto-link email; Google-only không bịa password requirement; email prefs/WS overrides giữ; Vi/En routes cần dịch đủ | 10a/10b1 đạt09/10;10b2 tiếp theo |
 | S11 | Trash & restore | Project trash list/detail/restore, expiry/legacy-unscheduled/parent readonly | Restore theo capability/current assignee/version; không replay; expired lý do rõ. Không CTA purge thủ công khi chưa có API/quyền | Chưa bắt đầu |
 | S12 | Regression toàn bộ | Scope switch/Guest/2 Org+standalone, drawer routes/drafts, localization, responsive, assets/perf | Không blocker UX/data/privacy; điểm deferred có record; docs không claim production acceptance | Chưa bắt đầu |
 
@@ -149,3 +149,5 @@ Plan này là nguồn trạng thái mới cho đợt Stitch/core-expanded UI; k�
 09/10/2026: S9b public WS/Org/Project invitations đạt: [QA](../qa/UI-STITCH-S09-CHECK.md), [tiến độ](UI-UPGRADE-PROGRESS.md). FE16/build148, real browser/C2 regression,3 variants/5width, probe0 Hỏng/console sạch. S1–S9 đạt gate cụm; tiếp S10a Settings. Không BE/schema/queues/providers/backfill dev.
 
 09/10/2026: S10a Settings/profile/email/password/Google capability đạt: [QA](../qa/UI-STITCH-S10-CHECK.md), [contract](../ui-ux/SETTINGS-AUTH-S10-CONTRACT.md). FE16/build149, browser/fake Google verification/C2 regression,3tabs/5width/probe0 Hỏng. Tiếp S10b auth screens và locale scope; không providers/schema/queues dev.
+
+09/10/2026: S10b1 AuthFrame/login/register/recover/verify/reset đạt: [QA](../qa/UI-STITCH-S10-CHECK.md). FE16/build151, browser/C2 regression,5screens/5width/probe0 Hỏng. Google signup/localeS10b2 còn mở; S10 chưa toàn gate. Mỗi increment có commit/pushdev, [workflow](DEVELOPMENT-WORKFLOW.md).

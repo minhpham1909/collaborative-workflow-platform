@@ -1,6 +1,6 @@
 # S10 — Settings & Auth
 
-09/10/2026: S10a account/settings đạt trong scope; S10b auth/locale screens tiếp theo. Nguồn Stitch local `h_s_c_nh_n_c_i_t/code.html` + `screen.png`, shared form/Avatar/password/feedback/draft components; giữ kem–indigo/Jakarta, không wireframe lại.
+09/10/2026: S10a account/settings và S10b1 Auth screens đạt trong scope; S10b2 Google signup/locale tiếp theo. Nguồn Stitch local `h_s_c_nh_n_c_i_t/code.html` + `screen.png`, shared form/Avatar/password/feedback/draft components; giữ kem–indigo/Jakarta, không wireframe lại.
 
 ## S10a
 
@@ -19,8 +19,17 @@ Profile summary trái + content card theo3 tabs phải; mobile summary thu gọn
 - Already-linked hiển thị có thể login Google, không giả unlink/MFA/session list. Google-only không yêu cầu hoặc tự tạo password. Unverified link controls disabled; verify/auth flow chung cải thiện S10b.
 - Summary/avatar từ Google picture hoặc initials hiện có; không upload personal avatar. Native password visibility buttons/focus giữ cùng hệ thống.
 
+## S10b1 — Auth screens
+
+- AuthFrame chung cho login/register/recover/verify/reset, brand SVG và story theo tác vụ; embedded Login của lời mời giữ form/intent hiện tại. Không copy fake social providers/seat counts/avatar/upload từ mockup. Bộ Stitch local không có Auth screen riêng, adapt foundation đã chọn.
+- Existing API/contracts giữ: register có local draft policy/version/consent; capabilities load/retry không mất input và ignores stale request; FE password/name checks + BE strict validation. Register success chỉ nói queued verification, không nói mail delivered. Recover cùng phản hồi cho missing/Google-only, không user enumeration.
+- Verify/reset token chỉ memory, scrub URL, user phải bấm POST; thiếu/đã dùng/hết hạn có hướng mở/yêu cầu liên kết mới. Verify missing token khi có account unverified có resend/reload actions hiện có; không suy tài khoản đang login đã được xác minh từ một link thuộc người khác.
+- Reset success clears client session và revokes target sessions theo API. Unknown reset/register outcome khóa submit, không auto retry; kiểm trạng thái/login/readback trước gửi tiếp. Success card có bước tiếp theo, link giữ invitation intent hiện có qua login/register/verify.
+- Login Google linked/existing vẫn có nonce/challenge; Google mới hiện vẫn TERM_REQUIRED/local policy gate như trước. Đây là việc riêng trong incrementS10b2, chưa mở theo hình thức auto-link.
+- Auth strings hiện chủ yếuVi; không đánh dấu toànS10/Vi-En hoàn tất. Full-app locale vẫn cần auditS12, không nhầm email locale của settings với site đã dịch đủ.
+
 ## Chưa mở / tiếp theo
 
-S10b: login/register/verify/recover/reset và language scope/copy; Google new-account terms/UI cần xét tiếp theo backend đã có. Toàn app Vi/En/draft/history được kiểm tiếpS12. Không thêm theme/timezone chooser/digest/mentions/2FA/billing/API keys/devices/unlink/account deletion chỉ vì mockup có.
+S10b2: language scope/copy; Google new-account terms/UI cần xét tiếp theo backend đã có. Toàn app Vi/En/draft/history được kiểm tiếpS12. Không thêm theme/timezone chooser/digest/mentions/2FA/billing/API keys/devices/unlink/account deletion chỉ vì mockup có.
 
 [QA S10](../qa/UI-STITCH-S10-CHECK.md).

@@ -3,6 +3,7 @@ import PasswordField from "../../components/PasswordField.jsx";
 import { useDraftGuard } from "../../lib/draft-navigation.js";
 import { useEffect, useRef, useState } from "react";
 import { messageFor } from "../../lib/messages.js";
+import AuthFrame from "./AuthFrame.jsx";
 import { loadGoogle } from "../../lib/google.js";
 export default function Login({ api, connectionError, retry, embedded = false }) {
   const [email, setEmail] = useState(""),
@@ -98,30 +99,13 @@ export default function Login({ api, connectionError, retry, embedded = false })
       setBusy(false);
     }
   }
-  const Container = embedded ? "section" : "main";
+  const Container = embedded ? "section" : AuthFrame;
   return (
-    <Container className={embedded ? "invite-login" : "auth-page"}>
-      {!embedded && <section className="auth-story">
-        <a className="brand" href="#home">
-          <span>W</span>Workflow
-        </a>
-        <small>CÙNG NHAU LÀM NÊN ĐIỀU HAY</small>
-        <h1>
-          Ý tưởng có chỗ.
-          <br />
-          Công việc có nhịp.
-        </h1>
-        <p>
-          Một không gian ấm áp để đội ngũ cùng tổ chức, trao đổi và hoàn thành
-          công việc.
-        </p>
-        <div className="art">
-          <span>✦</span>
-          <span>↗</span>
-          <span>✓</span>
-        </div>
-      </section>}
-      <section className="auth-form">
+    <Container className="invite-login">
+      {embedded ? <section className="auth-form">{content()}</section> : content()}
+    </Container>
+  );
+  function content() { return <>
         <h2>Chào bạn trở lại ✨</h2>
         <p>Đăng nhập để mở không gian làm việc của bạn.</p>
         {connectionError && (
@@ -174,7 +158,5 @@ export default function Login({ api, connectionError, retry, embedded = false })
           Tiếp tục với Google
         </button>
         <div ref={googleTarget} className="google-target" />
-      </section>
-    </Container>
-  );
+    </>; }
 }

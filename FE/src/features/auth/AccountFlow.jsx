@@ -1,3 +1,5 @@
+import AuthFrame from "./AuthFrame.jsx";
+import EmailVerificationActions from '../../components/EmailVerificationActions.jsx';
 import { InlineMessage } from "../../components/Feedback.jsx";
 import PasswordField from "../../components/PasswordField.jsx";
 import FormField from "../../components/FormField.jsx";
@@ -61,7 +63,7 @@ export default function AccountFlow({
     [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
     [success, setSuccess] = useState(""),
-    [uncertain, setUncertain] = useState(false);
+    [uncertain, setUncertain] = useState(false), [capsRevision,setCapsRevision]=useState(0),[capsBusy,setCapsBusy]=useState(false);
   const pending = useRef(false),
     live = useRef(true);
   const [fieldErrors, setFieldErrors] = useState({});
@@ -79,23 +81,27 @@ export default function AccountFlow({
     setRepeat("");
   }, [token]);
   useEffect(() => {
+    let active = true;
     live.current = true;
-    if (mode === "register")
+    if (mode === "register") {
+      setCapsBusy(true);setError('');
       api
         .raw("/auth/capabilities")
         .then((value) => {
-          if (live.current) {
+          if (active) {
             setCaps(value);
             setTerms(false);
           }
         })
         .catch((e) => {
-          if (live.current) setError(messageFor(e));
-        });
+          if (active) setError(messageFor(e));
+        }).finally(()=>{if(active)setCapsBusy(false);});
+    }
     return () => {
+      active = false;
       live.current = false;
     };
-  }, [mode]);
+  }, [mode,capsRevision]);
   const tokenMode = ["verify-email", "reset-password"].includes(mode);
   async function submit(e) {
     e.preventDefault();
@@ -200,27 +206,12 @@ export default function AccountFlow({
     }
   }
   return (
-    <main className="auth-page">
-      <section className="auth-story">
-        <a className="brand" href="#home">
-          <span>W</span>Workflow
-        </a>
-        <small>CÙNG NHAU LÀM NÊN ĐIỀU HAY</small>
-        <h1>
-          Một bước nhỏ.
-          <br />
-          Một nhịp làm việc mới.
-        </h1>
-        <p>
-          Thông tin tài khoản và phiên đăng nhập được kiểm tra ở cả giao diện và
-          hệ thống.
-        </p>
-      </section>
-      <section className="auth-form">
+    <AuthFrame mode={mode}>
         <h2>{titles[mode]}</h2>
         {success ? (
           <>
             <InlineMessage tone="info">{success}</InlineMessage>
+            <div className="auth-next-step"><h3>Bước tiếp theo</h3><p>{mode==='register'?'Đăng nhập, mở email xác minh và chọn xác nhận. Nếu chưa thấy email, bạn có thể gửi lại yêu cầu sau khi đăng nhập.':mode==='recover'?'Kiểm tra hộp thư và thư rác. Nếu dùng Google, quay lại đăng nhập bằng Google.':mode==='verify-email'?'Tiếp tục với tài khoản và không gian bạn được cấp quyền.':'Đăng nhập lại bằng mật khẩu mới; các phiên trước đó đã bị thu hồi.'}</p></div>
             <a className="card-link" href={loginHref}>
               {mode === "verify-email" && user?.emailVerified
                 ? "Tiếp tục làm việc →"
@@ -230,12 +221,14 @@ export default function AccountFlow({
         ) : tokenMode && !token ? (
           <>
             <InlineMessage>
-              Mở lại liên kết gốc trong email. Token không được lưu sau khi tải
+              Mở lại liên kết gốc trong email để tiếp tục. Liên kết không được giữ sau khi tải
               lại trang.
             </InlineMessage>
             {mode === "reset-password" && (
               <a href="#recover">Yêu cầu liên kết mới</a>
             )}
+            {mode==='verify-email'&&user&&!user.emailVerified&&<div className="auth-verify-actions"><EmailVerificationActions api={api}/></div>}
+            {mode==='verify-email'&&user?.emailVerified&&<p>Email của tài khoản đang dùng đã xác minh. Bạn có thể quay lại không gian làm việc.</p>}
           </>
         ) : (
           <form onSubmit={submit}>
@@ -265,6 +258,8 @@ export default function AccountFlow({
                     Đăng ký email/mật khẩu cho bản thử nghiệm local. Google mới
                     vẫn chờ nội dung chính sách phát hành.
                   </p>
+                  {capsBusy&&<p role="status">Đang tải điều kiện đăng ký…</p>}
+                  {!capsBusy&&!caps&&<button type="button" onClick={()=>setCapsRevision(value=>value+1)}>Tải lại điều kiện đăng ký</button>}
                 </>
               )}
               {["register", "recover"].includes(mode) && (
@@ -327,7 +322,7 @@ export default function AccountFlow({
               )}
               {mode === "verify-email" && (
                 <p>
-                  Xác nhận email bằng liên kết này. Hệ thống chỉ sử dụng token
+                  Xác nhận email bằng liên kết này. Chỉ xác nhận
                   khi bạn bấm nút dưới đây.
                 </p>
               )}
@@ -360,7 +355,6 @@ export default function AccountFlow({
             <a href={loginHref}>Về đăng nhập</a>
           </p>
         )}
-      </section>
-    </main>
+    </AuthFrame>
   );
 }
