@@ -50,3 +50,16 @@ node --env-file=BE/.env FE/scripts/check-mail-lifecycle.mjs --send-to YOUR_AUTHO
 ```
 
 S12 vẫn đang thực hiện: Org/Project invitation variants đã có fixture regression nhưng chưa gửi SMTP thật trongS12b; whole-siteVi/En/navigation/performance còn gate. Không tự gửi thêm thư hoặc bật worker nền để hoàn thành các phần đó.
+
+## S12c — Phạm vi quyền và điều hướng/draft
+
+09/10/2026 — kiểm xong đợt regression này, S12 chưa toàn gate.
+
+- `BE/scripts/run-integration.js test/core-e2e-mongo.test.js`:6 tests PASS/0 skip. HTTP chain2 Org+standalone+Guest, onboarding/current-role/no global elevation, labels/checklist/reopen/statistics, Archive/Ban/Org exit và independent scope, trash/restore/no replay. Retention/migration chỉ chạy trong DB fixture riêng, không dev27018/OS27017/outbox.
+- `FE/scripts/check-stitch-organizations.mjs` PASS: Owner/Admin/Member, Org/WS search/total/cursor; không thấy Workspace chưa cấp quyền, cross-Org unavailable không lộ tên; role demotion được BE từ chối, không tự nâng quyền; breadcrumbs, empty/error/retry/stale search và5width.
+- `FE/scripts/check-navigation-flows.mjs` PASS sau cập nhật selector Home từ “+ Tạo Workspace” sang “Tạo Workspace” đúng UI S1. Lượt đầu dừng do test selector cũ, không có bằng chứng product failure tại chỗ đó. Không đổi logic guard để làm test qua.
+- Guard regression: Back/Forward/hash/link/reload/logout; giữ draft Task create/edit, Project name/description, Workspace create/settings/description/email override, profile/email/password, Comment create/edit, invite/register/recovery/reset; Escape/cancel/discard, busy write chưa nhận response, history tồn tại trước mount và fallback khi không có Navigation API. URL/token scrub và owning React tree được kiểm.
+- Bổ sung vào `check-stitch-trash.mjs`: Board→trash tạo history thật; giữ restore request ở transport gate, Back phải quay lại URL trash và giữ component, header refresh bị khóa, thông báo busy hiện; release chỉ1 POST, Task được phục hồi đúng. Fixture cleanup luôn release gate cả khi assertion lỗi để không treo route handler. Cả S11 suite và5width PASS/0 page errors.
+- Dữ liệu/accounts/providers trong fixtures độc lập. Không gửi thêm mail thật trongS12c hoặc chạy worker/dev backfill. SMTP S12a/b và xác nhận Inbox giữ nguyên bằng chứng lịch sử.
+
+Gate còn: coverageVi/En toàn app, dialog/toast layering kiểm riêng, responsive/performance/assets và kết quả nghiệm thu tổng hợp. Những guard tests đạt không phải lời khẳng định bảo vệ mọi thao tác rời trang/browser crash.

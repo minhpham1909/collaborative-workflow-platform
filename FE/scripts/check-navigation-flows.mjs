@@ -277,7 +277,7 @@ try {
   await page.getByRole("button", { name: "Bỏ thay đổi", exact: true }).click();
   await heading("Sáng Tạo Studio").waitFor();
   await page
-    .getByRole("button", { name: "+ Tạo Workspace", exact: true })
+    .getByRole("button", { name: "Tạo Workspace", exact: true })
     .click();
   const workspaceName = page.getByLabel("Tên Workspace", { exact: true });
   await workspaceName.fill("Workspace chưa tạo");
