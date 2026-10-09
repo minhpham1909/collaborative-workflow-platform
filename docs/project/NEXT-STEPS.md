@@ -1,5 +1,7 @@
 # Trạng thái và bước tiếp theo
 
+09/10/2026 — **S12a bắt đầu theo yêu cầu kiểm email thật**: công cụ SMTP single-message không truy cập DB/queue, preview/syntax PASS;1 email thật SMTP accepted mãd37f13ea, user đã xác nhận thư trong Inbox. [QA S12](../qa/UI-STITCH-S12-CHECK.md). Tiếp kiểm email nghiệp vụ/link action có scope riêng và regression/navigation/localization/performance. Vẫn11/12 gate; không gửi dev queue cũ, không bật worker/backfill/purge. Commit/pushdev mỗi increment.
+
 09/10/2026 — **S11 thùng rác Task đạt trong scope**: route Project/trash, paged list/read-only detail/restore confirm,30d expiry/legacy-unscheduled/Archived reasons, current scope/CAS/unknown response lock/readback. [QA](../qa/UI-STITCH-S11-CHECK.md), [contract](../ui-ux/TASK-TRASH-S11-CONTRACT.md): FE17/build157, BE8 retention integration trên DB tạm, browser S11/core/C2 regression PASS,5width/probe0 Hỏng. **11/12 mốc UI đạt gate, tiếp S12 regression toàn app/navigation/drafts/Vi-En/responsive/performance**. Commit/pushdev mỗi increment; không dev queues/providers/schema/backfill.
 
 09/10/2026 — **Settings/shared accountVi/En gate đạt; S10 hoàn tất trong scope**: protected name/email/value, independent UI/email locale, localized account guards/verify gate, lazySettings. [QA](../qa/UI-STITCH-S10-CHECK.md), [contract](../ui-ux/SETTINGS-AUTH-S10-CONTRACT.md): FE17/build155, settings/Auth/core/C2 regression PASS,3tabs/5width/probe0 Hỏng. **TiếpS11 Task trash/restore**; toàn siteVi/En/S12 còn kiểm. Mỗi đợt commit/pushdev; no API/schema/providers/queues dev.

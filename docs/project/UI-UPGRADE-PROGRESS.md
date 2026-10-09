@@ -16,7 +16,7 @@ Cập nhật09/10/2026 sau gate S11 Task trash/restore, đối chiếu [plan c�
 | S9 | Notifications inbox + public invitations3 scope | Đạt9a/9b |
 | S10 | Account/settings và Auth flows | Đạt scopeAccount/Auth; full site localeS12 |
 | S11 | Thùng rác/khôi phục Task | Đạt scope list/detail/restore; không purge thủ công |
-| S12 | Regression toàn app, navigation/draft, Vi/En, responsive/performance | Chưa nghiệm thu tổng thể |
+| S12 | Regression toàn app, navigation/draft, Vi/En, responsive/performance và email thật | Đang S12a SMTP smoke; chưa nghiệm thu tổng thể |
 
 Các chức năng Auth/settings đã có, “chưa nâng cấp cụm” nghĩa chưa qua gate UI mới. S10a đã đạt profile/email/security/Google link;10b login/register/verify/recovery/reset và locale. S11 đã biểu diễn expiry30 ngày/legacy-unscheduled/read-only/restore conditions đúng API, không CTA purge chưa mở. S12 cần kiểm xuyên các scope/role/history/drafts và bản dịch đầy đủ.
 
