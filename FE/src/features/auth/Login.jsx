@@ -42,7 +42,7 @@ export default function Login({ api, connectionError, retry, embedded = false })
             } catch (e) {
               setError(
                 e.code === "TERMS_REQUIRED"
-                  ? "Tạo tài khoản Google mới chưa mở trong bản này. Đăng nhập bằng tài khoản đã đăng ký hoặc đã liên kết."
+                  ? "Google account chưa có tài khoản Workflow. Mở đăng ký và đồng ý điều khoản để tạo tài khoản."
                   : messageFor(e),
               );
               setGoogleEnabled(false);

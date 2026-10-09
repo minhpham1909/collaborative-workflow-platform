@@ -1,5 +1,7 @@
 # Trạng thái và bước tiếp theo
 
+09/10/2026 — **S10b2 Google signup increment đạt**: consent/nonce/version, draft discard, Google-only, external verify, no auto-link, stale terms reset, unknown lock/readback; fake SDK/verifier/real API/temp DB, C2/FE16/build152/probe PASS. Tiếp AuthVi/En trong S10b2; chưa toàn S10. Mỗi increment commit/pushdev, không actual providers/queues.
+
 09/10/2026 — **S10b1 đạt Auth screens**: AuthFrame5flows, register/verify/recovery/reset states/caps retry/unknown submit lock, invitation intent giữ. [QA](../qa/UI-STITCH-S10-CHECK.md), [contract](../ui-ux/SETTINGS-AUTH-S10-CONTRACT.md): FE16/build151, real browser/fake Google linked login, C2 regression,5screens/5width/probe0 Hỏng. **Tiếp S10b2 Google signup và locale**, chưa tính toànS10 đạt. Mỗi đợt code có commit/pushdev theo [workflow](DEVELOPMENT-WORKFLOW.md). Không actual Google/SMTP/queues/schema/backfill dev.
 
 09/10/2026 — **S10a đạt account/settings**: summary +3 tabs profile/email/security; CAS/drafts/unknown readback, password current rotation, Google linked/only/unverified capability. [QA](../qa/UI-STITCH-S10-CHECK.md), [contract](../ui-ux/SETTINGS-AUTH-S10-CONTRACT.md): FE16/build149, browser/fake Google/C2 regression PASS,3tabs/5width/probe0 Hỏng. Git9 baseline commits đã push dev; S10a commit riêng. BE67 unit/113 integration PASS trên DB tạm. **Tiếp S10b auth/login/register/verify/recovery/reset và locale scope**; không actual Google/SMTP/queues/schema/backfill dev.

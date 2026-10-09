@@ -33,3 +33,7 @@ Profile summary trái + content card theo3 tabs phải; mobile summary thu gọn
 S10b2: language scope/copy; Google new-account terms/UI cần xét tiếp theo backend đã có. Toàn app Vi/En/draft/history được kiểm tiếpS12. Không thêm theme/timezone chooser/digest/mentions/2FA/billing/API keys/devices/unlink/account deletion chỉ vì mockup có.
 
 [QA S10](../qa/UI-STITCH-S10-CHECK.md).
+
+## S10b2 — Google signup (09/10)
+
+GoogleRegister chỉ cho bắt đầu khi caps/consent hiện tại đủ; chọn Google sau xác nhận bỏ draft local, khóa form khi chọn/submit, cancel trước callback được phép. api.google gửi credential/termsAccepted/termsVersion từ version đã consent; nonce/challenge/verified claims/unique email-identity/transactions vẫn BE. Email Google authoritative cho verify theo backend; external không authoritative phải verify. Không password cho user mới Google-only, không auto-link local email trùng. Known errors retry nonce mới, TERMS_REQUIRED refresh caps/reset consent; unknown kết quả khóa write và đọc lại qua login. Success giữ invite intent qua continuation link, không auto-accept. Draft policy local không biến thành production policy. Locale tiếp sau.

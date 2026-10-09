@@ -1,5 +1,6 @@
 import AuthFrame from "./AuthFrame.jsx";
 import EmailVerificationActions from '../../components/EmailVerificationActions.jsx';
+import GoogleRegister from './GoogleRegister.jsx';
 import { InlineMessage } from "../../components/Feedback.jsx";
 import PasswordField from "../../components/PasswordField.jsx";
 import FormField from "../../components/FormField.jsx";
@@ -63,13 +64,13 @@ export default function AccountFlow({
     [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
     [success, setSuccess] = useState(""),
-    [uncertain, setUncertain] = useState(false), [capsRevision,setCapsRevision]=useState(0),[capsBusy,setCapsBusy]=useState(false);
+    [uncertain, setUncertain] = useState(false), [capsRevision,setCapsRevision]=useState(0),[capsBusy,setCapsBusy]=useState(false),[googleRunning,setGoogleRunning]=useState(false),[googleDone,setGoogleDone]=useState(false);
   const pending = useRef(false),
     live = useRef(true);
   const [fieldErrors, setFieldErrors] = useState({});
   useDraftGuard({
     dirty: !success && Boolean(name || email || password || repeat || terms),
-    busy,
+    busy:busy||googleRunning,
     message: "Bỏ thông tin tài khoản đang nhập?",
   });
   useEffect(() => {
@@ -211,9 +212,9 @@ export default function AccountFlow({
         {success ? (
           <>
             <InlineMessage tone="info">{success}</InlineMessage>
-            <div className="auth-next-step"><h3>Bước tiếp theo</h3><p>{mode==='register'?'Đăng nhập, mở email xác minh và chọn xác nhận. Nếu chưa thấy email, bạn có thể gửi lại yêu cầu sau khi đăng nhập.':mode==='recover'?'Kiểm tra hộp thư và thư rác. Nếu dùng Google, quay lại đăng nhập bằng Google.':mode==='verify-email'?'Tiếp tục với tài khoản và không gian bạn được cấp quyền.':'Đăng nhập lại bằng mật khẩu mới; các phiên trước đó đã bị thu hồi.'}</p></div>
+            <div className="auth-next-step"><h3>Bước tiếp theo</h3><p>{googleDone?(user?.emailVerified?'Chọn tiếp tục để vào không gian của bạn hoặc quay lại lời mời.':'Mở email xác minh để hoàn tất trước khi bắt đầu làm việc.'):mode==='register'?'Đăng nhập, mở email xác minh và chọn xác nhận. Nếu chưa thấy email, bạn có thể gửi lại yêu cầu sau khi đăng nhập.':mode==='recover'?'Kiểm tra hộp thư và thư rác. Nếu dùng Google, quay lại đăng nhập bằng Google.':mode==='verify-email'?'Tiếp tục với tài khoản và không gian bạn được cấp quyền.':'Đăng nhập lại bằng mật khẩu mới; các phiên trước đó đã bị thu hồi.'}</p></div>
             <a className="card-link" href={loginHref}>
-              {mode === "verify-email" && user?.emailVerified
+              {googleDone || (mode === "verify-email" && user?.emailVerified)
                 ? "Tiếp tục làm việc →"
                 : "Về đăng nhập →"}
             </a>
@@ -232,7 +233,7 @@ export default function AccountFlow({
           </>
         ) : (
           <form onSubmit={submit}>
-            <fieldset disabled={busy || uncertain}>
+            <fieldset disabled={busy || uncertain || googleRunning}>
               {mode === "register" && (
                 <>
                   <FormField
@@ -255,8 +256,8 @@ export default function AccountFlow({
                     )}
                   </FormField>
                   <p className="muted">
-                    Đăng ký email/mật khẩu cho bản thử nghiệm local. Google mới
-                    vẫn chờ nội dung chính sách phát hành.
+                    Đăng ký email/mật khẩu hoặc dùng Google sau khi đồng ý
+                    nội dung thử nghiệm local phía dưới.
                   </p>
                   {capsBusy&&<p role="status">Đang tải điều kiện đăng ký…</p>}
                   {!capsBusy&&!caps&&<button type="button" onClick={()=>setCapsRevision(value=>value+1)}>Tải lại điều kiện đăng ký</button>}
@@ -349,6 +350,7 @@ export default function AccountFlow({
             </fieldset>
           </form>
         )}
+        {mode==='register'&&!success&&<GoogleRegister api={api} caps={caps} consent={terms} disabled={busy||uncertain||capsBusy} hasDraft={Boolean(name||email||password||repeat)} onStart={()=>{setName('');setEmail('');setPassword('');setRepeat('');}} onRunning={setGoogleRunning} onCapsStale={()=>setCapsRevision(value=>value+1)} onUncertain={()=>setUncertain(true)} onSuccess={account=>{setGoogleDone(true);setTerms(false);setSuccess(account.emailVerified?'Tài khoản Google đã sẵn sàng. Bạn có thể tiếp tục làm việc.':'Đã tạo tài khoản Google. Xác minh email trước khi bắt đầu làm việc.');setGoogleRunning(false);}}/>}
         {error && <InlineMessage>{error}</InlineMessage>}
         {!success && (
           <p>

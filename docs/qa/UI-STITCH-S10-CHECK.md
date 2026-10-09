@@ -19,3 +19,9 @@
 ## Git checkpoint
 
 09/10:9 commit baseline tách models/API/operations/design assets/foundation/workspace-team/task/inbox-routing/docs, đẩy `origin/dev` tới5888972. `.env`, runtime DB, builds/dependencies/QA screenshots bị ignore; raw Stitch ZIP duplicate thêm ignore, extracted references commit. S10a đã commit6ac1814 và pushdev; S10b1 có commit riêng sau gate. Chưa coiS10 hoàn tất.
+
+## S10b2 — Google signup increment
+
+09/10/2026: GoogleRegister nối API có sẵn, consent/version bắt buộc, Google-only không password, exact-email không auto-link, email không authoritative vẫn verify. Draft email/mật khẩu phải xác nhận bỏ trước chuyển; lỗi commit-unknown khóa cả hai phương thức, readback login không tạo lại user. Thay termsVersion giữa thao tác bị rollback; reload capabilities buộc consent lại.
+
+check-google-signup.mjs real API/temp DB + fake Google SDK/verifier PASS, consent/draft/rejection/authoritative-external/stale terms/unknown/readback,5width no overflow; probe0 Hỏng/console sạch. C2 regression, FE16/build152 PASS. Không Google/SMTP thật, không BE/schema/queues dev. Locale còn increment tiếp; chưa toàn S10.
