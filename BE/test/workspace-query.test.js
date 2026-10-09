@@ -27,3 +27,9 @@ test("workspace dates cover the full Vietnam day and reject invalid ranges", () 
   assert.throws(() => workspaceQuery({ from: "2026-10-05", to: "2026-10-04" }));
   assert.throws(() => workspaceQuery({ ownerId: "unsafe" }));
 });
+test('Workspace Home filters reject role/state injection and keep existing defaults', () => {
+  assert.equal(workspaceQuery({}).state, 'all');
+  assert.equal(workspaceQuery({}).role, 'all');
+  assert.equal(workspaceQuery({ role: 'managed', state: 'archived' }).role, 'managed');
+  for (const query of [{ role: 'admin' }, { role: ['all'] }, { state: 'deleted' }, { state: { $ne: 'active' } }]) assert.throws(() => workspaceQuery(query), /INVALID_INPUT/u);
+});

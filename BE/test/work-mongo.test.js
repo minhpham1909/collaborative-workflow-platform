@@ -104,9 +104,17 @@ test('Project, Task, Comment and scoped queries on real MongoDB/HTTP', { skip: !
       await assert.rejects(service.updateProject(claims[0], p.id, { expectedVersion: p.version, icon: 'folder' }), /VERSION_CONFLICT/u);
       const title = 'daily-' + prefix;
       const make = (projectId, dueAt) => service.createTask(claims[0], projectId, { title, assigneeId: String(users[0]._id), dueAt });
-      await make(p.id, '2026-10-03T17:00:00.000Z');
-      await make(p2.id, '2026-10-04T16:59:00.000Z');
-      await make(p2.id, '2026-10-04T17:00:00.000Z');
+        await make(p.id, '2026-10-03T17:00:00.000Z');
+        await make(p2.id, '2026-10-04T16:59:00.000Z');
+        await make(p2.id, '2026-10-04T17:00:00.000Z');
+        const pageSummary = await service.projects(claims[1], first.id, { limit: '1' });
+        assert.deepEqual(pageSummary.items[0].taskSummary, { scope: 'whole_project', total: 1, done: 0, progressPercent: 0 });
+        assert.equal(pageSummary.items.some(item => item.id === p2.id), false);
+        const ownerContext = (await workspaces.get(claims[0], first.id)).workspace;
+        const memberContext = (await workspaces.get(claims[1], first.id)).workspace;
+        assert.equal(ownerContext.permissions.createProject, true);
+        assert.equal(memberContext.permissions.manage, false);
+        assert.equal(memberContext.permissions.emailPreferences, true);
       const daily = await service.mine(claims[0], { q: title, limit: '1', status: 'open', timeField: 'dueAt', from: '2026-10-04', to: '2026-10-04' });
       assert.equal(daily.total, 2); assert.equal(daily.workspaceCount, 2); assert.equal(daily.items.length, 1); assert.ok(daily.nextCursor);
       let metrics = (await workspaces.list(claims[0], { q: 'Home metrics A' })).items[0];
@@ -158,7 +166,7 @@ test('Project, Task, Comment and scoped queries on real MongoDB/HTTP', { skip: !
       comment = (await service.createComment(claims[3], task.id, { content: content('Bình luận') })).comment;
       assert.equal(comment.author.displayName,users[3].displayName);assert.ok(!JSON.stringify(comment.author).includes(users[3].email));
       for (const index of [0, 1, 2]) await assert.rejects(service.updateComment(claims[index], task.id, comment.id, { expectedVersion: 0, content: content('No') }), /COMMENT_AUTHOR_REQUIRED/u);
-      await assert.rejects(service.deleteComment(claims[0], task.id, comment.id, { expectedVersion: 0 }), /COMMENT_AUTHOR_REQUIRED/u);
+      await assert.rejects(service.deleteComment(claims[0], task.id, comment.id, { expectedVersion: 0 }), /MODERATION_REASON_REQUIRED/u);
       comment = (await service.updateComment(claims[3], task.id, comment.id, { expectedVersion: 0, content: content('Updated') })).comment;
       await assert.rejects(service.updateComment(claims[3], task.id, comment.id, { expectedVersion: 0, content: content('Stale') }), /VERSION_CONFLICT/u);
       const other = await createTask(); await assert.rejects(service.updateComment(claims[3], other.id, comment.id, { expectedVersion: 1, content: content('Wrong task') }), /RESOURCE_UNAVAILABLE/u);
@@ -221,11 +229,11 @@ test('Project, Task, Comment and scoped queries on real MongoDB/HTTP', { skip: !
       assert.equal(done.assigneeId, String(users[2]._id)); assert.equal(done.assigneeLeft, true);
       assert.equal(done.assignee.displayName,users[2].displayName);
       await assert.rejects(service.getTask(claims[2], done.id), /RESOURCE_UNAVAILABLE/u); assert.equal((await service.mine(claims[2], { state: 'all', status: 'all' })).total, 0);
-      done = (await service.status(claims[1], done.id, { expectedVersion: done.version, status: 'todo' })).task; assert.equal(done.assigneeId, null);
+      done = (await service.status(claims[0], done.id, { expectedVersion: done.version, status: 'todo', reason: 'Kiểm tra lại' })).task; assert.equal(done.assigneeId, null);
       await workspaces.accept(claims[2], { token }); assert.equal((await service.getTask(claims[2], todo.id)).task.assigneeId, null);
       done = (await service.updateTask(claims[1], done.id, { expectedVersion: done.version, assigneeId: String(users[2]._id) })).task;
       done = (await service.status(claims[1], done.id, { expectedVersion: done.version, status: 'done' })).task;
-      done = (await service.status(claims[1], done.id, { expectedVersion: done.version, status: 'todo' })).task; assert.equal(done.assigneeId, String(users[2]._id));
+      done = (await service.status(claims[0], done.id, { expectedVersion: done.version, status: 'todo', reason: 'Kiểm tra lại' })).task; assert.equal(done.assigneeId, String(users[2]._id));
     });
     await t.test('Concurrent saves/archive/leave serialize and deleted parent hides Comments', async () => {
       let value = await createTask({ assigneeId: String(users[2]._id) });

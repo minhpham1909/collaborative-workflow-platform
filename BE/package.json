@@ -16,10 +16,18 @@
     "mail:worker": "node --env-file-if-exists=.env scripts/mail-worker.js",
     "env:dev": "node scripts/setup-dev-env.js",
     "auth:test-page": "node --env-file-if-exists=.env scripts/auth-test-server.js",
-    "db:dev": "node scripts/dev-database.js",
+    "db:dev": "node --env-file-if-exists=.env scripts/dev-database.js",
     "db:indexes": "node --env-file-if-exists=.env scripts/create-indexes.js",
+    "db:audit-scope": "node --env-file-if-exists=.env scripts/audit-organization-scope.js",
+    "db:task-codes": "node --env-file-if-exists=.env scripts/task-codes.js",
+    "moderation:once": "node --env-file-if-exists=.env scripts/moderation-once.js",
+    "moderation:worker": "node --env-file-if-exists=.env scripts/moderation-worker.js",
     "dev:full": "node scripts/dev-full.js",
-    "mail:status": "node --env-file-if-exists=.env scripts/mail-status.js"
+    "mail:status": "node --env-file-if-exists=.env scripts/mail-status.js",
+    "retention:once": "node --env-file-if-exists=.env scripts/retention-once.js",
+    "retention:worker": "node --env-file-if-exists=.env scripts/retention-worker.js",
+    "db:audit-retention": "node --env-file-if-exists=.env scripts/retention-audit.js",
+    "check:operations": "node scripts/check-core-operations.js"
   },
   "dependencies": {
     "@node-rs/argon2": "2.2.1",

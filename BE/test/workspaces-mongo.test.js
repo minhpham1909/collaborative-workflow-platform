@@ -176,6 +176,10 @@ test('Workspace membership/invitation lifecycle on real MongoDB and HTTP', { ski
       const workspace = await create(); const invitation = await link(workspace); const token = raw(invitation); await join(1, token); await join(2, token);
       const race = await Promise.allSettled([service.transfer(identities[0], workspace.id, { expectedVersion: 0, memberId: String(users[1]._id) }), service.leave(identities[1], workspace.id, { expectedVersion: 0 })]);
       assert.equal(race.filter((value) => value.status === 'fulfilled').length, 1);
+      if (race[0].status === 'fulfilled') {
+        assert.equal(race[0].value.workspace.role, 'member');
+        assert.equal(race[0].value.workspace.permissions.manage, false);
+      }
       const actual = await Workspace.collection.findOne({ _id: new mongoose.Types.ObjectId(workspace.id) });
       const ownerMembership = await WorkspaceMembership.collection.findOne({ workspaceId: actual._id, userId: actual.ownerId }); assert.equal(ownerMembership.state, 'active');
       const ownerIndex = String(actual.ownerId) === String(users[0]._id) ? 0 : 1;
