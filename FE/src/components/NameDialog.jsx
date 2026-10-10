@@ -1,3 +1,4 @@
+import { organizationText } from '../lib/organization-text.js';
 import { InlineMessage } from "./Feedback.jsx";
 import useDialogFocus from "./useDialogFocus.js";
 import { confirmDialog } from "./NotificationProvider.jsx";
@@ -11,6 +12,7 @@ import { useDraftGuard } from "../lib/draft-navigation.js";
 
 export default function NameDialog({
   title,
+  locale = "vi",
   initial = "",
   initialIcon = "folder",
   withIcon = false,
@@ -20,6 +22,7 @@ export default function NameDialog({
   onSave,
   onClose,
 }) {
+  const t = value => organizationText(value, locale);
   const [icon, setIcon] = useState(initialIcon);
   const [name, setName] = useState(initial),
     [busy, setBusy] = useState(false),
@@ -32,13 +35,14 @@ export default function NameDialog({
   useDraftGuard({
     dirty: name !== initial || icon !== initialIcon,
     busy,
-    message: "Bỏ nội dung chưa lưu?",
+    message: t("Bỏ nội dung chưa lưu?"),
+    dialogOptions: { cancelLabel: t("Ở lại"), confirmLabel: t("Bỏ thay đổi") },
   });
   close.current = async () => {
     if (
       !pending.current &&
       ((name === initial && icon === initialIcon) ||
-        (await confirmDialog("Bỏ nội dung chưa lưu?")))
+        (await confirmDialog(t("Bỏ nội dung chưa lưu?"))))
     )
       onClose(uncertain);
   };
@@ -76,6 +80,7 @@ export default function NameDialog({
       <section
         ref={panel}
         tabIndex={-1}
+        lang={locale}
         className="dialog"
         role="dialog"
         aria-modal="true"
@@ -86,8 +91,8 @@ export default function NameDialog({
         <form onSubmit={submit}>
           <FormField
             label={label}
-            error={nameError}
-            hint="Tối đa 200 ký tự."
+            error={nameError ? t(nameError) : nameError}
+            hint={t("Tối đa 200 ký tự.")}
           >
             {(props) => (
               <input
@@ -110,17 +115,17 @@ export default function NameDialog({
               disabled={busy || uncertain}
             />
           )}
-          {error && <InlineMessage>{error}</InlineMessage>}
+          {error && <InlineMessage>{t(error)}</InlineMessage>}
           <div className="buttons">
             <button
               type="button"
               disabled={busy}
               onClick={() => close.current()}
             >
-              Hủy
+              {t("Hủy")}
             </button>
             <button className="primary" disabled={busy || uncertain}>
-              {busy ? "Đang lưu…" : submitLabel}
+              {busy ? t("Đang lưu…") : submitLabel}
             </button>
           </div>
         </form>

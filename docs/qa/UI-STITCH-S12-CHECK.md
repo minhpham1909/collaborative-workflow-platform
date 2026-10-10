@@ -89,3 +89,15 @@ Coverage còn thiếu: Home/highlights/Org/Team/Workspace/Project/Task/My Tasks/
 - FE18 unit PASS; build160 PASS, entry507.66kB/gzip143.27kB còn warning>500kB, performance gate chưa đạt. `check-interaction-flows.mjs` PASS do thay sharedFilterPanel; không BE schema/API/providers/SMTP/queue/dev data trong increment.
 
 Coverage tiếp: Organizations/Team, Workspace/Project/Task/My Tasks/Inbox/invitations và rich controls/feedback; dialog-toast layering và performance. Home đạt không đồng nghĩa toàn siteEnglish/S12 đạt.
+
+## S12d3a — Danh sách Tổ chức và Workspace trực thuộc Việt/Anh
+
+10/10/2026 — đạt2 màn Organizations/Organization và form tạo tương ứng; Organization Team quản lý quyền chưa chuyển English trong increment này.
+
+- Dịch hero/path/breadcrumb/section navigation/search-role-date-state/counts/cards/fallback/empty/loading/error/create/success. Role Owner/Admin/Member có locale argument với mặc địnhvi để các caller Team chưa dịch giữ hành vi cũ. Dates vẫnVietnam timezone; resource names/descriptions/initials và query enums giữ nguyên.
+- NameDialog thêm locale prop mặc địnhvi: hint/name validation/cancel/saving/error/discard message và guard labels theo caller locale. Org truyền locale/title/label/submitLabel; không reset input khi mở nested confirm, không sửa quyền/expectedVersion/POST body.
+- `check-stitch-organizations.mjs` PASS: S2 scope/role/current Admin demotion/cross-Org/read-only/totals/search/race/paging16/empty/error/retry/create. Bổ sungEN directory+attachedWS5width; name validation/nested cancel giữ draft/createOrg vàWorkspace tên Việt; sau create filter reset và tìm lại Org cũ; Owner denied private Org không lộ tên; Member English chỉ thấy Workspace được cấp, không có CreateWorkspace và không thấy Workspace khác.
+- Xem trực tiếp ảnh375: `.local/stitch-organizations/selector-en-375.png`, `workspaces-en-375.png`;5width mỗi màn không overflow/page errors. Increment này không chạy lại installed probe English, không claim probe0; S2 probe lịch sử là bằng chứng riêng.
+- FE18 unit PASS, build161 PASS; entry512.47kB/gzip144.41kB còn warning>500kB, chưa performance gate. `check-interaction-flows.mjs` PASS do thay shared NameDialog. Không BE/API/schema/providers/SMTP/dev data/queue/backfill.
+
+Tiếp Organization Team/invite/role/ownership/Manager/allocation/audit copy theo từng phần; Workspace/Project/Task/My Tasks/Inbox và global feedback/layering/performance còn mở. Gate UI toànS12 vẫn chưa đạt.
