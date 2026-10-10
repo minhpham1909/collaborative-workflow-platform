@@ -116,3 +116,15 @@ Tiếp Organization Team/invite/role/ownership/Manager/allocation/audit copy the
 - FE5173 đã khởi động lại khi resume vì server không còn chạy. Không real accounts/dev27018/OS27017/SMTP/moderation/retention/backfill; toàn test dùngMongoMemoryReplSet riêng.
 
 Tiếp OrganizationManageDialog vàAudit copy, sau đó các Workspace/Project/Task/MyTasks/Inbox/invitation screens. Shared layering/performance/full language gate còn; S12 chưa tổng acceptance.
+
+## S12d3c — Quản lý quyền và nhật ký Tổ chức Việt/Anh
+
+10/10/2026 — đạt copy/flows OrganizationManageDialog vàOrganizationAudit. Không thay quyền, CAS, enums hoặc typed confirmation condition.
+
+- Dịch role change/workspace admission/Manager replacement/ownership transfer labels, hints, confirmation/warnings/errors/success và guard copy. Member/Org/Workspace names được chèn sau template, không dịch. Nhập tênOrg vẫn so sánh chính xác cùngchuỗi có dấu; language chỉ thay presentation, không transform payload.
+- Audit action labels/role labels/fallback/loading/empty/reload/paging được dịch; actor/target displayName vàhistorical references giữ nguyên, dates dùngVietnam timezone với locale format.
+- `check-stitch-team-management.mjs` PASS: fullS4bVI gồm CAS/draft/unknown committed response lock/readback, Admin demotion denial, direct member assignment, Archived Manager replacement, role preservation/audit, typed transfer/capability loss. English thêm stale roleVersion rejection/draft retained, manager eligibility trongArchived vàAddMember bị khóa, Manager save, auditMinh→Lan unchanged, accent-mismatch transfer disabled/typed exact success/oldOwner no management; role/Manager/audit/transfer4views×5width không overflow/page errors.
+- Default-limiter fixture app mới tại boundaryVI/EN/audit; không tăng/tắt limit hoặc sửa dev server data. FE19 unit vàbuild161 PASS; entry523.41kB/gzip147.61kB còn warning>500kB, chưa performance gate. Không English probe mới; visual trực tiếp `transfer-en-375.png`, ảnh `.local/stitch-team-management/{role,manager,audit,transfer}-en-{width}.png` làfixtureignored.
+- KhôngrealSMTP/Google/dev27018/OS27017/moderation/retention/backfill. Provider/queues gates không chạy lại chỉ vì đổi copy.
+
+Organization directory/team/manage/audit đã cóVi/En trongscope hiện tại; không suy thành full-site acceptance. Tiếp Workspace detail/team/settings/email/Ban flows, Project/Task/MyTasks/Inbox/invitations, shared layering vàperformance.
