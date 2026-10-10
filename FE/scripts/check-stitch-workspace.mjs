@@ -24,7 +24,7 @@ const { createMongoNotificationsStore } = await import('../../BE/src/notificatio
 const { cutoffCodec } = await import('../../BE/src/notifications/input.js');
 const { testConfig } = await import('../../BE/test-support/auth-store.js');
 const out = fileURLToPath(new URL('../../.local/stitch-workspace/', import.meta.url)); await mkdir(out, { recursive: true });
-let repl, server, browser; const errors = [];
+let repl, server, browser, closing=false; const errors = [];
 try {
   repl = await MongoMemoryReplSet.create({ binary: { version: '8.0.17', downloadDir: fileURLToPath(new URL('../../.local/mongodb-binaries/', import.meta.url)) }, replSet: { count: 1, storageEngine: 'wiredTiger', ip: '127.0.0.1' } });
   await mongoose.connect(repl.getUri('workflow_fe_stitch_workspace_test'));
@@ -58,8 +58,8 @@ try {
   const attachedMember = await Workspace.collection.findOne({ _id: new mongoose.Types.ObjectId(first.id) });
   await organizations.manager(auths[0], org.id, first.id, { expectedVersion: attachedMember.version, managerId: users[1].id });
   const cutoff = cutoffCodec(config.accessKeyHex);
-  server = createApp({ authService: auth, authConfig: config, workspaceService: workspaces, workService: work, organizationService: organizations, notificationsService: createNotificationsService({ store: createMongoNotificationsStore({ cutoff }), cutoff }) }).listen(0, '127.0.0.1'); await once(server, 'listening');
-  const origin = `http://127.0.0.1:${server.address().port}`;
+  const fixtureApp=()=>createApp({ authService: auth, authConfig: config, workspaceService: workspaces, workService: work, organizationService: organizations, notificationsService: createNotificationsService({ store: createMongoNotificationsStore({ cutoff }), cutoff }) });server=fixtureApp().listen(0,'127.0.0.1'); await once(server, 'listening');
+  let origin = `http://127.0.0.1:${server.address().port}`;async function rotateFixture(){const previous=server;server=fixtureApp().listen(0,'127.0.0.1');await once(server,'listening');origin='http://127.0.0.1:'+server.address().port;await new Promise(resolve=>previous.close(resolve));}
   browser = await chromium.launch({ executablePath: process.env.WORKFLOW_BROWSER_EXECUTABLE, headless: true });
   let fail = false, delay = false, lostStateResponse = false, stateWrites = 0;
   async function pageFor(index) {
@@ -67,7 +67,7 @@ try {
     await context.route('http://localhost:4000/**', async route => {
       if (fail && route.request().url().includes(`/workspaces/${standalone.id}/projects?`)) return route.abort();
       if (delay && route.request().url().includes('/organizations?')) await new Promise(resolve => setTimeout(resolve, new URL(route.request().url()).searchParams.get('q') === 'Hà' ? 900 : 50));
-      const response = await route.fetch({ url: route.request().url().replace('http://localhost:4000', origin) });
+      const relay=origin;let response;try{response=await route.fetch({url:route.request().url().replace('http://localhost:4000',relay)});}catch{if(closing||relay!==origin)return route.abort().catch(()=>{});throw new Error('Fixture relay failed: '+new URL(route.request().url()).pathname);}
       if (route.request().method() === 'PATCH' && route.request().url().endsWith('/state')) { stateWrites++; if (lostStateResponse) { lostStateResponse = false; return route.abort(); } }
       await route.fulfill({ response });
     });
@@ -155,6 +155,13 @@ try {
   for(let index = 0; index < 12; index++) await work.createProject(auths[0], standalone.id, { name: `Page project ${index}` });
   await ownerPage.getByRole('button', { name: 'Làm mới', exact: true }).click(); await ownerPage.getByText('15 kết quả', { exact: true }).waitFor(); assert.equal(await ownerPage.locator('.project-card').count(), 12);
   await ownerPage.getByRole('button', { name: 'Tải thêm', exact: true }).click(); await ownerPage.waitForFunction(() => document.querySelectorAll('.project-card').length === 15);
+  await rotateFixture();await ownerPage.evaluate(()=>localStorage.setItem('workflow.auth.locale','en'));await ownerPage.reload();await ownerPage.getByRole('heading',{name:'Studio đã cập nhật',exact:true}).waitFor();await ownerPage.getByLabel('Search project names or descriptions',{exact:true}).fill('Bloom');await ownerPage.getByRole('heading',{name:'Bloom Website V2',exact:true}).waitFor();assert.equal(await ownerPage.locator('main').getAttribute('lang'),'en');
+  for(const width of [375,768,1024,1280,1440]){await ownerPage.setViewportSize({width,height:1000});await ownerPage.screenshot({path:out+'/workspace-en-'+width+'.png',fullPage:true});assert.ok(await ownerPage.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'EN Workspace overflow '+width);}
+  await ownerPage.getByRole('button',{name:'Create project',exact:true}).click();await ownerPage.getByLabel('Project name',{exact:true}).fill('Dự án Việt');await ownerPage.getByRole('dialog').getByRole('button',{name:'Engineering',exact:true}).click();await ownerPage.getByRole('dialog').getByRole('button',{name:'Create project',exact:true}).click();await ownerPage.getByRole('heading',{name:'Dự án Việt',exact:true}).waitFor();const enProject=await Project.findOne({name:'Dự án Việt'});assert.equal(enProject.icon,'code');assert.equal(await ownerPage.getByLabel('Search project names or descriptions',{exact:true}).inputValue(),'');
+  await ownerPage.getByRole('button',{name:'Archive workspace',exact:true}).click();let enDialog=ownerPage.getByRole('dialog');await enDialog.getByLabel('Type the workspace name again',{exact:true}).fill('Studio da cap nhat');await enDialog.getByLabel('Reason',{exact:true}).fill('Kiểm thử English Archive');assert.equal(await enDialog.getByRole('button',{name:'Archive workspace',exact:true}).isDisabled(),true);await enDialog.getByLabel('Type the workspace name again',{exact:true}).fill('Studio đã cập nhật');
+  for(const width of [375,768,1024,1280,1440]){await ownerPage.setViewportSize({width,height:1000});await ownerPage.screenshot({path:out+'/archive-en-'+width+'.png'});assert.ok(await ownerPage.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'EN archive overflow '+width);}
+  await enDialog.getByRole('button',{name:'Archive workspace',exact:true}).click();await enDialog.waitFor({state:'hidden'});await ownerPage.getByRole('button',{name:'Reopen workspace',exact:true}).waitFor();assert.equal(await ownerPage.getByRole('button',{name:'Create project',exact:true}).count(),0);await ownerPage.getByText('Workspace archived · Read-only',{exact:true}).first().waitFor();await ownerPage.getByRole('button',{name:'Reopen workspace',exact:true}).click();enDialog=ownerPage.getByRole('dialog');await enDialog.getByLabel('Type the workspace name again',{exact:true}).fill('Studio đã cập nhật');await enDialog.getByLabel('Reason',{exact:true}).fill('Mở lại để tiếp tục kiểm thử');await enDialog.getByRole('button',{name:'Reopen workspace',exact:true}).click();await enDialog.waitFor({state:'hidden'});await ownerPage.getByRole('button',{name:'Create project',exact:true}).waitFor();assert.equal((await Project.findById(oldProject.id)).state,'archived');
+  await ownerPage.getByLabel('Project state',{exact:true}).selectOption('all');await ownerPage.getByLabel('Search project names or descriptions',{exact:true}).fill('Tài liệu');await ownerPage.getByRole('heading',{name:'Tài liệu Onboarding',exact:true}).waitFor();await ownerPage.getByText('Project archived · Read-only',{exact:true}).first().waitFor();
   assert.deepEqual(errors, []);
   if (process.env.WORKFLOW_SKILL_PROBE === '1') {
     let source = await readFile('C:/Users/Acer/.agents/skills/ui-ux/scripts/probe.mjs', 'utf8');
@@ -173,9 +180,9 @@ try {
       assert.equal(await new Promise(resolve => child.once('exit', resolve)), 0);
     }
   }
-  console.log(`PASS S3: standalone/attached management, member readonly, scoped statistics excluding trash, metadata/Project edits, create, stale-role denial with draft, archive confirmation and independent Project state, pagination, long description and 5 widths. Screens: ${out}. No dev/providers.`);
+  console.log(`PASS Workspace/Project collection and Archive Vi-En, protected inputs/icons/read-only/5width; S3: standalone/attached management, member readonly, scoped statistics excluding trash, metadata/Project edits, create, stale-role denial with draft, archive confirmation and independent Project state, pagination, long description and 5 widths. Screens: ${out}. No dev/providers.`);
 } catch (error) { if (browser) for (const [index, context] of browser.contexts().entries()) for (const page of context.pages()) { await page.screenshot({ path: `${out}/failure-${index}.png`, fullPage: true }); console.log((await page.locator('main').innerText()).slice(-1800)); } throw error;
-} finally { await browser?.close(); if (server) await new Promise(resolve => server.close(resolve)); await mongoose.disconnect(); await repl?.stop(); }
+} finally { closing=true; await browser?.close(); if (server) await new Promise(resolve => server.close(resolve)); await mongoose.disconnect(); await repl?.stop(); }
 
 
 

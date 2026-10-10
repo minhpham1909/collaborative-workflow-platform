@@ -110,6 +110,7 @@ export default function NameDialog({
           </FormField>
           {withIcon && (
             <ProjectIconPicker
+              locale={locale}
               value={icon}
               onChange={setIcon}
               disabled={busy || uncertain}

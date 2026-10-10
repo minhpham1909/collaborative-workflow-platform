@@ -1,5 +1,7 @@
 # Trạng thái và bước tiếp theo
 
+10/10/2026 — **S12d4a Workspace detail/Project collection/ArchiveVi-En đạt**: protectednames/iconenums/reason/exacttypedName/readonly/reopenProjectstate; sharedDescriptionPreview/IconPicker/editor-loadinglocaleoptionalVi. WorkspaceS3VI+EN5width vàcoreinteractionPASS, FE19/build162 (entry528.94kBwarning). [QA](../qa/UI-STITCH-S12-CHECK.md). Tiếp WorkspaceTeam/settings/email/Ban body; vẫn11/12 gate, fullsiteEnglish/layering/performance chưađạt. Khôngproviders/queues/devdata; commit/pushdev.
+
 10/10/2026 — **S12d3c OrgManage/AuditVi-En đạt**: đổirole/phân bổWorkspace/ArchivedManager/typedOwner transfer/audit giữnames+history vàpayloadconditions. ManagementS4bVI+EN4views×5width PASS, FE19/build161. [QA](../qa/UI-STITCH-S12-CHECK.md). Tiếp Workspace locale theo cụm; globalfeedback/layering/performance còn (entry523.41kB warning), vẫn11/12 gate. Khôngproviders/queues/devdata; commit/pushdev.
 
 10/10/2026 — **S12d3b Team members/invitesVi-En đạt sau resume**: sửa crash tab transition do labelundefined, clear stale rows+loading, helper non-string safe; revokeBackbusyguard/singlePOST. TeamS4aVi-En+5width vàmanagementS4bVI regressionsPASS, FE19/build161, khôngrealproviders/devqueues. [QA](../qa/UI-STITCH-S12-CHECK.md). TiếpManageDialog(role/Workspace/Owner)/Audit locale; chưa cảTeamEnglish, vẫn11/12 gate. Performance cònwarningentry518.79kB; commit/pushdev.

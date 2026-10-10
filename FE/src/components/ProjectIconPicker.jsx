@@ -1,3 +1,4 @@
+import { workspaceText } from '../lib/workspace-text.js';
 import Icon from "./Icon.jsx";
 export const projectIcons = [
   ["folder", "Chung"],
@@ -7,21 +8,22 @@ export const projectIcons = [
   ["layers", "Design System"],
   ["document", "Tài liệu"],
 ];
-export default function ProjectIconPicker({ value, onChange, disabled }) {
+export default function ProjectIconPicker({ value, onChange, disabled, locale = "vi" }) {
+  const t = value => workspaceText(value, locale);
   return (
     <fieldset className="project-icon-picker" disabled={disabled}>
-      <legend>Biểu tượng Dự án</legend>
+      <legend>{t("Biểu tượng Dự án")}</legend>
       <div>
         {projectIcons.map(([key, label]) => (
           <button
             type="button"
             key={key}
-            aria-label={label}
+            aria-label={t(label)}
             aria-pressed={value === key}
             onClick={() => onChange(key)}
           >
             <Icon name={key} />
-            <span>{label}</span>
+            <span>{t(label)}</span>
           </button>
         ))}
       </div>

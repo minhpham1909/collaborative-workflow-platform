@@ -128,3 +128,16 @@ Tiếp OrganizationManageDialog vàAudit copy, sau đó các Workspace/Project/T
 - KhôngrealSMTP/Google/dev27018/OS27017/moderation/retention/backfill. Provider/queues gates không chạy lại chỉ vì đổi copy.
 
 Organization directory/team/manage/audit đã cóVi/En trongscope hiện tại; không suy thành full-site acceptance. Tiếp Workspace detail/team/settings/email/Ban flows, Project/Task/MyTasks/Inbox/invitations, shared layering vàperformance.
+
+## S12d4a — Workspace detail/Project collection/Archive Việt/Anh
+
+10/10/2026 — đạt Workspace shell/Project collection +Archive/reopen confirmation, chưaWorkspaceTeam/settings/email/Ban body English.
+
+- Dịch Workspace breadcrumb/header/role/state/description fallback/section tabs, Project search/date/state/counts/progress/read-only/CTA/create/edit/empty/loading. Names/descriptions vàicon enum không qua dictionary; progress lấy nguyênBE summary, timezoneVietnam, payloadqueries không thay đổi.
+- WorkspaceStateDialog copy/hints/reason/validation/discard/unknown feedback theo locale; exactName check, reason.trim, expectedVersion vàstateactive/archived giữ nguyên. MởWorkspace không đổi state riêng củaProject.
+- Shared NameDialog truyềnlocale vàoProjectIconPicker; picker enum keys giữ nguyên,labelsVI/EN. DescriptionPreview/RichEditor thêmlocale optionalvi default cho collapse/read-full/scroll hint/editor-loading, không đổiEditorJSON hoặc dữ liệu document. Các caller chưa chuyển vẫnVI.
+- `check-stitch-workspace.mjs` PASS: fullS3VI quyềnstandalone/attached/member/Manager/Admin; summary excludes trash; longdescription/metadata/Project edit/create/stale-role denial/CAS/archive/lost committed response single-write lock/readback/independent projectstate/paging15. English bổ sung5widthdetail+archive, protectedWorkspace/Project/reason input, createProject tênVi+Engineering→code, exactname accent mismatch disabled, archive readonly/CreateProject absent/reopen preserves separatelyArchivedProject. Đã điều chỉnhtest tìmProject cũ bằngsearch saupaging vì item không luônởpage1.
+- `check-interaction-flows.mjs` PASS do thayshared NameDialog/icon/description/editor-loading. FE19 unit/build162 PASS; entry528.94kB/gzip149.41kB cònwarning>500kB, khôngnới threshold/chưaperformancegate.
+- 5width khôngoverflow/pageerrors; xem trực tiếp `.local/stitch-workspace/archive-en-375.png`, `workspace-en-{width}.png`, `archive-en-{width}.png`. KhôngEnglishprobe mới trongincrement; khôngclaimprobe0. KhôngBE/API/schema/devcollections/SMTP/moderation/retention/backfill.
+
+Tiếp WorkspaceTeam/settings/email/moderation, sauđóProject/Task/MyTasks/Inbox/invitation body/feedback. Full-language/layering/performance gateS12 vẫn mở.

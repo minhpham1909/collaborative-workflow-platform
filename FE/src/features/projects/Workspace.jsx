@@ -1,3 +1,5 @@
+import { useAuthLocale } from '../auth/AuthLocale.jsx';
+import { workspaceText } from '../../lib/workspace-text.js';
 import {
   EmptyState,
   InlineMessage,
@@ -19,6 +21,8 @@ import WorkspaceSettings from "./WorkspaceSettings.jsx";
 import DescriptionPreview from "../../components/DescriptionPreview.jsx";
 
 export default function Workspace({ api, id }) {
+  const { locale } = useAuthLocale();
+  const t = (value, values) => workspaceText(value, locale, values);
   const [workspace, setWorkspace] = useState(null),
     [tab, setTab] = useState("projects"),
     [state, setState] = useState("active"),
@@ -39,7 +43,7 @@ export default function Workspace({ api, id }) {
   async function changeTab(value) {
     if (
       !saving &&
-      (!dirty || (await confirmDialog("Bỏ thay đổi cài đặt chưa lưu?")))
+      (!dirty || (await confirmDialog(t("Bỏ thay đổi cài đặt chưa lưu?"))))
     ) {
       setDirty(false);
       setTab(value);
@@ -48,7 +52,7 @@ export default function Workspace({ api, id }) {
   useDraftGuard({
     dirty: dirty,
     busy: saving,
-    message: "Bỏ thay đổi cài đặt chưa lưu?",
+    message: t("Bỏ thay đổi cài đặt chưa lưu?"),
   });
 
   const generation = useRef(0),
@@ -108,81 +112,82 @@ export default function Workspace({ api, id }) {
     };
   }, [id, tab, query, revision]);
   return (
-    <main className="studio-workspace">
+    <main lang={locale} className="studio-workspace">
       <p className="breadcrumbs">
-        <a href="#home">Trang chủ</a>{workspace?.organizationId && <> / <a href={`#organization/${workspace.organizationId}`}>Tổ chức</a></>} / Workspace
+        <a href="#home">Trang chủ</a>{workspace?.organizationId && <> / <a href={`#organization/${workspace.organizationId}`}>{t("Tổ chức")}</a></>} / Workspace
       </p>
       {error && (
         <InlineMessage>
-          {error}{" "}
-          <button onClick={() => setRevision((v) => v + 1)}>Tải lại</button>
+          {t(error)}{" "}
+          <button onClick={() => setRevision((v) => v + 1)}>{t("Tải lại")}</button>
         </InlineMessage>
       )}
       {workspace && (
         <>
           <section className="hero workspace-hero">
             <div>
-              <small className="home-eyebrow">KHÔNG GIAN CỦA ĐỘI NGŨ</small>
+              <small className="home-eyebrow">{t("KHÔNG GIAN CỦA ĐỘI NGŨ")}</small>
               <h1>{workspace.name}</h1>
-              <div className="workspace-meta"><span className="badge">{workspaceRoleLabel(workspace.role)}</span><span>{workspace.state === "archived" ? "Đã lưu trữ · Chỉ đọc" : "Đang hoạt động"}</span></div>
+              <div className="workspace-meta"><span className="badge">{workspaceRoleLabel(workspace.role, locale)}</span><span>{workspace.state === "archived" ? t("Đã lưu trữ · Chỉ đọc") : t("Đang hoạt động")}</span></div>
               <div className="workspace-description">
                 <div className="section-heading">
-                  <strong>Mô tả Workspace</strong>
+                  <strong>{t("Mô tả Workspace")}</strong>
                   {workspace.permissions?.edit && tab !== "settings" && (
                     <button
                       disabled={saving}
                       onClick={() => changeTab("settings")}
                     >
-                      Chỉnh sửa mô tả Workspace
+                      {t("Chỉnh sửa mô tả Workspace")}
                     </button>
                   )}
                 </div>
                 {workspace.description?.plainText ? (
                   <DescriptionPreview
+                    locale={locale}
                     key={workspace.id + ":" + workspace.version}
                     value={workspace.description}
-                    label="Mô tả nhóm"
+                    label={t("Mô tả nhóm")}
                     limit={20000}
                   />
                 ) : (
                   <p className="muted">
-                    Workspace chưa có mô tả.{" "}
+                    {t("Workspace chưa có mô tả.")}{" "}
                     {canManage
-                      ? "Thêm mục tiêu và cách làm việc của nhóm trong Cài đặt nhóm."
-                      : "Người quản lý có thể bổ sung mô tả cho nhóm."}
+                      ? t("Thêm mục tiêu và cách làm việc của nhóm trong Cài đặt nhóm.")
+                      : t("Người quản lý có thể bổ sung mô tả cho nhóm.")}
                   </p>
                 )}
               </div>
             </div>
             <div className="workspace-actions">
-            {tab === "projects" && <button disabled={busy || saving || dirty} onClick={() => setRevision(v => v + 1)}><Icon name="refresh" />Làm mới</button>}
+            {tab === "projects" && <button disabled={busy || saving || dirty} onClick={() => setRevision(v => v + 1)}><Icon name="refresh" />{t("Làm mới")}</button>}
             {canCreate && tab === "projects" && (
               <button
                 className="primary"
                 disabled={busy}
                 onClick={() => setCreating(true)}
               >
-                <Icon name="plus" />Tạo Dự án
+                <Icon name="plus" />{t("Tạo Dự án")}
               </button>
             )}
-            {workspace.permissions?.changeState && <button disabled={busy || saving || dirty} onClick={() => setChangingState(true)}><Icon name="archive" />{workspace.state === "archived" ? "Mở lại Workspace" : "Lưu trữ Workspace"}</button>}
+            {workspace.permissions?.changeState && <button disabled={busy || saving || dirty} onClick={() => setChangingState(true)}><Icon name="archive" />{workspace.state === "archived" ? t("Mở lại Workspace") : t("Lưu trữ Workspace")}</button>}
             </div>
           </section>
-          {workspace.state === "archived" && <InlineMessage tone="info">Workspace đang lưu trữ. Dự án và Task bên trong chỉ đọc; mở lại Workspace không thay đổi trạng thái riêng của từng Dự án.</InlineMessage>}
-          <div className="tabs workspace-tabs" aria-label="Nội dung Workspace">
+          {workspace.state === "archived" && <InlineMessage tone="info">{t("Workspace đang lưu trữ. Dự án và Task bên trong chỉ đọc; mở lại Workspace không thay đổi trạng thái riêng của từng Dự án.")}</InlineMessage>}
+          <div className="tabs workspace-tabs" aria-label={t("Nội dung Workspace")}>
             <button
               aria-pressed={tab === "projects"}
               disabled={saving}
               onClick={() => changeTab("projects")}
             >
-              Dự án
+              {t("Dự án")}
             </button>
             <button
               aria-pressed={tab === "members"}
               disabled={saving}
               onClick={() => changeTab("members")}
             >
-              Thành viên
+              {t("Thành viên")}
             </button>
             {canManage && !workspace.organizationId && (
               <button
@@ -190,7 +195,7 @@ export default function Workspace({ api, id }) {
                 disabled={saving}
                 onClick={() => changeTab("invitations")}
               >
-                Lời mời
+                {t("Lời mời")}
               </button>
             )}
             {canManage && (
@@ -199,7 +204,7 @@ export default function Workspace({ api, id }) {
                 aria-pressed={tab === "settings"}
                 onClick={() => changeTab("settings")}
               >
-                Cài đặt nhóm
+                {t("Cài đặt nhóm")}
               </button>
             )}
             {workspace.permissions?.emailPreferences && <button
@@ -207,7 +212,7 @@ export default function Workspace({ api, id }) {
               aria-pressed={tab === "email"}
               onClick={() => changeTab("email")}
             >
-              Email của tôi trong nhóm
+              {t("Email của tôi trong nhóm")}
             </button>}
           </div>
         </>
@@ -235,28 +240,28 @@ export default function Workspace({ api, id }) {
       )}
       {tab === "projects" && (
         <>
-          <div className="workspace-collection-heading"><h2>Dự án trong Workspace</h2><span className="muted">{data.total !== undefined ? `${data.total} kết quả` : ""}</span></div>
-          <FilterPanel compact advancedLabel="Thời gian">
+          <div className="workspace-collection-heading"><h2>{t("Dự án trong Workspace")}</h2><span className="muted">{data.total !== undefined ? t("{count} kết quả", { count: data.total }) : ""}</span></div>
+          <FilterPanel locale={locale} compact advancedLabel={t("Thời gian")}>
             <label>
-              Tìm theo tên hoặc mô tả Dự án
+              {t("Tìm theo tên hoặc mô tả Dự án")}
               <input
                 type="search"
-                placeholder="Nhập để tìm kiếm…"
+                placeholder={t("Nhập để tìm kiếm…")}
                 maxLength={200}
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
               />
             </label>
             <label>
-              Trạng thái
-              <select aria-label="Trạng thái Dự án" value={state} onChange={(e) => setState(e.target.value)}>
-                <option value="active">Đang hoạt động</option>
-                <option value="archived">Đã lưu trữ</option>
-                <option value="all">Tất cả</option>
+              {t("Trạng thái")}
+              <select aria-label={t("Trạng thái Dự án")} value={state} onChange={(e) => setState(e.target.value)}>
+                <option value="active">{t("Đang hoạt động")}</option>
+                <option value="archived">{t("Đã lưu trữ")}</option>
+                <option value="all">{t("Tất cả")}</option>
               </select>
             </label>
             <label>
-              Từ ngày tạo
+              {t("Từ ngày tạo")}
               <input
                 type="date"
                 value={from}
@@ -264,7 +269,7 @@ export default function Workspace({ api, id }) {
               />
             </label>
             <label>
-              Đến ngày tạo
+              {t("Đến ngày tạo")}
               <input
                 type="date"
                 value={to}
@@ -279,22 +284,22 @@ export default function Workspace({ api, id }) {
                 setState("active");
               }}
             >
-              Xóa bộ lọc
+              {t("Xóa bộ lọc")}
             </button>
           </FilterPanel>
           <p className="muted">
-            Ngày tạo theo giờ Việt Nam · Tiến độ tính trên toàn Dự án, không gồm Task trong thùng rác
+            {t("Ngày tạo theo giờ Việt Nam · Tiến độ tính trên toàn Dự án, không gồm Task trong thùng rác")}
           </p>
           {invalid && (
             <InlineMessage>
-              Ngày bắt đầu phải trước hoặc bằng ngày kết thúc.
+              {t("Ngày bắt đầu phải trước hoặc bằng ngày kết thúc.")}
             </InlineMessage>
           )}
         </>
       )}
       {busy && tab === "projects" && (
         <LoadingState>
-          Đang tải {tab === "projects" ? "Dự án" : "thành viên"}…
+          {t("Đang tải Dự án…")}
         </LoadingState>
       )}
       {tab === "projects" && (
@@ -323,8 +328,8 @@ export default function Workspace({ api, id }) {
                       }
                     >
                       {item.readOnly
-                        ? (item.state === "archived" ? "Dự án lưu trữ · Chỉ đọc" : "Workspace lưu trữ · Chỉ đọc")
-                        : "Đang hoạt động"}
+                        ? (item.state === "archived" ? t("Dự án lưu trữ · Chỉ đọc") : t("Workspace lưu trữ · Chỉ đọc"))
+                        : t("Đang hoạt động")}
                     </span>
                   </StudioCover>
                   <div className="project-card-body">
@@ -338,17 +343,17 @@ export default function Workspace({ api, id }) {
                     </h2>
                     <p>
                       {item.description?.plainText ||
-                        "Không gian để biến ý tưởng thành công việc."}
+                        t("Không gian để biến ý tưởng thành công việc.")}
                     </p>
-                    {item.taskSummary && <div className="project-progress"><div><span>{item.taskSummary.done}/{item.taskSummary.total} Task hoàn thành</span><strong>{item.taskSummary.progressPercent}%</strong></div><progress aria-label={`Tiến độ ${item.name}`} value={item.taskSummary.progressPercent} max="100" /></div>}
+                    {item.taskSummary && <div className="project-progress"><div><span>{t("{done}/{total} Task hoàn thành", { done: item.taskSummary.done, total: item.taskSummary.total })}</span><strong>{item.taskSummary.progressPercent}%</strong></div><progress aria-label={t("Tiến độ {name}", { name: item.name })} value={item.taskSummary.progressPercent} max="100" /></div>}
                     <p className="muted">
-                      Tạo{" "}
-                      {new Date(item.createdAt).toLocaleDateString("vi-VN", {
+                      {t("Tạo")}{" "}
+                      {new Date(item.createdAt).toLocaleDateString(locale === "en" ? "en-GB" : "vi-VN", {
                         timeZone: "Asia/Ho_Chi_Minh",
                       })}
                     </p>
-                    <div className="project-card-actions"><span className="card-link pill-link" aria-hidden="true">{item.readOnly ? "Xem Dự án" : "Vào Bảng Kanban"} <Icon name="chevron-right" /></span>
-                    {!item.readOnly && item.permissions?.manageProject && <button aria-label={`Sửa tên và biểu tượng ${item.name}`} onClick={() => setEditing(item)}>Chỉnh sửa</button>}</div>
+                    <div className="project-card-actions"><span className="card-link pill-link" aria-hidden="true">{item.readOnly ? t("Xem Dự án") : t("Vào Bảng Kanban")} <Icon name="chevron-right" /></span>
+                    {!item.readOnly && item.permissions?.manageProject && <button aria-label={t("Sửa tên và biểu tượng {name}", { name: item.name })} onClick={() => setEditing(item)}>{t("Chỉnh sửa")}</button>}</div>
                   </div>
                 </article>
               ) : (
@@ -358,11 +363,11 @@ export default function Workspace({ api, id }) {
                   </span>
                   <h2>{item.displayName}</h2>
                   <span className="badge">
-                    {item.role === "owner" ? "Chủ sở hữu" : "Thành viên"}
+                    {item.role === "owner" ? t("Chủ sở hữu") : t("Thành viên")}
                   </span>
                   <p className="muted">
                     Tham gia{" "}
-                    {new Date(item.joinedAt).toLocaleDateString("vi-VN", {
+                    {new Date(item.joinedAt).toLocaleDateString(locale === "en" ? "en-GB" : "vi-VN", {
                       timeZone: "Asia/Ho_Chi_Minh",
                     })}
                   </p>
@@ -374,12 +379,12 @@ export default function Workspace({ api, id }) {
             <EmptyState>
               <h2>
                 {tab === "projects"
-                  ? "Không có Dự án phù hợp"
+                  ? t("Không có Dự án phù hợp")
                   : "Chưa có thành viên để hiển thị"}
               </h2>
               <p>
                 {tab === "projects"
-                  ? (canCreate ? "Tạo Dự án đầu tiên hoặc thay đổi bộ lọc để tìm công việc của nhóm." : "Thay đổi bộ lọc hoặc liên hệ người quản lý để tạo Dự án.")
+                  ? (canCreate ? t("Tạo Dự án đầu tiên hoặc thay đổi bộ lọc để tìm công việc của nhóm.") : t("Thay đổi bộ lọc hoặc liên hệ người quản lý để tạo Dự án."))
                   : "Danh sách chỉ gồm thành viên đang trong Workspace."}
               </p>
             </EmptyState>
@@ -389,18 +394,20 @@ export default function Workspace({ api, id }) {
               disabled={busy || Boolean(invalid && tab === "projects")}
               onClick={() => load(data.nextCursor)}
             >
-              Tải thêm
+              {t("Tải thêm")}
             </button>
           )}
         </>
       )}
       {changingState && workspace && <WorkspaceStateDialog api={api} workspace={workspace} onSaved={value => { setWorkspace(value); setRevision(v => v + 1); }} onClose={uncertain => { setChangingState(false); if (uncertain) setRevision(v => v + 1); }} />}
-      {editing && <NameDialog title="Chỉnh sửa Dự án" initial={editing.name} initialIcon={editing.icon ?? "folder"} withIcon onClose={uncertain => { setEditing(null); if (uncertain) setRevision(v => v + 1); }} onSave={async (name, icon) => { await api.request(`/projects/${editing.id}`, { method: "PATCH", body: { expectedVersion: editing.version, name, icon } }); setRevision(v => v + 1); notify("Đã cập nhật Dự án."); }} />}
+      {editing && <NameDialog locale={locale} title={t("Chỉnh sửa Dự án")} initial={editing.name} initialIcon={editing.icon ?? "folder"} withIcon label={t("Tên Dự án")} submitLabel={t("Lưu")} onClose={uncertain => { setEditing(null); if (uncertain) setRevision(v => v + 1); }} onSave={async (name, icon) => { await api.request(`/projects/${editing.id}`, { method: "PATCH", body: { expectedVersion: editing.version, name, icon } }); setRevision(v => v + 1); notify(t("Đã cập nhật Dự án.")); }} />}
       {creating && canCreate && (
         <NameDialog
-          title="Tạo Dự án"
+          locale={locale}
+          label={t("Tên Dự án")}
+          title={t("Tạo Dự án")}
           withIcon
-          submitLabel="Tạo Dự án"
+          submitLabel={t("Tạo Dự án")}
           onClose={(uncertain) => {
             setCreating(false);
             if (uncertain) setRevision((v) => v + 1);
@@ -415,7 +422,7 @@ export default function Workspace({ api, id }) {
             setFrom("");
             setTo("");
             setRevision((v) => v + 1);
-            notify("Đã tạo Dự án.");
+            notify(t("Đã tạo Dự án."));
           }}
         />
       )}

@@ -1,8 +1,10 @@
+import { workspaceText } from '../lib/workspace-text.js';
 import { useId, useState } from "react";
 import RichEditor from "./RichEditor.jsx";
 
 // Keep short descriptions visible; long documents can be read in full on demand.
-export default function DescriptionPreview({ value, label, limit }) {
+export default function DescriptionPreview({ value, label, limit, locale = "vi" }) {
+  const t = (value, values) => workspaceText(value, locale, values);
   const [expanded, setExpanded] = useState(false);
   const panelId = useId();
   const text = value?.plainText ?? "";
@@ -15,17 +17,17 @@ export default function DescriptionPreview({ value, label, limit }) {
         hidden={long && !expanded}
         className={long ? "description-full" : undefined}
         role={long && expanded ? "region" : undefined}
-        aria-label={long && expanded ? `${label} — nội dung đầy đủ` : undefined}
+        aria-label={long && expanded ? t("{name} — nội dung đầy đủ", { name: label }) : undefined}
         aria-describedby={long && expanded ? `${panelId}-hint` : undefined}
         tabIndex={long && expanded ? 0 : undefined}
       >
         {(!long || expanded) && (
-          <RichEditor readOnly value={value} label={label} limit={limit} />
+          <RichEditor locale={locale} readOnly value={value} label={label} limit={limit} />
         )}
       </div>
       {long && expanded && (
         <p id={`${panelId}-hint`} className="muted description-scroll-hint">
-          Cuộn trong khung để đọc toàn bộ nội dung.
+          {t("Cuộn trong khung để đọc toàn bộ nội dung.")}
         </p>
       )}
       {long && (
@@ -36,7 +38,7 @@ export default function DescriptionPreview({ value, label, limit }) {
           aria-controls={panelId}
           onClick={() => setExpanded((old) => !old)}
         >
-          {expanded ? "Thu gọn mô tả" : "Đọc toàn bộ mô tả"}
+          {expanded ? t("Thu gọn mô tả") : t("Đọc toàn bộ mô tả")}
         </button>
       )}
     </div>
