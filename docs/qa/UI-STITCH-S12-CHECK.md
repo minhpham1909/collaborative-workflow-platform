@@ -63,3 +63,16 @@ S12 vẫn đang thực hiện: Org/Project invitation variants đã có fixture 
 - Dữ liệu/accounts/providers trong fixtures độc lập. Không gửi thêm mail thật trongS12c hoặc chạy worker/dev backfill. SMTP S12a/b và xác nhận Inbox giữ nguyên bằng chứng lịch sử.
 
 Gate còn: coverageVi/En toàn app, dialog/toast layering kiểm riêng, responsive/performance/assets và kết quả nghiệm thu tổng hợp. Những guard tests đạt không phải lời khẳng định bảo vệ mọi thao tác rời trang/browser crash.
+
+## S12d1 — Việt/Anh cho shell và nhãn shared dialog/toast
+
+10/10/2026 — đạt increment này, chưa full-site language gate.
+
+- Header/sidebar/mobile navigation/footer dùng dictionary shell riêng và cùng UI locale hiện có. Breadcrumb scope label/menu/skip-to-content/account actions/unread badge accessibility được dịch. `lang` trên shell subtree phản ánh ngôn ngữ đang chọn; tên user/Workspace/Task không chạy qua dictionary.
+- Locale provider bọc NotificationProvider để default dialog title/URL input/cancel/confirm/apply và toast dismiss label đổi ngôn ngữ. Không dịch máy nội dung confirm động hoặc thông báo nghiệp vụ chưa có dictionary; không claim toàn bộ dialog body/feature đã English. Giữ item/promise/input/focus-stack hiện có, không thay logic dialog/toast layering trong increment này.
+- FE18 unit PASS: interpolation giữ nguyên tên có dấu/placeholder/dollar characters và unread count; build159 PASS. Entry chunk501.70kB, gzip141.38kB: Vite còn warning>500kB, chưa performance gate; không nới ngưỡng.
+- `check-settings-locale.mjs` cập nhật EN navigation selectors, kiểm shell `lang`/nav/footer/keyboard skip focus/English dialog metadata, mobile English menu. Full Settings/unknown/CAS/password/Google fixture regression PASS,3tabs/5width; UI locale không đổi email locale hay dữ liệu draft. Name “Mật khẩu” giữ nguyên; persistence/read-only email giữ.
+- Installed skill probe5width0 Hỏng. Ảnh `.local/settings-locale/shell-menu-en-375.png`, `*-en-{width}.png`; xem trực tiếp menu English375 không overflow/CTA bị mất. Gu exceptions warm borders/focus rings/mobile shadow/skip-link header measurement giữ theo brand/accessibility, không claim mọi heuristic sạch.
+- C2 invitation browser regression PASS; Auth Vi/En regression PASS trên5 flows/5width do thay provider hierarchy. Không SMTP/Google thật/worker/dev data trong increment này. FE local5173 đã khởi động lại vì đầu phiên chưa có server; lỗi đầu tiên connection refused là môi trường, không product regression.
+
+Coverage còn thiếu: Home/highlights/Org/Team/Workspace/Project/Task/My Tasks/Inbox/invitation bodies, rich-editor/pickers/validation/role/time copy, dynamic confirmation/feedback. Kiểm dialog-toast layering và bundle split/error recovery là các bước kế tiếp, không tính S12 hoàn thành.

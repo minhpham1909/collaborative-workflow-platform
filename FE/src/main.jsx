@@ -9,7 +9,7 @@ import "./features/organizations/organizations.css";
 import NotificationProvider from "./components/NotificationProvider.jsx";
 import {AuthLocaleProvider} from './features/auth/AuthLocale.jsx';
 createRoot(document.getElementById("root")).render(
-  <NotificationProvider>
-    <AuthLocaleProvider><App /></AuthLocaleProvider>
-  </NotificationProvider>,
+  <AuthLocaleProvider>
+    <NotificationProvider><App /></NotificationProvider>
+  </AuthLocaleProvider>,
 );

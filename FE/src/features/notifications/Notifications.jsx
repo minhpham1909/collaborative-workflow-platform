@@ -4,6 +4,7 @@ import {
   LoadingState,
 } from "../../components/Feedback.jsx";
 import { confirmDialog } from "../../components/NotificationProvider.jsx";
+import { useShellText } from '../../lib/useShellText.js';
 import FilterPanel from "../../components/FilterPanel.jsx";
 import { useEffect, useRef, useState } from "react";
 import { messageFor } from "../../lib/messages.js";
@@ -83,6 +84,7 @@ function Content({ note }) {
   );
 }
 export function InboxBadge({ api, userId }) {
+  const { t } = useShellText();
   const [count, setCount] = useState(null),
     [stale, setStale] = useState(false);
   useEffect(() => {
@@ -113,8 +115,8 @@ export function InboxBadge({ api, userId }) {
     <span
       aria-label={
         count === null
-          ? "Chưa tải số thông báo chưa đọc"
-          : `${count} thông báo chưa đọc${stale ? ", cần tải lại" : ""}`
+          ? t('Chưa tải số thông báo chưa đọc')
+          : t('{count} thông báo chưa đọc', { count }) + (stale ? t(', cần tải lại') : '')
       }
       className="inbox-badge"
     >

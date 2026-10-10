@@ -1,9 +1,11 @@
+import { useShellText } from '../lib/useShellText.js';
 import { useEffect, useRef } from "react";
 import Icon from "./Icon.jsx";
 import Avatar from "./Avatar.jsx";
 
 
 export default function AppHeader({ route, user, api, busy, logout, openMobile, mobileOpen }) {
+  const { locale, t } = useShellText();
   const menu = useRef(null);
   useEffect(() => {
     if (menu.current) menu.current.open = false;
@@ -29,7 +31,7 @@ export default function AppHeader({ route, user, api, busy, logout, openMobile, 
     };
   }, []);
   return (
-    <header className="app-header">
+    <header lang={locale} className="app-header">
       <button
         type="button"
         className="skip-link"
@@ -41,27 +43,27 @@ export default function AppHeader({ route, user, api, busy, logout, openMobile, 
           main.scrollIntoView({ block: "start" });
         }}
       >
-        Đi đến nội dung chính
+        {t('Đi đến nội dung chính')}
       </button>
-      <button type="button" className="mobile-nav-toggle" aria-label="Mở menu điều hướng" aria-expanded={mobileOpen} onClick={openMobile}><Icon name="menu" /></button>
-      <div className="header-location"><span>Workflow</span><Icon name="chevron-right" /><strong>{({ home: 'Trang chủ', organizations: 'Tổ chức & Studio', organization: 'Tổ chức', mine: 'Công việc của tôi', shared: 'Dự án được chia sẻ', notifications: 'Thông báo', notification: 'Thông báo', settings: 'Tài khoản', workspace: 'Workspace', project: 'Dự án', task: 'Công việc' })[route.kind] ?? 'Không gian làm việc'}</strong></div>
-      <a className="header-bell" href="#notifications" aria-label="Mở thông báo" title="Mở thông báo"><Icon name="bell" /></a>
+      <button type="button" className="mobile-nav-toggle" aria-label={t('Mở menu điều hướng')} aria-expanded={mobileOpen} onClick={openMobile}><Icon name="menu" /></button>
+      <div className="header-location"><span>Workflow</span><Icon name="chevron-right" /><strong>{t(({ home: 'Trang chủ', organizations: 'Tổ chức & Studio', organization: 'Tổ chức', mine: 'Công việc của tôi', shared: 'Dự án được chia sẻ', notifications: 'Thông báo', notification: 'Thông báo', settings: 'Tài khoản', workspace: 'Workspace', project: 'Dự án', task: 'Công việc' })[route.kind] ?? 'Không gian làm việc')}</strong></div>
+      <a className="header-bell" href="#notifications" aria-label={t('Mở thông báo')} title={t('Mở thông báo')}><Icon name="bell" /></a>
       <details ref={menu} className="account-menu">
-        <summary aria-label={`Menu tài khoản của ${user.displayName}`}>
+        <summary aria-label={t('Menu tài khoản của {name}', { name: user.displayName })}>
           <Avatar user={user} />
           <span>
             <strong>{user.displayName}</strong>
-            <small>Tài khoản cá nhân</small>
+            <small>{t('Tài khoản cá nhân')}</small>
           </span>
           <span aria-hidden="true">⌄</span>
         </summary>
         <div className="account-dropdown">
           <a href="#settings">
             <Icon name="settings" />
-            Tài khoản & Cài đặt
+            {t('Tài khoản & Cài đặt')}
           </a>
           <button disabled={busy} onClick={logout}>
-            {busy ? "Đang đăng xuất…" : "Đăng xuất"}
+            {t(busy ? 'Đang đăng xuất…' : 'Đăng xuất')}
           </button>
         </div>
       </details>

@@ -1,3 +1,4 @@
+import { useShellText } from '../lib/useShellText.js';
 import useDialogFocus from "./useDialogFocus.js";
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -85,20 +86,22 @@ export default function NotificationProvider({ children }) {
   );
 }
 function Toast({ toast, onClose }) {
+  const { locale, t } = useShellText();
   useEffect(() => {
     const timer = setTimeout(onClose, 6000);
     return () => clearTimeout(timer);
   }, [toast.id]);
   return (
-    <div className={`system-toast ${toast.tone}`}>
+    <div lang={locale} className={`system-toast ${toast.tone}`}>
       <span>{toast.message}</span>
-      <button aria-label="Đóng thông báo" onClick={onClose}>
+      <button aria-label={t('Đóng thông báo')} onClick={onClose}>
         ×
       </button>
     </div>
   );
 }
 function SystemDialog({ item, finish }) {
+  const { locale, t } = useShellText();
   const panel = useRef(null),
     [value, setValue] = useState(item.initial);
   useDialogFocus(panel, () => finish(item.kind === "confirm" ? false : null));
@@ -107,6 +110,7 @@ function SystemDialog({ item, finish }) {
       <section
         ref={panel}
         tabIndex={-1}
+        lang={locale}
         className={`system-dialog ${item.options.tone === "danger" ? "danger" : ""}`}
         role="dialog"
         aria-modal="true"
@@ -122,8 +126,8 @@ function SystemDialog({ item, finish }) {
         </span>
         <h2 id="system-dialog-title">
           {item.kind === "input"
-            ? (item.options.title ?? "Thêm liên kết")
-            : (item.options.title ?? "Xác nhận thao tác")}
+            ? t(item.options.title ?? "Thêm liên kết")
+            : t(item.options.title ?? "Xác nhận thao tác")}
         </h2>
         <p id="system-dialog-message">{item.message}</p>
         <form
@@ -134,7 +138,7 @@ function SystemDialog({ item, finish }) {
         >
           {item.kind === "input" && (
             <label>
-              {item.options.inputLabel ?? "Đường dẫn"}
+              {t(item.options.inputLabel ?? "Đường dẫn")}
               <input
                 value={value}
                 onChange={(event) => setValue(event.target.value)}
@@ -147,12 +151,12 @@ function SystemDialog({ item, finish }) {
               type="button"
               onClick={() => finish(item.kind === "confirm" ? false : null)}
             >
-              {item.options.cancelLabel ?? "Hủy"}
+              {t(item.options.cancelLabel ?? "Hủy")}
             </button>
             <button className="primary">
               {item.kind === "input"
-                ? (item.options.confirmLabel ?? "Áp dụng")
-                : (item.options.confirmLabel ?? "Xác nhận")}
+                ? t(item.options.confirmLabel ?? "Áp dụng")
+                : t(item.options.confirmLabel ?? "Xác nhận")}
             </button>
           </div>
         </form>
