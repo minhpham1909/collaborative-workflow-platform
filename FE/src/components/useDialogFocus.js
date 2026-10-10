@@ -1,6 +1,11 @@
-import { useLayoutEffect, useRef } from "react";
+import { useLayoutEffect, useRef, useSyncExternalStore } from "react";
 
 const stack = [];
+const listeners = new Set();
+const subscribe = listener => { listeners.add(listener); return () => listeners.delete(listener); };
+const depth = () => stack.length;
+export const useDialogDepth = () => useSyncExternalStore(subscribe, depth, () => 0);
+const changed = () => { for (const listener of listeners) listener(); };
 const original = new Map();
 let previousOverflow = "";
 const controls = (panel) =>
@@ -43,6 +48,7 @@ export default function useDialogFocus(panelRef, onClose, open = true) {
       document.body.style.overflow = "hidden";
     }
     stack.push(entry);
+    changed();
     lockBackground();
     (controls(entry.panel)[0] ?? entry.panel).focus();
     const key = (event) => {
@@ -73,6 +79,7 @@ export default function useDialogFocus(panelRef, onClose, open = true) {
     return () => {
       const wasTop = stack.at(-1) === entry;
       stack.splice(stack.indexOf(entry), 1);
+      changed();
       document.removeEventListener("keydown", key, true);
       lockBackground();
       if (wasTop) {

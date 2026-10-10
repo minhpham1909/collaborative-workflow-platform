@@ -1,5 +1,6 @@
 import { useShellText } from '../lib/useShellText.js';
-import useDialogFocus from "./useDialogFocus.js";
+import useDialogFocus, { useDialogDepth } from "./useDialogFocus.js";
+import { enqueueFeedback } from '../lib/feedback-queue.js';
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 let dispatch = null;
@@ -28,6 +29,7 @@ export default function NotificationProvider({ children }) {
   const [queue, setQueue] = useState([]),
     [toasts, setToasts] = useState([]);
   const pending = useRef(new Set());
+  const dialogDepth = useDialogDepth();
   useEffect(() => {
     const cancel = () => {
       for (const item of pending.current)
@@ -36,8 +38,10 @@ export default function NotificationProvider({ children }) {
       setQueue([]);
     };
     window.addEventListener("workflow:route-committed", cancel);
+    const accountChanged = () => { cancel(); setToasts([]); };
+    window.addEventListener('workflow:account-changed', accountChanged);
     dispatch = (item) => {
-      if (item.kind === "toast") setToasts((old) => [...old.slice(-3), item]);
+      if (item.kind === "toast") setToasts((old) => enqueueFeedback(old, item));
       else {
         pending.current.add(item);
         setQueue((old) => [...old, item]);
@@ -45,6 +49,7 @@ export default function NotificationProvider({ children }) {
     };
     return () => {
       window.removeEventListener("workflow:route-committed", cancel);
+      window.removeEventListener('workflow:account-changed', accountChanged);
       dispatch = null;
       for (const item of pending.current)
         item.resolve(item.kind === "confirm" ? false : null);
@@ -69,31 +74,52 @@ export default function NotificationProvider({ children }) {
           document.body,
         )}
       {createPortal(
-        <div className="toast-stack" aria-live="polite">
-          {toasts.map((toast) => (
+        <div className="toast-stack">
+          {!dialogDepth && toasts.length > 0 && (
             <Toast
-              key={toast.id}
-              toast={toast}
+              toast={toasts[0]}
+              remaining={toasts.length - 1}
               onClose={() =>
-                setToasts((old) => old.filter((value) => value.id !== toast.id))
+                setToasts((old) => old.filter((value) => value.id !== toasts[0].id))
               }
             />
-          ))}
+          )}
         </div>,
         document.body,
       )}
     </NotificationContext.Provider>
   );
 }
-function Toast({ toast, onClose }) {
+function Toast({ toast, onClose, remaining }) {
   const { locale, t } = useShellText();
+  const [hovered, setHovered] = useState(false), [focused, setFocused] = useState(false);
+  const paused = hovered || focused;
+  const panel = useRef(null);
   useEffect(() => {
+    // Feedback text stays click-through; observe pointer position without
+    // placing an invisible event-catching layer over the form underneath.
+    const move = event => {
+      if (event.pointerType !== 'mouse') { setHovered(false); return; }
+      const rect = panel.current?.getBoundingClientRect();
+      setHovered(Boolean(rect && event.clientX >= rect.left && event.clientX <= rect.right && event.clientY >= rect.top && event.clientY <= rect.bottom));
+    };
+    window.addEventListener('pointermove', move, { passive: true });
+    return () => window.removeEventListener('pointermove', move);
+  }, []);
+  useEffect(() => {
+    const reserve = () => document.body.style.setProperty('--wf-toast-space', `${(panel.current?.offsetHeight ?? 0) + 32}px`);
+    reserve(); const observer = new ResizeObserver(reserve); observer.observe(panel.current);
+    return () => { observer.disconnect(); document.body.style.removeProperty('--wf-toast-space'); };
+  }, []);
+  useEffect(() => {
+    if (paused) return;
     const timer = setTimeout(onClose, 6000);
     return () => clearTimeout(timer);
-  }, [toast.id]);
+  }, [toast.id, paused]);
   return (
-    <div lang={locale} className={`system-toast ${toast.tone}`}>
-      <span>{toast.message}</span>
+    <div ref={panel} lang={locale} className={`system-toast ${toast.tone}`} role={toast.tone === 'error' ? 'alert' : 'status'}
+      onFocus={() => setFocused(true)} onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget)) setFocused(false); }}>
+      <div className="toast-content"><span>{toast.message}</span>{remaining > 0 && <small>{t('{count} thông báo tiếp theo', { count: remaining })}</small>}</div>
       <button aria-label={t('Đóng thông báo')} onClick={onClose}>
         ×
       </button>

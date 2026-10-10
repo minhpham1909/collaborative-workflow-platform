@@ -154,3 +154,16 @@ Tiếp WorkspaceTeam/settings/email/moderation, sauđóProject/Task/MyTasks/Inbo
 - Ảnh `.local/stitch-workspace/settings-en-{width}.png`, `email-en-{width}.png`; xem trực tiếp375. KhôngEnglishprobe mới trongincrement này.
 - **Quan sát còn cần sửa:** ở ảnh email375, nhiều success toast từ chuỗi thao tác nhanh chồng lên nội dung form. Chưa gọi visual/layering gate đạt; ưu tiên xử lý shared notification stack riêng trước khi tiếp tục nghiệm thu toàn ứng dụng. Screenshot không được dùng để tuyên bố mọi control đều unobstructed.
 - KhôngBE/schema/APIproduction/providers/SMTP/devqueue/moderation/retention/backfill. WorkspaceTeam/Ban, Project/Task/MyTasks/Inbox và publicinvitations/body copy vẫn là các scope tiếp theo.
+
+## S12e1 — Toast queue và phối hợp dialog
+
+10/10/2026 — xử lý lỗi nhiều toast che form mobile đã ghi nhận ởS12d4b. Không thay inline form errors hoặc nghiệp vụ thông báo Inbox.
+
+- Chỉ1toast hiện tại; queue tối đa4, error/warning ưu tiên hơninfo/success, cùngmessage+tone gộp lại. Lower-priority transient feedback có thể bị bỏ khi queue đầy; đây không phải lịch sửNotifications bền vững. Có nhãn số feedback tiếp theo.
+- Dialog depth lấy từ chính useDialogFocus stack qua subscription, không đoán bằngDOM. Khi cómodal/nested confirmation, toast tạm không render và không chạy timeout; khi mọi modal đóng, feedback nhận lại6 giây hiển thị. Lỗi cần xử lý tại form vẫnInlineMessage, không bị đưa vào deferred toast.
+- Hover theo tọa độpointermouse để text vẫn click-through, không tạo lớp bắtclick cheform; focus/hover giữ toast khi đọc, rời chúng bắt đầu lại6 giây. Close button44px/sticky, message dài cuộn trong tối đa180px/30dvh. Body dành khoảng trống theo chiều cao toast để action cuối trang cuộn lên trên toast. Một toast vẫn là lớp nổi, không claim không bao giờ phủ bất kỳ nội dung nào tại vị trí scroll hiện tại.
+- App phát account-changed khi userID thay đổi/clear; Provider xóa feedback vàcancel pending prompts ở boundary này. Refresh cùngID không xóa feedback. Đây là cleanup phíaUI, không rollback request đã gửi hay thay server authorization; không claim giải quyết mọi stale response của hệ thống.
+- `check-feedback-flows.mjs` PASS trên UI-only harness: burst chỉ1visible/countremaining, priorityerror/dedup, keyboardfocus vàmouse hover>6s giữ message, dialogdefer>6s/nestedEscape/focus/draft, account reset event, bottomaction scrollaboveToast,5width/nooverflow/pageerrors. Harness riêngkhôngAPI/DB/auth/provider; productionbuild không cóentry này.
+- `check-stitch-workspace.mjs` PASS fullS3Vi-En/settings/email/reset, ảnh email375 chỉcòn1toast với sốpending thayvì4toast. `check-interaction-flows.mjs` và`check-c2-invite-flows.mjs` PASS do thay sharedfocus/NotificationProvider vàAppsession callback.
+- FE20 unit/build163 PASS; entry534.08kB/gzip151.30kB vẫnwarning>500kB, khôngnới threshold. Ảnh `.local/feedback/feedback-{width}.png`, `.local/stitch-workspace/email-en-375.png` đãxem. KhôngEnglishprobe mới; khôngfull-site accessibility/production acceptance.
+- KhôngSMTP/Google/liveaccounts/devdatabase/worker/backfill; harness gây feedbacksynthetic trongbrowsercontext riêng. TiếpWorkspaceTeam/Ban locale/cácfeature cònthiếu vàbundle performance; S12 chưahoàn tất.

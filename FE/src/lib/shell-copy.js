@@ -17,6 +17,7 @@ const english = {
   'Chưa tải số thông báo chưa đọc': 'Unread notification count not loaded',
   '{count} thông báo chưa đọc': '{count} unread notifications',
   ', cần tải lại': ', reload required',
+  '{count} thông báo tiếp theo': '{count} more updates',
 };
 export function shellText(value, locale, values = {}) {
   const template = locale === 'en' ? (english[value] ?? value) : value;

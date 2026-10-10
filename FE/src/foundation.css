@@ -42,6 +42,13 @@
 .shell a:focus-visible, .shell button:focus-visible { outline: 3px solid var(--wf-focus); outline-offset: 3px; }
 .toast-stack { pointer-events: none; }
 .toast-stack button, .toast-stack a { pointer-events: auto; }
+body { padding-bottom: var(--wf-toast-space, 0px); }
+.system-toast { max-height: min(180px, 30dvh); overflow-y: auto; align-items: flex-start; }
+.system-toast button { min-width: 44px; min-height: 44px; flex-shrink: 0; position: sticky; top: 0; }
+.toast-content { min-width: 0; overflow-wrap: anywhere; line-height: 1.7; }
+.toast-content small { display: block; color: var(--wf-muted); font-size: 12px; margin-top: 6px; }
+.system-toast.warning { border-left-color: #987000; }
+@media (max-width: 640px) { .toast-stack { left: 16px; right: 16px; bottom: 16px; width: auto; } }
 .sidebar-context strong, .sidebar-context small, .sidebar-label, .sidebar-bottom p { font-size: 12px; }
 .shell .account-menu summary small { font-size: 12px; }
 .mobile-sidebar { box-shadow: 8px 0 40px #1e1b1926; }

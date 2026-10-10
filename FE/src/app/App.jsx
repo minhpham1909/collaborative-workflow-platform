@@ -108,7 +108,15 @@ export default function App() {
     }
   }
   useEffect(() => {
-    sessionListener = setUser;
+    let accountId = null;
+    sessionListener = next => {
+      const nextId = next?.id ?? null;
+      if (nextId !== accountId) {
+        accountId = nextId;
+        window.dispatchEvent(new Event('workflow:account-changed'));
+      }
+      setUser(next);
+    };
     const changed = (event) => {
       if (event.data?.type === "session-changed") {
         api.clear();
