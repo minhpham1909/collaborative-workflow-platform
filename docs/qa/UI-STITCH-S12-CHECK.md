@@ -76,3 +76,16 @@ Gate còn: coverageVi/En toàn app, dialog/toast layering kiểm riêng, respons
 - C2 invitation browser regression PASS; Auth Vi/En regression PASS trên5 flows/5width do thay provider hierarchy. Không SMTP/Google thật/worker/dev data trong increment này. FE local5173 đã khởi động lại vì đầu phiên chưa có server; lỗi đầu tiên connection refused là môi trường, không product regression.
 
 Coverage còn thiếu: Home/highlights/Org/Team/Workspace/Project/Task/My Tasks/Inbox/invitation bodies, rich-editor/pickers/validation/role/time copy, dynamic confirmation/feedback. Kiểm dialog-toast layering và bundle split/error recovery là các bước kế tiếp, không tính S12 hoàn thành.
+
+## S12d2 — Home và tổng quan cá nhân Việt/Anh
+
+10/10/2026 — đạt scope Home, giữ layout/media/component Stitch hiện có.
+
+- Home dùng UI locale cho greeting, filters/grid-list/role/state/counts, cards fallback/CTA, loading/empty/error/create validation/confirm/success, compact overview/attention/notification summary. Date/date-time hiển thịvi-VN hoặcen-GB nhưng giữAsia/Ho_Chi_Minh; query/role/state IDs/time bounds/count source không đổi.
+- Tên người dùng/Workspace, description có dữ liệu, Task title/code/project/Workspace names không dịch; greeting dùng replacement callback để `$&`/`{name}` trong tên không bị xử lý như replacement syntax. Count1 dùngperson/project/task/workspace singular. Created/date là một text template để spacing không bị tách bởi flex layout.
+- FilterPanel có locale prop mặc địnhvi; Home truyền locale, các cụm chưa chuyển giữ hành vi/copy cũ. Không tự bật English cho feature chưa dịch. Error text hiển thị theo locale; giữ raw errors trong state để không đóng băng language khi đổi locale.
+- `check-stitch-home.mjs` PASS: toànS1 scope/roles/Archive/counts/search-time-race/grid-list/card-navigation/empty/network/retry/create/pagination20; bổ sungEN greeting tên “Mật khẩu $& {name}”, protected Task title,5width/no overflow, blank-name validation, nested cancel giữ draft, invalid date, empty/search, network error/retry, tạoWorkspace tên “Đăng xuất” qua API không dịch name và success toast English.
+- Installed skill probe English ở375/768/1024/1280/1440:0 Hỏng; mỗi width một default-limiter fixture mới, không nới rate limit. Ảnh `.local/stitch-home/home-en-{width}.png`, `probe-en-{width}/report.json`; xem trực tiếp375. Gu exceptions native date/select/focus/warm borders/card hierarchy/mobile shadow/layout measurements giữ theo brand, không claim mọi heuristic sạch.
+- FE18 unit PASS; build160 PASS, entry507.66kB/gzip143.27kB còn warning>500kB, performance gate chưa đạt. `check-interaction-flows.mjs` PASS do thay sharedFilterPanel; không BE schema/API/providers/SMTP/queue/dev data trong increment.
+
+Coverage tiếp: Organizations/Team, Workspace/Project/Task/My Tasks/Inbox/invitations và rich controls/feedback; dialog-toast layering và performance. Home đạt không đồng nghĩa toàn siteEnglish/S12 đạt.

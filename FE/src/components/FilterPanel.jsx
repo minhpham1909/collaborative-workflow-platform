@@ -1,3 +1,4 @@
+import { homeText } from '../lib/home-text.js';
 import Icon from "./Icon.jsx";
 import { Children, Fragment, cloneElement, useId, useState } from "react";
 function flattenFields(children, prefix = "filter") {
@@ -10,10 +11,12 @@ function flattenFields(children, prefix = "filter") {
 }
 export default function FilterPanel({
   children,
+  locale = "vi",
   compact = false,
   sortLabel = "Mới tạo trước",
   advancedLabel = "Bộ lọc",
 }) {
+  const t = value => homeText(value, locale);
   const [open, setOpen] = useState(false);
   const panelId = useId();
   if (compact) {
@@ -46,7 +49,7 @@ export default function FilterPanel({
     return (
       <section
         className="filter-panel compact-filter"
-        aria-label="Bộ lọc danh sách"
+        aria-label={t("Bộ lọc danh sách")}
       >
         <div className="filters compact-filter-bar">
           {primary}
@@ -59,7 +62,7 @@ export default function FilterPanel({
             <Icon name="filter" />
             {advancedLabel}{count ? ` (${count})` : ""}
           </button>
-          <span className="filter-sort">Sắp xếp: {sortLabel}</span>
+          <span className="filter-sort">{t("Sắp xếp:")} {t(sortLabel)}</span>
         </div>
         <div id={panelId} className="filters filter-advanced" hidden={!open}>
           {advanced}
@@ -68,11 +71,11 @@ export default function FilterPanel({
     );
   }
   return (
-    <section className="filter-panel" aria-label="Bộ lọc danh sách">
+    <section className="filter-panel" aria-label={t("Bộ lọc danh sách")}>
       <div className="filter-heading">
         <Icon name="filter" />
-        <strong>Tìm kiếm & bộ lọc</strong>
-        <span>Thu hẹp danh sách theo nhu cầu của bạn</span>
+        <strong>{t("Tìm kiếm & bộ lọc")}</strong>
+        <span>{t("Thu hẹp danh sách theo nhu cầu của bạn")}</span>
       </div>
       <div className="filters">{children}</div>
     </section>

@@ -1,3 +1,5 @@
+import { useAuthLocale } from '../auth/AuthLocale.jsx';
+import { homeText } from '../../lib/home-text.js';
 import {
   EmptyState,
   InlineMessage,
@@ -29,6 +31,8 @@ function plain(node) {
   return (node.content ?? []).map(plain).join(" ");
 }
 export default function Home({ api, user }) {
+  const { locale } = useAuthLocale();
+  const t = (value, values) => homeText(value, locale, values);
   const [role, setRole] = useState("all"), [state, setState] = useState("all"), [view, setView] = useState("grid");
   const [q, setQ] = useState(""),
     [from, setFrom] = useState(""),
@@ -48,7 +52,9 @@ export default function Home({ api, user }) {
   useDraftGuard({
     dirty: creating && Boolean(name),
     busy: saving,
-    message: "Bỏ Workspace đang tạo?",
+    busyMessage: t("Đang xử lý yêu cầu. Vui lòng chờ kết quả trước khi rời trang."),
+    message: t("Bỏ Workspace đang tạo?"),
+    dialogOptions: { cancelLabel: t("Ở lại"), confirmLabel: t("Bỏ thay đổi") },
   });
   const highlights = useHomeHighlights(api, refresh);
   const invalid = from && to && from > to;
@@ -114,8 +120,8 @@ export default function Home({ api, user }) {
       (!name ||
         (await confirmDialog(
           uncertain
-            ? "Đóng form và tải lại để kiểm tra Workspace đã tạo chưa?"
-            : "Bỏ tên Workspace chưa lưu?",
+            ? t("Đóng form và tải lại để kiểm tra Workspace đã tạo chưa?")
+            : t("Bỏ tên Workspace chưa lưu?"),
         )))
     ) {
       setCreating(false);
@@ -150,7 +156,7 @@ export default function Home({ api, user }) {
       setCreating(false);
       setName("");
       setQ(""); setFrom(""); setTo(""); setRole("all"); setState("all");
-      notify("Đã tạo Workspace.");
+      notify(t("Đã tạo Workspace."));
       setRefresh((v) => v + 1);
     } catch (e) {
       setUncertain(isUncertainMutation(e));
@@ -165,15 +171,14 @@ export default function Home({ api, user }) {
     }
   }
   return (
-    <main className="studio-home">
+    <main lang={locale} className="studio-home">
       <section className="hero studio-home-hero">
         <div>
-          <small>KHÔNG GIAN LÀM VIỆC CỦA BẠN</small>
-          <h1>{homeCopy.vi.greeting.replace("{name}", user.displayName)}</h1>
+          <small>{t("KHÔNG GIAN LÀM VIỆC CỦA BẠN")}</small>
+          <h1>{homeCopy[locale].greeting.replace("{name}", () => user.displayName)}</h1>
           <HomeDay data={highlights} />
           <p>
-            Chọn một Workspace để bắt đầu. Cùng đội ngũ biến ý tưởng thành công
-            việc.
+            {t("Chọn một Workspace để bắt đầu. Cùng đội ngũ biến ý tưởng thành công việc.")}
           </p>
         </div>
         <button
@@ -185,32 +190,32 @@ export default function Home({ api, user }) {
             setCreating(true);
           }}
         >
-          <Icon name="plus" /> Tạo Workspace
+          <Icon name="plus" /> {t("Tạo Workspace")}
         </button>
       </section>
       <HomeHighlights data={highlights} compact />
-      <div className="home-collection-header"><div><p className="home-eyebrow">CÙNG NHAU LÀM VIỆC</p><h2>Workspace của bạn <span className="home-count">{data.total ?? '—'}</span></h2></div><div className="home-view-switch" role="group" aria-label="Cách xem Workspace"><button aria-label="Xem Workspace dạng thẻ" aria-pressed={view === 'grid'} onClick={() => setView('grid')}><Icon name="grid" /></button><button aria-label="Xem Workspace dạng danh sách" aria-pressed={view === 'list'} onClick={() => setView('list')}><Icon name="list" /></button></div></div>
+      <div className="home-collection-header"><div><p className="home-eyebrow">{t("CÙNG NHAU LÀM VIỆC")}</p><h2>{t("Workspace của bạn")} <span className="home-count">{data.total ?? '—'}</span></h2></div><div className="home-view-switch" role="group" aria-label={t("Cách xem Workspace")}><button aria-label={t("Xem Workspace dạng thẻ")} aria-pressed={view === 'grid'} onClick={() => setView('grid')}><Icon name="grid" /></button><button aria-label={t("Xem Workspace dạng danh sách")} aria-pressed={view === 'list'} onClick={() => setView('list')}><Icon name="list" /></button></div></div>
       <div className="home-filters">
-      <FilterPanel compact advancedLabel="Thời gian">
+      <FilterPanel locale={locale} compact advancedLabel={t("Thời gian")}>
         <label>
-          Tìm theo tên hoặc mô tả Workspace
+          {t("Tìm theo tên hoặc mô tả Workspace")}
           <input
             id="home-search"
             aria-keyshortcuts="Control+K Meta+K"
             type="search"
-            placeholder="Nhập để tìm kiếm…"
+            placeholder={t("Nhập để tìm kiếm…")}
             maxLength={200}
             value={q}
             onChange={(e) => setQ(e.target.value)}
           />
         </label>
-        <label>Trạng thái Workspace
+        <label>{t("Trạng thái Workspace")}
           <select value={state} onChange={event => setState(event.target.value)}>
-            <option value="all">Tất cả trạng thái</option><option value="active">Đang hoạt động</option><option value="archived">Đã lưu trữ</option>
+            <option value="all">{t("Tất cả trạng thái")}</option><option value="active">{t("Đang hoạt động")}</option><option value="archived">{t("Đã lưu trữ")}</option>
           </select>
         </label>
         <label>
-          Từ ngày tạo
+          {t("Từ ngày tạo")}
           <input
             type="date"
             value={from}
@@ -218,7 +223,7 @@ export default function Home({ api, user }) {
           />
         </label>
         <label>
-          Đến ngày tạo
+          {t("Đến ngày tạo")}
           <input
             type="date"
             value={to}
@@ -232,37 +237,37 @@ export default function Home({ api, user }) {
             setTo(""); setRole("all"); setState("all");
           }}
         >
-          Xóa bộ lọc
+          {t("Xóa bộ lọc")}
         </button>
         <button disabled={busy} onClick={() => setRefresh((v) => v + 1)}>
-          Làm mới
+          {t("Làm mới")}
         </button>
       </FilterPanel>
-      <div className="home-role-filters" role="group" aria-label="Lọc quyền Workspace">
-        {[['all', 'Tất cả'], ['managed', 'Tôi quản lý'], ['member', 'Thành viên']].map(([key, label]) => <button key={key} aria-pressed={role === key} onClick={() => setRole(key)}>{label}<span>{data.roleCounts?.[key] ?? '—'}</span></button>)}
-        {(q || from || to || state !== 'all' || role !== 'all') && <span className="home-filter-summary">Đang áp dụng bộ lọc{from || to ? ` · ${from || 'Từ đầu'} → ${to || 'Hiện tại'}` : ''}</span>}
+      <div className="home-role-filters" role="group" aria-label={t("Lọc quyền Workspace")}>
+        {[['all', 'Tất cả'], ['managed', 'Tôi quản lý'], ['member', 'Thành viên']].map(([key, label]) => <button key={key} aria-pressed={role === key} onClick={() => setRole(key)}>{t(label)}<span>{data.roleCounts?.[key] ?? '—'}</span></button>)}
+        {(q || from || to || state !== 'all' || role !== 'all') && <span className="home-filter-summary">{t('Đang áp dụng bộ lọc')}{from || to ? ` · ${from || t('Từ đầu')} → ${to || t('Hiện tại')}` : ''}</span>}
       </div></div>
       {invalid && (
         <InlineMessage>
-          Ngày bắt đầu phải trước hoặc bằng ngày kết thúc.
+          {t("Ngày bắt đầu phải trước hoặc bằng ngày kết thúc.")}
         </InlineMessage>
       )}
 
       {error && (
         <InlineMessage>
-          {error}{" "}
-          <button onClick={() => setRefresh((v) => v + 1)}>Thử lại</button>
+          {t(error)}{" "}
+          <button onClick={() => setRefresh((v) => v + 1)}>{t("Thử lại")}</button>
         </InlineMessage>
       )}
-      {busy && <LoadingState>Đang tải Workspace…</LoadingState>}
+      {busy && <LoadingState>{t("Đang tải Workspace…")}</LoadingState>}
       <div className={`cards workspace-cards home-workspace-cards view-${view}`} aria-busy={busy}>
         {!invalid && data.items.map(w => (
           <article className={`card workspace-card home-workspace-card${w.state === 'archived' ? ' is-archived' : ''}`} key={w.id}>
-            <div className="home-card-media"><StudioCover id={w.id} archived={w.state === 'archived'} /><span className="home-role-badge">{workspaceRoleLabel(w.role)}</span>{w.state === 'archived' && <span className="home-archived-badge"><Icon name="archive" />Chỉ đọc</span>}</div>
+            <div className="home-card-media"><StudioCover id={w.id} archived={w.state === 'archived'} /><span className="home-role-badge">{workspaceRoleLabel(w.role, locale)}</span>{w.state === 'archived' && <span className="home-archived-badge"><Icon name="archive" />{t("Chỉ đọc")}</span>}</div>
             <div className="home-card-content"><div className="home-card-title"><h2><a href={`#workspace/${w.id}`}>{w.name}</a></h2><span className={'symbol tone-' + studioTone(w.id)}><Icon name={['palette', 'code', 'megaphone'][studioTone(w.id)]} /></span></div>
-              <p className="home-card-description">{plain(w.description) || 'Không gian để cùng nhau làm việc.'}</p>
-              <div className="workspace-metrics"><span><Icon name="people" /><div>Thành viên<strong>{w.memberCount ?? '—'} người</strong></div></span><span><Icon name="folder" /><div>Dự án hoạt động<strong>{w.activeProjectCount ?? '—'} dự án</strong></div></span></div>
-              <div className="studio-card-footer"><p className="muted">Tạo {new Date(w.createdAt).toLocaleDateString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}</p><span className="home-card-action" aria-hidden="true">{w.state === 'archived' ? 'Xem Workspace' : 'Mở Workspace'}<Icon name="chevron-right" /></span></div>
+              <p className="home-card-description">{plain(w.description) || t('Không gian để cùng nhau làm việc.')}</p>
+              <div className="workspace-metrics"><span><Icon name="people" /><div>{t("Thành viên")}<strong>{t('{count} người', { count: w.memberCount ?? '—' })}</strong></div></span><span><Icon name="folder" /><div>{t("Dự án hoạt động")}<strong>{t('{count} dự án', { count: w.activeProjectCount ?? '—' })}</strong></div></span></div>
+              <div className="studio-card-footer"><p className="muted">{t("Tạo {date}", { date: new Date(w.createdAt).toLocaleDateString(locale === 'en' ? 'en-GB' : 'vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }) })}</p><span className="home-card-action" aria-hidden="true">{t(w.state === 'archived' ? 'Xem Workspace' : 'Mở Workspace')}<Icon name="chevron-right" /></span></div>
             </div>
           </article>
         ))}
@@ -271,13 +276,13 @@ export default function Home({ api, user }) {
         <EmptyState>
           <h2>
             {q || from || to || role !== 'all' || state !== 'all'
-              ? "Không có Workspace phù hợp"
-              : "Bạn chưa có Workspace"}
+              ? t("Không có Workspace phù hợp")
+              : t("Bạn chưa có Workspace")}
           </h2>
           <p>
             {q || from || to || role !== 'all' || state !== 'all'
-              ? "Thử thay đổi từ khóa hoặc bộ lọc."
-              : "Tạo Workspace đầu tiên để bắt đầu cùng đội ngũ."}
+              ? t("Thử thay đổi từ khóa hoặc bộ lọc.")
+              : t("Tạo Workspace đầu tiên để bắt đầu cùng đội ngũ.")}
           </p>
         </EmptyState>
       )}
@@ -286,7 +291,7 @@ export default function Home({ api, user }) {
           disabled={busy || invalid}
           onClick={() => load(data.nextCursor)}
         >
-          Tải thêm
+          {t("Tải thêm")}
         </button>
       )}
       <HomeHighlights data={highlights} details />
@@ -299,14 +304,15 @@ export default function Home({ api, user }) {
               role="dialog"
               aria-modal="true"
               aria-labelledby="create-title"
+              lang={locale}
               className="dialog"
             >
-              <h2 id="create-title">Tạo Workspace</h2>
+              <h2 id="create-title">{t("Tạo Workspace")}</h2>
               <form onSubmit={create}>
                 <FormField
-                  label="Tên Workspace"
-                  hint="Tối đa 200 ký tự."
-                  error={nameError}
+                  label={t("Tên Workspace")}
+                  hint={t("Tối đa 200 ký tự.")}
+                  error={nameError ? t(nameError) : nameError}
                 >
                   {(props) => (
                     <input
@@ -322,17 +328,17 @@ export default function Home({ api, user }) {
                     />
                   )}
                 </FormField>
-                {createError && <InlineMessage>{createError}</InlineMessage>}
+                {createError && <InlineMessage>{t(createError)}</InlineMessage>}
                 <div className="buttons">
                   <button
                     type="button"
                     disabled={saving}
                     onClick={() => closeDialog.current()}
                   >
-                    Hủy
+                    {t("Hủy")}
                   </button>
                   <button className="primary" disabled={saving || uncertain}>
-                    {saving ? "Đang tạo…" : "Tạo Workspace"}
+                    {t(saving ? "Đang tạo…" : "Tạo Workspace")}
                   </button>
                 </div>
               </form>
