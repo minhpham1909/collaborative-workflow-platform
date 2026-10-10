@@ -88,6 +88,7 @@ const english = {
   "Bỏ thay đổi": "Discard changes"
 };
 export function homeText(value, locale, values = {}) {
+  if (typeof value !== 'string') return value;
   const singular = { '{count} người': '{count} person', '{count} dự án': '{count} project', '{count} việc đến hạn hôm nay': '{count} task due today', 'tại {count} Workspace': 'across {count} workspace' };
   const template = locale === 'en' ? (values.count === 1 && singular[value] ? singular[value] : english[value] ?? translateAuthText(value, locale)) : value;
   return template.replace(/\{(\w+)\}/gu, (match, key) => Object.hasOwn(values, key) ? String(values[key]) : match);
