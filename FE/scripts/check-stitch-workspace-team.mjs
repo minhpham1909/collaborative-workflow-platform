@@ -26,7 +26,7 @@ const { testConfig } = await import('../../BE/test-support/auth-store.js');
 const { createModerationService } = await import('../../BE/src/moderation/service.js');
 const { createMongoModerationStore } = await import('../../BE/src/moderation/mongo-store.js');
 const out = fileURLToPath(new URL('../../.local/stitch-workspace-team/', import.meta.url)); await mkdir(out, { recursive: true });
-let repl, server, browser; const errors = [];
+let repl, server, browser, closing=false; const errors = [];
 try {
   repl = await MongoMemoryReplSet.create({ binary: { version: '8.0.17', downloadDir: fileURLToPath(new URL('../../.local/mongodb-binaries/', import.meta.url)) }, instanceOpts: [{ launchTimeout: 30000 }], replSet: { count: 1, storageEngine: 'wiredTiger', ip: '127.0.0.1' } });
   await mongoose.connect(repl.getUri('workflow_fe_stitch_workspace_team_test'));
@@ -65,8 +65,8 @@ try {
   await work.createComment(auths[1], assigned.id, { content }); await work.createComment(auths[1], assigned.id, { content });
   const reusableLink = await workspaces.invite(auths[0], standalone.id, { type: 'LINK' });
   const cutoff = cutoffCodec(config.accessKeyHex);
-  server = createApp({ authService: auth, authConfig: config, workspaceService: workspaces, workService: work, organizationService: organizations, moderationService: mod, notificationsService: createNotificationsService({ store: createMongoNotificationsStore({ cutoff }), cutoff }) }).listen(0, '127.0.0.1'); await once(server, 'listening');
-  const origin = `http://127.0.0.1:${server.address().port}`;
+  const fixtureApp=()=>createApp({ authService: auth, authConfig: config, workspaceService: workspaces, workService: work, organizationService: organizations, moderationService: mod, notificationsService: createNotificationsService({ store: createMongoNotificationsStore({ cutoff }), cutoff }) });server=fixtureApp().listen(0,'127.0.0.1'); await once(server, 'listening');
+  let origin = `http://127.0.0.1:${server.address().port}`;async function rotateFixture(){const previous=server;server=fixtureApp().listen(0,'127.0.0.1');await once(server,'listening');origin='http://127.0.0.1:'+server.address().port;await new Promise(resolve=>previous.close(resolve));}
   browser = await chromium.launch({ executablePath: process.env.WORKFLOW_BROWSER_EXECUTABLE, headless: true });
   let fail = false, delay = false, lostStateResponse = false, stateWrites = 0;
   async function pageFor(index) {
@@ -74,7 +74,7 @@ try {
     await context.route('http://localhost:4000/**', async route => {
       if (fail && route.request().url().includes(`/workspaces/${standalone.id}/projects?`)) return route.abort();
       if (delay && route.request().url().includes('/organizations?')) await new Promise(resolve => setTimeout(resolve, new URL(route.request().url()).searchParams.get('q') === 'Hà' ? 900 : 50));
-      const response = await route.fetch({ url: route.request().url().replace('http://localhost:4000', origin) });
+      const relay=origin;let response;try{response=await route.fetch({url:route.request().url().replace('http://localhost:4000',relay)});}catch{if(closing||relay!==origin)return route.abort().catch(()=>{});throw new Error('Fixture relay failed: '+new URL(route.request().url()).pathname);}
       if (route.request().method() === 'PATCH' && route.request().url().endsWith('/state')) { stateWrites++; if (lostStateResponse) { lostStateResponse = false; return route.abort(); } }
       await route.fulfill({ response });
     });
@@ -105,6 +105,30 @@ try {
   await invitationRow.getByRole('button', { name: 'Thu hồi', exact: true }).click(); await ownerPage.getByRole('dialog').getByRole('button', { name: 'Thu hồi lời mời', exact: true }).click(); await ownerPage.getByRole('dialog').waitFor({ state: 'hidden' }); await invitationRow.getByText('Đã thu hồi', { exact: true }).waitFor(); assert.equal((await EmailOutbox.collection.findOne({ _id: mail._id })).state, 'cancelled');
   await ownerPage.getByRole('button', { name: '+ Tạo lời mời', exact: true }).click(); inviteDialog = ownerPage.getByRole('dialog'); await inviteDialog.getByLabel('Cách mời', { exact: true }).selectOption('LINK'); await inviteDialog.getByRole('button', { name: 'Tạo lời mời', exact: true }).click(); await inviteDialog.getByLabel('Liên kết tham gia', { exact: true }).waitFor(); const generatedLink = new URL(await inviteDialog.getByLabel('Liên kết tham gia', { exact: true }).inputValue()); assert.equal(generatedLink.pathname, '/invite'); assert.ok(new URLSearchParams(generatedLink.hash.slice(1)).get('token')); await inviteDialog.getByRole('button', { name: 'Đóng kết quả', exact: true }).click();
   const oldManaged = (await workspaces.get(auths[0], first.id)).workspace; await organizations.manager(auths[0], org.id, first.id, { expectedVersion: oldManaged.version, managerId: users[0].id }); const revokedMember = await WorkspaceMembership.collection.findOne({ workspaceId: new mongoose.Types.ObjectId(first.id), userId: users[1]._id }); await workspaces.remove(auths[0], first.id, users[1].id, { expectedVersion: revokedMember.version }); await memberPage.getByRole('button', { name: 'Làm mới danh sách', exact: true }).click(); await memberPage.getByText('Workspace không còn khả dụng với quyền hiện tại.', { exact: false }).waitFor(); assert.equal(await memberPage.getByRole('heading', { name: first.name, exact: true }).count(), 0); assert.equal(await memberPage.locator('.team-table tbody tr').count(), 0);
+  await rotateFixture();await ownerPage.evaluate(()=>localStorage.setItem('workflow.auth.locale','en'));await ownerPage.reload();await ownerPage.locator('.workspace-tabs').getByRole('button',{name:'Member',exact:true}).click();await ownerPage.getByRole('table',{name:'Workspace members',exact:true}).waitFor();await ownerPage.getByText('Bình',{exact:true}).waitFor();
+  for(const width of [375,768,1024,1280,1440]){await ownerPage.setViewportSize({width,height:1000});await ownerPage.screenshot({path:out+'/members-en-'+width+'.png',fullPage:true});assert.ok(await ownerPage.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'EN WS members overflow '+width);}
+  await ownerPage.locator('.workspace-tabs').getByRole('button',{name:'Invitations',exact:true}).click();await ownerPage.getByRole('button',{name:'+ Create invitation',exact:true}).click();await ownerPage.getByRole('dialog').getByLabel('Invitation method',{exact:true}).selectOption('LINK');await ownerPage.getByRole('dialog').getByRole('button',{name:'Create invitation',exact:true}).click();await ownerPage.getByRole('dialog').getByLabel('Invitation link',{exact:true}).waitFor();const enLink=new URL(await ownerPage.getByRole('dialog').getByLabel('Invitation link',{exact:true}).inputValue());assert.equal(enLink.pathname,'/invite');assert.ok(new URLSearchParams(enLink.hash.slice(1)).get('token'));await ownerPage.getByRole('button',{name:'Close result',exact:true}).click();
+  await ownerPage.getByRole('button',{name:'+ Create invitation',exact:true}).click();await ownerPage.getByRole('dialog').getByLabel('Recipient email',{exact:true}).fill('english-ws-invite@example.com');await ownerPage.getByRole('dialog').getByRole('button',{name:'Create invitation',exact:true}).click();await ownerPage.getByText('Invitation created; email is queued.',{exact:true}).waitFor();await ownerPage.getByRole('button',{name:'Close result',exact:true}).click();await ownerPage.getByText('english-ws-invite@example.com',{exact:true}).waitFor();
+  for(const width of [375,768,1024,1280,1440]){await ownerPage.setViewportSize({width,height:1000});await ownerPage.screenshot({path:out+'/invites-en-'+width+'.png',fullPage:true});assert.ok(await ownerPage.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'EN WS invitations overflow '+width);}
+  await ownerPage.locator('.team-table tbody tr').filter({hasText:'english-ws-invite@example.com'}).getByRole('button',{name:'Revoke',exact:true}).click();await ownerPage.getByRole('dialog').getByRole('button',{name:'Revoke invitation',exact:true}).click();await ownerPage.getByRole('dialog').waitFor({state:'hidden'});
+  await rotateFixture();await ownerPage.locator('.workspace-tabs').getByRole('button',{name:'Member',exact:true}).click();await ownerPage.getByText('Bình',{exact:true}).waitFor();await ownerPage.locator('.team-table tbody tr').filter({hasText:'Bình'}).getByRole('button',{name:'Transfer ownership',exact:true}).click();await ownerPage.getByLabel('Type the workspace name to confirm',{exact:true}).fill('Wrong name');assert.equal(await ownerPage.getByRole('dialog').getByRole('button',{name:'Transfer ownership',exact:true}).isDisabled(),true);await ownerPage.getByLabel('Type the workspace name to confirm',{exact:true}).fill(standalone.name);await ownerPage.getByRole('dialog').getByRole('button',{name:'Transfer ownership',exact:true}).click();await ownerPage.getByRole('dialog').waitFor({state:'hidden'});await ownerPage.getByRole('button',{name:'Leave workspace',exact:true}).waitFor();const enTransferred=(await workspaces.get(auths[3],standalone.id)).workspace;await workspaces.transfer(auths[3],standalone.id,{expectedVersion:enTransferred.version,memberId:users[0].id});await ownerPage.getByRole('button',{name:'Refresh list',exact:true}).click();await ownerPage.locator('.team-table tbody tr').filter({hasText:'Bình'}).getByRole('button',{name:'Remove from workspace',exact:true}).waitFor();
+  const kickTask=(await work.createTask(auths[0],project.id,{title:'English Kick case',assigneeId:users[3].id})).task;await ownerPage.locator('.team-table tbody tr').filter({hasText:'Bình'}).getByRole('button',{name:'Remove from workspace',exact:true}).click();await ownerPage.getByRole('dialog').getByRole('button',{name:'Remove member',exact:true}).click();await ownerPage.getByRole('dialog').waitFor({state:'hidden'});assert.equal((await Task.findById(kickTask.id)).assigneeId,null);
+  await workspaces.accept(auths[1], { token: new URLSearchParams(new URL(reusableLink.url).hash.slice(1)).get('token') });
+  await memberPage.evaluate(()=>localStorage.setItem('workflow.auth.locale','en'));await memberPage.goto(`http://localhost:5173/#workspace/${standalone.id}`);await memberPage.reload();await memberPage.locator('.workspace-tabs').getByRole('button',{name:'Member',exact:true}).click();await memberPage.getByRole('button',{name:'Leave workspace',exact:true}).click();await memberPage.getByRole('dialog').getByRole('button',{name:'Leave workspace',exact:true}).click();await memberPage.waitForURL('**/#home');await assert.rejects(workspaces.get(auths[1],standalone.id));
+  await rotateFixture();
+  const admissionWorkspace = (await organizations.createWorkspace(auths[0], org.id, { name: 'Nội bộ English fixture' })).workspace;
+  await ownerPage.goto(`http://localhost:5173/#workspace/${admissionWorkspace.id}`);
+  await ownerPage.locator('.workspace-tabs').getByRole('button', { name: 'Member', exact: true }).click();
+  await ownerPage.getByRole('button', { name: 'Add organization member', exact: true }).click();
+  const englishAdmission = ownerPage.getByRole('dialog');
+  await englishAdmission.getByLabel('Search organization members', { exact: true }).fill('Hải');
+  await englishAdmission.getByLabel('Member to add', { exact: true }).selectOption(users[2].id);
+  await englishAdmission.screenshot({ path: `${out}/admission-en.png` });
+  await englishAdmission.getByRole('button', { name: 'Add to workspace', exact: true }).click();
+  await englishAdmission.waitFor({ state: 'hidden' });
+  await ownerPage.getByRole('table', { name: 'Workspace members', exact: true }).getByText('Hải', { exact: true }).waitFor();
+  assert.equal(await WorkspaceMembership.collection.countDocuments({ workspaceId: new mongoose.Types.ObjectId(admissionWorkspace.id), userId: users[2]._id, state: 'active' }), 1);
+  assert.equal((await OrganizationMembership.collection.findOne({ organizationId: new mongoose.Types.ObjectId(org.id), userId: users[2]._id })).role, 'admin');
   assert.deepEqual(errors, []);
   if (process.env.WORKFLOW_SKILL_PROBE === '1') {
     let source = await readFile('C:/Users/Acer/.agents/skills/ui-ux/scripts/probe.mjs', 'utf8');
@@ -124,9 +148,9 @@ try {
       assert.equal(await new Promise(resolve => child.once('exit', resolve)), 0);
     }
   }
-  console.log(`PASS S5: Kick/rejoin distinction, archived Ban preview/confirmed cleanup queue, protected tasks/history, job retry, Unban without membership/cleanup cancellation, leave, member denial, 5 widths. No dev data/providers/workers. Screens ${out}`);
+  console.log(`PASS WS Team/invites/kick/leave/transfer Vi-En plusS5: Kick/rejoin distinction, archived Ban preview/confirmed cleanup queue, protected tasks/history, job retry, Unban without membership/cleanup cancellation, leave, member denial, 5 widths. No dev data/providers/workers. Screens ${out}`);
 } catch (error) { if (browser) for (const [index, context] of browser.contexts().entries()) for (const page of context.pages()) { await page.screenshot({ path: `${out}/failure-${index}.png`, fullPage: true }); console.log((await page.locator('main').innerText()).slice(-1800)); } throw error;
-} finally { await browser?.close(); if (server) await new Promise(resolve => server.close(resolve)); await mongoose.disconnect(); await repl?.stop(); }
+} finally { closing=true; await browser?.close(); if (server) await new Promise(resolve => server.close(resolve)); await mongoose.disconnect(); await repl?.stop(); }
 
 
 

@@ -123,11 +123,11 @@ try {
     .getByRole("link", { name: "Sáng Tạo Studio", exact: true })
     .click();
   await page.getByRole("button", { name: "Thành viên", exact: true }).click();
-  await page.getByRole("heading", { name: member.displayName }).waitFor();
+  await page.locator(".team-table").getByText(member.displayName, { exact: true }).waitFor();
   await page.getByLabel("Tìm tên thành viên").fill("lan");
-  await page.getByRole("heading", { name: member.displayName }).waitFor();
+  await page.locator(".team-table").getByText(member.displayName, { exact: true }).waitFor();
   assert.equal(
-    await page.getByRole("heading", { name: owner.displayName }).count(),
+    await page.locator(".team-table").getByText(owner.displayName, { exact: true }).count(),
     0,
   );
   await page.getByRole("button", { name: "Xóa bộ lọc" }).click();
@@ -145,7 +145,7 @@ try {
     .click();
   await page.getByText("Đã tạo lời mời; email đang chờ gửi.").waitFor();
   await page.getByRole("button", { name: "Đóng kết quả" }).click();
-  await page.getByRole("heading", { name: "new-team@example.com" }).waitFor();
+  await page.locator(".team-table").getByText("new-team@example.com", { exact: true }).waitFor();
   const invitation = await WorkspaceInvitation.findOne({
     email: "new-team@example.com",
   });
@@ -165,7 +165,7 @@ try {
     .click();
   await page.getByText("Email: Chờ gửi").waitFor();
   await page.getByRole("button", { name: "+ Tạo lời mời" }).click();
-  await page.getByLabel("Cách mời").selectOption("LINK");
+  await page.getByRole("dialog").getByLabel("Cách mời").selectOption("LINK");
   await page
     .locator(".dialog")
     .getByRole("button", {
@@ -221,16 +221,16 @@ try {
     1,
   );
   await page.getByLabel("Tìm email người nhận").fill("new-team");
-  await page.getByRole("heading", { name: "new-team@example.com" }).waitFor();
+  await page.locator(".team-table").getByText("new-team@example.com", { exact: true }).waitFor();
   assert.equal(
     await page
-      .getByRole("heading", { name: "Liên kết tham gia", exact: true })
+      .locator(".team-table").getByText("Liên kết tham gia", { exact: true })
       .count(),
     0,
   );
   await page.getByRole("button", { name: "Xóa bộ lọc" }).click();
   await page
-    .getByRole("heading", { name: "Liên kết tham gia", exact: true })
+    .locator(".team-table").getByText("Liên kết tham gia", { exact: true })
     .waitFor();
   await page.evaluate(() => document.fonts.ready);
   await page.screenshot({ path: ".local/fe-invitations.png", fullPage: true });
@@ -245,11 +245,11 @@ try {
   }
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.getByRole("button", { name: "Thành viên", exact: true }).click();
-  await page.getByRole("heading", { name: "Người mới", exact: true }).waitFor();
-  const row = page.locator("article").filter({
-    has: page.getByRole("heading", { name: "Người mới", exact: true }),
+  await page.locator(".team-table").getByText("Người mới", { exact: true }).waitFor();
+  const row = page.locator(".team-table tbody tr").filter({
+    hasText: "Người mới",
   });
-  await row.getByRole("button", { name: "Loại khỏi nhóm" }).click();
+  await row.getByRole("button", { name: "Gỡ khỏi nhóm" }).click();
   await WorkspaceMembership.collection.updateOne(
     {
       workspaceId: new mongoose.Types.ObjectId(workspace.id),
@@ -273,8 +273,8 @@ try {
     1,
   );
   await page.getByRole("button", { name: "Đóng", exact: true }).click();
-  await page.getByRole("heading", { name: "Người mới", exact: true }).waitFor();
-  await row.getByRole("button", { name: "Loại khỏi nhóm" }).click();
+  await page.locator(".team-table").getByText("Người mới", { exact: true }).waitFor();
+  await row.getByRole("button", { name: "Gỡ khỏi nhóm" }).click();
   await page
     .locator(".dialog")
     .getByRole("button", {
@@ -283,12 +283,13 @@ try {
     .click();
   await page.getByRole("dialog").waitFor({ state: "hidden" });
   await page
-    .getByRole("heading", { name: "Người mới", exact: true })
+    .locator(".team-table").getByText("Người mới", { exact: true })
     .waitFor({ state: "hidden" });
   const lan = page
-    .locator("article")
-    .filter({ has: page.getByRole("heading", { name: member.displayName }) });
+    .locator(".team-table tbody tr")
+    .filter({ hasText: member.displayName });
   await lan.getByRole("button", { name: "Chuyển quyền sở hữu" }).click();
+  await page.getByLabel("Nhập tên Workspace để xác nhận", { exact: true }).fill(workspace.name);
   await page
     .locator(".dialog")
     .getByRole("button", {
@@ -303,7 +304,7 @@ try {
     0,
   );
   assert.equal(
-    await page.getByRole("button", { name: "Loại khỏi nhóm" }).count(),
+    await page.getByRole("button", { name: "Gỡ khỏi nhóm" }).count(),
     0,
   );
   const newOwner = await pageFor(member.email);
@@ -312,13 +313,10 @@ try {
     .click();
   await newOwner.getByRole("button", { name: "Lời mời", exact: true }).click();
   await newOwner
-    .getByRole("heading", { name: "Liên kết tham gia", exact: true })
+    .locator(".team-table").getByText("Liên kết tham gia", { exact: true })
     .waitFor();
-  const linkRow = newOwner.locator("article").filter({
-    has: newOwner.getByRole("heading", {
-      name: "Liên kết tham gia",
-      exact: true,
-    }),
+  const linkRow = newOwner.locator(".team-table tbody tr").filter({
+    hasText: "Liên kết tham gia",
   });
   await linkRow.getByRole("button", { name: "Thu hồi", exact: true }).click();
   await newOwner
