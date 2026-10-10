@@ -114,7 +114,7 @@ export default function Workspace({ api, id }) {
   return (
     <main lang={locale} className="studio-workspace">
       <p className="breadcrumbs">
-        <a href="#home">Trang chủ</a>{workspace?.organizationId && <> / <a href={`#organization/${workspace.organizationId}`}>{t("Tổ chức")}</a></>} / Workspace
+        <a href="#home">{t("Trang chủ")}</a>{workspace?.organizationId && <> / <a href={`#organization/${workspace.organizationId}`}>{t("Tổ chức")}</a></>} / Workspace
       </p>
       {error && (
         <InlineMessage>

@@ -1,3 +1,5 @@
+import { useAuthLocale } from '../auth/AuthLocale.jsx';
+import { workspaceText } from '../../lib/workspace-text.js';
 import { InlineMessage, LoadingState } from "../../components/Feedback.jsx";
 import { notify } from "../../components/NotificationProvider.jsx";
 import FormField from "../../components/FormField.jsx";
@@ -21,6 +23,8 @@ export default function WorkspaceSettings({
   onDirty,
   onSaving,
 }) {
+  const { locale } = useAuthLocale();
+  const t = (value, values) => workspaceText(value, locale, values);
   const [snapshot, setSnapshot] = useState(null),
     [global, setGlobal] = useState(null),
     [name, setName] = useState(""),
@@ -80,7 +84,7 @@ export default function WorkspaceSettings({
     if (
       !dirty ||
       (await confirmDialog(
-        "Bỏ thay đổi chưa lưu và tải lại cài đặt Workspace?",
+        t("Bỏ thay đổi chưa lưu và tải lại cài đặt Workspace?"),
       ))
     )
       setRevision((v) => v + 1);
@@ -104,7 +108,7 @@ export default function WorkspaceSettings({
           !name.trim() ||
           name.length > 200 ||
           /[\u0000-\u001f\u007f\u2028\u2029]/u.test(name)
-            ? "Tên tối đa 200 ký tự, không để trống hoặc chứa ký tự điều khiển."
+            ? t("Tên tối đa 200 ký tự, không để trống hoặc chứa ký tự điều khiển.")
             : "",
         description:
           [
@@ -112,7 +116,7 @@ export default function WorkspaceSettings({
               description?.plainText ?? "",
             ),
           ].length > 20000
-            ? "Mô tả tối đa 20.000 ký tự hiển thị."
+            ? t("Mô tả tối đa 20.000 ký tự hiển thị.")
             : "",
       });
       return;
@@ -120,7 +124,7 @@ export default function WorkspaceSettings({
     if (
       reset &&
       !(await confirmDialog(
-        "Đưa cả bốn loại email về kế thừa cài đặt chung của bạn?",
+        t("Đưa cả bốn loại email về kế thừa cài đặt chung của bạn?"),
       ))
     )
       return;
@@ -157,13 +161,13 @@ export default function WorkspaceSettings({
       if (emailOnly) setOverrides(result.emailOverrides);
       setDirty(false);
       onDirty(false);
-      setNote(reset ? "Đã trở về cài đặt chung." : "Đã lưu cài đặt.");
-      notify("Đã lưu cài đặt Workspace.");
+      setNote(reset ? t("Đã trở về cài đặt chung.") : t("Đã lưu cài đặt."));
+      notify(t("Đã lưu cài đặt Workspace."));
     } catch (e) {
       setError(
         !isUncertainMutation(e)
           ? messageFor(e)
-          : "Chưa xác nhận đã lưu. Tải lại cài đặt để kiểm tra trước khi gửi tiếp.",
+          : t("Chưa xác nhận đã lưu. Tải lại cài đặt để kiểm tra trước khi gửi tiếp."),
       );
       if (isUncertainMutation(e)) setUncertain(true);
       if (
@@ -191,20 +195,20 @@ export default function WorkspaceSettings({
     }
   }
   return (
-    <section className="project-info">
+    <section lang={locale} className="project-info">
       <div className="section-heading">
-        <h2>{emailOnly ? "Email của tôi trong nhóm" : "Cài đặt Workspace"}</h2>
+        <h2>{emailOnly ? t("Email của tôi trong nhóm") : t("Cài đặt Workspace")}</h2>
         <button disabled={busy || saving} onClick={reload}>
-          Tải lại cài đặt
+          {t("Tải lại cài đặt")}
         </button>
       </div>
-      {busy && <LoadingState>Đang tải cài đặt…</LoadingState>}
-      {error && <InlineMessage>{error}</InlineMessage>}
-      {note && <InlineMessage tone="info">{note}</InlineMessage>}
+      {busy && <LoadingState>{t("Đang tải cài đặt…")}</LoadingState>}
+      {error && <InlineMessage>{t(error)}</InlineMessage>}
+      {note && <InlineMessage tone="info">{t(note)}</InlineMessage>}
       {snapshot &&
         ((!emailOnly && !snapshot.permissions?.edit) || (emailOnly && !snapshot.permissions?.emailPreferences) ? (
           <InlineMessage tone="info">
-            {emailOnly ? "Tùy chọn email riêng chỉ dành cho thành viên của Workspace." : snapshot.state === "archived" ? "Workspace đang lưu trữ. Mở lại trước khi sửa tên hoặc mô tả." : "Chỉ người quản lý hiện tại được sửa thông tin nhóm."}
+            {emailOnly ? t("Tùy chọn email riêng chỉ dành cho thành viên của Workspace.") : snapshot.state === "archived" ? t("Workspace đang lưu trữ. Mở lại trước khi sửa tên hoặc mô tả.") : t("Chỉ người quản lý hiện tại được sửa thông tin nhóm.")}
           </InlineMessage>
         ) : (
           <form onSubmit={submit}>
@@ -212,15 +216,14 @@ export default function WorkspaceSettings({
               {emailOnly ? (
                 <>
                   <p>
-                    Các lựa chọn này chỉ áp dụng cho bạn trong {snapshot.name}.
-                    Email xác minh và bảo mật không bị tắt.
+                    {t("Các lựa chọn này chỉ áp dụng cho bạn trong {name}. Email xác minh và bảo mật không bị tắt.", { name: snapshot.name })}
                   </p>
                   {Object.entries(events).map(([key, label]) => (
                     <div className="email-override" key={key}>
                       <label>
-                        {label}
+                        {t(label)}
                         <select
-                          aria-label={label}
+                          aria-label={t(label)}
                           value={overrides[key]}
                           onChange={(e) => {
                             setOverrides((old) => ({
@@ -230,38 +233,37 @@ export default function WorkspaceSettings({
                             setDirty(true);
                           }}
                         >
-                          <option value="inherit">Theo cài đặt chung</option>
-                          <option value="on">Bật</option>
-                          <option value="off">Tắt</option>
+                          <option value="inherit">{t("Theo cài đặt chung")}</option>
+                          <option value="on">{t("Bật")}</option>
+                          <option value="off">{t("Tắt")}</option>
                         </select>
                       </label>
                       <p className="muted">
-                        Hiện tại:{" "}
+                        {t("Hiện tại:")}{" "}
                         {(
                           overrides[key] === "inherit"
                             ? global?.[key]
                             : overrides[key] === "on"
                         )
-                          ? "Bật"
-                          : "Tắt"}
+                          ? t("Bật")
+                          : t("Tắt")}
                         {overrides[key] === "inherit"
-                          ? " · Kế thừa tài khoản"
-                          : " · Riêng Workspace này"}
+                          ? t(" · Kế thừa tài khoản")
+                          : t(" · Riêng Workspace này")}
                       </p>
                     </div>
                   ))}
                   <p className="muted">
-                    Rời nhóm sẽ xóa các tùy chọn riêng. Gia nhập lại sẽ theo cài
-                    đặt chung.
+                    {t("Rời nhóm sẽ xóa các tùy chọn riêng. Gia nhập lại sẽ theo cài đặt chung.")}
                   </p>
-                  <a href="#settings">Mở cài đặt email chung</a>
+                  <a href="#settings">{t("Mở cài đặt email chung")}</a>
                 </>
               ) : (
                 <>
                   <FormField
-                    label="Tên Workspace"
-                    hint="Tối đa 200 ký tự."
-                    error={fieldErrors.name}
+                    label={t("Tên Workspace")}
+                    hint={t("Tối đa 200 ký tự.")}
+                    error={fieldErrors.name ? t(fieldErrors.name) : fieldErrors.name}
                   >
                     {(props) => (
                       <input
@@ -278,8 +280,9 @@ export default function WorkspaceSettings({
                     )}
                   </FormField>
                   <RichEditor
+                    locale={locale}
                     value={description}
-                    label="Mô tả Workspace"
+                    label={t("Mô tả Workspace")}
                     limit={20000}
                     readOnly={saving || uncertain}
                     onChange={(value) => {
@@ -290,25 +293,25 @@ export default function WorkspaceSettings({
                   />
                   {fieldErrors.description && (
                     <InlineMessage className="field-message error">
-                      {fieldErrors.description}
+                      {t(fieldErrors.description)}
                     </InlineMessage>
                   )}
                   <p className="muted">
-                    Tên và mô tả được chia sẻ với các thành viên trong nhóm.
+                    {t("Tên và mô tả được chia sẻ với các thành viên trong nhóm.")}
                   </p>
                 </>
               )}
               <div className="buttons">
                 {emailOnly && (
                   <button type="button" onClick={() => submit(null, true)}>
-                    Trở về cài đặt chung
+                    {t("Trở về cài đặt chung")}
                   </button>
                 )}
                 <button type="button" onClick={reload}>
-                  Hủy thay đổi
+                  {t("Hủy thay đổi")}
                 </button>
                 <button className="primary">
-                  {saving ? "Đang lưu…" : "Lưu cài đặt"}
+                  {saving ? t("Đang lưu…") : t("Lưu cài đặt")}
                 </button>
               </div>
             </fieldset>

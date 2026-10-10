@@ -1,5 +1,7 @@
 # Trạng thái và bước tiếp theo
 
+10/10/2026 — **S12d4b WorkspaceSettings/email/editorVi-En functional gate đạt**: protectednames/documents, unsafeLink block, inherit/on/off/reset confirmation đúngAPI vàUser.emailLocale không đổi. Workspacebrowser/fullS3+ENsettings/email5width, coreeditor/interaction vàFE19/build162 PASS. [QA](../qa/UI-STITCH-S12-CHECK.md). Toaststack chồng nội dung ở375 đã ghi nhận, ưu tiênsharednotification/layering patch kế tiếp; chưavisual/fullS12 acceptance. CònWorkspaceTeam/Ban vàfeaturelocale; entry532.48kB warning. Khôngproviders/queues/devdata; commit/pushdev.
+
 10/10/2026 — **S12d4a Workspace detail/Project collection/ArchiveVi-En đạt**: protectednames/iconenums/reason/exacttypedName/readonly/reopenProjectstate; sharedDescriptionPreview/IconPicker/editor-loadinglocaleoptionalVi. WorkspaceS3VI+EN5width vàcoreinteractionPASS, FE19/build162 (entry528.94kBwarning). [QA](../qa/UI-STITCH-S12-CHECK.md). Tiếp WorkspaceTeam/settings/email/Ban body; vẫn11/12 gate, fullsiteEnglish/layering/performance chưađạt. Khôngproviders/queues/devdata; commit/pushdev.
 
 10/10/2026 — **S12d3c OrgManage/AuditVi-En đạt**: đổirole/phân bổWorkspace/ArchivedManager/typedOwner transfer/audit giữnames+history vàpayloadconditions. ManagementS4bVI+EN4views×5width PASS, FE19/build161. [QA](../qa/UI-STITCH-S12-CHECK.md). Tiếp Workspace locale theo cụm; globalfeedback/layering/performance còn (entry523.41kB warning), vẫn11/12 gate. Khôngproviders/queues/devdata; commit/pushdev.

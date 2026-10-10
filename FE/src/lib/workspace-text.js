@@ -1,5 +1,6 @@
 import { organizationText } from './organization-text.js';
 const english = {
+  "Trang chủ": "Home",
   "Bỏ thay đổi cài đặt chưa lưu?": "Discard unsaved settings changes?",
   "Tải lại": "Reload",
   "Đã lưu trữ · Chỉ đọc": "Archived · Read-only",
@@ -64,6 +65,56 @@ const english = {
   "Tên xác nhận chưa khớp tên Workspace hiện tại.": "The confirmation name does not match the current workspace name.",
   "Cần bổ nhiệm Manager còn quyền hợp lệ trước khi mở lại Workspace.": "Appoint a valid Manager before reopening this workspace."
 };
+Object.assign(english, {
+  "Bỏ thay đổi chưa lưu và tải lại cài đặt Workspace?": "Discard unsaved changes and reload workspace settings?",
+  "Tên tối đa 200 ký tự, không để trống hoặc chứa ký tự điều khiển.": "Enter a non-empty name of up to 200 characters without control characters.",
+  "Mô tả tối đa 20.000 ký tự hiển thị.": "Description is limited to 20,000 displayed characters.",
+  "Đã trở về cài đặt chung.": "Account settings restored.",
+  "Đã lưu cài đặt.": "Settings saved.",
+  "Đã lưu cài đặt Workspace.": "Workspace settings saved.",
+  "Chưa xác nhận đã lưu. Tải lại cài đặt để kiểm tra trước khi gửi tiếp.": "Saving is unconfirmed. Reload settings before submitting again.",
+  "Cài đặt Workspace": "Workspace settings",
+  "Tải lại cài đặt": "Reload settings",
+  "Đang tải cài đặt…": "Loading settings…",
+  "Tùy chọn email riêng chỉ dành cho thành viên của Workspace.": "Workspace email preferences are only available to its members.",
+  "Workspace đang lưu trữ. Mở lại trước khi sửa tên hoặc mô tả.": "This workspace is archived. Reopen it before editing its name or description.",
+  "Chỉ người quản lý hiện tại được sửa thông tin nhóm.": "Only a current manager can edit workspace information.",
+  "Các lựa chọn này chỉ áp dụng cho bạn trong {name}. Email xác minh và bảo mật không bị tắt.": "These choices only apply to you in {name}. Verification and security emails remain enabled.",
+  "Phân công Task": "Task assignment",
+  "Bình luận mới": "New comments",
+  "Nội dung hoặc deadline thay đổi": "Content or deadline changes",
+  "Trạng thái Task thay đổi": "Task status changes",
+  "Theo cài đặt chung": "Use account settings",
+  "Bật": "On",
+  "Tắt": "Off",
+  "Hiện tại:": "Effective:",
+  " · Kế thừa tài khoản": " · Inherited from account",
+  " · Riêng Workspace này": " · Workspace override",
+  "Rời nhóm sẽ xóa các tùy chọn riêng. Gia nhập lại sẽ theo cài đặt chung.": "Leaving removes these overrides. Rejoining uses your account settings.",
+  "Mở cài đặt email chung": "Open account email settings",
+  "Tên và mô tả được chia sẻ với các thành viên trong nhóm.": "The name and description are shared with workspace members.",
+  "Trở về cài đặt chung": "Reset to account settings",
+  "Hủy thay đổi": "Discard changes",
+  "Lưu cài đặt": "Save settings",
+  "Đường dẫn https:// hoặc mailto: (để trống để bỏ liên kết)": "Enter an https:// or mailto: URL (leave blank to remove the link)",
+  "Liên kết chưa hợp lệ.": "Invalid link.",
+  "Định dạng {name}": "Format {name}",
+  "Đậm": "Bold",
+  "Nghiêng": "Italic",
+  "Gạch chân": "Underline",
+  "Tiêu đề 1": "Heading 1",
+  "Tiêu đề 2": "Heading 2",
+  "Văn bản thường": "Body text",
+  "Nội dung": "Body text",
+  "Danh sách dấu đầu dòng": "Bullet list",
+  "Danh sách đánh số": "Numbered list",
+  "Chèn hoặc sửa liên kết": "Insert or edit link",
+  "Thêm emoji": "Insert emoji",
+  "Hoàn tác": "Undo",
+  "Làm lại": "Redo",
+  "{words} từ · {chars}/{limit} ký tự": "{words} words · {chars}/{limit} characters"
+});
+Object.assign(english, {"Đưa cả bốn loại email về kế thừa cài đặt chung của bạn?": "Reset all four email types to inherit your account settings?"});
 export function workspaceText(value, locale, values = {}) {
   return organizationText(locale === 'en' ? (english[value] ?? value) : value, locale, values);
 }

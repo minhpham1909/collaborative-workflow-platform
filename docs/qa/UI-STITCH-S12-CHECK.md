@@ -141,3 +141,16 @@ Organization directory/team/manage/audit đã cóVi/En trongscope hiện tại; 
 - 5width khôngoverflow/pageerrors; xem trực tiếp `.local/stitch-workspace/archive-en-375.png`, `workspace-en-{width}.png`, `archive-en-{width}.png`. KhôngEnglishprobe mới trongincrement; khôngclaimprobe0. KhôngBE/API/schema/devcollections/SMTP/moderation/retention/backfill.
 
 Tiếp WorkspaceTeam/settings/email/moderation, sauđóProject/Task/MyTasks/Inbox/invitation body/feedback. Full-language/layering/performance gateS12 vẫn mở.
+
+## S12d4b — Cài đặt Workspace/email override/editor Việt–Anh
+
+10/10/2026 — đạt kiểm thử chức năng trong phạm vi này; chưa nghiệm thu giao diện tổng thể S12.
+
+- WorkspaceSettings dịch form tên/mô tả, validation, loading/readonly, discard/reload/save/unknown feedback và email override. Giữ đúng `inherit/on/off`, `membershipVersion`, reset cả4 sự kiện, dữ liệu tên và EditorJSON; lựa chọn ngôn ngữ UI không cập nhật `User.locale` dùng cho email.
+- EditorCore nhận locale optional mặc địnhvi: toolbar/ARIA/link prompt/link error và word/character labels. Cập nhật aria-label khi label đổi, không reset content. Segmenter/grapheme limit/JSON/safeLink/heading/list/undo logic giữ nguyên.
+- Bổ sung bản dịch Home breadcrumb còn thiếu ở Workspace. Các bodyTeam/moderation chưa chuyển locale trong increment này.
+- `check-stitch-workspace.mjs` PASS toànS3VI +Englishdetail/Archive và thêm settings/email: blank-name validation, lưu tên/mô tả tiếng Việt+emoji nguyên vẹn, unsafejavascript link bị từ chối và không vào document,5width settings/email khôngoverflow, assignmentoverrideoff được ghi đúng, User email locale giữ nguyên, reset có explicitconfirm→inherit. Fixture thêm UsersService thật cho GET/users/me; không đọc devDB.
+- `check-interaction-flows.mjs` PASS do thay shared editor: editor/link/dialog/draft/Board/comments/author/assignee/CAS/Archive regression. FE19 unit/build162 PASS; entry532.48kB/gzip150.75kB vàEditorCore395.77kB/gzip125.49kB, warning>500kB còn, khôngnới threshold.
+- Ảnh `.local/stitch-workspace/settings-en-{width}.png`, `email-en-{width}.png`; xem trực tiếp375. KhôngEnglishprobe mới trongincrement này.
+- **Quan sát còn cần sửa:** ở ảnh email375, nhiều success toast từ chuỗi thao tác nhanh chồng lên nội dung form. Chưa gọi visual/layering gate đạt; ưu tiên xử lý shared notification stack riêng trước khi tiếp tục nghiệm thu toàn ứng dụng. Screenshot không được dùng để tuyên bố mọi control đều unobstructed.
+- KhôngBE/schema/APIproduction/providers/SMTP/devqueue/moderation/retention/backfill. WorkspaceTeam/Ban, Project/Task/MyTasks/Inbox và publicinvitations/body copy vẫn là các scope tiếp theo.

@@ -1,3 +1,4 @@
+import { workspaceText } from '../lib/workspace-text.js';
 import { InlineMessage } from "./Feedback.jsx";
 import { inputDialog } from "./NotificationProvider.jsx";
 import { useEditor, EditorContent } from "@tiptap/react";
@@ -11,11 +12,13 @@ import {
 } from "../lib/content.js";
 export default function RichEditor({
   value,
+  locale = "vi",
   onChange,
   readOnly = false,
   label = "Nội dung",
   limit = 10000,
 }) {
+  const t = (value, values) => workspaceText(value, locale, values);
   const latest = useRef(onChange);
   const container = useRef(null);
   latest.current = onChange;
@@ -58,7 +61,8 @@ export default function RichEditor({
     container.current
       ?.querySelector(".tiptap")
       ?.setAttribute("aria-readonly", String(readOnly));
-  }, [readOnly, editor]);
+    container.current?.querySelector(".tiptap")?.setAttribute("aria-label", label);
+  }, [readOnly, editor, label]);
   useEffect(() => {
     if (editor && !editor.isDestroyed && readOnly)
       editor.commands.setContent(value?.document ?? emptyDocument(), {
@@ -74,7 +78,7 @@ export default function RichEditor({
   if (!editor || editor.isDestroyed) return null;
   async function link() {
     const href = await inputDialog(
-      "Đường dẫn https:// hoặc mailto: (để trống để bỏ liên kết)",
+      t("Đường dẫn https:// hoặc mailto: (để trống để bỏ liên kết)"),
       editor.getAttributes("link").href ?? "",
     );
     if (href === null) return;
@@ -98,7 +102,7 @@ export default function RichEditor({
         <div
           className="editor-toolbar"
           role="group"
-          aria-label={"Định dạng " + label}
+          aria-label={t("Định dạng {name}", { name: label })}
         >
           {[
             ["B", () => editor.chain().focus().toggleBold().run()],
@@ -124,10 +128,10 @@ export default function RichEditor({
               key={name}
               type="button"
               onClick={run}
-              aria-label={toolbarLabels[name]}
-              title={toolbarLabels[name]}
+              aria-label={t(toolbarLabels[name])}
+              title={t(toolbarLabels[name])}
             >
-              {name}
+              {t(name)}
             </button>
           ))}
         </div>
@@ -135,10 +139,10 @@ export default function RichEditor({
       <EditorContent editor={editor} />
       {!readOnly && (
         <p className={chars > limit ? "error" : "muted"} role="status">
-          {words} từ · {chars}/{limit} ký tự
+          {t("{words} từ · {chars}/{limit} ký tự", { words, chars, limit })}
         </p>
       )}
-      {error && <InlineMessage>{error}</InlineMessage>}
+      {error && <InlineMessage>{t(error)}</InlineMessage>}
     </div>
   );
 }
