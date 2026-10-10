@@ -24,7 +24,7 @@ const { createMongoNotificationsStore } = await import('../../BE/src/notificatio
 const { cutoffCodec } = await import('../../BE/src/notifications/input.js');
 const { testConfig } = await import('../../BE/test-support/auth-store.js');
 const out = fileURLToPath(new URL('../../.local/stitch-team/', import.meta.url)); await mkdir(out, { recursive: true });
-let repl, server, browser; const errors = [];
+let repl, server, browser, releaseRevoke, seeRevoke, closing=false; const errors = [];
 try {
   repl = await MongoMemoryReplSet.create({ binary: { version: '8.0.17', downloadDir: fileURLToPath(new URL('../../.local/mongodb-binaries/', import.meta.url)) }, replSet: { count: 1, storageEngine: 'wiredTiger', ip: '127.0.0.1' } });
   await mongoose.connect(repl.getUri('workflow_fe_stitch_team_test'));
@@ -47,8 +47,9 @@ try {
   await work.createProject(auths[0], first.id, { name: 'Brand project' });
   await workspaces.create(auths[0], { name: 'Standalone outside organization' });
   const cutoff = cutoffCodec(config.accessKeyHex);
-  server = createApp({ authService: auth, authConfig: config, workspaceService: workspaces, workService: work, organizationService: organizations, notificationsService: createNotificationsService({ store: createMongoNotificationsStore({ cutoff }), cutoff }) }).listen(0, '127.0.0.1'); await once(server, 'listening');
-  const origin = `http://127.0.0.1:${server.address().port}`;
+  const fixtureApp = () => createApp({ authService: auth, authConfig: config, workspaceService: workspaces, workService: work, organizationService: organizations, notificationsService: createNotificationsService({ store: createMongoNotificationsStore({ cutoff }), cutoff }) }); server=fixtureApp().listen(0,'127.0.0.1'); await once(server, 'listening');
+  let origin = `http://127.0.0.1:${server.address().port}`;
+  async function rotateFixture(){const previous=server;server=fixtureApp().listen(0,'127.0.0.1');await once(server,'listening');origin='http://127.0.0.1:'+server.address().port;await new Promise(resolve=>previous.close(resolve));}
   browser = await chromium.launch({ executablePath: process.env.WORKFLOW_BROWSER_EXECUTABLE, headless: true });
   let fail = false, delay = false, lostInviteResponse = false;
   async function pageFor(index) {
@@ -56,7 +57,7 @@ try {
     await context.route('http://localhost:4000/**', async route => {
       if (fail && route.request().url().includes(`/organizations/${org.id}/members?`)) return route.abort();
       if (delay && route.request().url().includes(`/organizations/${org.id}/members?`)) await new Promise(resolve => setTimeout(resolve, new URL(route.request().url()).searchParams.get('q') === 'Lan' ? 900 : 50));
-      const response = await route.fetch({ url: route.request().url().replace('http://localhost:4000', origin) });
+      const relay=origin;let response;try{response=await route.fetch({url:route.request().url().replace('http://localhost:4000',relay)});}catch{if(closing||relay!==origin)return route.abort().catch(()=>{});throw new Error('Fixture relay failed: '+new URL(route.request().url()).pathname);}
       if (lostInviteResponse && route.request().method() === 'POST' && route.request().url().endsWith('/invitations')) { lostInviteResponse = false; return route.abort(); }
       await route.fulfill({ response });
     });
@@ -97,6 +98,16 @@ try {
   await ownerPage.getByRole('button', { name: 'Lời mời', exact: true }).click(); await ownerPage.getByText('16', { exact: true }).waitFor(); assert.equal(await ownerPage.locator('.team-table tbody tr').count(), 12); await ownerPage.getByRole('button', { name: 'Tải thêm lời mời', exact: true }).click(); await ownerPage.waitForFunction(() => document.querySelectorAll('.team-table tbody tr').length === 16);
   await ownerPage.getByLabel('Tìm email được mời', { exact: true }).fill('alpha-new'); await ownerPage.waitForFunction(() => document.querySelectorAll('.team-table tbody tr').length === 1); assert.equal(await ownerPage.locator('.team-list-heading h2 span').innerText(), '1');
   await ownerPage.getByRole('button', { name: 'Mời thành viên', exact: true }).click(); await ownerPage.getByLabel('Email người nhận', { exact: true }).fill('uncertain-created@example.com'); lostInviteResponse = true; await ownerPage.getByRole('dialog').getByRole('button', { name: 'Tạo lời mời', exact: true }).click(); await ownerPage.getByText('Chưa rõ lời mời đã được tạo. Đóng form và tải lại danh sách trước khi gửi tiếp.', { exact: true }).waitFor(); assert.equal(await ownerPage.getByRole('dialog').getByRole('button', { name: 'Tạo lời mời', exact: true }).isDisabled(), true); assert.equal(await OrganizationInvitation.collection.countDocuments({ email: 'uncertain-created@example.com' }), 1); await ownerPage.getByRole('dialog').getByRole('button', { name: 'Hủy', exact: true }).click(); await ownerPage.locator('.system-dialog button.primary').click(); await ownerPage.getByText('uncertain-created@example.com', { exact: true }).waitFor();
+  await rotateFixture();await ownerPage.evaluate(()=>localStorage.setItem('workflow.auth.locale','en'));await ownerPage.reload();await ownerPage.getByRole('table',{name:'Organization members',exact:true}).waitFor();await ownerPage.getByRole('button',{name:'Member',exact:true}).click();await ownerPage.locator('.team-table[aria-busy="false"] tbody tr').first().waitFor();await ownerPage.getByLabel('Search members').fill('Lan');await ownerPage.getByText('Lan',{exact:true}).waitFor();assert.equal(await ownerPage.locator('main').getAttribute('lang'),'en');
+  for(const width of [375,768,1024,1280,1440]){await ownerPage.setViewportSize({width,height:1000});await ownerPage.screenshot({path:out+'/members-en-'+width+'.png',fullPage:true});assert.ok(await ownerPage.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'EN members overflow '+width);}
+  await ownerPage.getByRole('button',{name:'Invite member',exact:true}).click();await ownerPage.getByLabel('Recipient email',{exact:true}).fill('english-invite@example.com');await ownerPage.getByLabel('Target workspace (optional)',{exact:true}).selectOption(first.id);await ownerPage.getByRole('dialog').getByRole('button',{name:'Cancel',exact:true}).click();await ownerPage.getByRole('dialog',{name:'Confirm action',exact:true}).getByRole('button',{name:'Cancel',exact:true}).click();assert.equal(await ownerPage.getByLabel('Recipient email',{exact:true}).inputValue(),'english-invite@example.com');await ownerPage.getByRole('dialog',{name:'Invite to organization',exact:true}).getByRole('button',{name:'Create invitation',exact:true}).click();await ownerPage.getByText('english-invite@example.com',{exact:true}).waitFor();const englishInvite=await OrganizationInvitation.findOne({email:'english-invite@example.com'});assert.equal(String(englishInvite.workspaceId),first.id);
+  for(const width of [375,768,1024,1280,1440]){await ownerPage.setViewportSize({width,height:1000});await ownerPage.screenshot({path:out+'/invites-en-'+width+'.png',fullPage:true});assert.ok(await ownerPage.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'EN invitations overflow '+width);}
+  await rotateFixture();
+  // Create same-document history before testing the in-flight revoke guard.
+  await ownerPage.evaluate(id=>{location.hash='organization/'+id;},org.id);await ownerPage.getByRole('heading',{name:org.name,exact:true}).waitFor();await ownerPage.getByRole('link',{name:'Members & permissions',exact:true}).click();await ownerPage.getByRole('button',{name:'Invitations',exact:true}).click();await ownerPage.getByText('english-invite@example.com',{exact:true}).waitFor();
+  let revokeWrites=0;const started=new Promise(resolve=>{seeRevoke=resolve;});await ownerPage.context().route('**/invitations/'+englishInvite.id+'/revoke',async route=>{revokeWrites++;const response=await route.fetch({url:route.request().url().replace('http://localhost:4000',origin)});seeRevoke();await new Promise(resolve=>{releaseRevoke=resolve;});await route.fulfill({response});});
+  await ownerPage.locator('.team-table tbody tr').filter({hasText:'english-invite@example.com'}).getByRole('button',{name:'Revoke',exact:true}).click();await ownerPage.getByRole('dialog',{name:'Revoke invitation',exact:true}).getByRole('button',{name:'Revoke',exact:true}).click();await started;await ownerPage.goBack();await ownerPage.getByText('A request is being processed. Wait for the outcome before leaving.',{exact:false}).waitFor();await ownerPage.waitForURL('**/#organization/'+org.id+'/team');releaseRevoke();await ownerPage.locator('.team-table tbody tr').filter({hasText:'english-invite@example.com'}).getByText('Revoked',{exact:true}).waitFor();assert.equal(revokeWrites,1);
+  await rotateFixture();await memberPage.evaluate(()=>localStorage.setItem('workflow.auth.locale','en'));await memberPage.reload();await memberPage.getByRole('table',{name:'Organization members',exact:true}).waitFor();assert.equal(await memberPage.getByRole('button',{name:'Invite member',exact:true}).count(),0);assert.equal(await memberPage.getByRole('button',{name:'Invitations',exact:true}).count(),0);
   assert.deepEqual(errors, []);
   if (process.env.WORKFLOW_SKILL_PROBE === '1') {
     let source = await readFile('C:/Users/Acer/.agents/skills/ui-ux/scripts/probe.mjs', 'utf8');
@@ -115,5 +126,5 @@ try {
       assert.equal(await new Promise(resolve => child.once('exit', resolve)), 0);
     }
   }
-  console.log(`PASS S4a: member table/search/total/cursor, role scope, email invitation/optional Workspace/revoke, filters/pagination, demotion denies create and preserves draft, private organization isolation, 5 widths. Screens: ${out}. No live DB or SMTP.`);
-} finally { await browser?.close(); if (server) await new Promise(resolve => server.close(resolve)); await mongoose.disconnect(); await repl?.stop(); }
+  console.log(`PASS Team members/invitations Vi-En and busy-revoke Back guard; S4a: member table/search/total/cursor, role scope, email invitation/optional Workspace/revoke, filters/pagination, demotion denies create and preserves draft, private organization isolation, 5 widths. Screens: ${out}. No live DB or SMTP.`);
+} catch(error){console.log('Page errors:',errors);if(browser)for(const context of browser.contexts())for(const page of context.pages()){await page.screenshot({path:out+'/failure.png'});console.log((await page.locator('main').innerText().catch(()=>'' )).slice(-800));}throw error;} finally { closing=true; releaseRevoke?.(); await browser?.close(); if (server) await new Promise(resolve => server.close(resolve)); await mongoose.disconnect(); await repl?.stop(); }

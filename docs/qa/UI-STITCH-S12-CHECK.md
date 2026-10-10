@@ -101,3 +101,18 @@ Coverage tiếp: Organizations/Team, Workspace/Project/Task/My Tasks/Inbox/invit
 - FE18 unit PASS, build161 PASS; entry512.47kB/gzip144.41kB còn warning>500kB, chưa performance gate. `check-interaction-flows.mjs` PASS do thay shared NameDialog. Không BE/API/schema/providers/SMTP/dev data/queue/backfill.
 
 Tiếp Organization Team/invite/role/ownership/Manager/allocation/audit copy theo từng phần; Workspace/Project/Task/My Tasks/Inbox và global feedback/layering/performance còn mở. Gate UI toànS12 vẫn chưa đạt.
+
+## S12d3b — Team members/invitations Việt/Anh và kiểm thử sau gián đoạn
+
+10/10/2026 — đạt scope danh sách thành viên/lời mời, form mời vàoOrg, revoke và permission guide. ManageDialog role/Workspace/ownership và Audit body chưa chuyển English trong increment này.
+
+- Giữ enum/query/filter/expectedVersion, names/email/Workspace names và role checks. Copy/header/tables/mobile data-labels/date-time/empty/loading/error/invite/revoke/guide theo UI locale; timezoneVietnam. Không gửi email thật trongS12d3b; invitations chỉ queued trong database fixture.
+- **Lỗi đã tái hiện**: sau tạo lời mời, Team đổi tab nhưng render vẫn nhận array thành viên cũ; status label undefined đi qua `.replace` khiến React crash. Sửa clear rows/total và bật loading ngay khi setTab (click/create completion/demotion fallback); active tab click làm refresh để không mắc loading, cùng helper bảo toàn non-string. Unit regression thiếu label ởvi/en được thêm; không sửa BE để né lỗi.
+- Team revoke có busy draft-navigation guard: response đã commit nhưng bị giữ tại transport; Back phải trả về đúngTeamURL và giữ component, có busy feedback; release→rowRevoked, chỉ1POST. Existing CAS/unknown/no auto retry retained.
+- `check-stitch-team.mjs` PASS: fullS4a role scopes/member search/total16/paging, invitation targetWorkspace/create/filter/revoke/lost create response/readback, Admin demotion denial/draft preserved/privateOrg isolation. English thêm names/search, member+invitation5width, cancel draft preserved, invite đúngWorkspace, single revoke/backguard và Member không có Invite/Invitations buttons;0page errors/overflow.
+- Mỗi nhómVI/EN/revoke/member chạy default-limiter API fixture instance mới, cùng private testDB/auth keys; không nâng/tắt production rate limits. Đã quan sát429 ở lượt automation nhanh trước khi tách nhóm, ghi rõ là fixture traffic limit, không coi là testpass hoặc lỗi quyền.
+- `check-stitch-team-management.mjs` PASS regressionS4b: role/CAS/draft, direct internal allocation, Archived Manager recovery, preservedOrgrole/audit/Admin matrix/typed transfer/current capabilities,5width. Đây là regression hành viVI, không claimManage/AuditEnglish.
+- FE19 unit PASS, build161 PASS; entry518.79kB/gzip146.32kB vẫnwarning>500kB, chưa performance gate. Xem ảnh `.local/stitch-team/members-en-375.png`, `invites-en-375.png` và5width. Không chạy English probe mới trongscope này; không claimprobe0 choTeamEnglish.
+- FE5173 đã khởi động lại khi resume vì server không còn chạy. Không real accounts/dev27018/OS27017/SMTP/moderation/retention/backfill; toàn test dùngMongoMemoryReplSet riêng.
+
+Tiếp OrganizationManageDialog vàAudit copy, sau đó các Workspace/Project/Task/MyTasks/Inbox/invitation screens. Shared layering/performance/full language gate còn; S12 chưa tổng acceptance.

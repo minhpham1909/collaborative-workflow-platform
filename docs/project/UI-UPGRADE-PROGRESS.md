@@ -1,6 +1,6 @@
 # Tiến độ nâng cấp UI theo Stitch
 
-Cập nhật10/10/2026 sau S12d3a Org directory/attached Workspace locale, đối chiếu [plan cụm](STITCH-UI-CLUSTER-PLAN-v0.1.md) và QA từng cụm. **11/12 mốc S đạt gate — khoảng92% số mốc**, không phải92% khối lượng hoặc92% sản phẩm hoàn thiện. F0 có gate nền/pilot riêng, không cộng vào12 mốc.
+Cập nhật10/10/2026 sau S12d3b Team members/invitations locale, đối chiếu [plan cụm](STITCH-UI-CLUSTER-PLAN-v0.1.md) và QA từng cụm. **11/12 mốc S đạt gate — khoảng92% số mốc**, không phải92% khối lượng hoặc92% sản phẩm hoàn thiện. F0 có gate nền/pilot riêng, không cộng vào12 mốc.
 
 | Mốc | Phạm vi | Trạng thái |
 | --- | --- | --- |
@@ -16,7 +16,7 @@ Cập nhật10/10/2026 sau S12d3a Org directory/attached Workspace locale, đố
 | S9 | Notifications inbox + public invitations3 scope | Đạt9a/9b |
 | S10 | Account/settings và Auth flows | Đạt scopeAccount/Auth; full site localeS12 |
 | S11 | Thùng rác/khôi phục Task | Đạt scope list/detail/restore; không purge thủ công |
-| S12 | Regression toàn app, navigation/draft, Vi/En, responsive/performance và email thật | S12a–d3a đạt từng đợt; tiếpTeam locale, cònlayering/performance vàgate tổng |
+| S12 | Regression toàn app, navigation/draft, Vi/En, responsive/performance và email thật | S12a–d3b đạt từng đợt; tiếpManage/Audit locale, cònlayering/performance vàgate tổng |
 
 Các chức năng Auth/settings đã có, “chưa nâng cấp cụm” nghĩa chưa qua gate UI mới. S10a đã đạt profile/email/security/Google link;10b login/register/verify/recovery/reset và locale. S11 đã biểu diễn expiry30 ngày/legacy-unscheduled/read-only/restore conditions đúng API, không CTA purge chưa mở. S12 cần kiểm xuyên các scope/role/history/drafts và bản dịch đầy đủ.
 
