@@ -198,3 +198,15 @@ Tiếp Ban/moderation Việt–Anh, rồi Project/Task/MyTasks/Inbox/invitation 
 - Vite5173 khởi động lại do server không còn chạy. Tests dùng private MongoMemoryReplSet/API/browser fixture; không đọc/ghi dev database, xử lý workers/old queues, gửi SMTP/Google, purge/retention hoặc backfill.
 
 Tiếp Project/Kanban, Task, MyTasks, Inbox/invitation body locale và performance. S12 vẫn mở; 11/12 mốc UI là số gate, không tỷ lệ hoàn thiện sản phẩm.
+## S12d5a — Project header/overview/edit/Archive Việt–Anh
+
+11/10/2026 — slice Project.jsx/ProjectOverview/ProjectDescriptionEditor. Chưa dịch TaskList/TaskForm/ProjectManagement/ProjectTrash/TaskPanel hoặc toànProject; không suy whole-site English.
+
+- `projectText` kế thừa workspace dictionary; chỉ copy UI và template số liệu. Names/descriptions/reasons/codes/role enums không dịch. Date Vietnam locale; overall statistics từBE giữ độc lập filtered Board counts, không gồm Task trash. ProjectOverview locale optional mặc địnhvi.
+- Project breadcrumb/header/actions/capability/read-only/Archive-confirm/unknown feedback, rename và mô tả dùng UI locale; DescriptionPreview/RichEditor/icon picker nhận locale. NameDialog truyền rõ title/label/submitLabel vì shared component không tự dịch raw caller props. ExactName/icon/document/expectedVersion/state payload không đổi.
+- `check-stitch-board.mjs` PASS fullS6aVI:3columns/load-more12→18, whole vs filtered stats, taskcode/priority/labels/checklist/completion, dynamic search/priority/empty, create resets filters, Guest isolation và parentWorkspaceArchive refresh. English thêm header/overview5width, rename có dấu giữ nguyênDB, mô tả có dấu/emoji lưu đúngJSON/plainText, Cancel confirmation giữ draft rồi Save, Archive project→read-only/edit absent→Reopen, Guest English không Rename/Archive hoặc Workspace link.
+- Lượt đầu EN rename chưa đạt vì NameDialog caller thiếu label/submitLabel English, sửa product caller rồi chạy lại đạt. Fixture app mới ở ranh giớiVI/EN, cùng private testDB/auth keys, giữ default rate limit.
+- FE20 unit/build164 PASS; entry550.36kB/gzip156.15kB, EditorCore395.77kB/gzip125.49kB. Warning>500kB giữ nguyên; performance chưađạt. Ảnh `.local/stitch-board/project-en-{width}.png`, xem trực tiếp375. Board body cònVI thấy rõ; khôngEnglishprobe mới hoặc full visual/accessibility acceptance.
+- Không providers/SMTP/workers/queues/dev collections/backfill. Tests dùng MongoMemoryReplSet/API/browser fixture riêng.
+
+Theo yêu cầu rà việc còn lại, có [S12-REMAINING-WORK.md](../project/S12-REMAINING-WORK.md): thứ tựlocale, gate regression/visual, performance, production acceptance và phạm vi deferred. Core planU2 trước đó còn ghi chưa bắt đầuUI; cập nhật status và dẫn progress hiện tại, không xóa checkpoint lịch sử. Tiếp Board/filter/card/TaskForm; S12 vẫn mở,11/12 UI gates.

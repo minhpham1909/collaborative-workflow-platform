@@ -1,3 +1,5 @@
+import { useAuthLocale } from '../auth/AuthLocale.jsx';
+import { projectText } from '../../lib/project-text.js';
 import { InlineMessage, LoadingState } from "../../components/Feedback.jsx";
 import {
   confirmDialog,
@@ -19,6 +21,8 @@ import { isUncertainMutation } from '../../lib/mutation-outcome.js';
 import './project.css';
 
 export default function Project({ api, id, user, section }) {
+  const { locale } = useAuthLocale();
+  const t = (value, values) => projectText(value, locale, values);
   const [project, setProject] = useState(null),
     [workspace, setWorkspace] = useState(null),
     [error, setError] = useState(""),
@@ -69,8 +73,8 @@ export default function Project({ api, id, user, section }) {
     if (
       !(await confirmDialog(
         state === "archived"
-          ? "Lưu trữ Dự án? Mọi Task và bình luận sẽ chuyển sang chỉ đọc."
-          : "Mở lại Dự án để tiếp tục làm việc?",
+          ? t("Lưu trữ Dự án? Mọi Task và bình luận sẽ chuyển sang chỉ đọc.")
+          : t("Mở lại Dự án để tiếp tục làm việc?"),
       ))
     )
       return;
@@ -83,16 +87,16 @@ export default function Project({ api, id, user, section }) {
         body: { expectedVersion: project.version, state },
       });
       setProject(result.project);
-      notify("Đã cập nhật trạng thái Dự án.");
+      notify(t("Đã cập nhật trạng thái Dự án."));
       setNotice(
-        state === "archived" ? "Đã lưu trữ Dự án." : "Đã mở lại Dự án.",
+        state === "archived" ? t("Đã lưu trữ Dự án.") : t("Đã mở lại Dự án."),
       );
     } catch (e) {
       setUncertain(isUncertainMutation(e));
       setError(
         e.status
           ? messageFor(e)
-          : "Chưa xác nhận kết quả. Tải lại dữ liệu trước khi thao tác lại.",
+          : t("Chưa xác nhận kết quả. Tải lại dữ liệu trước khi thao tác lại."),
       );
       if (e.status === 403 || e.status === 404) {
         setProject(null);
@@ -104,18 +108,18 @@ export default function Project({ api, id, user, section }) {
     }
   }
   return (
-    <main className="studio-project-page">
+    <main lang={locale} className="studio-project-page">
       <p className="breadcrumbs">
-        <a href="#home">Trang chủ</a>
-        {project?.accessRole === "guest" && <> / <a href="#shared">Dự án được chia sẻ</a> / <span>{project.context?.workspaceName ?? "Project được chia sẻ"}</span></>}
+        <a href="#home">{t("Trang chủ")}</a>
+        {project?.accessRole === "guest" && <> / <a href="#shared">{t("Dự án được chia sẻ")}</a> / <span>{project.context?.workspaceName ?? t("Project được chia sẻ")}</span></>}
         {workspace && (
           <>
-            {workspace.organizationId && <> / <a href={`#organization/${workspace.organizationId}`}>Tổ chức</a></>}
+            {workspace.organizationId && <> / <a href={`#organization/${workspace.organizationId}`}>{t("Tổ chức")}</a></>}
             {" "}
             / <a href={`#workspace/${workspace.id}`}>{workspace.name}</a>
           </>
         )}{" "}
-        / Dự án
+        / {t("Dự án")}
       </p>
       {!project && (
         <button
@@ -125,14 +129,12 @@ export default function Project({ api, id, user, section }) {
             setNotice("");
             setRevision((v) => v + 1);
           }}
-        >
-          Làm mới Dự án
-        </button>
+        >{t("Làm mới Dự án")}</button>
       )}
 
       {error && (
         <InlineMessage>
-          {error}{" "}
+          {t(error)}{" "}
           <button
             disabled={busy || editingDescription || taskComposing}
             onClick={() => {
@@ -140,13 +142,11 @@ export default function Project({ api, id, user, section }) {
               setNotice("");
               setRevision((v) => v + 1);
             }}
-          >
-            Tải lại dữ liệu
-          </button>
+          >{t("Tải lại dữ liệu")}</button>
         </InlineMessage>
       )}
-      {notice && <InlineMessage tone="info">{notice}</InlineMessage>}
-      {busy && <LoadingState>Đang xử lý Dự án…</LoadingState>}
+      {notice && <InlineMessage tone="info">{t(notice)}</InlineMessage>}
+      {busy && <LoadingState>{t("Đang xử lý Dự án…")}</LoadingState>}
       {project && (
         <>
           <section className="hero board-project-header">
@@ -159,13 +159,13 @@ export default function Project({ api, id, user, section }) {
               </h1>
               <span className={"badge state-" + (project.readOnly ? 'archived' : project.state)}>
                 {project.readOnly
-                  ? (project.state === 'archived' ? "Dự án lưu trữ · Chỉ đọc" : "Workspace lưu trữ · Chỉ đọc")
-                  : "Đang hoạt động"}
+                  ? (project.state === 'archived' ? t("Dự án lưu trữ · Chỉ đọc") : t("Workspace lưu trữ · Chỉ đọc"))
+                  : t("Đang hoạt động")}
               </span>
-              <span className="project-role">{project.accessRole === 'guest' ? 'Guest · Xem và bình luận' : project.accessRole === 'lead' ? 'Project Lead' : workspaceRoleLabel(project.accessRole)}</span>
+              <span className="project-role">{project.accessRole === 'guest' ? t("Guest · Xem và bình luận") : project.accessRole === 'lead' ? 'Project Lead' : workspaceRoleLabel(project.accessRole, locale)}</span>
               <span className="project-created muted">
-                Tạo{" "}
-                {new Date(project.createdAt).toLocaleDateString("vi-VN", {
+                {t("Tạo")}{" "}
+                {new Date(project.createdAt).toLocaleDateString(locale === "en" ? "en-GB" : "vi-VN", {
                   timeZone: "Asia/Ho_Chi_Minh",
                 })}
               </span>
@@ -178,51 +178,43 @@ export default function Project({ api, id, user, section }) {
                   setNotice("");
                   setRevision((v) => v + 1);
                 }}
-              >
-                Làm mới Dự án
-              </button>
-              {project.accessRole !== 'guest' && <a className="project-trash-link" href={`#project/${id}${showTrash ? '' : '/trash'}`} aria-current={showTrash ? 'page' : undefined}>{showTrash ? 'Về Board' : 'Thùng rác Task'}</a>}
-              {(project.permissions?.manageAccess || project.permissions?.manageLabels) && <button disabled={busy || uncertain || editingDescription || taskComposing} onClick={() => { location.hash = `project/${id}${showManagement ? '' : '/manage'}`; }}>{showManagement ? 'Về Board' : 'Quản lý Project'}</button>}
+              >{t("Làm mới Dự án")}</button>
+              {project.accessRole !== 'guest' && <a className="project-trash-link" href={`#project/${id}${showTrash ? '' : '/trash'}`} aria-current={showTrash ? 'page' : undefined}>{showTrash ? t("Về Board") : t("Thùng rác Task")}</a>}
+              {(project.permissions?.manageAccess || project.permissions?.manageLabels) && <button disabled={busy || uncertain || editingDescription || taskComposing} onClick={() => { location.hash = `project/${id}${showManagement ? '' : '/manage'}`; }}>{showManagement ? t("Về Board") : t("Quản lý Project")}</button>}
               {project.permissions?.manageProject && (
                 <>
                   {project.state === "active" && (
                     <button
                       disabled={busy || uncertain || editingDescription || taskComposing}
                       onClick={() => setEditing(true)}
-                    >
-                      Đổi tên
-                    </button>
+                    >{t("Đổi tên")}</button>
                   )}
                   <button
                     disabled={busy || uncertain || editingDescription || taskComposing}
                     onClick={changeState}
                   >
                     {project.state === "active"
-                      ? "Lưu trữ Dự án"
-                      : "Mở lại Dự án"}
+                      ? t("Lưu trữ Dự án")
+                      : t("Mở lại Dự án")}
                   </button>
                 </>
               )}
             </div>
           </section>
-          {!showManagement && !showTrash && <ProjectOverview data={statistics} />}
+          {!showManagement && !showTrash && <ProjectOverview locale={locale} data={statistics} />}
           {(project.readOnly ?? project.state === "archived") && (
-            <InlineMessage tone="info" className="archive-banner">
-              Dự án hoặc Workspace đang được lưu trữ nên chỉ đọc. Quản lý cần mở lại phạm vi tương ứng để tiếp tục chỉnh sửa.
-            </InlineMessage>
+            <InlineMessage tone="info" className="archive-banner">{t("Dự án hoặc Workspace đang được lưu trữ nên chỉ đọc. Quản lý cần mở lại phạm vi tương ứng để tiếp tục chỉnh sửa.")}</InlineMessage>
           )}
           {!showTrash && <section className="project-info project-scope">
             <div className="section-heading">
-              <h2>Mục tiêu & mô tả Dự án</h2>
+              <h2>{t("Mục tiêu & mô tả Dự án")}</h2>
               {project.state === "active" &&
                 project.permissions?.editDescription &&
                 !editingDescription && (
                   <button
                     disabled={taskComposing || busy || uncertain}
                     onClick={() => setEditingDescription(true)}
-                  >
-                    Chỉnh sửa mô tả Dự án
-                  </button>
+                  >{t("Chỉnh sửa mô tả Dự án")}</button>
                 )}
             </div>
             {editingDescription ? (
@@ -242,13 +234,14 @@ export default function Project({ api, id, user, section }) {
               <div>
                 {project.description?.plainText ? (
                   <DescriptionPreview
+                    locale={locale}
                     key={project.id + ":" + project.version}
                     value={project.description}
-                    label="Mô tả Dự án"
+                    label={t("Mô tả Dự án")}
                     limit={10000}
                   />
                 ) : (
-                  <p>Dự án chưa có mô tả.</p>
+                  <p>{t("Dự án chưa có mô tả.")}</p>
                 )}
               </div>
             )}
@@ -273,7 +266,10 @@ export default function Project({ api, id, user, section }) {
       )}
       {editing && project && (
         <NameDialog
-          title="Đổi tên Dự án"
+          locale={locale}
+          title={t("Đổi tên Dự án")}
+          label={t("Tên Dự án")}
+          submitLabel={t("Lưu")}
           initial={project.name}
           withIcon
           initialIcon={project.icon ?? "folder"}
@@ -287,7 +283,7 @@ export default function Project({ api, id, user, section }) {
               body: { expectedVersion: project.version, name, icon },
             });
             setProject(data.project);
-            setNotice("Đã cập nhật tên Dự án.");
+            setNotice(t("Đã cập nhật tên Dự án."));
           }}
         />
       )}

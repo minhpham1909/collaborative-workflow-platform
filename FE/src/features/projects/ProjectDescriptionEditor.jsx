@@ -1,3 +1,5 @@
+import { useAuthLocale } from '../auth/AuthLocale.jsx';
+import { projectText } from '../../lib/project-text.js';
 import { InlineMessage } from "../../components/Feedback.jsx";
 import { useDraftGuard } from "../../lib/draft-navigation.js";
 import { useRef, useState } from "react";
@@ -15,6 +17,8 @@ export default function ProjectDescriptionEditor({
   onDone,
   onCancel,
 }) {
+  const { locale } = useAuthLocale();
+  const t = (value, values) => projectText(value, locale, values);
   const [value, setValue] = useState(
       project.description ?? envelope(emptyDocument()),
     ),
@@ -26,7 +30,8 @@ export default function ProjectDescriptionEditor({
   useDraftGuard({
     dirty: dirty,
     busy: busy,
-    message: "Bỏ mô tả Dự án chưa lưu?",
+    message: t("Bỏ mô tả Dự án chưa lưu?"),
+    busyMessage: t("Đang xử lý yêu cầu. Vui lòng chờ kết quả trước khi rời trang."),
   });
 
   async function save(event) {
@@ -46,13 +51,13 @@ export default function ProjectDescriptionEditor({
         body: { expectedVersion: project.version, description: value },
       });
       setDirty(false);
-      notify("Đã lưu mục tiêu và mô tả Dự án.");
+      notify(t("Đã lưu mục tiêu và mô tả Dự án."));
       onDone(data.project);
     } catch (error) {
       setUncertain(isUncertainMutation(error));
       setError(
         isUncertainMutation(error)
-          ? "Chưa xác nhận kết quả lưu. Đóng form để tải lại trước khi thử lại."
+          ? t("Chưa xác nhận kết quả lưu. Đóng form để tải lại trước khi thử lại.")
           : messageFor(error),
       );
     } finally {
@@ -61,18 +66,19 @@ export default function ProjectDescriptionEditor({
     }
   }
   return (
-    <form className="description-form" onSubmit={save}>
+    <form lang={locale} className="description-form" onSubmit={save}>
       <RichEditor
+        locale={locale}
         value={value}
         onChange={(value) => {
           setValue(value);
           setDirty(true);
         }}
         readOnly={busy || uncertain}
-        label="Mục tiêu & mô tả Dự án"
+        label={t("Mục tiêu & mô tả Dự án")}
         limit={10000}
       />
-      {error && <InlineMessage>{error}</InlineMessage>}
+      {error && <InlineMessage>{t(error)}</InlineMessage>}
       <div className="buttons">
         <button
           type="button"
@@ -82,17 +88,15 @@ export default function ProjectDescriptionEditor({
               !dirty ||
               (await confirmDialog(
                 uncertain
-                  ? "Đóng form và tải lại để kiểm tra kết quả lưu?"
-                  : "Bỏ mô tả Dự án chưa lưu?",
+                  ? t("Đóng form và tải lại để kiểm tra kết quả lưu?")
+                  : t("Bỏ mô tả Dự án chưa lưu?"),
               ))
             )
               onCancel(uncertain);
           }}
-        >
-          Hủy mô tả
-        </button>
+        >{t("Hủy mô tả")}</button>
         <button className="primary" disabled={busy || uncertain}>
-          {busy ? "Đang lưu…" : "Lưu mô tả Dự án"}
+          {busy ? t("Đang lưu…") : t("Lưu mô tả Dự án")}
         </button>
       </div>
     </form>

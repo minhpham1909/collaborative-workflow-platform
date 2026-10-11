@@ -68,8 +68,9 @@ try {
   await work.updateProject(auths[0], project.id, { expectedVersion: project.version, description });
   const invitation = await work.inviteGuest(auths[0], project.id, { type: 'LINK' }); await work.acceptGuestInvitation(auths[3], { token: new URLSearchParams(new URL(invitation.url).hash.slice(1)).get('token') });
   const cutoff = cutoffCodec(config.accessKeyHex);
-  server = createApp({ authService: auth, authConfig: config, workspaceService: workspaces, workService: work, organizationService: organizations, notificationsService: createNotificationsService({ store: createMongoNotificationsStore({ cutoff }), cutoff }) }).listen(0, '127.0.0.1'); await once(server, 'listening');
-  const origin = `http://127.0.0.1:${server.address().port}`;
+  const fixtureApp = () => createApp({ authService: auth, authConfig: config, workspaceService: workspaces, workService: work, organizationService: organizations, notificationsService: createNotificationsService({ store: createMongoNotificationsStore({ cutoff }), cutoff }) });
+  server = fixtureApp().listen(0, '127.0.0.1'); await once(server, 'listening');
+  let origin = `http://127.0.0.1:${server.address().port}`;
   browser = await chromium.launch({ executablePath: process.env.WORKFLOW_BROWSER_EXECUTABLE, headless: true });
   let fail = false, delay = false, lostStateResponse = false, stateWrites = 0;
   async function pageFor(index) {
@@ -95,6 +96,42 @@ try {
   const guestPage = await pageFor(3); await guestPage.goto(`http://localhost:5173/#project/${project.id}`); await guestPage.locator('.board-task').first().waitFor(); assert.equal(await guestPage.getByRole('button', { name: '+ Tạo Task', exact: true }).count(), 0); assert.equal(await guestPage.getByRole('button', { name: 'Lưu trữ Dự án', exact: true }).count(), 0); assert.equal(await guestPage.getByRole('link', { name: standalone.name, exact: true }).count(), 0);
   const currentWs = (await workspaces.get(auths[0], standalone.id)).workspace; await workspaces.state(auths[0], standalone.id, { expectedVersion: currentWs.version, state: 'archived', confirmName: currentWs.name, reason: 'Check board refresh parent readonly' }); await ownerPage.getByRole('button', { name: 'Làm mới công việc', exact: true }).click(); await ownerPage.getByText('Workspace lưu trữ · Chỉ đọc', { exact: true }).waitFor(); assert.equal(await ownerPage.getByRole('button', { name: '+ Tạo Task', exact: true }).count(), 0); assert.equal(await ownerPage.getByRole('button', { name: 'Lưu trữ Dự án', exact: true }).count(), 0);
   const archivedWs = (await workspaces.get(auths[0], standalone.id)).workspace; await workspaces.state(auths[0], standalone.id, { expectedVersion: archivedWs.version, state: 'active', confirmName: archivedWs.name, reason: 'Return active fixture' }); await ownerPage.getByRole('button', { name: 'Làm mới công việc', exact: true }).click(); await ownerPage.getByRole('button', { name: '+ Tạo Task', exact: true }).waitFor();
+  const previousServer = server; server = fixtureApp().listen(0, '127.0.0.1'); await once(server, 'listening'); origin = `http://127.0.0.1:${server.address().port}`; await new Promise(resolve => previousServer.close(resolve));
+  await ownerPage.evaluate(() => localStorage.setItem('workflow.auth.locale', 'en')); await ownerPage.reload();
+  await ownerPage.getByText('2/22 tasks completed', { exact: true }).waitFor();
+  for (const width of [375,768,1024,1280,1440]) {
+    await ownerPage.setViewportSize({ width, height: 1000 });
+    await ownerPage.screenshot({ path: `${out}/project-en-${width}.png`, fullPage: true });
+    assert.ok(await ownerPage.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), `EN project overflow ${width}`);
+  }
+  await ownerPage.getByRole('button', { name: 'Rename', exact: true }).click();
+  const rename = ownerPage.getByRole('dialog');
+  await rename.getByLabel('Project name', { exact: true }).fill('Website thử nghiệm có dấu');
+  await rename.getByRole('button', { name: 'Save', exact: true }).click();
+  await rename.waitFor({ state: 'hidden' });
+  await ownerPage.getByRole('heading', { name: 'Website thử nghiệm có dấu', exact: true }).waitFor();
+  assert.equal((await Project.findById(project.id)).name, 'Website thử nghiệm có dấu');
+  await ownerPage.getByRole('button', { name: 'Edit project description', exact: true }).click();
+  const descriptionInput = ownerPage.getByRole('textbox', { name: 'Project goals & description', exact: true });
+  await descriptionInput.fill('Mục tiêu mới có dấu ✨');
+  await ownerPage.getByRole('button', { name: 'Cancel description', exact: true }).click();
+  await ownerPage.locator('.system-dialog').getByRole('button', { name: 'Cancel', exact: true }).click();
+  assert.equal(await descriptionInput.innerText(), 'Mục tiêu mới có dấu ✨');
+  await ownerPage.getByRole('button', { name: 'Save project description', exact: true }).click();
+  await ownerPage.getByRole('button', { name: 'Edit project description', exact: true }).waitFor();
+  assert.equal((await Project.findById(project.id)).description.plainText, 'Mục tiêu mới có dấu ✨');
+  await ownerPage.getByRole('button', { name: 'Archive project', exact: true }).click();
+  await ownerPage.locator('.system-dialog').getByRole('button', { name: 'Confirm', exact: true }).click();
+  await ownerPage.getByText('Archived project · Read-only', { exact: true }).waitFor();
+  assert.equal(await ownerPage.getByRole('button', { name: 'Edit project description', exact: true }).count(), 0);
+  await ownerPage.getByRole('button', { name: 'Reopen project', exact: true }).click();
+  await ownerPage.locator('.system-dialog').getByRole('button', { name: 'Confirm', exact: true }).click();
+  await ownerPage.getByRole('button', { name: 'Edit project description', exact: true }).waitFor();
+  await guestPage.evaluate(() => localStorage.setItem('workflow.auth.locale', 'en')); await guestPage.reload();
+  await guestPage.getByText('Guest · View and comment', { exact: true }).waitFor();
+  assert.equal(await guestPage.getByRole('button', { name: 'Rename', exact: true }).count(), 0);
+  assert.equal(await guestPage.getByRole('button', { name: 'Archive project', exact: true }).count(), 0);
+  assert.equal(await guestPage.getByRole('link', { name: standalone.name, exact: true }).count(), 0);
   assert.deepEqual(errors, []);
   if (process.env.WORKFLOW_SKILL_PROBE === '1') {
     let source = await readFile('C:/Users/Acer/.agents/skills/ui-ux/scripts/probe.mjs', 'utf8');

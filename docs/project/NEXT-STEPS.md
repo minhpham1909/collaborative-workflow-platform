@@ -1,5 +1,7 @@
 # Trạng thái và bước tiếp theo
 
+11/10/2026 — **S12d5a Project header/overview/mô tả/Archive Việt–Anh đạt**: names/documents preserved, rename labels truyền rõ vào NameDialog, dirty-description cancel giữ draft, archive/reopen và Guest capabilities. BoardS6aVI+EN header/5width/edit/Archive/Guest PASS, FE20/build164; entry550.36kB còn warning. Tiếp Board/filter/card/TaskForm, sau đó management/Task/MyTasks/Inbox/invitation/trash locale. [Danh sách việc còn lại](S12-REMAINING-WORK.md); [QA](../qa/UI-STITCH-S12-CHECK.md). Chưa cảProjectEnglish/S12; vẫn11/12 mốc, không providers/queues/dev data.
+
 11/10/2026 — **S12d4d Workspace Ban/nhật ký Việt–Anh**: dialog Ban/Unban, phạm vi dọn bình luận, preview, retry và trạng thái nhật ký theo UI locale. Giữ `XÓA BÌNH LUẬN` exact confirmation, quyền/CAS/cleanup enums và dữ liệu tên/lý do. Kiểm thử S5 Vi–En, 5 kích thước, FE20/build163; [QA](../qa/UI-STITCH-S12-CHECK.md). Tiếp Project/Kanban và các cụm Task/MyTasks/Inbox/invitations; performance/full-language còn mở, vẫn11/12 mốc. Không chạy worker/SMTP/queue dev hay thay dữ liệu dev.
 
 10/10/2026 — **S12d4c Workspace Team Việt–Anh**: danh sách/bộ lọc, lời mời EMAIL/LINK, Kick/rời nhóm/chuyển Owner và thêm thành viên nội bộ. Kiểm browser S5 Vi–En, quyền/assignee và 5 kích thước; xem [QA](../qa/UI-STITCH-S12-CHECK.md). Ban/moderation body chuyển sang lượt kế tiếp; full-language/performance còn mở, vẫn11/12 mốc. Không gửi email hoặc xử lý queue/dev data trong lượt này.
