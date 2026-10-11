@@ -1,5 +1,9 @@
+import { messageText } from './messages.js';
 import { translateAuthText } from '../features/auth/auth-translations.js';
 const english = {
+  "Bỏ nội dung chưa lưu và chuyển trang?": "Discard unsaved content and leave this page?",
+  "Bỏ các thay đổi chưa lưu và chuyển trang?": "Discard unsaved changes and leave this page?",
+  "Đang xử lý yêu cầu. Vui lòng chờ kết quả trước khi rời trang.": "A request is in progress. Wait for the result before leaving this page.",
   "Công việc của tôi": "My tasks",
   "Tạo {date}": "Created {date}",
   "Bộ lọc danh sách": "List filters", "Sắp xếp:": "Sort:", "Mới tạo trước": "Newest first", "Tìm kiếm & bộ lọc": "Search & filters", "Thu hẹp danh sách theo nhu cầu của bạn": "Narrow the list to what you need",
@@ -91,6 +95,6 @@ const english = {
 export function homeText(value, locale, values = {}) {
   if (typeof value !== 'string') return value;
   const singular = { '{count} người': '{count} person', '{count} dự án': '{count} project', '{count} việc đến hạn hôm nay': '{count} task due today', 'tại {count} Workspace': 'across {count} workspace' };
-  const template = locale === 'en' ? (values.count === 1 && singular[value] ? singular[value] : english[value] ?? translateAuthText(value, locale)) : value;
+  const template = locale === 'en' ? (values.count === 1 && singular[value] ? singular[value] : english[value] ?? messageText(translateAuthText(value, locale), locale)) : value;
   return template.replace(/\{(\w+)\}/gu, (match, key) => Object.hasOwn(values, key) ? String(values[key]) : match);
 }

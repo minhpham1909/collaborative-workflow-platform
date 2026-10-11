@@ -1,10 +1,10 @@
-import {Children,cloneElement,createContext,isValidElement,useContext,useState} from 'react';
+import {Children,cloneElement,createContext,isValidElement,useContext,useEffect,useState} from 'react';
 import PasswordField from '../../components/PasswordField.jsx';
 import EmailVerificationActions from '../../components/EmailVerificationActions.jsx';
 import {translateAuthText} from './auth-translations.js';
 const Context=createContext({locale:'vi',setLocale:()=>{}});
 const key='workflow.auth.locale';
-export function AuthLocaleProvider({children}){const [locale,setValue]=useState(()=>{try{return localStorage.getItem(key)==='en'?'en':'vi';}catch{return 'vi';}});function setLocale(value){if(!['vi','en'].includes(value))return;setValue(value);try{localStorage.setItem(key,value);}catch{}}return <Context.Provider value={{locale,setLocale}}>{children}</Context.Provider>;}
+export function AuthLocaleProvider({children}){const [locale,setValue]=useState(()=>{try{return localStorage.getItem(key)==='en'?'en':'vi';}catch{return 'vi';}});useEffect(()=>{document.documentElement.lang=locale;},[locale]);function setLocale(value){if(!['vi','en'].includes(value))return;setValue(value);try{localStorage.setItem(key,value);}catch{}}return <Context.Provider value={{locale,setLocale}}>{children}</Context.Provider>;}
 export const useAuthLocale=()=>useContext(Context);
 // Translate presentation strings/labels only. Controlled values, IDs, callbacks,
 // versions and authentication request bodies are left intact.

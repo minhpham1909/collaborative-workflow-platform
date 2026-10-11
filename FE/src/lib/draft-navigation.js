@@ -1,5 +1,7 @@
 import { useLayoutEffect, useRef } from "react";
 import { confirmDialog, notify } from "../components/NotificationProvider.jsx";
+import { homeText } from './home-text.js';
+const text = value => homeText(value, globalThis.document?.documentElement?.lang === 'en' ? 'en' : 'vi');
 
 const drafts = new Set();
 let leavePrompt = null;
@@ -15,7 +17,7 @@ const active = () => [...drafts].map((ref) => ref.current).filter(Boolean);
 export async function mayLeaveDrafts() {
   if (active().some((draft) => draft.busy)) {
     notify(
-      active().find(draft=>draft.busy&&draft.busyMessage)?.busyMessage ?? "Đang xử lý yêu cầu. Vui lòng chờ kết quả trước khi rời trang.",
+      text(active().find(draft=>draft.busy&&draft.busyMessage)?.busyMessage ?? "Đang xử lý yêu cầu. Vui lòng chờ kết quả trước khi rời trang."),
       "warning",
     );
     return false;
@@ -24,10 +26,10 @@ export async function mayLeaveDrafts() {
   if (!dirty.length) return true;
   if (!leavePrompt)
     leavePrompt = confirmDialog(
-      dirty.length === 1
+      text(dirty.length === 1
         ? (dirty[0].message ?? "Bỏ nội dung chưa lưu và chuyển trang?")
-        : "Bỏ các thay đổi chưa lưu và chuyển trang?",
-      { confirmLabel: "Bỏ thay đổi", cancelLabel: "Ở lại", ...dirty.find(draft=>draft.dialogOptions)?.dialogOptions },
+        : "Bỏ các thay đổi chưa lưu và chuyển trang?"),
+      { confirmLabel: text("Bỏ thay đổi"), cancelLabel: text("Ở lại"), ...dirty.find(draft=>draft.dialogOptions)?.dialogOptions },
     ).finally(() => {
       leavePrompt = null;
     });

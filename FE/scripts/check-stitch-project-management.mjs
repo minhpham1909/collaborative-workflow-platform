@@ -123,6 +123,7 @@ try {
   assert.equal(await englishGuestPage.getByRole('link', { name: standalone.name, exact: true }).count(), 0);
   await ownerPage.getByRole('button', { name: 'Guest', exact: true }).click(); await ownerPage.getByRole('button', { name: 'Remove Guest access', exact: true }).click(); enDialog = ownerPage.getByRole('dialog'); await enDialog.getByRole('button', { name: 'Remove Guest access', exact: true }).click(); await enDialog.waitFor({ state: 'hidden' });
   await assert.rejects(work.getProject(auths[3], project.id));
+  await ownerPage.getByRole('button',{name:'Labels',exact:true}).click(); await ownerPage.getByRole('button',{name:'Create label',exact:true}).click(); const duplicate=ownerPage.getByRole('dialog'); await duplicate.getByLabel('Label name',{exact:true}).fill('Nhãn có dấu'); await duplicate.getByRole('button',{name:'Create label',exact:true}).click(); await duplicate.getByText('This label name already exists in the project. Choose another name.',{exact:true}).waitFor(); assert.equal(await duplicate.getByLabel('Label name',{exact:true}).inputValue(),'Nhãn có dấu'); assert.equal(await ProjectLabel.countDocuments({name:'Nhãn có dấu'}),1);
   assert.deepEqual(errors, []);
   if (process.env.WORKFLOW_SKILL_PROBE === '1') {
     let source = await readFile('C:/Users/Acer/.agents/skills/ui-ux/scripts/probe.mjs', 'utf8');
