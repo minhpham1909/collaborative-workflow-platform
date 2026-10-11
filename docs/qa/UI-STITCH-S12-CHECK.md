@@ -219,3 +219,8 @@ Theo yêu cầu rà việc còn lại, có [S12-REMAINING-WORK.md](../project/S1
 - `check-interaction-flows.mjs` PASS: create/edit/comments/author/assignee/status/MyTasks/CAS/Archive/paging/drafts/editor/nested dialogs; cần thiết do đổi shared pickers/profile. FE20 unit/build165 PASS, entry556.47kB/gzip157.88kB cònwarning>500; khôngnới threshold.
 - Xem `.local/stitch-board/board-en-375.png`;5width screenshotsignored. KhôngEnglishprobe mới/fullaccessibility acceptance. Trong lúc chuyển copy có lỗi JSX build; đã sửa trước khi kiểm browser đạt, khôngclaim cácbuildfailed làpass.
 - Khôngproviders/workers/devcollections/backfill. TiếpProjectManagement/SharedProjects, Task detail/checklist/comments/activity/reopen, MyTasks/Inbox/invitation/trash vàperformance.
+## S12d5c — ProjectManagement và SharedProjects Việt–Anh
+
+11/10/2026 — dịch labels/colors/Lead/Guest/invitations/reopen queue summary, mutation dialog/guards/status/expiry và shared-project list/filters. Names/reasons/enums/CAS/URLtokens giữ nguyên, MemberPicker nhậnlocale. Không đổi Lead/Guest scope.
+
+Project-management browser PASS fullS6bVI (archive label/history preservation, create/edit priorities/labels, Lead demotion denial preserves draft, Archived Guest revoke, LINK/revoke) +EN: label có dấu/colorblue lưu chính xác, setLeadLan, GuestLINK path/token đúng, accept fixture→SharedProjectsEN/cardGuest/noWorkspace link, revokeGuest→BEdeny;5widthmanagementEN nooverflow/pageerror. Build165 PASSentry561.61kB cònwarning; khôngEnglishprobe/provider/worker/devdata. TiếpTask details/MyTasks/Inbox/invitation/trash locale vàperformance.

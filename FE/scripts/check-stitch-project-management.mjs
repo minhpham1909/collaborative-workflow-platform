@@ -68,8 +68,8 @@ try {
   await work.updateProject(auths[0], project.id, { expectedVersion: project.version, description });
   const invitation = await work.inviteGuest(auths[0], project.id, { type: 'LINK' }); await work.acceptGuestInvitation(auths[3], { token: new URLSearchParams(new URL(invitation.url).hash.slice(1)).get('token') });
   const cutoff = cutoffCodec(config.accessKeyHex);
-  server = createApp({ authService: auth, authConfig: config, workspaceService: workspaces, workService: work, organizationService: organizations, notificationsService: createNotificationsService({ store: createMongoNotificationsStore({ cutoff }), cutoff }) }).listen(0, '127.0.0.1'); await once(server, 'listening');
-  const origin = `http://127.0.0.1:${server.address().port}`;
+  const fixtureApp = () => createApp({ authService: auth, authConfig: config, workspaceService: workspaces, workService: work, organizationService: organizations, notificationsService: createNotificationsService({ store: createMongoNotificationsStore({ cutoff }), cutoff }) }); server = fixtureApp().listen(0, '127.0.0.1'); await once(server, 'listening');
+  let origin = `http://127.0.0.1:${server.address().port}`;
   browser = await chromium.launch({ executablePath: process.env.WORKFLOW_BROWSER_EXECUTABLE, headless: true });
   let fail = false, delay = false, lostStateResponse = false, stateWrites = 0;
   async function pageFor(index) {
@@ -95,6 +95,34 @@ try {
   await leadPage.getByRole('button', { name: 'Tạo nhãn', exact:true }).click(); await leadPage.getByLabel('Tên nhãn', { exact:true }).fill('Denied after Lead removal'); const leadSnapshot=(await work.getProject(auths[0],project.id)).project; await work.lead(auths[0],project.id,{expectedVersion:leadSnapshot.version,leadId:null}); await leadPage.getByRole('dialog').getByRole('button',{name:'Tạo nhãn',exact:true}).click(); await leadPage.getByText('Thao tác cần quyền quản lý Project hiện tại.',{exact:true}).waitFor(); assert.equal(await leadPage.getByLabel('Tên nhãn',{exact:true}).inputValue(),'Denied after Lead removal'); assert.equal(await ProjectLabel.collection.countDocuments({name:'Denied after Lead removal'}),0); await leadPage.getByRole('dialog').getByRole('button',{name:'Đóng',exact:true}).click(); await leadPage.locator('.system-dialog button.primary').click();
   await ownerPage.getByRole('button',{name:'Guest',exact:true}).click(); await ownerPage.locator('.project-management-list').getByText('Bình',{exact:true}).waitFor(); const latest=(await work.getProject(auths[0],project.id)).project; await work.state(auths[0],project.id,{expectedVersion:latest.version,state:'archived'}); await ownerPage.getByRole('button',{name:'Tải lại quản lý',exact:true}).click(); await ownerPage.getByRole('button',{name:'Thu hồi quyền Guest',exact:true}).click(); dialog=ownerPage.getByRole('dialog'); await dialog.getByRole('button',{name:'Thu hồi quyền Guest',exact:true}).click(); await dialog.waitFor({state:'hidden'}); assert.equal(await ProjectGuest.collection.countDocuments({projectId:new mongoose.Types.ObjectId(project.id),userId:users[3]._id,state:'active'}),0); await assert.rejects(work.getProject(auths[3],project.id));
   const archivedProject=(await work.getProject(auths[0],project.id)).project; await work.state(auths[0],project.id,{expectedVersion:archivedProject.version,state:'active'}); await ownerPage.getByRole('button',{name:'Tải lại quản lý',exact:true}).click(); await ownerPage.getByRole('button',{name:'Lời mời Guest',exact:true}).click(); await ownerPage.getByRole('button',{name:'Mời Guest',exact:true}).click(); dialog=ownerPage.getByRole('dialog'); await dialog.getByLabel('Cách mời Guest',{exact:true}).selectOption('LINK'); await dialog.getByRole('button',{name:'Mời Guest',exact:true}).click(); const link = new URL(await dialog.getByLabel('Liên kết Guest',{exact:true}).inputValue()); assert.equal(link.pathname,'/project-invite'); assert.ok(new URLSearchParams(link.hash.slice(1)).get('token')); await dialog.getByRole('button',{name:'Đóng kết quả',exact:true}).click(); await ownerPage.locator('.project-management-list li').filter({hasText:'Còn hiệu lực'}).getByRole('button',{name:'Thu hồi lời mời Guest',exact:true}).first().click(); await ownerPage.getByRole('dialog').getByRole('button',{name:'Thu hồi lời mời Guest',exact:true}).click(); await ownerPage.getByRole('dialog').waitFor({state:'hidden'});
+  const oldServer = server; server = fixtureApp().listen(0, '127.0.0.1'); await once(server, 'listening'); origin = `http://127.0.0.1:${server.address().port}`; await new Promise(resolve => oldServer.close(resolve));
+  await ownerPage.evaluate(() => localStorage.setItem('workflow.auth.locale', 'en')); await ownerPage.reload();
+  await ownerPage.getByRole('button', { name: 'Labels', exact: true }).click();
+  await ownerPage.getByRole('button', { name: 'Create label', exact: true }).click();
+  let enDialog = ownerPage.getByRole('dialog');
+  await enDialog.getByLabel('Label name', { exact: true }).fill('Nhãn có dấu');
+  await enDialog.getByLabel('Label color', { exact: true }).selectOption('blue');
+  await enDialog.getByRole('button', { name: 'Create label', exact: true }).click(); await enDialog.waitFor({ state: 'hidden' });
+  await ownerPage.getByText('Nhãn có dấu', { exact: true }).waitFor();
+  assert.equal((await ProjectLabel.findOne({ name: 'Nhãn có dấu' })).color, 'blue');
+  for (const width of [375,768,1024,1280,1440]) { await ownerPage.setViewportSize({ width, height:1000 }); await ownerPage.screenshot({ path: `${out}/management-en-${width}.png`, fullPage: true }); assert.ok(await ownerPage.evaluate(() => document.documentElement.scrollWidth <= innerWidth+1)); }
+  await ownerPage.getByRole('button', { name: 'Set Lead', exact: true }).click(); enDialog = ownerPage.getByRole('dialog');
+  await enDialog.getByLabel('Project Lead', { exact: true }).selectOption(users[1].id);
+  await enDialog.getByRole('button', { name: 'Set Project Lead', exact: true }).click(); await enDialog.waitFor({ state: 'hidden' });
+  assert.equal(String((await Project.findById(project.id)).leadId), users[1].id);
+  await ownerPage.getByRole('button', { name: 'Guest invitations', exact: true }).click(); await ownerPage.getByRole('button', { name: 'Invite Guest', exact: true }).click(); enDialog = ownerPage.getByRole('dialog');
+  await enDialog.getByLabel('Guest invitation method', { exact: true }).selectOption('LINK');
+  await enDialog.getByRole('button', { name: 'Invite Guest', exact: true }).click();
+  const englishLink = new URL(await enDialog.getByLabel('Guest link', { exact: true }).inputValue());
+  const englishToken = new URLSearchParams(englishLink.hash.slice(1)).get('token'); assert.equal(englishLink.pathname, '/project-invite'); assert.ok(englishToken);
+  await enDialog.getByRole('button', { name: 'Close result', exact: true }).click();
+  await work.acceptGuestInvitation(auths[3], { token: englishToken });
+  const englishGuestPage = await pageFor(3); await englishGuestPage.evaluate(() => localStorage.setItem('workflow.auth.locale', 'en')); await englishGuestPage.goto('http://localhost:5173/#shared'); await englishGuestPage.reload();
+  await englishGuestPage.getByRole('heading', { name: 'Shared projects', exact: true }).waitFor(); await englishGuestPage.getByRole('link', { name: project.name, exact: true }).waitFor();
+  await englishGuestPage.getByText('Guest · View and comment', { exact: true }).waitFor();
+  assert.equal(await englishGuestPage.getByRole('link', { name: standalone.name, exact: true }).count(), 0);
+  await ownerPage.getByRole('button', { name: 'Guest', exact: true }).click(); await ownerPage.getByRole('button', { name: 'Remove Guest access', exact: true }).click(); enDialog = ownerPage.getByRole('dialog'); await enDialog.getByRole('button', { name: 'Remove Guest access', exact: true }).click(); await enDialog.waitFor({ state: 'hidden' });
+  await assert.rejects(work.getProject(auths[3], project.id));
   assert.deepEqual(errors, []);
   if (process.env.WORKFLOW_SKILL_PROBE === '1') {
     let source = await readFile('C:/Users/Acer/.agents/skills/ui-ux/scripts/probe.mjs', 'utf8');
