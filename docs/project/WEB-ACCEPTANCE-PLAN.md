@@ -14,7 +14,9 @@ FE5173 trả200; API4000 health/ready trả200. Khởi động database project2
 
 Hai script network/picker dùng tên nút/filter cũ (+TạoWorkspace, +TạoProject, Bộlọc/Lưu). Cập nhật selectors theo UIhiện tại, scope đúng dialog cho submit. Giữ assertions API/recordcount/blockedwrites; không đổi product để né test. Các lượt lỗi selector không được tínhpass.
 
-## W2 — Nghiệm thu sử dụng web: còn tiếp
+## W2 — Browser journey đạt; nghiệm thu thực tế còn tiếp
+
+Đãchạy4hànhtrìnhVi/En×1440/375 trênbuiltpreview tuần tự, cùngHome/Org/ManageAudit/Workspace regressionsPASS. [Kết quảW2](../qa/WEB-ACCEPTANCE-W2-CHECK.md). Lượt4browserssong song cóERR_INSUFFICIENT_RESOURCES/modulefetchfailure; giữrecord vàtách khỏibusinessacceptance, chưa loadtest hoặcuserUAT/provider thật.
 
 Kiểm xuyên cụm Auth → Home/Org/Workspace → Project/Task → MyTasks/Inbox/Trash, theo Owner/Admin/Manager/Lead/Member/Assignee/Guest. So sánh kết quả hiển thị với quyền/dữ liệu hiện tại, kiểm loading/empty/errors/read-only, Back/Forward/drafts, Vi-En vàdesktop/mobile. Dùng tài khoản/dữ liệu test tách riêng cho CRUD; luồng Google/email thật cần tách bằng chứng provider khỏi fixture.
 

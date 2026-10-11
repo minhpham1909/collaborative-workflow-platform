@@ -1,5 +1,7 @@
 # Trạng thái và bước tiếp theo
 
+11/10/2026 — **W2 browser journey đạt scoped gate**: UIOrg→Workspace→Project→Task→MyTasks→Inbox→Guest→Trash/restore;4caseVi/En×1440/375 builtpreview tuần tựPASS vàHome/Org/ManageAudit/Workspace regressionsPASS. [QA](../qa/WEB-ACCEPTANCE-W2-CHECK.md). Ghi riêng resource/moduleerrors khi chạy song song, khôngđánh giá load/capacity từfixture. Tiếp nghiệmthu web thực tế vàlỗi tái hiện; chưadeploy/CI-CD/provider/worker/devwrites.
+
 11/10/2026 — **Ưu tiên nghiệm thu web, hoãn chuyển sang deploy/CI-CD theo yêu cầu người dùng**. W0 localFE/API/DB ready, W1network/picker/TeamVi-En PASS; sửa selectors test cũ, không đổi businesscode. TiếpW2cross-role/manual-use acceptance theo [planweb](WEB-ACCEPTANCE-PLAN.md). GateS12technical khôngthayuser acceptance. Khôngworkers/oldqueues/backfill/devbusinesswrites.
 
 11/10/2026 — **S12 gate local hoàn tất**: S12d5b–d7 locale/flows, S12e2 loading/errors/lang/routesplit/budget. FE21/BE67unit+113integration, browserclusters/navigation/feedback/auth/C2/builtpreview Vi-En failure/reload PASS. Entry308.64kB/initial400.79kB/largest395.89kB; khôngchunk>500kB. F0/S1–S12 local gates đạt; khôngproduction/WCAG/SLA claim. Tiếp nghiên cứu deploy/CI-CD theo [readiness](S12-REMAINING-WORK.md). Khôngproviders/oldqueues/devdata/backfill.
