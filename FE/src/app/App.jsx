@@ -1,3 +1,4 @@
+import RouteFrame from '../components/RouteFrame.jsx';
 import { InlineMessage, LoadingState } from "../components/Feedback.jsx";
 import EmailVerificationActions from "../components/EmailVerificationActions.jsx";
 import {AuthLanguageSwitch,localizeAuth,useAuthLocale} from '../features/auth/AuthLocale.jsx';
@@ -5,19 +6,19 @@ import {translateAuthText} from '../features/auth/auth-translations.js';
 import AppFooter from "../components/AppFooter.jsx";
 import AppHeader from "../components/AppHeader.jsx";
 import AppSidebar from "../components/AppSidebar.jsx";
-import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { lazy, useCallback, useEffect, useRef, useState } from "react";
 import { createApi } from "../lib/api.js";
 import { messageFor } from "../lib/messages.js";
 import Login from "../features/auth/Login.jsx";
-import Home from "../features/workspaces/Home.jsx";
-import Organizations from "../features/organizations/Organizations.jsx";
-import Organization from "../features/organizations/Organization.jsx";
-import Workspace from "../features/projects/Workspace.jsx";
-import OrganizationTeam from "../features/organizations/OrganizationTeam.jsx";
-import Project from "../features/projects/Project.jsx";
-import MyTasks from "../features/tasks/MyTasks.jsx";
-import TaskDetail from "../features/tasks/TaskDetail.jsx";
-import SharedProjects from "../features/projects/SharedProjects.jsx";
+const Home = lazy(() => import("../features/workspaces/Home.jsx"));
+const Organizations = lazy(() => import("../features/organizations/Organizations.jsx"));
+const Organization = lazy(() => import("../features/organizations/Organization.jsx"));
+const Workspace = lazy(() => import("../features/projects/Workspace.jsx"));
+const OrganizationTeam = lazy(() => import("../features/organizations/OrganizationTeam.jsx"));
+const Project = lazy(() => import("../features/projects/Project.jsx"));
+const MyTasks = lazy(() => import("../features/tasks/MyTasks.jsx"));
+const TaskDetail = lazy(() => import("../features/tasks/TaskDetail.jsx"));
+const SharedProjects = lazy(() => import("../features/projects/SharedProjects.jsx"));
 import { notify } from "../components/NotificationProvider.jsx";
 import { readRoute } from "./routes.js";
 const Settings=lazy(()=>import('../features/settings/Settings.jsx'));
@@ -192,6 +193,7 @@ export default function App() {
           mobileOpen={mobileOpen}
         />
         {error && <InlineMessage>{error}</InlineMessage>}
+        <RouteFrame key={user.id + route.kind + (route.id ?? "") + (route.section ?? "")} locale={locale}>
         {isInvitationKind(route.kind) || (route.kind === "login" && inviteIntent) ? (
           <Invite
             key={user.id + (inviteIntent?.kind ?? route.kind)}
@@ -204,13 +206,13 @@ export default function App() {
             accountBusy={busy}
           />
         ) : route.kind === "settings" ? (
-          <Suspense fallback={<main><LoadingState>Đang tải cài đặt…</LoadingState></main>}><Settings
+          <Settings
             key={user.id}
             api={api}
             onUser={(value) =>
               setUser((old) => (old?.id === value.id ? value : old))
             }
-          /></Suspense>
+          />
         ) : ["notifications", "notification"].includes(route.kind) ? (
           <Notifications
             key={user.id + (route.id ?? "inbox")}
@@ -251,6 +253,7 @@ export default function App() {
         ) : (
           <Home key={user.id} api={api} user={user} />
         )}
+        </RouteFrame>
         <AppFooter />
       </div>
     </div>

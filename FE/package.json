@@ -10,6 +10,7 @@
   "scripts": {
     "dev": "vite --host localhost --port 5173 --strictPort",
     "build": "vite build",
+    "check:build": "node scripts/check-build-budget.mjs",
     "preview": "vite preview --host localhost --port 4176 --strictPort",
     "test": "node --test test/*.test.js"
   },

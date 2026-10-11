@@ -23,13 +23,15 @@ const { createNotificationsService } = await import('../../BE/src/notifications/
 const { createMongoNotificationsStore } = await import('../../BE/src/notifications/mongo-store.js');
 const { cutoffCodec } = await import('../../BE/src/notifications/input.js');
 const { testConfig } = await import('../../BE/test-support/auth-store.js');
+const feOrigin = process.env.WORKFLOW_FE_ORIGIN ?? 'http://localhost:5173';
+assert.ok(/^http:\/\/localhost:(5173|4176)$/.test(feOrigin), 'Only local fixture FE origins are allowed');
 const out = fileURLToPath(new URL('../../.local/stitch-board/', import.meta.url)); await mkdir(out, { recursive: true });
 let repl, server, browser; const errors = [];
 try {
   repl = await MongoMemoryReplSet.create({ binary: { version: '8.0.17', downloadDir: fileURLToPath(new URL('../../.local/mongodb-binaries/', import.meta.url)) }, instanceOpts: [{ launchTimeout: 30000 }], replSet: { count: 1, storageEngine: 'wiredTiger', ip: '127.0.0.1' } });
   await mongoose.connect(repl.getUri('workflow_fe_stitch_board_test'));
   for (const model of Object.values(models)) await model.createIndexes();
-  const config = { ...testConfig(), webOrigin: 'http://localhost:5173', secureCookies: false }, password = 'Organization browser fixture password', hash = await hashPassword(password);
+  const config = { ...testConfig(), webOrigin: feOrigin, secureCookies: false }, password = 'Organization browser fixture password', hash = await hashPassword(password);
   const auth = await createAuthService({ store: createMongoAuthStore(), config }), organizations = createOrganizationService({ store: createMongoOrganizationStore({ config }) }), workspaces = createWorkspaceService({ store: createMongoWorkspaceStore({ config }) }), work = createWorkService({ store: createMongoWorkStore({ config }) });
   const users = [], auths = [];
   for (let index = 0; index < 4; index++) { const user = new User({ email: `org-ui-${index}@example.com`, displayName: ['Minh', 'Lan', 'Hải', 'Bình'][index], passwordHash: hash, emailVerifiedAt: new Date(), termsAcceptance: { version: 'test', acceptedAt: new Date() } }); await user.save(); users.push(user); auths.push(await auth.authenticate((await auth.login({ email: user.email, password })).accessToken)); }
@@ -83,21 +85,22 @@ try {
       await route.fulfill({ response });
     });
     const page = await context.newPage(); page.setDefaultTimeout(15000); page.on('pageerror', error => errors.push(error.message));
-    await page.goto('http://localhost:5173/'); await page.getByLabel('Email', { exact: true }).fill(users[index].email); await page.getByLabel('Mật khẩu', { exact: true }).fill(password); await page.getByRole('button', { name: 'Đăng nhập', exact: true }).click();
-    await page.locator('.studio-home').waitFor(); await page.goto('http://localhost:5173/#organizations'); await page.locator('.organization-page').waitFor(); return page;
+    await page.goto(feOrigin + '/'); await page.getByLabel('Email', { exact: true }).fill(users[index].email); await page.getByLabel('Mật khẩu', { exact: true }).fill(password); await page.getByRole('button', { name: 'Đăng nhập', exact: true }).click();
+    await page.locator('.studio-home').waitFor(); await page.goto(feOrigin + '/#organizations'); await page.locator('.organization-page').waitFor(); return page;
   }
-  const ownerPage = await pageFor(0); await ownerPage.goto(`http://localhost:5173/#project/${project.id}`); await ownerPage.locator('.board-column.todo .board-task').first().waitFor(); await ownerPage.getByText('2/21 Task hoàn thành', { exact: true }).waitFor(); assert.equal(await ownerPage.locator('.board-column').count(), 3); assert.equal(await ownerPage.locator('.board-column.todo .board-task').count(), 12); await ownerPage.getByText(special.code, { exact: true }).waitFor(); await ownerPage.getByText('Thiết kế UI', { exact: true }).waitFor(); await ownerPage.getByText('0/2 mục checklist', { exact: true }).waitFor();
+  const ownerPage = await pageFor(0); await ownerPage.goto(`${feOrigin}/#project/${project.id}`); await ownerPage.locator('.board-column.todo .board-task').first().waitFor(); await ownerPage.getByText('2/21 Task hoàn thành', { exact: true }).waitFor(); assert.equal(await ownerPage.locator('.board-column').count(), 3); assert.equal(await ownerPage.locator('.board-column.todo .board-task').count(), 12); await ownerPage.getByText(special.code, { exact: true }).waitFor(); await ownerPage.getByText('Thiết kế UI', { exact: true }).waitFor(); await ownerPage.getByText('0/2 mục checklist', { exact: true }).waitFor();
   for(const width of [1440,1280,1024,768,375]) { await ownerPage.setViewportSize({ width, height: 1000 }); await ownerPage.screenshot({ path: `${out}/board-${width}.png`, fullPage: true }); assert.ok(await ownerPage.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), `Board page overflow ${width}`); if(width === 375) assert.ok(await ownerPage.locator('.board-scroll').evaluate(element => element.scrollWidth > element.clientWidth)); }
   await ownerPage.setViewportSize({ width: 1440, height: 1000 }); await ownerPage.getByRole('button', { name: 'Tải thêm Chưa làm', exact: true }).click(); await ownerPage.waitForFunction(() => document.querySelectorAll('.board-column.todo .board-task').length === 18); assert.equal(await ownerPage.locator('.board-column.in_progress .board-task').count(), 1); assert.equal(await ownerPage.locator('.board-column.done .board-task').count(), 2);
   await ownerPage.getByLabel('Tìm Task', { exact: true }).fill(special.code); await ownerPage.waitForFunction(() => document.querySelectorAll('.board-task').length === 1); await ownerPage.getByText('2/21 Task hoàn thành', { exact: true }).waitFor();
   await ownerPage.getByRole('button', { name: 'Xóa bộ lọc Task', exact: true }).click(); await ownerPage.getByRole('button', { name: 'Lọc nâng cao', exact: true }).click(); await ownerPage.getByLabel('Ưu tiên', { exact: true }).selectOption('high'); await ownerPage.waitForFunction(() => document.querySelectorAll('.board-task').length === 2); await ownerPage.getByText('2/21 Task hoàn thành', { exact: true }).waitFor();
   await ownerPage.getByRole('button', { name: 'Xóa bộ lọc Task', exact: true }).click(); await ownerPage.getByLabel('Tìm Task', { exact: true }).fill('Không có dữ liệu'); await ownerPage.waitForFunction(() => document.querySelectorAll('.board-column').length === 3 && document.querySelectorAll('.board-task').length === 0); assert.equal(await ownerPage.locator('.board-column').count(), 3);
   await ownerPage.getByRole('button', { name: '+ Tạo Task', exact: true }).click(); await ownerPage.getByLabel('Tiêu đề Task', { exact: true }).fill('Task sau bộ lọc'); await ownerPage.getByRole('button', { name: 'Lưu Task', exact: true }).click(); await ownerPage.getByRole('heading', { name: 'Task sau bộ lọc', exact: true }).waitFor(); assert.equal(await ownerPage.getByLabel('Tìm Task', { exact: true }).inputValue(), '');
-  const guestPage = await pageFor(3); await guestPage.goto(`http://localhost:5173/#project/${project.id}`); await guestPage.locator('.board-task').first().waitFor(); assert.equal(await guestPage.getByRole('button', { name: '+ Tạo Task', exact: true }).count(), 0); assert.equal(await guestPage.getByRole('button', { name: 'Lưu trữ Dự án', exact: true }).count(), 0); assert.equal(await guestPage.getByRole('link', { name: standalone.name, exact: true }).count(), 0);
+  const guestPage = await pageFor(3); await guestPage.goto(`${feOrigin}/#project/${project.id}`); await guestPage.locator('.board-task').first().waitFor(); assert.equal(await guestPage.getByRole('button', { name: '+ Tạo Task', exact: true }).count(), 0); assert.equal(await guestPage.getByRole('button', { name: 'Lưu trữ Dự án', exact: true }).count(), 0); assert.equal(await guestPage.getByRole('link', { name: standalone.name, exact: true }).count(), 0);
   const currentWs = (await workspaces.get(auths[0], standalone.id)).workspace; await workspaces.state(auths[0], standalone.id, { expectedVersion: currentWs.version, state: 'archived', confirmName: currentWs.name, reason: 'Check board refresh parent readonly' }); await ownerPage.getByRole('button', { name: 'Làm mới công việc', exact: true }).click(); await ownerPage.getByText('Workspace lưu trữ · Chỉ đọc', { exact: true }).waitFor(); assert.equal(await ownerPage.getByRole('button', { name: '+ Tạo Task', exact: true }).count(), 0); assert.equal(await ownerPage.getByRole('button', { name: 'Lưu trữ Dự án', exact: true }).count(), 0);
   const archivedWs = (await workspaces.get(auths[0], standalone.id)).workspace; await workspaces.state(auths[0], standalone.id, { expectedVersion: archivedWs.version, state: 'active', confirmName: archivedWs.name, reason: 'Return active fixture' }); await ownerPage.getByRole('button', { name: 'Làm mới công việc', exact: true }).click(); await ownerPage.getByRole('button', { name: '+ Tạo Task', exact: true }).waitFor();
   const previousServer = server; server = fixtureApp().listen(0, '127.0.0.1'); await once(server, 'listening'); origin = `http://127.0.0.1:${server.address().port}`; await new Promise(resolve => previousServer.close(resolve));
   await ownerPage.evaluate(() => localStorage.setItem('workflow.auth.locale', 'en')); await ownerPage.reload();
+  assert.equal(await ownerPage.evaluate(() => document.documentElement.lang), 'en');
   await ownerPage.getByText('2/22 tasks completed', { exact: true }).waitFor();
   for (const width of [375,768,1024,1280,1440]) {
     await ownerPage.setViewportSize({ width, height: 1000 });
@@ -161,6 +164,21 @@ try {
     await ownerPage.setViewportSize({ width, height: 1000 });
     await ownerPage.screenshot({ path: `${out}/board-en-${width}.png`, fullPage: true });
     assert.ok(await ownerPage.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), `EN board overflow ${width}`);
+  }
+  if (process.env.WORKFLOW_TEST_ROUTE_FAILURE === '1') {
+    const oldFailureServer=server; server=fixtureApp().listen(0,'127.0.0.1'); await once(server,'listening'); origin=`http://127.0.0.1:${server.address().port}`; await new Promise(resolve=>oldFailureServer.close(resolve));
+    for (const language of ['vi','en']) {
+      const failurePage = await pageFor(0); let blockedChunk = false;
+      if(language==='en'){await failurePage.evaluate(()=>localStorage.setItem('workflow.auth.locale','en'));await failurePage.reload();await failurePage.locator('.organization-page').waitFor();}
+      await failurePage.route('**/assets/Project-*.js', route => { if (!blockedChunk) { blockedChunk = true; return route.abort(); } return route.continue(); });
+      await failurePage.goto(`${feOrigin}/#project/${project.id}`);
+      await failurePage.getByRole('heading', { name: language==='en'?'Unable to open this screen':'Không thể mở màn hình này', exact: true }).waitFor();
+      assert.equal(blockedChunk, true);
+      await failurePage.getByRole('button', { name: language==='en'?'Reload page':'Tải lại trang', exact: true }).click();
+      await failurePage.locator('.board-task').first().waitFor();
+      assert.equal(new URL(failurePage.url()).hash, `#project/${project.id}`);
+      assert.equal(await failurePage.evaluate(()=>document.documentElement.lang),language);
+    }
   }
   assert.deepEqual(errors, []);
   if (process.env.WORKFLOW_SKILL_PROBE === '1') {
