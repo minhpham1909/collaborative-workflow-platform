@@ -1,3 +1,5 @@
+import { useAuthLocale } from '../auth/AuthLocale.jsx';
+import { taskText } from '../../lib/task-text.js';
 import { InlineMessage, LoadingState } from "../../components/Feedback.jsx";
 import { confirmDialog, inputDialog } from "../../components/NotificationProvider.jsx";
 import PersonProfile from "../../components/PersonProfile.jsx";
@@ -15,6 +17,8 @@ import { useDraftGuard } from '../../lib/draft-navigation.js';
 import { messageFor } from "../../lib/messages.js";
 import { statuses, deadline } from "../../lib/content.js";
 export default function TaskDetail({ api, id, expectedProjectId, onBusyChange, onDeleted, onReturnProject, onReturnMine, returnTo = myTaskReturn() }) {
+  const { locale } = useAuthLocale();
+  const tr = (value, values) => taskText(value, locale, values);
   const [composing, setComposing] = useState(false);
   const [checklistComposing, setChecklistComposing] = useState(false), [uncertain, setUncertain] = useState(false);
   const blocked = composing || checklistComposing;
@@ -29,7 +33,7 @@ export default function TaskDetail({ api, id, expectedProjectId, onBusyChange, o
     [revision, setRevision] = useState(0);
   const pending = useRef(false);
   useEffect(() => { if (deleted && !busy) { if (onDeleted) onDeleted(); else location.hash = returnTo ?? `project/${task.projectId}`; } }, [deleted, busy]);
-  useDraftGuard({ dirty: false, busy: busy && pending.current, message: 'Task đang xử lý.' });
+  useDraftGuard({ dirty: false, busy: busy && pending.current, message: tr("Task đang xử lý.") });
   useEffect(() => { onBusyChange?.(busy && pending.current); return () => onBusyChange?.(false); }, [busy, onBusyChange]);
   useEffect(() => {
     let live = true;
@@ -71,19 +75,19 @@ export default function TaskDetail({ api, id, expectedProjectId, onBusyChange, o
     try {
     let reason, confirmIncompleteChecklist = false;
     if (task.status === "done" && status && status !== "done") {
-      reason = await inputDialog("Lý do mở lại Task để tiếp tục xử lý", "", { title: "Mở lại Task", inputLabel: "Lý do", maxLength: 2000, confirmLabel: "Mở lại Task" });
+      reason = await inputDialog(tr("Lý do mở lại Task để tiếp tục xử lý"), "", { title: tr("Mở lại Task"), inputLabel: tr("Lý do"), maxLength: 2000, confirmLabel: tr("Mở lại Task") });
       if (reason === null) return;
-      if (!reason.trim() || reason.length > 2000) { setError("Nhập lý do mở lại, tối đa 2.000 ký tự."); return; }
+      if (!reason.trim() || reason.length > 2000) { setError(tr("Nhập lý do mở lại, tối đa 2.000 ký tự.")); return; }
     }
     if (status === "done" && task.status !== "done" && task.checklist?.some(item => !item.checked)) {
-      confirmIncompleteChecklist = await confirmDialog("Checklist vẫn còn mục chưa hoàn thành. Bạn muốn chuyển Task sang Hoàn thành?", { title: "Checklist chưa hoàn thành", confirmLabel: "Vẫn hoàn thành" });
+      confirmIncompleteChecklist = await confirmDialog(tr("Checklist vẫn còn mục chưa hoàn thành. Bạn muốn chuyển Task sang Hoàn thành?"), { title: tr("Checklist chưa hoàn thành"), confirmLabel: tr("Vẫn hoàn thành") });
       if (!confirmIncompleteChecklist) return;
     }
     if (
       !status &&
       !(await confirmDialog(
-        "Chuyển Task vào thùng rác và ẩn khỏi danh sách cùng bình luận? Dữ liệu được giữ 30 ngày trước khi dọn vĩnh viễn.",
-        { title: "Xóa Task?", confirmLabel: "Xóa Task", tone: "danger" },
+        tr("Chuyển Task vào thùng rác và ẩn khỏi danh sách cùng bình luận? Dữ liệu được giữ 30 ngày trước khi dọn vĩnh viễn."),
+        { title: tr("Xóa Task?"), confirmLabel: tr("Xóa Task"), tone: "danger" },
       ))
     )
       return;
@@ -101,14 +105,14 @@ export default function TaskDetail({ api, id, expectedProjectId, onBusyChange, o
       );
       if (status) {
         setTask(result.task);
-        setNotice("Đã đổi trạng thái Task.");
+        setNotice(tr("Đã đổi trạng thái Task."));
       } else setDeleted(true);
     } catch (e) {
       setUncertain(isUncertainMutation(e));
       setError(
         e.status
           ? messageFor(e)
-          : "Chưa xác nhận thao tác. Tải lại dữ liệu trước khi thử lại.",
+          : tr("Chưa xác nhận thao tác. Tải lại dữ liệu trước khi thử lại."),
       );
       if (e.status === 404) {
         setTask(null);
@@ -123,9 +127,9 @@ export default function TaskDetail({ api, id, expectedProjectId, onBusyChange, o
   return (
     <main className="studio-task-detail">
       <p className="breadcrumbs">
-        <a href="#home">Trang chủ</a>
-        {returnTo && <> / <a href={returnTo} onClick={event=>{if(onReturnMine){event.preventDefault();onReturnMine();}}}>Công việc của tôi</a></>}
-        {project?.accessRole === "guest" && <> / <a href="#shared">Dự án được chia sẻ</a> / <span>{project.context?.workspaceName ?? "Project được chia sẻ"}</span></>}
+        <a href="#home">{tr("Trang chủ")}</a>
+        {returnTo && <> / <a href={returnTo} onClick={event=>{if(onReturnMine){event.preventDefault();onReturnMine();}}}>{tr("Công việc của tôi")}</a></>}
+        {project?.accessRole === "guest" && <> / <a href="#shared">{tr("Dự án được chia sẻ")}</a> / <span>{project.context?.workspaceName ?? tr("Project được chia sẻ")}</span></>}
         {workspace && (
           <>
             {" "}
@@ -147,20 +151,18 @@ export default function TaskDetail({ api, id, expectedProjectId, onBusyChange, o
             setNotice("");
             setRevision((v) => v + 1);
           }}
-        >
-          Làm mới Task
-        </button>
+        >{tr("Làm mới Task")}</button>
       )}
-      {busy && <LoadingState>Đang xử lý Task…</LoadingState>}
-      {error && <InlineMessage>{error}</InlineMessage>}
-      {notice && <InlineMessage tone="info">{notice}</InlineMessage>}
+      {busy && <LoadingState>{tr("Đang xử lý Task…")}</LoadingState>}
+      {error && <InlineMessage>{tr(error)}</InlineMessage>}
+      {notice && <InlineMessage tone="info">{tr(notice)}</InlineMessage>}
       {task && (
         <>
           <section className="hero task-detail-header">
             <div>
-              <small>CHI TIẾT CÔNG VIỆC</small>
+              <small>{tr("CHI TIẾT CÔNG VIỆC")}</small>
               <h1>{task.title}</h1>
-              <span className="badge">{statuses[task.status]}</span>
+              <span className="badge">{tr(statuses[task.status])}</span>
             </div>
             {!editing && (
               <div className="buttons">
@@ -170,29 +172,21 @@ export default function TaskDetail({ api, id, expectedProjectId, onBusyChange, o
                     setNotice("");
                     setRevision((v) => v + 1);
                   }}
-                >
-                  Làm mới Task
-                </button>
+                >{tr("Làm mới Task")}</button>
                 {task.permissions.edit && (
                   <button
                     disabled={busy || blocked || uncertain}
                     onClick={() => setEditing(true)}
-                  >
-                    Sửa Task
-                  </button>
+                  >{tr("Sửa Task")}</button>
                 )}
                 {task.permissions.delete && (
-                  <button disabled={busy || blocked || uncertain} onClick={() => action()}>
-                    Xóa Task
-                  </button>
+                  <button disabled={busy || blocked || uncertain} onClick={() => action()}>{tr("Xóa Task")}</button>
                 )}
               </div>
             )}
           </section>
           {(project.readOnly ?? project.state === "archived") && (
-            <InlineMessage tone="info" className="archive-banner">
-              Dự án hoặc Workspace đang lưu trữ. Nội dung chỉ đọc; người có quyền vẫn có thể gỡ bình luận vi phạm.
-            </InlineMessage>
+            <InlineMessage tone="info" className="archive-banner">{tr("Dự án hoặc Workspace đang lưu trữ. Nội dung chỉ đọc; người có quyền vẫn có thể gỡ bình luận vi phạm.")}</InlineMessage>
           )}
           {editing ? (
             <TaskForm
@@ -207,71 +201,70 @@ export default function TaskDetail({ api, id, expectedProjectId, onBusyChange, o
               onDone={(t) => {
                 setTask(t);
                 setEditing(false);
-                setNotice("Đã lưu Task.");
+                setNotice(tr("Đã lưu Task."));
               }}
             />
           ) : (
             <>
               <section className="project-info">
-                <div className="task-detail-identifiers"><span>{task.code ?? 'Task chưa có mã lịch sử'}</span><span className={'task-priority priority-'+task.priority}>{({low:'Ưu tiên thấp',medium:'Ưu tiên vừa',high:'Ưu tiên cao'})[task.priority]}</span>{task.labels?.map(label => <span key={label.id}>{label.name}{label.archivedAt ? ' · Đã lưu trữ' : ''}</span>)}</div>
+                <div className="task-detail-identifiers"><span>{task.code ?? tr("Task chưa có mã lịch sử")}</span><span className={'task-priority priority-'+task.priority}>{({low:tr("Ưu tiên thấp"),medium:tr("Ưu tiên vừa"),high:tr("Ưu tiên cao")})[task.priority]}</span>{task.labels?.map(label => <span key={label.id}>{label.name}{label.archivedAt ? tr(" · Đã lưu trữ") : ''}</span>)}</div>
                 <div className="task-meta detail-meta-grid">
-                  <label>
-                    Trạng thái
-                    <select
-                      aria-label="Trạng thái"
+                  <label>{tr("Trạng thái")}<select
+                      aria-label={tr("Trạng thái")}
                       disabled={!task.permissions.status || busy || blocked || uncertain || (task.status === 'done' && Boolean(task.pendingReopenRequestId))}
                       value={task.status}
                       onChange={(e) => action(e.target.value)}
                     >
                       {Object.entries(statuses).map(([v, l]) => (
                         <option value={v} key={v}>
-                          {l}
+                          {tr(l)}
                         </option>
                       ))}
                     </select>
                   </label>
                   <p className="detail-person">
-                    Người thực hiện:{" "}
+                    {tr("Người thực hiện:")}{" "}
                     <strong>
-                      {task.assignee ? <PersonProfile api={api} projectId={task.projectId} user={task.assignee} /> : "Chưa phân công"}
+                      {task.assignee ? <PersonProfile locale={locale} api={api} projectId={task.projectId} user={task.assignee} /> : tr("Chưa phân công")}
                     </strong>
                   </p>
                   <p>
-                    Deadline: {deadline(task.dueAt)}{" "}
+                    Deadline: {task.dueAt ? new Date(task.dueAt).toLocaleString(locale === "en" ? "en-GB" : "vi-VN", { timeZone: "Asia/Ho_Chi_Minh", dateStyle: "short", timeStyle: "short" }) : tr("Không có hạn")}{" "}
                     {task.overdue && (
-                      <strong className="overdue">Quá hạn</strong>
+                      <strong className="overdue">{tr("Quá hạn")}</strong>
                     )}
                   </p>
                   <p className="detail-person">
-                    Người tạo:{" "}
+                    {tr("Người tạo:")}{" "}
                     <strong>
-                      {task.creator && <PersonProfile api={api} projectId={task.projectId} user={task.creator} />}
+                      {task.creator && <PersonProfile locale={locale} api={api} projectId={task.projectId} user={task.creator} />}
                     </strong>
                   </p>
                   <p>
-                    Tạo:{" "}
+                    {tr("Tạo:")}{" "}
                     <strong>
-                      {new Date(task.createdAt).toLocaleString("vi-VN", {
+                      {new Date(task.createdAt).toLocaleString(locale === "en" ? "en-GB" : "vi-VN", {
                         timeZone: "Asia/Ho_Chi_Minh",
                       })}
                     </strong>
                   </p>
                   <p>
-                    Cập nhật:{" "}
+                    {tr("Cập nhật:")}{" "}
                     <strong>
-                      {new Date(task.updatedAt).toLocaleString("vi-VN", {
+                      {new Date(task.updatedAt).toLocaleString(locale === "en" ? "en-GB" : "vi-VN", {
                         timeZone: "Asia/Ho_Chi_Minh",
                       })}
                     </strong>
                   </p>
                 </div>
-                {task.status === 'done' && <p>Hoàn thành: {task.completedAt ? new Date(task.completedAt).toLocaleString('vi-VN', { timeZone:'Asia/Ho_Chi_Minh' }) : 'Chưa ghi nhận ngày hoàn thành'}</p>}
-                <h2>Mô tả</h2>
+                {task.status === 'done' && <p>{tr("Hoàn thành:")} {task.completedAt ? new Date(task.completedAt).toLocaleString(locale === "en" ? "en-GB" : "vi-VN", { timeZone:'Asia/Ho_Chi_Minh' }) : tr("Chưa ghi nhận ngày hoàn thành")}</p>}
+                <h2>{tr("Mô tả")}</h2>
                 <RichEditor
+              locale={locale}
                   key={task.version}
                   value={task.description}
                   readOnly
-                  label="Mô tả Task"
+                  label={tr("Mô tả Task")}
                 />
               </section>
               <TaskChecklist api={api} task={task} disabled={busy || blocked || uncertain} onComposing={setChecklistComposing} onTask={value => { if (value) setTask(value); else setRevision(v => v+1); }} />
