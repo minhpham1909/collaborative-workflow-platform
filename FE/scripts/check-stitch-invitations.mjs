@@ -87,6 +87,7 @@ try {
       await route.fulfill({ response });
     });
     const page = await context.newPage(); page.on("pageerror", e => { errors.push(e.stack ?? e.message); console.info("Browser error:", e.stack ?? e.message); });
+    if(options.locale) await page.addInitScript(locale=>localStorage.setItem('workflow.auth.locale',locale),options.locale);
     await page.goto(url); return page;
   }
   async function login(page, index) {
@@ -194,6 +195,10 @@ try {
   for(const [scope,url,name] of [['workspace',visualLink,visualWs.name],['project',visualGuest,visualProject.name],['organization','http://localhost:5173/organization-invite#token='+visualOrgToken,org.name]]) {
     const visual=await pageFor(url);await visual.getByRole('heading',{name,exact:true}).waitFor();await visual.getByRole('button',{name:'Đăng nhập',exact:true}).waitFor();assert.ok(!visual.url().includes('token='));
     for(const width of [1440,1280,1024,768,375]){await visual.setViewportSize({width,height:1000});await visual.screenshot({path:out+'/'+scope+'-'+width+'.png',fullPage:true});assert.ok(await visual.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Invite overflow '+scope+'/'+width);}
+    const englishVisual=await pageFor(url,{locale:'en'}); await englishVisual.getByRole('heading',{name,exact:true}).waitFor();
+    await englishVisual.getByRole('heading',{name:/Invitation to join/}).waitFor();
+    for(const width of [375,768,1024,1280,1440]){await englishVisual.setViewportSize({width,height:1000});await englishVisual.screenshot({path:out+'/'+scope+'-en-'+width+'.png',fullPage:true});assert.ok(await englishVisual.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));}
+
   }
   const retry=await pageFor(visualLink,{failPreview:true});await retry.getByRole('button',{name:'Tải lại lời mời',exact:true}).click();await retry.getByRole('heading',{name:visualWs.name,exact:true}).waitFor();
   const joining=await pageFor(visualLink,{delayAccept:true});await login(joining,1);await joining.getByRole('button',{name:'Tham gia Workspace',exact:true}).click();await joining.getByRole('link',{name:'Về Trang chủ',exact:true}).click();assert.equal(new URL(joining.url()).hash,'#invite');await joining.waitForURL('**/#workspace/'+visualWs.id);assert.equal(await WorkspaceMembership.collection.countDocuments({workspaceId:new mongoose.Types.ObjectId(visualWs.id),userId:users[1]._id,state:'active'}),1);

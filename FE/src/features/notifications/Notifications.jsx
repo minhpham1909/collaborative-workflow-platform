@@ -1,3 +1,5 @@
+import { useAuthLocale } from '../auth/AuthLocale.jsx';
+import { workflowText } from '../../lib/workflow-text.js';
 import {
   EmptyState,
   InlineMessage,
@@ -17,46 +19,48 @@ const categories = { work:'Công việc', invitation:'Lời mời Workspace', me
 const noteIcon = note => !note.available ? 'archive' : note.category==='work' ? note.changes.includes('comment')?'document':'tasks' : 'people';
 const changed = () => window.dispatchEvent(new Event("workflow-inbox-changed"));
 function Content({ note }) {
+  const { locale } = useAuthLocale();
+  const tr = (value, values) => workflowText(value, locale, values);
   if (!note.available)
     return (
       <>
-        <h3>Nội dung không còn khả dụng</h3>
-        <p>Bạn vẫn có thể đánh dấu thông báo này đã đọc.</p>
+        <h3>{tr("Nội dung không còn khả dụng")}</h3>
+        <p>{tr("Bạn vẫn có thể đánh dấu thông báo này đã đọc.")}</p>
       </>
     );
   const p = note.payload;
   if (note.category === "project_invitation")
     return (
       <>
-        <h3>Lời mời xem {p.projectName}</h3>
-        <p>{p.inviterDisplayName} mời bạn xem và bình luận trong Project này.</p>
+        <h3>{tr("Lời mời xem {name}", { name: p.projectName })}</h3>
+        <p>{tr("{name} mời bạn xem và bình luận trong Project này.", { name: p.inviterDisplayName })}</p>
         <p>Workspace: {p.workspaceName}</p>
-        <p>Hết hạn {new Date(p.expiresAt).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" })}</p>
+        <p>{tr("Hết hạn")} {new Date(p.expiresAt).toLocaleString(locale === "en" ? "en-GB" : "vi-VN", { timeZone: "Asia/Ho_Chi_Minh" })}</p>
       </>
     );
   if (note.category === "organization_invitation")
     return (
       <>
-        <h3>Lời mời tham gia {p.organizationName}</h3>
-        <p>{p.inviterDisplayName} mời bạn vào tổ chức với vai trò Member.</p>
-        {p.workspaceName && <p>Bạn cũng sẽ tham gia Workspace: {p.workspaceName}.</p>}
-        <p>Hết hạn {new Date(p.expiresAt).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" })}</p>
+        <h3>{tr("Lời mời tham gia {name}", { name: p.organizationName })}</h3>
+        <p>{tr("{name} mời bạn vào tổ chức với vai trò Member.", { name: p.inviterDisplayName })}</p>
+        {p.workspaceName && <p>{tr("Bạn cũng sẽ tham gia Workspace: {name}.", { name: p.workspaceName })}</p>}
+        <p>{tr("Hết hạn")} {new Date(p.expiresAt).toLocaleString(locale === "en" ? "en-GB" : "vi-VN", { timeZone: "Asia/Ho_Chi_Minh" })}</p>
       </>
     );
   if (note.category === "membership")
     return (
       <>
-        <h3>Bạn đã được thêm vào {p.workspaceName}</h3>
-        <p>{p.actorDisplayName} đã thêm bạn vào Workspace.</p>
+        <h3>{tr("Bạn đã được thêm vào {name}", { name: p.workspaceName })}</h3>
+        <p>{tr("{name} đã thêm bạn vào Workspace.", { name: p.actorDisplayName })}</p>
       </>
     );
   return note.category === "invitation" ? (
     <>
-      <h3>Lời mời tham gia {p.workspaceName}</h3>
-      <p>{p.inviterDisplayName} mời bạn vào Workspace.</p>
+      <h3>{tr("Lời mời tham gia {name}", { name: p.workspaceName })}</h3>
+      <p>{tr("{name} mời bạn vào Workspace.", { name: p.inviterDisplayName })}</p>
       <p>
-        Hết hạn{" "}
-        {new Date(p.expiresAt).toLocaleString("vi-VN", {
+        {tr("Hết hạn")}{" "}
+        {new Date(p.expiresAt).toLocaleString(locale === "en" ? "en-GB" : "vi-VN", {
           timeZone: "Asia/Ho_Chi_Minh",
         })}
       </p>
@@ -72,10 +76,10 @@ function Content({ note }) {
           .map(
             (v) =>
               ({
-                assignment: "Phân công",
-                comment: "Bình luận mới",
-                content: "Nội dung/deadline",
-                status: "Trạng thái",
+                assignment: tr("Phân công"),
+                comment: tr("Bình luận mới"),
+                content: tr("Nội dung/deadline"),
+                status: tr("Trạng thái"),
               })[v] ?? v,
           )
           .join(" · ")}
@@ -84,6 +88,8 @@ function Content({ note }) {
   );
 }
 export function InboxBadge({ api, userId }) {
+  const { locale } = useAuthLocale();
+  const tr = (value, values) => workflowText(value, locale, values);
   const { t } = useShellText();
   const [count, setCount] = useState(null),
     [stale, setStale] = useState(false);
@@ -115,8 +121,8 @@ export function InboxBadge({ api, userId }) {
     <span
       aria-label={
         count === null
-          ? t('Chưa tải số thông báo chưa đọc')
-          : t('{count} thông báo chưa đọc', { count }) + (stale ? t(', cần tải lại') : '')
+          ? t(tr("Chưa tải số thông báo chưa đọc"))
+          : t(tr("{count} thông báo chưa đọc"), { count }) + (stale ? t(tr(", cần tải lại")) : '')
       }
       className="inbox-badge"
     >
@@ -126,6 +132,8 @@ export function InboxBadge({ api, userId }) {
   );
 }
 export default function Notifications({ api, id, user }) {
+  const { locale } = useAuthLocale();
+  const tr = (value, values) => workflowText(value, locale, values);
   const [read, setRead] = useState(()=>inboxFilters().read),
     [category, setCategory] = useState(()=>inboxFilters().category),
     [q, setQ] = useState(()=>inboxFilters().q),
@@ -141,7 +149,7 @@ export default function Notifications({ api, id, user }) {
   const generation = useRef(0),
     pending = useRef(false),
     invalid = from && to && from > to;
-  useDraftGuard({ dirty:false, busy:mutating, message:'Thông báo đang được xử lý.' });
+  useDraftGuard({ dirty:false, busy:mutating, message:tr("Thông báo đang được xử lý.") });
   function filter(setter,value,current) {if(value===current)return;generation.current++;setData(null);setLoaded('');setError('');setter(value);}
   const query = new URLSearchParams({
     limit: "12",
@@ -209,25 +217,25 @@ export default function Notifications({ api, id, user }) {
     setError("");
     setNotice("");
     try {
-      if (kind === 'all' && !(await confirmDialog('Đánh dấu các thông báo chưa đọc theo loại, từ khóa và khoảng ngày hiện tại? Không phụ thuộc tab Đã đọc/Chưa đọc và bao gồm các trang chưa tải. Thông báo mới hơn lần tải này vẫn được giữ chưa đọc.', { title:'Đánh dấu đã đọc', confirmLabel:'Đánh dấu đã đọc' }))) return;
+      if (kind === 'all' && !(await confirmDialog(tr("Đánh dấu các thông báo chưa đọc theo loại, từ khóa và khoảng ngày hiện tại? Không phụ thuộc tab Đã đọc/Chưa đọc và bao gồm các trang chưa tải. Thông báo mới hơn lần tải này vẫn được giữ chưa đọc."), { title:tr("Đánh dấu đã đọc"), confirmLabel:tr("Đánh dấu đã đọc") }))) return;
       const result = await api.request(path, { method: "POST", body });
       setNotice(
         kind === "acceptProject"
-          ? "Đã được cấp quyền xem và bình luận Project."
+          ? tr("Đã được cấp quyền xem và bình luận Project.")
           : kind === "acceptOrganization"
-          ? "Đã tham gia tổ chức. Mở Trang chủ để chọn Workspace được cấp."
+          ? tr("Đã tham gia tổ chức. Mở Trang chủ để chọn Workspace được cấp.")
           : kind === "accept"
-          ? "Đã tham gia Workspace. Mở Trang chủ để chọn nhóm."
+          ? tr("Đã tham gia Workspace. Mở Trang chủ để chọn nhóm.")
           : kind === "all"
             ? `Đã đánh dấu ${result.markedCount} thông báo đã đọc.`
-            : "Đã đánh dấu đã đọc.",
+            : tr("Đã đánh dấu đã đọc."),
       );
       changed();
       setRevision((v) => v + 1);
     } catch (e) {
       setUncertain(isUncertainMutation(e));
       setError(
-        isUncertainMutation(e) ? "Chưa xác nhận kết quả. Tải lại trước khi thử tiếp." : messageFor(e),
+        isUncertainMutation(e) ? tr("Chưa xác nhận kết quả. Tải lại trước khi thử tiếp.") : messageFor(e),
       );
       if (e.status === 404) setData(null);
     } finally {
@@ -242,45 +250,43 @@ export default function Notifications({ api, id, user }) {
         key={note.id}
       >
         <span className="note-icon" aria-hidden="true"><Icon name={noteIcon(note)}/></span><div className="note-body">
-        <div className="note-category">{categories[note.category] ?? 'Thông báo'}</div>
+        <div className="note-category">{categories[note.category] ?? tr("Thông báo")}</div>
         <p className="muted">
-          {note.readAt ? "Đã đọc" : "● Chưa đọc"} ·{" "}
-          {new Date(note.createdAt).toLocaleString("vi-VN", {
+          {note.readAt ? tr("Đã đọc") : tr("● Chưa đọc")} ·{" "}
+          {new Date(note.createdAt).toLocaleString(locale === "en" ? "en-GB" : "vi-VN", {
             timeZone: "Asia/Ho_Chi_Minh",
           })}
         </p>
         <Content note={note} />
         <div className="buttons">
-          {!id && <a href={`#notification/${note.id}?returnTo=${encodeURIComponent('#notifications?'+query)}`}>Xem chi tiết</a>}
+          {!id && <a href={`#notification/${note.id}?returnTo=${encodeURIComponent('#notifications?'+query)}`}>{tr("Xem chi tiết")}</a>}
           {!note.readAt && (
             <button
               disabled={mutating || busy || uncertain}
               onClick={() =>
                 mutate(`/notifications/${note.id}/read`, {}, "one")
               }
-            >
-              Đánh dấu đã đọc
-            </button>
+            >{tr("Đánh dấu đã đọc")}</button>
           )}
           {note.available && note.target?.type === "task" && (
-            <a href={`#task/${note.target.taskId}`}>Mở Task →</a>
+            <a href={`#task/${note.target.taskId}`}>{tr("Mở Task →")}</a>
           )}
           {note.available && note.target?.type === "workspace" && (
-            <a href={`#workspace/${note.target.workspaceId}`}>Mở Workspace →</a>
+            <a href={`#workspace/${note.target.workspaceId}`}>{tr("Mở Workspace →")}</a>
           )}
           {id && note.available && note.target?.type === "organization_invitation" && (
             user.emailVerified ? (
               <button className="primary" disabled={mutating || busy || uncertain} onClick={() => mutate(
                 `/organization-invitations/${note.target.invitationId}/accept`, {}, "acceptOrganization",
-              )}>Tham gia tổ chức</button>
-            ) : <p className="archive-banner">Xác minh email trước khi tham gia tổ chức.</p>
+              )}>{tr("Tham gia tổ chức")}</button>
+            ) : <p className="archive-banner">{tr("Xác minh email trước khi tham gia tổ chức.")}</p>
           )}
           {id && note.available && note.target?.type === "project_invitation" && (
             user.emailVerified ? (
               <button className="primary" disabled={mutating || busy || uncertain} onClick={() => mutate(
                 `/project-invitations/${note.target.invitationId}/accept`, {}, "acceptProject",
-              )}>Chấp nhận quyền Guest</button>
-            ) : <p className="archive-banner">Xác minh email trước khi tham gia Project.</p>
+              )}>{tr("Chấp nhận quyền Guest")}</button>
+            ) : <p className="archive-banner">{tr("Xác minh email trước khi tham gia Project.")}</p>
           )}
           {id &&
             note.available &&
@@ -296,13 +302,9 @@ export default function Notifications({ api, id, user }) {
                     "accept",
                   )
                 }
-              >
-                Tham gia Workspace
-              </button>
+              >{tr("Tham gia Workspace")}</button>
             ) : (
-              <p className="archive-banner">
-                Xác minh email trước khi tham gia Workspace.
-              </p>
+              <p className="archive-banner">{tr("Xác minh email trước khi tham gia Workspace.")}</p>
             ))}
         </div></div>
       </article>
@@ -312,14 +314,14 @@ export default function Notifications({ api, id, user }) {
     <main className="studio-notifications">
       {id && (
         <p className="breadcrumbs">
-          <a href={inboxReturn()}>Thông báo</a> / Chi tiết
+          <a href={inboxReturn()}>{tr("Thông báo")}</a> / {tr("Chi tiết")}
         </p>
       )}
       <section className="hero notification-hero">
         <div>
-          <small>NHỮNG CẬP NHẬT DÀNH CHO BẠN</small>
-          <h1>{id ? "Chi tiết thông báo" : "Thông báo"}</h1>
-          <p>Những thay đổi công việc và lời mời liên quan đến bạn.</p>
+          <small>{tr("NHỮNG CẬP NHẬT DÀNH CHO BẠN")}</small>
+          <h1>{id ? tr("Chi tiết thông báo") : tr("Thông báo")}</h1>
+          <p>{tr("Những thay đổi công việc và lời mời liên quan đến bạn.")}</p>
         </div>
         <div className="buttons">
           <button
@@ -329,9 +331,7 @@ export default function Notifications({ api, id, user }) {
               setRevision((v) => v + 1);
               changed();
             }}
-          >
-            Tải lại thông báo
-          </button>
+          >{tr("Tải lại thông báo")}</button>
           {!id && (
             <button
               disabled={
@@ -349,64 +349,52 @@ export default function Notifications({ api, id, user }) {
                   "all",
                 )
               }
-            >
-              Đánh dấu tất cả đã đọc
-            </button>
+            >{tr("Đánh dấu tất cả đã đọc")}</button>
           )}
         </div>
       </section>
       {!id && (
         <>
-          <div className="notification-quick" aria-label="Lọc nhanh thông báo">{[['all','Tất cả thông báo'],['unread','Chưa đọc'],['read','Đã đọc']].map(([value,label])=><button key={value} disabled={mutating} aria-pressed={read===value} onClick={()=>filter(setRead,value,read)}>{label}</button>)}</div>
-          <fieldset className="notification-filter-fields" disabled={mutating}><FilterPanel compact advancedLabel="Lọc nâng cao">
-            <label>
-              Trạng thái đọc
-              <select
-                aria-label="Trạng thái đọc"
+          <div className="notification-quick" aria-label={tr("Lọc nhanh thông báo")}>{[['all',tr("Tất cả thông báo")],['unread',tr("Chưa đọc")],['read',tr("Đã đọc")]].map(([value,label])=><button key={value} disabled={mutating} aria-pressed={read===value} onClick={()=>filter(setRead,value,read)}>{tr(label)}</button>)}</div>
+          <fieldset className="notification-filter-fields" disabled={mutating}><FilterPanel locale={locale} compact advancedLabel={tr("Lọc nâng cao")}>
+            <label>{tr("Trạng thái đọc")}<select
+                aria-label={tr("Trạng thái đọc")}
                 value={read}
                 onChange={(e) => filter(setRead,e.target.value,read)}
               >
-                <option value="all">Tất cả</option>
-                <option value="unread">Chưa đọc</option>
-                <option value="read">Đã đọc</option>
+                <option value="all">{tr("Tất cả")}</option>
+                <option value="unread">{tr("Chưa đọc")}</option>
+                <option value="read">{tr("Đã đọc")}</option>
               </select>
             </label>
-            <label>
-              Loại thông báo
-              <select
-                aria-label="Loại thông báo"
+            <label>{tr("Loại thông báo")}<select
+                aria-label={tr("Loại thông báo")}
                 value={category}
                 onChange={(e) => filter(setCategory,e.target.value,category)}
               >
-                <option value="all">Tất cả loại</option>
-                <option value="work">Công việc</option>
-                <option value="invitation">Lời mời</option>
-                <option value="membership">Tham gia Workspace</option>
-                <option value="organization_invitation">Lời mời tổ chức</option>
-                <option value="project_invitation">Lời mời Guest</option>
+                <option value="all">{tr("Tất cả loại")}</option>
+                <option value="work">{tr("Công việc")}</option>
+                <option value="invitation">{tr("Lời mời")}</option>
+                <option value="membership">{tr("Tham gia Workspace")}</option>
+                <option value="organization_invitation">{tr("Lời mời tổ chức")}</option>
+                <option value="project_invitation">{tr("Lời mời Guest")}</option>
               </select>
             </label>
-            <label>
-              Tìm thông báo
-              <input
+            <label>{tr("Tìm thông báo")}<input
                 type="search"
-                placeholder="Nhập để tìm kiếm…"
+                placeholder={tr("Nhập để tìm kiếm…")}
                 maxLength={200}
                 value={q}
                 onChange={(e) => filter(setQ,e.target.value,q)}
               />
             </label>
-            <label>
-              Từ ngày thông báo
-              <input
+            <label>{tr("Từ ngày thông báo")}<input
                 type="date"
                 value={from}
                 onChange={(e) => filter(setFrom,e.target.value,from)}
               />
             </label>
-            <label>
-              Đến ngày thông báo
-              <input
+            <label>{tr("Đến ngày thông báo")}<input
                 type="date"
                 value={to}
                 onChange={(e) => filter(setTo,e.target.value,to)}
@@ -422,9 +410,7 @@ export default function Notifications({ api, id, user }) {
                 setFrom("");
                 setTo("");
               }}
-            >
-              Xóa bộ lọc thông báo
-            </button>
+            >{tr("Xóa bộ lọc thông báo")}</button>
           </FilterPanel></fieldset>
           {data && (
             <p className="muted">
@@ -435,32 +421,28 @@ export default function Notifications({ api, id, user }) {
         </>
       )}
       {invalid && !id && (
-        <InlineMessage>
-          Ngày bắt đầu phải trước hoặc bằng ngày kết thúc.
-        </InlineMessage>
+        <InlineMessage>{tr("Ngày bắt đầu phải trước hoặc bằng ngày kết thúc.")}</InlineMessage>
       )}
-      {error && <InlineMessage><span>{error}</span><button disabled={busy||mutating} onClick={()=>setRevision(value=>value+1)}>Tải lại để kiểm tra</button></InlineMessage>}
-      {notice && <InlineMessage tone="info">{notice}</InlineMessage>}
-      {busy && <LoadingState>Đang tải thông báo…</LoadingState>}
-      {!id && <p className="notification-preferences">Email công việc được cấu hình riêng trong <a href="#settings">Tùy chọn email</a>.</p>}
+      {error && <InlineMessage><span>{tr(error)}</span><button disabled={busy||mutating} onClick={()=>setRevision(value=>value+1)}>{tr("Tải lại để kiểm tra")}</button></InlineMessage>}
+      {notice && <InlineMessage tone="info">{tr(notice)}</InlineMessage>}
+      {busy && <LoadingState>{tr("Đang tải thông báo…")}</LoadingState>}
+      {!id && <p className="notification-preferences">{tr("Email công việc được cấu hình riêng trong")}<a href="#settings">{tr("Tùy chọn email")}</a>.</p>}
       {data &&
         (id ? (
           row(data.notification)
         ) : (
           <>
-            {[[false,'Mới và chưa đọc'],[true,'Đã đọc trước đó']].map(([isRead,label])=>{const items=data.items.filter(note=>Boolean(note.readAt)===isRead);return items.length?<section className="notification-group" key={label} aria-label={label}><div className="notification-group-heading"><h2>{label}</h2><p>{items.length} mục đã tải</p></div>{items.map(row)}</section>:null;})}
+            {[[false,tr("Mới và chưa đọc")],[true,tr("Đã đọc trước đó")]].map(([isRead,label])=>{const items=data.items.filter(note=>Boolean(note.readAt)===isRead);return items.length?<section className="notification-group" key={tr(label)} aria-label={tr(label)}><div className="notification-group-heading"><h2>{tr(label)}</h2><p>{items.length} mục đã tải</p></div>{items.map(row)}</section>:null;})}
             {!data.items.length && (
               <EmptyState>
-                <h2>Không có thông báo phù hợp</h2>
+                <h2>{tr("Không có thông báo phù hợp")}</h2>
               </EmptyState>
             )}
             {data.nextCursor && (
               <button
                 disabled={busy || mutating}
                 onClick={() => load(data.nextCursor)}
-              >
-                Tải thêm thông báo
-              </button>
+              >{tr("Tải thêm thông báo")}</button>
             )}
           </>
         ))}
