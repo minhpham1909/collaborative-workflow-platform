@@ -211,7 +211,7 @@ try {
   await page
     .getByRole("link", { name: "Task cho chủ nhóm", exact: true })
     .waitFor();
-  await page.getByRole("button", { name: /^Bộ lọc/ }).click();
+  await page.getByRole("button", { name: /^Lọc nâng cao/ }).click();
   await page
     .getByRole("button", { name: "Tìm Workspace", exact: true })
     .click();
@@ -234,7 +234,7 @@ try {
       !document.querySelector(".workspace-picker select").disabled,
   );
   await select.selectOption(workspace.id);
-  await page.getByRole("button", { name: "Bộ lọc (1)", exact: true }).waitFor();
+  await page.getByRole("button", { name: /^Lọc nâng cao/, exact: true }).waitFor();
   await page
     .getByRole("link", { name: "Task cho chủ nhóm", exact: true })
     .waitFor();
@@ -355,7 +355,7 @@ try {
       document.querySelector(".workspace-picker select").value === "",
   );
   assert.equal(
-    await page.getByRole("button", { name: "Bộ lọc", exact: true }).count(),
+    await page.getByRole("button", { name: "Lọc nâng cao", exact: true }).count(),
     1,
   );
   assert.equal(await search.isVisible(), false);
@@ -391,7 +391,7 @@ try {
   await memberPage
     .getByRole("link", { name: "Task riêng của thành viên", exact: true })
     .waitFor();
-  await memberPage.getByRole("button", { name: /^Bộ lọc/ }).click();
+  await memberPage.getByRole("button", { name: /^Lọc nâng cao/ }).click();
   await memberPage
     .getByRole("button", { name: "Tìm Workspace", exact: true })
     .click();

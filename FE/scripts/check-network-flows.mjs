@@ -150,16 +150,16 @@ try {
     assert.equal(count(), 1);
   }
   await page
-    .getByRole("button", { name: "+ Tạo Workspace", exact: true })
+    .getByRole("button", { name: "Tạo Workspace", exact: true })
     .click();
   await page.getByLabel("Tên Workspace").fill("Network committed workspace");
   const wc = await dropCommitted("/workspaces");
-  await page
+  await page.getByRole("dialog")
     .getByRole("button", { name: "Tạo Workspace", exact: true })
     .click();
   await page.getByRole("alert").filter({ hasText: "Chưa rõ" }).waitFor();
   await blocked(
-    page.getByRole("button", { name: "Tạo Workspace", exact: true }),
+    page.getByRole("dialog").getByRole("button", { name: "Tạo Workspace", exact: true }),
     page.locator(".dialog form"),
     wc,
   );
@@ -180,16 +180,16 @@ try {
   await page
     .getByRole("link", { name: "Sáng Tạo Studio", exact: true })
     .click();
-  await page.getByRole("button", { name: "+ Tạo Dự án", exact: true }).click();
+  await page.getByRole("button", { name: "Tạo Dự án", exact: true }).click();
   await page.getByLabel("Tên Dự án").fill("Network committed project");
   const pc = await dropCommitted(
     "/workspaces/" + workspace.id + "/projects",
     "503",
   );
-  await page.getByRole("button", { name: "Lưu", exact: true }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Tạo Dự án", exact: true }).click();
   await page.getByRole("alert").filter({ hasText: "Chưa rõ" }).waitFor();
   await blocked(
-    page.getByRole("button", { name: "Lưu", exact: true }),
+    page.getByRole("dialog").getByRole("button", { name: "Tạo Dự án", exact: true }),
     page.locator(".dialog form"),
     pc,
   );
