@@ -1,3 +1,4 @@
+import { workflowText } from '../lib/workflow-text.js';
 import { useEffect, useId, useRef, useState } from "react";
 import FormField from "./FormField.jsx";
 import { messageFor } from "../lib/messages.js";
@@ -10,7 +11,9 @@ export default function WorkspacePicker({
   selectedWorkspace,
   disabled,
   resetKey,
+  locale = "vi",
 }) {
+  const tr=(value,values)=>workflowText(value,locale,values);
   const [query, setQuery] = useState("");
   const [searching, setSearching] = useState(false);
   const searchId = useId();
@@ -70,8 +73,8 @@ export default function WorkspacePicker({
     <div className="workspace-picker" aria-busy={busy}>
       <div hidden={!searching} id={searchId}>
         <FormField
-          label="Tìm Workspace"
-          hint="Tìm theo tên hoặc mô tả; Workspace đã chọn vẫn được giữ."
+          label={tr("Tìm Workspace")}
+          hint={tr("Tìm theo tên hoặc mô tả; Workspace đã chọn vẫn được giữ.")}
         >
           {(props) => (
             <input
@@ -89,14 +92,14 @@ export default function WorkspacePicker({
         label="Workspace"
         hint={
           busy
-            ? "Đang tải Workspace…"
+            ? tr("Đang tải Workspace…")
             : !data.items.length
               ? query.trim()
-                ? "Không có Workspace phù hợp. Thử tên khác hoặc xóa tìm kiếm."
-                : "Chưa có Workspace để chọn."
-              : "Lọc theo Workspace."
+                ? tr("Không có Workspace phù hợp. Thử tên khác hoặc xóa tìm kiếm.")
+                : tr("Chưa có Workspace để chọn.")
+              : tr("Lọc theo Workspace.")
         }
-        error={error}
+        error={tr(error)}
       >
         {(props) => (
           <select
@@ -111,12 +114,12 @@ export default function WorkspacePicker({
               onChange(e.target.value);
             }}
           >
-            <option value="">Tất cả Workspace</option>
+            <option value="">{tr("Tất cả Workspace")}</option>
             {missing && (
               <option value={value}>
                 {selected.current?.id === value
                   ? selected.current.name
-                  : "Workspace đã chọn"}
+                  : tr("Workspace đã chọn")}
               </option>
             )}
             {data.items.map((workspace) => (
@@ -133,26 +136,20 @@ export default function WorkspacePicker({
           aria-expanded={searching}
           aria-controls={searchId}
           onClick={() => setSearching((v) => !v)}
-        >
-          Tìm Workspace
-        </button>
+        >{tr("Tìm Workspace")}</button>
         {query && (
           <button
             type="button"
             disabled={disabled}
             onClick={() => setQuery("")}
-          >
-            Xóa tìm kiếm Workspace
-          </button>
+          >{tr("Xóa tìm kiếm Workspace")}</button>
         )}
         {error && (
           <button
             type="button"
             disabled={disabled || busy}
             onClick={() => setRevision((v) => v + 1)}
-          >
-            Thử tải Workspace lại
-          </button>
+          >{tr("Thử tải Workspace lại")}</button>
         )}
         {!error && data.nextCursor && (
           <button
@@ -160,7 +157,7 @@ export default function WorkspacePicker({
             disabled={disabled || busy}
             onClick={() => load(data.nextCursor, generation.current)}
           >
-            {busy ? "Đang tải…" : "Tải thêm Workspace"}
+            {busy ? tr("Đang tải…") : tr("Tải thêm Workspace")}
           </button>
         )}
       </div>

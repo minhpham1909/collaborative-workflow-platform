@@ -1,5 +1,6 @@
 import { translateAuthText } from '../features/auth/auth-translations.js';
 const english = {
+  "Công việc của tôi": "My tasks",
   "Tạo {date}": "Created {date}",
   "Bộ lọc danh sách": "List filters", "Sắp xếp:": "Sort:", "Mới tạo trước": "Newest first", "Tìm kiếm & bộ lọc": "Search & filters", "Thu hẹp danh sách theo nhu cầu của bạn": "Narrow the list to what you need",
   "KHÔNG GIAN LÀM VIỆC CỦA BẠN": "YOUR WORKSPACE",
