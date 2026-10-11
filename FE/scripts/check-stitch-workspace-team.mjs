@@ -129,6 +129,59 @@ try {
   await ownerPage.getByRole('table', { name: 'Workspace members', exact: true }).getByText('Hải', { exact: true }).waitFor();
   assert.equal(await WorkspaceMembership.collection.countDocuments({ workspaceId: new mongoose.Types.ObjectId(admissionWorkspace.id), userId: users[2]._id, state: 'active' }), 1);
   assert.equal((await OrganizationMembership.collection.findOne({ organizationId: new mongoose.Types.ObjectId(org.id), userId: users[2]._id })).role, 'admin');
+  await rotateFixture();
+  await workspaces.accept(auths[1], { token: new URLSearchParams(new URL(reusableLink.url).hash.slice(1)).get('token') });
+  const enBanTask = (await work.createTask(auths[0], project.id, { title: 'English ban fixture', assigneeId: users[1].id })).task;
+  const enWs = (await workspaces.get(auths[0], standalone.id)).workspace;
+  await workspaces.state(auths[0], standalone.id, { expectedVersion: enWs.version, state: 'archived', confirmName: enWs.name, reason: 'English archived moderation fixture' });
+  await ownerPage.goto(`http://localhost:5173/#workspace/${standalone.id}`);
+  await ownerPage.locator('.workspace-tabs').getByRole('button', { name: 'Member', exact: true }).click();
+  await ownerPage.locator('.team-table tbody tr').filter({ hasText: 'Lan' }).getByRole('button', { name: 'Ban access', exact: true }).click();
+  const enBan = ownerPage.getByRole('dialog', { name: 'Ban workspace access', exact: true });
+  await enBan.getByLabel('Comments to remove', { exact: true }).selectOption('all');
+  await enBan.getByLabel('Reason', { exact: true }).fill('Lý do có dấu · English fixture');
+  await enBan.getByRole('button', { name: 'Preview impact', exact: true }).click();
+  await enBan.getByText(/2 comments match the selected scope/).waitFor();
+  await enBan.getByLabel('Confirm comment cleanup', { exact: true }).fill('DELETE COMMENTS');
+  assert.equal(await enBan.getByRole('button', { name: 'Ban access', exact: true }).isDisabled(), true);
+  await enBan.getByLabel('Confirm comment cleanup', { exact: true }).fill('XÓA BÌNH LUẬN');
+  for (const width of [375,768,1024,1280,1440]) {
+    await ownerPage.setViewportSize({ width, height: 1000 });
+    await enBan.screenshot({ path: `${out}/ban-en-${width}.png` });
+    assert.ok(await ownerPage.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), `EN ban overflow ${width}`);
+  }
+  await enBan.getByRole('button', { name: 'Ban access', exact: true }).click();
+  await enBan.waitFor({ state: 'hidden' });
+  assert.equal((await Task.findById(enBanTask.id)).assigneeId, null);
+  await assert.rejects(workspaces.accept(auths[1], { token: new URLSearchParams(new URL(reusableLink.url).hash.slice(1)).get('token') }));
+  const enJob = await ModerationAction.collection.findOne({ scopeId: new mongoose.Types.ObjectId(standalone.id), action: 'ban', reason: 'Lý do có dấu · English fixture' });
+  assert.equal(enJob.state, 'pending'); assert.equal(enJob.matchedCount, 2);
+  const moderationPanel = ownerPage.locator('.workspace-moderation');
+  await moderationPanel.getByRole('button', { name: 'Processing log', exact: true }).click();
+  await moderationPanel.getByText(/0\/2 comments processed/).first().waitFor();
+  await moderationPanel.getByText('Lý do có dấu · English fixture', { exact: true }).waitFor();
+  await ownerPage.waitForFunction(() => document.querySelector('.team-table')?.getAttribute('aria-busy') === 'false' && !document.querySelector('.workspace-moderation .loading-state'));
+  for (const width of [375,768,1024,1280,1440]) {
+    await ownerPage.setViewportSize({ width, height: 1000 });
+    await ownerPage.screenshot({ path: `${out}/moderation-en-${width}.png`, fullPage: true });
+    assert.ok(await ownerPage.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), `EN moderation overflow ${width}`);
+  }
+  await ModerationAction.collection.updateOne({ _id: enJob._id }, { $set: { state: 'failed', lastErrorCode: 'FIXTURE_FAILURE' } });
+  await moderationPanel.getByRole('button', { name: 'Reload', exact: true }).click();
+  await moderationPanel.getByRole('button', { name: 'Retry cleanup', exact: true }).click();
+  await ownerPage.locator('.system-dialog').getByRole('button', { name: 'Queue again', exact: true }).click();
+  await moderationPanel.locator('li').filter({ hasText: 'Lý do có dấu · English fixture' }).getByText('Ban access · Queued', { exact: true }).waitFor();
+  assert.equal((await ModerationAction.collection.findOne({ _id: enJob._id })).state, 'pending');
+  await moderationPanel.getByRole('button', { name: 'Bans', exact: true }).click();
+  await moderationPanel.getByRole('button', { name: 'Remove ban', exact: true }).click();
+  const enUnban = ownerPage.getByRole('dialog', { name: 'Remove access ban', exact: true });
+  await enUnban.getByLabel('Reason', { exact: true }).fill('Bỏ chặn có dấu');
+  await enUnban.screenshot({ path: `${out}/unban-en.png` });
+  await enUnban.getByRole('button', { name: 'Remove ban', exact: true }).click();
+  await enUnban.waitFor({ state: 'hidden' });
+  await assert.rejects(workspaces.get(auths[1], standalone.id));
+  assert.equal((await ModerationAction.collection.findOne({ _id: enJob._id })).state, 'pending');
+  assert.equal(await TaskComment.collection.countDocuments({ authorId: users[1]._id }), 2);
   assert.deepEqual(errors, []);
   if (process.env.WORKFLOW_SKILL_PROBE === '1') {
     let source = await readFile('C:/Users/Acer/.agents/skills/ui-ux/scripts/probe.mjs', 'utf8');
@@ -148,7 +201,7 @@ try {
       assert.equal(await new Promise(resolve => child.once('exit', resolve)), 0);
     }
   }
-  console.log(`PASS WS Team/invites/kick/leave/transfer Vi-En plusS5: Kick/rejoin distinction, archived Ban preview/confirmed cleanup queue, protected tasks/history, job retry, Unban without membership/cleanup cancellation, leave, member denial, 5 widths. No dev data/providers/workers. Screens ${out}`);
+  console.log(`PASS WS Team and moderation Vi-En plusS5: Kick/rejoin distinction, archived Ban preview/confirmed cleanup queue, protected tasks/history, job retry, Unban without membership/cleanup cancellation, leave, member denial, 5 widths. No dev data/providers/workers. Screens ${out}`);
 } catch (error) { if (browser) for (const [index, context] of browser.contexts().entries()) for (const page of context.pages()) { await page.screenshot({ path: `${out}/failure-${index}.png`, fullPage: true }); console.log((await page.locator('main').innerText()).slice(-1800)); } throw error;
 } finally { closing=true; await browser?.close(); if (server) await new Promise(resolve => server.close(resolve)); await mongoose.disconnect(); await repl?.stop(); }
 

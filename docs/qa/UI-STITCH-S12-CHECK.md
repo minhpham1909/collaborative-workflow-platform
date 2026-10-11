@@ -183,3 +183,18 @@ Tiếp WorkspaceTeam/settings/email/moderation, sauđóProject/Task/MyTasks/Inbo
 - Không live accounts/dev collections/Google/SMTP/old queues/retention/backfill; private MongoMemoryReplSet và browser fixture riêng.
 
 Tiếp Ban/moderation Việt–Anh, rồi Project/Task/MyTasks/Inbox/invitation body và performance. Vẫn11/12 mốc UI, chưa nghiệm thu tổng S12.
+
+## S12d4d — Workspace Ban và nhật ký Việt–Anh
+
+11/10/2026 — phạm vi WorkspaceModeration/ModerationDialog, dùng UI locale và component hiện có. Không đổi API/quyền/CAS/cleanup enums, preview token, expectedVersion hoặc điều kiện xác nhận.
+
+- Dịch Ban/Unban, giải thích tác động theo Workspace, giữ Task/history, cleanup choices none/1/3/7/30/all, reason/preview/cutoff, cảnh báo comment xóa vĩnh viễn, guard/unknown/error/loading/empty/reload/paging/retry/notifications và trạng thái nhật ký. Names/reasons từ dữ liệu giữ nguyên; số liệu BE chèn sau template; Vietnam timezone với locale format.
+- Cụm xác nhận `XÓA BÌNH LUẬN` giữ nguyên ở cả Vi/En; hint English hướng dẫn nhập chính xác. Không biến thao tác xóa vĩnh viễn thành restore hoặc suy rằng bỏ Ban sẽ khôi phục membership/assignment hay hủy job cleanup.
+- `check-stitch-workspace-team.mjs`: fullS5 VI và các ca Team EN hiện có, thêm Ban trong Workspace Archived bằng EN: preview đúng2 comments, `DELETE COMMENTS` bị khóa, exact Vietnamese phrase mới submit được; names/reason có dấu giữ nguyên, Task chưaDone bị bỏ assignee và invitation rejoin bị chặn. Job vẫn pending, không thực thi cleanup.
+- Processing log EN đọc đúng0/2 và nguyên reason; mô phỏng failed job trong DB fixture, confirm retry giữ scope→job pending. Unban EN không cấp lại membership và không hủy pending cleanup, cả2 comments vẫn tồn tại. 5 kích thước375/768/1024/1280/1440 cho Ban/log không document overflow/page errors. Unban screenshot riêng.
+- Lượt retry automation đầu chưa đạt vì selector Queued đọc record Ban cũ trước khi request mới xong; sửa chờ đúng li mang reason fixture của job mới, giữ assertion database pending. Không sửa server/limiter để né lỗi. Screenshot log chờ Team và moderation hết loading để tránh đọc trạng thái chuyển tiếp.
+- FE20 unit và build163 PASS; entry546.80kB/gzip155.00kB, EditorCore395.77kB/gzip125.49kB. Warning>500kB giữ nguyên; performance chưa đạt. Không English skill probe mới, không suy toàn-site accessibility/visual acceptance từ screenshots.
+- Xem trực tiếp `.local/stitch-workspace-team/ban-en-375.png`, `moderation-en-375.png`, `unban-en.png`; 5width ignored artifacts. Dialog dài dùng vùng cuộn hiện có, không claim toàn nội dung/actions cùng nhìn thấy trong viewport375.
+- Vite5173 khởi động lại do server không còn chạy. Tests dùng private MongoMemoryReplSet/API/browser fixture; không đọc/ghi dev database, xử lý workers/old queues, gửi SMTP/Google, purge/retention hoặc backfill.
+
+Tiếp Project/Kanban, Task, MyTasks, Inbox/invitation body locale và performance. S12 vẫn mở; 11/12 mốc UI là số gate, không tỷ lệ hoàn thiện sản phẩm.
