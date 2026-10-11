@@ -210,3 +210,12 @@ Tiếp Project/Kanban, Task, MyTasks, Inbox/invitation body locale và performan
 - Không providers/SMTP/workers/queues/dev collections/backfill. Tests dùng MongoMemoryReplSet/API/browser fixture riêng.
 
 Theo yêu cầu rà việc còn lại, có [S12-REMAINING-WORK.md](../project/S12-REMAINING-WORK.md): thứ tựlocale, gate regression/visual, performance, production acceptance và phạm vi deferred. Core planU2 trước đó còn ghi chưa bắt đầuUI; cập nhật status và dẫn progress hiện tại, không xóa checkpoint lịch sử. Tiếp Board/filter/card/TaskForm; S12 vẫn mở,11/12 UI gates.
+## S12d5b — Board/TaskForm và bộ chọn Việt–Anh
+
+11/10/2026 — TaskList Board/filter/card/column/filteredprogress/deadline, TaskForm và shared MemberPicker/TaskLabelPicker/PersonProfile. Shared controls locale optional mặc địnhvi; caller chưa chuyển vẫnVi. MyTasks route riêng chưa chuyển trongslice này.
+
+- UI copy/ARIA/status/priority/count/date theo locale; names/codes/label names/description giữ nguyên. Status/priority/filter/date queries vàCAS unchanged; Vietnam minute→UTC conversion vẫn từcontent.js. PersonProfile thông tin theo quyền hiện tại, không đổi API/projection/privacy.
+- `check-stitch-board.mjs` PASS fullS6aVI +S12d5aEN và thêm searchTaskcode/whole-vs-filter stats, create task tiêu đề/mô tả có dấu/emoji +high +Lan +1label +deadline09:30Vietnam lưu02:30UTC chính xác, pastdeadline warning, priorityfilter vẫn whole2/23. ProfileofLan→Active member;5width EN Board khôngdocumentoverflow, horizontal board scroll contained.
+- `check-interaction-flows.mjs` PASS: create/edit/comments/author/assignee/status/MyTasks/CAS/Archive/paging/drafts/editor/nested dialogs; cần thiết do đổi shared pickers/profile. FE20 unit/build165 PASS, entry556.47kB/gzip157.88kB cònwarning>500; khôngnới threshold.
+- Xem `.local/stitch-board/board-en-375.png`;5width screenshotsignored. KhôngEnglishprobe mới/fullaccessibility acceptance. Trong lúc chuyển copy có lỗi JSX build; đã sửa trước khi kiểm browser đạt, khôngclaim cácbuildfailed làpass.
+- Khôngproviders/workers/devcollections/backfill. TiếpProjectManagement/SharedProjects, Task detail/checklist/comments/activity/reopen, MyTasks/Inbox/invitation/trash vàperformance.

@@ -1,3 +1,5 @@
+import { useAuthLocale } from '../auth/AuthLocale.jsx';
+import { taskText } from '../../lib/task-text.js';
 import {
   EmptyState,
   InlineMessage,
@@ -24,6 +26,8 @@ export default function TaskList({
   onOpenTask,
   refreshKey = 0,
 }) {
+  const { locale } = useAuthLocale();
+  const tr = (value, values) => taskText(value, locale, values);
   const [workspaceFilter, setWorkspaceFilter] = useState(""),
     [filterReset, setFilterReset] = useState(0);
   const [q, setQ] = useState(""),
@@ -143,11 +147,11 @@ export default function TaskList({
         {!mine && (
           <div className="board-task-top">
             {t.code && <span className="task-code">{t.code}</span>}
-            <span className={'task-priority priority-' + t.priority}>{({ high: 'Ưu tiên cao', medium: 'Ưu tiên vừa', low: 'Ưu tiên thấp' })[t.priority]}</span>
+            <span className={'task-priority priority-' + t.priority}>{({ high: tr("Ưu tiên cao"), medium: tr("Ưu tiên vừa"), low: tr("Ưu tiên thấp") })[t.priority]}</span>
             <span className={"pill status-" + t.status}>
-              {statuses[t.status]}
+              {tr(statuses[t.status])}
             </span>
-            {t.overdue && <span className="overdue-chip">Quá hạn</span>}
+            {t.overdue && <span className="overdue-chip">{tr("Quá hạn")}</span>}
           </div>
         )}
         <div className="task-summary">
@@ -168,28 +172,28 @@ export default function TaskList({
               )}
               <p className="board-assignee">
                 {t.assignee ? (
-                  <PersonProfile api={api} projectId={t.projectId} user={t.assignee} />
+                  <PersonProfile locale={locale} api={api} projectId={t.projectId} user={t.assignee} />
                 ) : (
-                  <><Icon name="people" /><span>Chưa phân công</span></>
+                  <><Icon name="people" /><span>{tr("Chưa phân công")}</span></>
                 )}
               </p>
             </>
           )}
         </div>
-        {!mine && t.labels?.length > 0 && <div className="board-labels">{t.labels.map(label => <span key={label.id} className={'label-color-' + label.color}>{label.name}{label.archivedAt ? ' · Đã lưu trữ' : ''}</span>)}</div>}
-        {!mine && t.checklist?.length > 0 && <p className="board-checklist"><Icon name="check" />{t.checklist.filter(item => item.checked).length}/{t.checklist.length} mục checklist</p>}
-        {!mine && t.status === 'done' && <p className="board-completed">{t.completedAt ? `Hoàn thành ${new Date(t.completedAt).toLocaleDateString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}` : 'Chưa ghi nhận ngày hoàn thành'}</p>}
+        {!mine && t.labels?.length > 0 && <div className="board-labels">{t.labels.map(label => <span key={label.id} className={'label-color-' + label.color}>{label.name}{label.archivedAt ? tr(" · Đã lưu trữ") : ''}</span>)}</div>}
+        {!mine && t.checklist?.length > 0 && <p className="board-checklist"><Icon name="check" />{tr("{count} mục checklist", { count: `${t.checklist.filter(item => item.checked).length}/${t.checklist.length}` })}</p>}
+        {!mine && t.status === 'done' && <p className="board-completed">{t.completedAt ? tr("Hoàn thành {date}", { date: new Date(t.completedAt).toLocaleDateString(locale === "en" ? "en-GB" : "vi-VN", { timeZone: "Asia/Ho_Chi_Minh" }) }) : tr("Chưa ghi nhận ngày hoàn thành")}</p>}
         <div className="task-row-meta">
           <p>
             {mine && (
               <span className={"pill status-" + t.status}>
-                {statuses[t.status]}
+                {tr(statuses[t.status])}
               </span>
             )}{" "}
             {!mine && <Icon name="calendar" />}
-            {deadline(t.dueAt)}
+            {t.dueAt ? new Date(t.dueAt).toLocaleString(locale === "en" ? "en-GB" : "vi-VN", { timeZone: "Asia/Ho_Chi_Minh", dateStyle: "short", timeStyle: "short" }) : tr("Không có hạn")}
           </p>
-          {mine && t.overdue && <strong className="overdue">Quá hạn</strong>}
+          {mine && t.overdue && <strong className="overdue">{tr("Quá hạn")}</strong>}
         </div>
       </article>
     );
@@ -204,7 +208,7 @@ export default function TaskList({
           {mine ? (
             <h1 className="task-list-title">Công việc của tôi</h1>
           ) : (
-            <h2>Bảng công việc</h2>
+            <h2>{tr("Bảng công việc")}</h2>
           )}
           {mine && (
             <p className="section-description">
@@ -216,17 +220,13 @@ export default function TaskList({
           <button
             disabled={busy || creating}
             onClick={() => setRevision((v) => v + 1)}
-          >
-            Làm mới công việc
-          </button>
+          >{tr("Làm mới công việc")}</button>
           {canCreate && (
             <button
               className="primary"
               disabled={busy || creating}
               onClick={() => setCreating(true)}
-            >
-              + Tạo Task
-            </button>
+            >{tr("+ Tạo Task")}</button>
           )}
         </div>
       </div>
@@ -246,27 +246,23 @@ export default function TaskList({
           }}
         />
       )}
-      <fieldset className="board-filter-fields" disabled={creating}><FilterPanel compact advancedLabel={mine ? 'Bộ lọc' : 'Lọc nâng cao'}>
-        <label>
-          Tìm Task
-          <input
+      <fieldset className="board-filter-fields" disabled={creating}><FilterPanel locale={locale} compact advancedLabel={mine ? tr("Bộ lọc") : tr("Lọc nâng cao")}>
+        <label>{tr("Tìm Task")}<input
             type="search"
-            placeholder="Nhập để tìm kiếm…"
+            placeholder={tr("Nhập để tìm kiếm…")}
             maxLength={200}
             value={q}
             onChange={(e) => setQ(e.target.value)}
           />
         </label>
-        <label>
-          Trạng thái Task
-          <select aria-label="Trạng thái Task" value={status} onChange={(e) => setStatus(e.target.value)}>
+        <label>{tr("Trạng thái Task")}<select aria-label={tr("Trạng thái Task")} value={status} onChange={(e) => setStatus(e.target.value)}>
             {Object.entries({
-              all: "Tất cả",
-              open: "Chưa hoàn thành",
+              all: tr("Tất cả"),
+              open: tr("Chưa hoàn thành"),
               ...statuses,
             }).map(([v, l]) => (
               <option key={v} value={v}>
-                {l}
+                {tr(l)}
               </option>
             ))}
           </select>
@@ -280,35 +276,29 @@ export default function TaskList({
             filterActive={Boolean(workspaceFilter)}
           />
         )}
-        {!mine && <label>Ưu tiên<select aria-label="Ưu tiên" value={priority} onChange={event => setPriority(event.target.value)}><option value="all">Tất cả mức ưu tiên</option><option value="high">Cao</option><option value="medium">Vừa</option><option value="low">Thấp</option></select></label>}
+        {!mine && <label>{tr("Ưu tiên")}<select aria-label={tr("Ưu tiên")} value={priority} onChange={event => setPriority(event.target.value)}><option value="all">{tr("Tất cả mức ưu tiên")}</option><option value="high">{tr("Cao")}</option><option value="medium">{tr("Vừa")}</option><option value="low">{tr("Thấp")}</option></select></label>}
         {mine && (
           <label>
             Dự án
             <select value={state} onChange={(e) => setState(e.target.value)}>
               <option value="active">Đang hoạt động</option>
               <option value="archived">Đã lưu trữ</option>
-              <option value="all">Tất cả</option>
+              <option value="all">{tr("Tất cả")}</option>
             </select>
           </label>
         )}
-        <label>
-          Thời gian
-          <select value={timeField} onChange={(e) => setTime(e.target.value)}>
-            <option value="createdAt">Ngày tạo</option>
+        <label>{tr("Thời gian")}<select value={timeField} onChange={(e) => setTime(e.target.value)}>
+            <option value="createdAt">{tr("Ngày tạo")}</option>
             <option value="dueAt">Deadline</option>
           </select>
         </label>
-        <label>
-          Từ ngày
-          <input
+        <label>{tr("Từ ngày")}<input
             type="date"
             value={from}
             onChange={(e) => setFrom(e.target.value)}
           />
         </label>
-        <label>
-          Đến ngày
-          <input
+        <label>{tr("Đến ngày")}<input
             type="date"
             value={to}
             onChange={(e) => setTo(e.target.value)}
@@ -319,9 +309,7 @@ export default function TaskList({
             type="checkbox"
             checked={overdue}
             onChange={(e) => setOverdue(e.target.checked)}
-          />
-          Quá hạn
-        </label>
+          />{tr("Quá hạn")}</label>
         <button
           onClick={() => {
             setQ("");
@@ -335,23 +323,21 @@ export default function TaskList({
             setWorkspaceFilter("");
             setFilterReset((v) => v + 1);
           }}
-        >
-          Xóa bộ lọc Task
-        </button>
+        >{tr("Xóa bộ lọc Task")}</button>
       </FilterPanel></fieldset>
       <p className="muted">
-        Mới tạo trước · Giờ Việt Nam ·{" "}
+        {tr("Mới tạo trước · Giờ Việt Nam ·")}{" "}
         {mine
-          ? "Chỉ Task được giao cho bạn"
-          : "Sắp xếp theo ngày tạo trong mỗi cột"}
+          ? tr("Chỉ Task được giao cho bạn")
+          : tr("Sắp xếp theo ngày tạo trong mỗi cột")}
       </p>
       {invalid && (
         <InlineMessage>
-          Ngày bắt đầu phải trước hoặc bằng ngày kết thúc.
+          {tr("Ngày bắt đầu phải trước hoặc bằng ngày kết thúc.")}
         </InlineMessage>
       )}
-      {error && <InlineMessage>{error}<button disabled={busy || creating} onClick={() => setRevision(v => v + 1)}>Thử lại công việc</button></InlineMessage>}
-      {busy && <LoadingState>Đang tải công việc…</LoadingState>}
+      {error && <InlineMessage>{tr(error)}<button disabled={busy || creating} onClick={() => setRevision(v => v + 1)}>{tr("Thử lại công việc")}</button></InlineMessage>}
+      {busy && <LoadingState>{tr("Đang tải công việc…")}</LoadingState>}
       {data &&
         (mine ? (
           <>
@@ -371,18 +357,18 @@ export default function TaskList({
           </>
         ) : (
           <>
-            <div className="board-scroll" tabIndex={0} role="region" aria-label="Bảng Kanban ba trạng thái"><div className="board" aria-busy={busy}>
+            <div className="board-scroll" tabIndex={0} role="region" aria-label={tr("Bảng Kanban ba trạng thái")}><div className="board" aria-busy={busy}>
               {Object.entries(statuses).map(([column, label]) => (
                 <section
                   className={"board-column " + column}
                   key={column}
                   tabIndex={0}
-                  aria-label={`${label}: ${data.columns[column].total} Task`}
+                  aria-label={`${tr(label)}: ${data.columns[column].total} Task`}
                 >
                   <div className="board-column-heading">
                     <h3>
                       <span className="column-dot" aria-hidden="true" />
-                      {label}{" "}
+                      {tr(label)}{" "}
                       <span className="column-count">
                         {data.columns[column].total}
                       </span>
@@ -399,23 +385,24 @@ export default function TaskList({
                   </div>
                   {data.columns[column].items.map(card)}
                   {!data.columns[column].items.length && (
-                    <EmptyState>Không có Task phù hợp.</EmptyState>
+                    <EmptyState>{tr("Không có Task phù hợp.")}</EmptyState>
                   )}
                   {data.columns[column].nextCursor && (
                     <button disabled={busy} onClick={() => more(column)}>
-                      Tải thêm {label}
+                      {tr("Tải thêm {status}", { status: tr(label) })}
                     </button>
                   )}
                 </section>
               ))}
             </div></div>
-            <BoardProgress columns={data.columns} />
+            <BoardProgress locale={locale} columns={data.columns} />
           </>
         ))}
     </section>
   );
 }
-function BoardProgress({ columns }) {
+function BoardProgress({ columns, locale }) {
+  const tr = (value, values) => taskText(value, locale, values);
   const total = Object.values(columns).reduce(
     (sum, column) => sum + column.total,
     0,
@@ -424,21 +411,19 @@ function BoardProgress({ columns }) {
   return (
     <section
       className="board-progress"
-      aria-label="Tiến độ công việc phù hợp bộ lọc"
+      aria-label={tr("Tiến độ công việc phù hợp bộ lọc")}
     >
       <span className="progress-icon">
         <Icon name="layers" />
       </span>
       <div>
-        <strong>Tiến độ công việc</strong>
-        <p>
-          {done}/{total} Task phù hợp bộ lọc đã hoàn thành
-        </p>
+        <strong>{tr("Tiến độ công việc")}</strong>
+        <p>{tr("{done}/{total} Task phù hợp bộ lọc đã hoàn thành", { done, total })}</p>
       </div>
       <progress
         max={total || 1}
         value={done}
-        aria-label={`${done} trên ${total} Task đã hoàn thành`}
+        aria-label={tr("{done} trên {total} Task đã hoàn thành", { done, total })}
       />
       <span>{total ? Math.round((done / total) * 100) : 0}%</span>
     </section>

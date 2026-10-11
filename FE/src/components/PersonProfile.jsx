@@ -1,9 +1,11 @@
+import { taskText } from '../lib/task-text.js';
 import { useEffect, useId, useRef, useState } from "react";
 import Avatar from "./Avatar.jsx";
 
 const statuses = { active: "Đang tham gia", organization_management: "Quản trị theo quyền tổ chức", guest: "Guest · Xem và bình luận", left_organization: "Đã rời tổ chức", left_workspace: "Đã rời Workspace", left_project: "Không còn tham gia Project", unavailable: "Không còn quyền trong Project" };
 const roles = { lead: "Project Lead", manager: "Workspace Manager", member: "Member", owner: "Workspace Owner", organization_owner: "Organization Owner", organization_admin: "Organization Admin", guest: "Guest" };
-export default function PersonProfile({ api, projectId, user }) {
+export default function PersonProfile({ api, projectId, user, locale = 'vi' }) {
+  const tr = (value, values) => taskText(value, locale, values);
   const [open, setOpen] = useState(false), [profile, setProfile] = useState(null), [error, setError] = useState("");
   const trigger = useRef(null), panel = useRef(null);
   const panelId = useId();
@@ -11,7 +13,7 @@ export default function PersonProfile({ api, projectId, user }) {
   useEffect(() => {
     if (!open) return;
     let live = true; setProfile(null); setError("");
-    api.request(`/projects/${projectId}/people/${user.id}/profile`).then(result => { if (live) setProfile(result.profile); }).catch(() => { if (live) setError("Thông tin không còn khả dụng với quyền hiện tại."); });
+    api.request(`/projects/${projectId}/people/${user.id}/profile`).then(result => { if (live) setProfile(result.profile); }).catch(() => { if (live) setError(tr("Thông tin không còn khả dụng với quyền hiện tại.")); });
     return () => { live = false; };
   }, [open, api, projectId, user.id]);
   function place() {
@@ -35,17 +37,17 @@ export default function PersonProfile({ api, projectId, user }) {
   function close() { panel.current?.hidePopover?.(); setOpen(false); }
   return (
     <span className="person-profile">
-      <button ref={trigger} type="button" popoverTarget={panelId} className="person-profile-trigger" aria-label={`Hồ sơ của ${user.displayName}`} aria-expanded={open}
+      <button ref={trigger} type="button" popoverTarget={panelId} className="person-profile-trigger" aria-label={tr("Hồ sơ của {name}", { name: user.displayName })} aria-expanded={open}
         onMouseEnter={show} onFocus={event => { if (!panel.current?.contains(event.relatedTarget)) show(); }} onClick={event => { event.preventDefault(); show(); }}><Avatar user={user} />{user.displayName}</button>
-      <span id={panelId} ref={panel} popover="auto" role="region" aria-label={`Thông tin của ${user.displayName}`} className="person-profile-card" style={position}
+      <span id={panelId} ref={panel} popover="auto" role="region" aria-label={tr("Thông tin của {name}", { name: user.displayName })} className="person-profile-card" style={position}
         onToggle={() => setOpen(Boolean(panel.current?.matches(":popover-open")))}>
-        <button type="button" className="profile-close" aria-label="Đóng hồ sơ" onClick={close}>×</button>
+        <button type="button" className="profile-close" aria-label={tr("Đóng hồ sơ")} onClick={close}>×</button>
         <strong>{profile?.displayName ?? user.displayName}</strong>
-        {!profile && !error && <span className="feedback loading-state" role="status">Đang tải hồ sơ…</span>}
-        {error && <span className="feedback error" role="alert">{error}</span>}
-        {profile && <><span>{statuses[profile.status] ?? statuses.unavailable}</span>{profile.role && <span>{roles[profile.role] ?? profile.role}</span>}
-          {profile.departedAt && <span>{new Date(profile.departedAt).toLocaleDateString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" })}</span>}
-          {profile.blocked && <span>Bị chặn trong phạm vi này</span>}</>}
+        {!profile && !error && <span className="feedback loading-state" role="status">{tr("Đang tải hồ sơ…")}</span>}
+        {error && <span className="feedback error" role="alert">{tr(error)}</span>}
+        {profile && <><span>{tr(statuses[profile.status] ?? statuses.unavailable)}</span>{profile.role && <span>{roles[profile.role] ?? profile.role}</span>}
+          {profile.departedAt && <span>{new Date(profile.departedAt).toLocaleDateString(locale === "en" ? "en-GB" : "vi-VN", { timeZone: "Asia/Ho_Chi_Minh" })}</span>}
+          {profile.blocked && <span>{tr("Bị chặn trong phạm vi này")}</span>}</>}
       </span>
     </span>
   );

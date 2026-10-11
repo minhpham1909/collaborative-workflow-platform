@@ -132,6 +132,36 @@ try {
   assert.equal(await guestPage.getByRole('button', { name: 'Rename', exact: true }).count(), 0);
   assert.equal(await guestPage.getByRole('button', { name: 'Archive project', exact: true }).count(), 0);
   assert.equal(await guestPage.getByRole('link', { name: standalone.name, exact: true }).count(), 0);
+  await ownerPage.getByLabel('Search tasks', { exact: true }).fill(special.code);
+  await ownerPage.waitForFunction(() => document.querySelectorAll('.board-task').length === 1);
+  await ownerPage.getByText('2/22 tasks completed', { exact: true }).waitFor();
+  await ownerPage.getByRole('button', { name: 'Clear task filters', exact: true }).click();
+  await ownerPage.getByRole('button', { name: '+ Create task', exact: true }).click();
+  await ownerPage.getByLabel('Task title', { exact: true }).fill('Task tiếng Việt ✨');
+  await ownerPage.getByLabel('Priority level', { exact: true }).selectOption('high');
+  await ownerPage.getByLabel('Assignee', { exact: true }).selectOption(users[1].id);
+  await ownerPage.getByLabel('Deadline · Vietnam time', { exact: true }).fill('2026-01-01T09:30');
+  await ownerPage.getByText('This deadline has passed. You can still save it.', { exact: true }).waitFor();
+  await ownerPage.getByLabel('Thiết kế UI', { exact: true }).check();
+  await ownerPage.getByRole('textbox', { name: 'Task description', exact: true }).fill('Nội dung Việt & emoji ✨');
+  await ownerPage.getByRole('button', { name: 'Save task', exact: true }).click();
+  await ownerPage.getByRole('heading', { name: 'Task tiếng Việt ✨', exact: true }).waitFor();
+  const englishTask = await Task.findOne({ title: 'Task tiếng Việt ✨' });
+  assert.equal(englishTask.priority, 'high'); assert.equal(String(englishTask.assigneeId), users[1].id);
+  assert.equal(englishTask.dueAt.toISOString(), '2026-01-01T02:30:00.000Z');
+  assert.equal(englishTask.description.plainText, 'Nội dung Việt & emoji ✨'); assert.equal(englishTask.labelIds.length, 1);
+  await ownerPage.getByRole('button', { name: 'Advanced filters', exact: true }).click();
+  await ownerPage.getByLabel('Priority', { exact: true }).selectOption('high');
+  await ownerPage.locator('.board-task').filter({ hasText: 'Task tiếng Việt ✨' }).waitFor();
+  await ownerPage.getByText('2/23 tasks completed', { exact: true }).waitFor();
+  await ownerPage.locator('.board-task').filter({ hasText: 'Task tiếng Việt ✨' }).getByRole('button', { name: 'Profile of Lan', exact: true }).click();
+  await ownerPage.getByRole('region', { name: 'Information about Lan', exact: true }).getByText('Active member', { exact: true }).waitFor();
+  await ownerPage.getByRole('button', { name: 'Close profile', exact: true }).click();
+  for (const width of [375,768,1024,1280,1440]) {
+    await ownerPage.setViewportSize({ width, height: 1000 });
+    await ownerPage.screenshot({ path: `${out}/board-en-${width}.png`, fullPage: true });
+    assert.ok(await ownerPage.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), `EN board overflow ${width}`);
+  }
   assert.deepEqual(errors, []);
   if (process.env.WORKFLOW_SKILL_PROBE === '1') {
     let source = await readFile('C:/Users/Acer/.agents/skills/ui-ux/scripts/probe.mjs', 'utf8');

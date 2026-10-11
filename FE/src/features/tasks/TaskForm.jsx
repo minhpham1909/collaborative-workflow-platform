@@ -1,3 +1,5 @@
+import { useAuthLocale } from '../auth/AuthLocale.jsx';
+import { taskText } from '../../lib/task-text.js';
 import { InlineMessage } from "../../components/Feedback.jsx";
 import { useDraftGuard } from "../../lib/draft-navigation.js";
 import FormField from "../../components/FormField.jsx";
@@ -20,6 +22,8 @@ export default function TaskForm({
   onDone,
   onCancel,
 }) {
+  const { locale } = useAuthLocale();
+  const tr = (value, values) => taskText(value, locale, values);
   const [title, setTitle] = useState(task?.title ?? ""),
     [description, setDescription] = useState(task?.description),
     [assigneeId, setAssignee] = useState(task?.assigneeId ?? ""),
@@ -35,7 +39,8 @@ export default function TaskForm({
   useDraftGuard({
     dirty: dirty,
     busy: busy,
-    message: "Bỏ nội dung chưa lưu và chuyển trang?",
+    message: tr("Bỏ nội dung chưa lưu và chuyển trang?"),
+    busyMessage: tr("Đang xử lý yêu cầu. Vui lòng chờ kết quả trước khi rời trang."),
   });
 
   async function save(e) {
@@ -50,7 +55,7 @@ export default function TaskForm({
     }
     if (!title.trim() || /[\u0000-\u001f\u007f\u2028\u2029]/u.test(title)) {
       setTitleError(
-        "Nhập tiêu đề có nội dung, không chứa ký tự xuống dòng hoặc điều khiển.",
+        tr("Nhập tiêu đề có nội dung, không chứa ký tự xuống dòng hoặc điều khiển."),
       );
       e.currentTarget.querySelector("input")?.focus();
       return;
@@ -75,14 +80,14 @@ export default function TaskForm({
         { method: task ? "PATCH" : "POST", body },
       );
       setDirty(false);
-      notify("Đã lưu Task.");
+      notify(tr("Đã lưu Task."));
       onDone(result.task);
     } catch (e) {
       setUncertain(isUncertainMutation(e));
       setError(
         !isUncertainMutation(e)
           ? messageFor(e)
-          : "Chưa xác nhận kết quả. Kiểm tra dữ liệu trước khi gửi lại.",
+          : tr("Chưa xác nhận kết quả. Kiểm tra dữ liệu trước khi gửi lại."),
       );
     } finally {
       pending.current = false;
@@ -91,13 +96,13 @@ export default function TaskForm({
   }
   return (
     <section className="project-info">
-      <h2>{task ? "Sửa Task" : "Tạo Task"}</h2>
+      <h2>{task ? tr("Sửa Task") : tr("Tạo Task")}</h2>
       <form onSubmit={save}>
         <fieldset disabled={busy}>
           <FormField
-            label="Tiêu đề Task"
-            error={titleError}
-            hint="Tối đa 300 ký tự."
+            label={tr("Tiêu đề Task")}
+            error={tr(titleError)}
+            hint={tr("Tối đa 300 ký tự.")}
           >
             {(props) => (
               <input
@@ -113,7 +118,7 @@ export default function TaskForm({
               />
             )}
           </FormField>
-          <MemberPicker
+          <MemberPicker locale={locale}
             api={api}
             workspaceId={workspaceId}
             value={assigneeId}
@@ -122,7 +127,7 @@ export default function TaskForm({
                 ? {
                     userId: task.assigneeId,
                     displayName:
-                      task.assignee?.displayName ?? "Người được giao",
+                      task.assignee?.displayName ?? tr("Người được giao"),
                     left: task.assigneeLeft,
                   }
                 : undefined
@@ -133,11 +138,9 @@ export default function TaskForm({
               setDirty(true);
             }}
           />
-          <FormField label="Mức ưu tiên" hint="Ba mức dùng chung trong Project.">{props => <select {...props} value={priority} disabled={busy || uncertain} onChange={event => { setPriority(event.target.value); setDirty(true); }}><option value="low">Thấp</option><option value="medium">Vừa</option><option value="high">Cao</option></select>}</FormField>
-          <TaskLabelPicker api={api} projectId={projectId ?? task?.projectId} value={labelIds} selectedLabels={task?.labels} disabled={busy || uncertain} onChange={value => { setLabelIds(value); setDirty(true); }} />
-          <label>
-            Deadline · Giờ Việt Nam
-            <input
+          <FormField label={tr("Mức ưu tiên")} hint={tr("Ba mức dùng chung trong Project.")}>{props => <select {...props} value={priority} disabled={busy || uncertain} onChange={event => { setPriority(event.target.value); setDirty(true); }}><option value="low">{tr("Thấp")}</option><option value="medium">{tr("Vừa")}</option><option value="high">{tr("Cao")}</option></select>}</FormField>
+          <TaskLabelPicker locale={locale} api={api} projectId={projectId ?? task?.projectId} value={labelIds} selectedLabels={task?.labels} disabled={busy || uncertain} onChange={value => { setLabelIds(value); setDirty(true); }} />
+          <label>{tr("Deadline · Giờ Việt Nam")}<input
               type="datetime-local"
               step="60"
               value={due}
@@ -148,24 +151,22 @@ export default function TaskForm({
             />
           </label>
           {due && new Date(toUtc(due)) < new Date() && (
-            <p className="archive-banner">
-              Hạn đã qua. Bạn vẫn có thể lưu thời hạn này.
-            </p>
+            <p className="archive-banner">{tr("Hạn đã qua. Bạn vẫn có thể lưu thời hạn này.")}</p>
           )}
-          <p>Mô tả</p>
-          <RichEditor
+          <p>{tr("Mô tả")}</p>
+          <RichEditor locale={locale}
             value={description}
             onChange={(value) => {
               setDescription(value);
               setDescriptionError("");
               setDirty(true);
             }}
-            label="Mô tả Task"
+            label={tr("Mô tả Task")}
             readOnly={busy}
           />
           {descriptionError && (
             <InlineMessage className="field-message error">
-              {descriptionError}
+              {tr(descriptionError)}
             </InlineMessage>
           )}
           <div className="buttons">
@@ -176,21 +177,19 @@ export default function TaskForm({
                   !dirty ||
                   (await confirmDialog(
                     uncertain
-                      ? "Đóng form và tải lại để kiểm tra Task đã lưu chưa?"
-                      : "Bỏ thay đổi Task chưa lưu?",
+                      ? tr("Đóng form và tải lại để kiểm tra Task đã lưu chưa?")
+                      : tr("Bỏ thay đổi Task chưa lưu?"),
                   ))
                 )
                   onCancel(uncertain);
               }}
-            >
-              Hủy
-            </button>
+            >{tr("Hủy")}</button>
             <button className="primary" disabled={uncertain}>
-              {busy ? "Đang lưu…" : "Lưu Task"}
+              {busy ? tr("Đang lưu…") : tr("Lưu Task")}
             </button>
           </div>
         </fieldset>
-        {error && <InlineMessage>{error}</InlineMessage>}
+        {error && <InlineMessage>{tr(error)}</InlineMessage>}
       </form>
     </section>
   );

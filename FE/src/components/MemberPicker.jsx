@@ -1,3 +1,4 @@
+import { taskText } from '../lib/task-text.js';
 import { useEffect, useRef, useState } from "react";
 import FormField from "./FormField.jsx";
 import { messageFor } from "../lib/messages.js";
@@ -11,7 +12,9 @@ export default function MemberPicker({
   selectedMember,
   disabled,
   label = 'Người thực hiện',
+  locale = 'vi',
 }) {
+  const tr = (value, values) => taskText(value, locale, values);
   const [query, setQuery] = useState("");
   const [data, setData] = useState({ items: [] });
   const [busy, setBusy] = useState(true);
@@ -66,8 +69,8 @@ export default function MemberPicker({
   return (
     <div className="member-picker" aria-busy={busy}>
       <FormField
-        label="Tìm thành viên"
-        hint="Tìm theo tên trong Workspace; người đã chọn vẫn được giữ."
+        label={tr("Tìm thành viên")}
+        hint={tr("Tìm theo tên trong Workspace; người đã chọn vẫn được giữ.")}
       >
         {(props) => (
           <input
@@ -81,17 +84,17 @@ export default function MemberPicker({
         )}
       </FormField>
       <FormField
-        label={label}
+        label={tr(label)}
         hint={
           busy
             ? "Đang tải thành viên…"
             : !data.items.length
               ? query.trim()
-                ? "Không có thành viên phù hợp. Thử tên khác hoặc xóa tìm kiếm."
-                : "Chưa có thành viên để chọn."
-              : "Chọn một thành viên hoặc để chưa phân công."
+                ? tr("Không có thành viên phù hợp. Thử tên khác hoặc xóa tìm kiếm.")
+                : tr("Chưa có thành viên để chọn.")
+              : tr("Chọn một thành viên hoặc để chưa phân công.")
         }
-        error={error}
+        error={tr(error)}
       >
         {(props) => (
           <select
@@ -105,13 +108,13 @@ export default function MemberPicker({
               onChange(e.target.value);
             }}
           >
-            <option value="">Chưa phân công</option>
+            <option value="">{tr("Chưa phân công")}</option>
             {missing && (
               <option value={value}>
                 {selected.current?.userId === value
                   ? selected.current.displayName
-                  : "Người đã chọn"}
-                {selected.current?.left ? " · Đã rời" : ""}
+                  : tr("Người đã chọn")}
+                {selected.current?.left ? tr(" · Đã rời") : ""}
               </option>
             )}
             {data.items.map((member) => (
@@ -128,18 +131,14 @@ export default function MemberPicker({
             type="button"
             disabled={disabled}
             onClick={() => setQuery("")}
-          >
-            Xóa tìm kiếm thành viên
-          </button>
+          >{tr("Xóa tìm kiếm thành viên")}</button>
         )}
         {error && (
           <button
             type="button"
             disabled={disabled || busy}
             onClick={() => setRevision((v) => v + 1)}
-          >
-            Thử tải thành viên lại
-          </button>
+          >{tr("Thử tải thành viên lại")}</button>
         )}
         {!error && data.nextCursor && (
           <button
@@ -147,7 +146,7 @@ export default function MemberPicker({
             disabled={disabled || busy}
             onClick={() => load(data.nextCursor, generation.current)}
           >
-            {busy ? "Đang tải…" : "Tải thêm thành viên"}
+            {busy ? tr("Đang tải…") : tr("Tải thêm thành viên")}
           </button>
         )}
       </div>
