@@ -1,6 +1,6 @@
 # Tiến độ nâng cấp UI theo Stitch
 
-Cập nhật11/10/2026 sau S12d5a Project header/overview/edit/Archive Việt–Anh, đối chiếu [plan cụm](STITCH-UI-CLUSTER-PLAN-v0.1.md) và QA từng cụm. **11/12 mốc S đạt gate — khoảng92% số mốc**, không phải92% khối lượng hoặc92% sản phẩm hoàn thiện. F0 có gate nền/pilot riêng, không cộng vào12 mốc. Tiếp Board/TaskForm và các feature locale; [việc còn lại](S12-REMAINING-WORK.md), full-language/performance vẫn mở.
+Cập nhật11/10/2026 sau S12d5b–d7/S12e2. **12/12 mốc S đạt gate local theo phạm vi kế hoạch**; không phải100% sản phẩm thương mại hoặcproduction ready. F0 có gate nền riêng. [QA S12](../qa/UI-STITCH-S12-CHECK.md), [readiness deploy/CI-CD](S12-REMAINING-WORK.md).
 
 | Mốc | Phạm vi | Trạng thái |
 | --- | --- | --- |
@@ -16,7 +16,7 @@ Cập nhật11/10/2026 sau S12d5a Project header/overview/edit/Archive Việt–
 | S9 | Notifications inbox + public invitations3 scope | Đạt9a/9b |
 | S10 | Account/settings và Auth flows | Đạt scopeAccount/Auth; full site localeS12 |
 | S11 | Thùng rác/khôi phục Task | Đạt scope list/detail/restore; không purge thủ công |
-| S12 | Regression toàn app, navigation/draft, Vi/En, responsive/performance và email thật | ĐãquaS12e1 toast/dialog, S12d4d Team/Ban vàS12d5a Project header; cònBoard/Task/features locale/performance/gate tổng |
+| S12 | Regression toàn app, navigation/draft, Vi/En, responsive/performance và email thật | Đạt gate local S12e2; production môi trường thật ởgiai đoạn tiếp theo |
 
 Các chức năng Auth/settings đã có, “chưa nâng cấp cụm” nghĩa chưa qua gate UI mới. S10a đã đạt profile/email/security/Google link;10b login/register/verify/recovery/reset và locale. S11 đã biểu diễn expiry30 ngày/legacy-unscheduled/read-only/restore conditions đúng API, không CTA purge chưa mở. S12 cần kiểm xuyên các scope/role/history/drafts và bản dịch đầy đủ.
 
@@ -34,3 +34,5 @@ Gate Settings/shared account locale đã đạt; S10 hoàn tất phạm viAccoun
 
 
 S11 đạt list/detail/restore gate: [QA](../qa/UI-STITCH-S11-CHECK.md). Các checkpoint10/12 ở trên là lịch sử; trạng thái hiện tại11/12. Tiếp S12 regression/navigation/drafts/Vi-En/responsive/performance; chưa nghiệm thu toàn app.
+
+Checkpoint11/12 phía trên là lịch sử. Trạng thái mới12/12 local; production/WCAG/SLA/backup/provider/worker không được suy từ sốmốc.

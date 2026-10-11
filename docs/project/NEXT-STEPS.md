@@ -1,5 +1,7 @@
 # Trạng thái và bước tiếp theo
 
+11/10/2026 — **S12 gate local hoàn tất**: S12d5b–d7 locale/flows, S12e2 loading/errors/lang/routesplit/budget. FE21/BE67unit+113integration, browserclusters/navigation/feedback/auth/C2/builtpreview Vi-En failure/reload PASS. Entry308.64kB/initial400.79kB/largest395.89kB; khôngchunk>500kB. F0/S1–S12 local gates đạt; khôngproduction/WCAG/SLA claim. Tiếp nghiên cứu deploy/CI-CD theo [readiness](S12-REMAINING-WORK.md). Khôngproviders/oldqueues/devdata/backfill.
+
 11/10/2026 — **S12d5b Board/TaskForm/pickers/profile Việt–Anh đạt**: BoardVi-En/5width/create data/UTC/profile và interaction regressionsPASS, FE20/build165. TiếpProjectManagement/SharedProjects vàcácfeature còn ở S12-REMAINING-WORK.md. Vẫn11/12 gates, chưafull-language/performance; khôngproviders/workers/devdata.
 
 11/10/2026 — **S12d5a Project header/overview/mô tả/Archive Việt–Anh đạt**: names/documents preserved, rename labels truyền rõ vào NameDialog, dirty-description cancel giữ draft, archive/reopen và Guest capabilities. BoardS6aVI+EN header/5width/edit/Archive/Guest PASS, FE20/build164; entry550.36kB còn warning. Tiếp Board/filter/card/TaskForm, sau đó management/Task/MyTasks/Inbox/invitation/trash locale. [Danh sách việc còn lại](S12-REMAINING-WORK.md); [QA](../qa/UI-STITCH-S12-CHECK.md). Chưa cảProjectEnglish/S12; vẫn11/12 mốc, không providers/queues/dev data.

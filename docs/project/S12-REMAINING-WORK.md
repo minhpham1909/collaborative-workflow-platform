@@ -1,40 +1,33 @@
-# Việc còn lại sau rà soát S12
+# S12 đã hoàn tất ở local; việc còn lại trước deploy
 
-Rà soát ngày11/10/2026 từ checkout hiện tại, [plan cụm](STITCH-UI-CLUSTER-PLAN-v0.1.md), [QA S12](../qa/UI-STITCH-S12-CHECK.md) và [core plan](CORE-EXPANSION-PLAN.md). Không dùng số11/12 gate để suy tỷ lệ khối lượng hoặc production readiness.
+Cập nhật11/10/2026. [QA](../qa/UI-STITCH-S12-CHECK.md) và [tiến độ](UI-UPGRADE-PROGRESS.md) là bằng chứng nghiệm thu scoped, không chứng nhận production readiness.
 
-## 1. Hoàn thành Vi/En theo cụm — việc tiếp theo
+## Các task implementation đã hoàn thành
 
-| Thứ tự | Phạm vi còn lại | Điều kiện chuyển bước |
-| --- | --- | --- |
-| 1 | TaskList Board: filter, column/card/status/priority/checklist/deadline/filtered progress; TaskForm và PersonProfile | Names/documents/codes/enums không bị dịch; search/paging/statistics và quyền Owner/Lead/Assignee/Guest đúng; Vi/En + responsive |
-| 2 | ProjectManagement: Lead/Guest/invitations/labels và SharedProjects | Current capabilities/CAS, revoke/Kick/Ban/Archived và mất quyền; không lộ Workspace cho Guest |
-| 3 | TaskPanel/TaskDetail, checklist, Comments, activity và reopen/review | Quyền tác giả/Assignee/quản lý, reasons/rate limits, request/review/self-review, history và unknown outcomes giữ đúng |
-| 4 | MyTasks, Inbox và public invitation bodies cho các scope | Filter/time/group counts/return context, unread/read/content-unavailable, login intent/token scrub và accept đúng scope |
-| 5 | ProjectTrash và shared controls/copy còn sót | Restore theo parent/current access, expiry30 ngày và legacy-unscheduled không bị hiểu thành backup; không thêm nút purge chưa có quyền/API |
+| Phần | Kết quả |
+| --- | --- |
+| Board/TaskForm/pickers/profile | S12d5b: Vi-En, payload/query/UTC và quyền giữ nguyên; browser5width +interaction regression |
+| ProjectManagement/SharedProjects | S12d5c: labels/Lead/Guest/invitations, protected names, current scopes/CAS; Vi-En và5width |
+| Task panel/detail/checklist/comments/activity/reopen | S12d6: authorship/Assignee/review/rates/history/unknown outcomes; Vi-En và5width |
+| MyTasks/Inbox/public invitations/Trash | S12d7: groups/counts/filters/returns, masking/read-cutoff, token intent, restore/retention; Vi-En và5width |
+| Error copy/lang/loading/failed chunk | S12e2:47workflowcodes, document.lang, defaultguards, route loading/error/reload Vi-En |
+| Bundle budget | Entry308.64kB, initialJS400.79kB/gzip estimate124.67kB, largest395.89kB; check:build PASS, khôngnới warning threshold |
+| Regression tổng local | FE21 unit, BE67 unit +113 integration, navigation/drafts/feedback/C2/auth/production-build fixture PASS |
 
-Project header/overview/rename/description/Archive ởS12d5a là một slice, chưa đồng nghĩa Board hoặc cảProject đã English. Những file trên có giao diện/cơ chế hiện hữu; việc còn lại chủ yếu là locale và nghiệm thu xuyên luồng, không phải xây lại từ đầu.
+F0/S1–S12 đạt gate local theo phạm vi kế hoạch. Các kết quả browser chạy bằng API/Mongo/browser fixture riêng; không gửi provider hoặc xử lý hàng đợi cũ/dev collections. Không suy toàn-siteWCAG, toàn bộbrowser, latencySLA hoặc production backup từ các test này.
 
-## 2. Đóng gate UI tổng thể
+## Bước tiếp theo: nghiên cứu deploy và CI/CD
 
-- Chạy lại luồng tạo → xem → sửa → hủy → mất quyền → lỗi mạng, Vi/En và scope2Org +standalone +Guest trên các cụm vừa đổi. Giữ negative tests/CAS/single-write/unknown readback, không chỉ screenshot đẹp.
-- Kiểm loading/empty/error/read-only/success, keyboard/focus/modal/scroll, touch targets, dài tên/mô tả, lịch sử Back/Forward/hash/drafts và các điểm chuyển account. Những kiểm scoped đã đạt là nền; không tự công bố toàn-site accessibility hoặc draft protection toàn diện.
-- Đối chiếu Stitch local theo screen contract; không thêm KPI/presence/CTA giả vì mockup có. Assets hiện có và ảnh/fallback phải tải ổn, không có external runtime từ export.
+Đã rà checkout dev: chưa có thư mục .github/workflows. Chưa triển khai workflow CI/CD trong S12; pipeline sẽ được thiết kế cùng phương án hạ tầng.
 
-## 3. Hiệu năng — còn mở
+1. Chọn môi trường, chi phí, domain và cách đặt FE/BE; xác định HTTPS/origins/cookies/CSRF và URL Google callback/SMTP theo môi trường thật.
+2. Chọn MongoDB replica set, secrets, indexes/migration/rehearsal, backup/restore/rollback và giới hạn lưu trữ/tải thực tế.
+3. Tách API và các workers; xác định startup/scheduling/retry/monitoring. Không mở SMTP/moderation/retention cũ củadev hay backfilllegacy theo thói quen deploy.
+4. Thiết kế CI: dependencies theo lockfile, FE/BE tests với Mongo tạm, build +budget, artifacts và secret checks. Thiết kế CD: environments/secrets, promotion, health/readiness/smoke, migration/backup và rollback.
+5. Nghiệm thu trên môi trường thật rồi mới mở truy cập internet; local fixture không thay production provider/worker/SLA acceptance. Email thửS12 đã nhậnInbox ởcheckpoint trước, không cần gửi lại chỉ vì đổiUIcopy.
 
-Entry build hiện lớn hơn500kB. App đang chỉ lazy-load Settings; EditorCore có chunk riêng. Cần đo và chia route/feature phù hợp, giữ loading/error/retry và auth/draft behavior; đo lại initial payload/caching/interaction, không nới warning threshold để coi đạt.
+Chưa tạo workflow deploy hoặc mở môi trườngproduction trong S12. Các lựa chọn nền tảng/hạ tầng là nội dung giai đoạn nghiên cứu tiếp theo.
 
-Không gọi performance gate hoàn tất chỉ vì build thành công hoặc ảnh375 không tràn trang.
+## Ngoài scope hiện tại
 
-## 4. Trước khi đưa lên internet
-
-Core C1–C6 và các browser fixtures đã có scoped evidence. Còn nghiệm thu cấu hình production: HTTPS/origins/cookies/CSRF, Google/SMTP production, replica set/index/migration rehearsal, backup/restore/rollback, worker scheduling/retry/monitoring và giới hạn tài nguyên dưới tải dự kiến. Local rehearsal không thay SLA/backup/provider acceptance ở môi trường thật.
-
-Không xử lý hàng đợi SMTP/moderation/retention cũ củadev hoặc backfilllegacy chỉ vì đang nghiệm thuUI. Cần tách cấu hình và dữ liệu production, xác định phạm vi thao tác trước khi mở workers. Email thửS12 đã được xác nhận Inbox ở lượt trước; không cần gửi lại chỉ vì đổi copy.
-
-## 5. Ngoài scope hiện tại / cần nghiệp vụ riêng
-
-- Manual permanent purge và chuyển Workspace độc lập vàoOrg còn mở: chốt quyền/điều kiện trước API hoặc CTA destructive.
-- Storage/upload/quota, realtime/presence/mentions, sprint/calendar/meetings/timer, billing/domain/SSO/2FA và custom RBAC chưa được coi là yêu cầu phải xây để đóngS12. Nếu muốn phát triển, mở spec/gate riêng.
-
-Ưu tiên: hoàn tất locale theo bảng → regression/visual tổng → đo và tối ưu bundle → kế hoạch nghiệm thu production. Tránh mở module mới giữa lúc gateUI còn dở.
+Manual permanent purge/chuyển Workspace vàoOrg còn cần chốt quyền/điều kiện trước API/CTA destructive. Storage/upload/quota, realtime/presence/mentions, sprint/calendar/meetings/timer, billing/domain/SSO/2FA/customRBAC là module/spec riêng; không tự thêm để gọiS12 hoàn thành.

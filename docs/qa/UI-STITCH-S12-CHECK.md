@@ -240,3 +240,17 @@ Task-detailS7aVI PASS(structure ID/tick preservation, Assignee tick-only, Done-i
 - FE20/build166 PASSentry587.45kB/gzip164.19, vẫnwarning>500. Khôngfull-siteaccessibility/performance acceptance. KhôngEnglishprobe mới. Artifacts mine-en/inbox-en/3public-en/trash-en5width trong.local ignored. Khôngproviders/oldqueues/devcollections/backfill.
 
 Tiếp split/đo route assets, regression tổng vàrà copy/state còn sót. Production deployment/providers/workers vẫn làgate môi trườngriêng, khôngđược nghiệmthu bằngfixtures.
+
+## S12e2 — Route chunks, language/errors và gate local tổng
+
+11/10/2026 — Home/Org/Team/Workspace/Project/Task/MyTasks/SharedProjects tải theo route; Settings giữ lazy. Notifications/InboxBadge/Auth/public invitations còn eager để giữ auth/accept intent. RouteFrame keyed user/kind/id/section có loading/error Vi-En; lỗi chunk có Reload page và Home, không đưa exception/stack ra UI.
+
+- Build entry308,641 bytes (trước split587,450); initial entry+static dependencies400,787 bytes/gzip estimate124,666 (4chunks), largest chunk395,893. Khôngchunk>500kB. InitialCSS75.20kB, CSSroute tách riêng. Gzip làestimate từngasset, không phải measuredtransfer/LCP/SLA.
+- check-build-budget.mjs theo HTMLentry/modulepreloads vàstatic imports: entry≤350kB/initial≤425kB/initialgzip≤135kB/largest≤500kB; package check:build. Khôngnới Vite warningthreshold. Payload sau khi mở nhiều route không bằng initial.
+- Built preview4176 PASS fullBoardVi-En/edit/Archive/Guest/create/query/profile/5width. Chặn ProjectJS trong freshcontextsVi/En→error screen→Reload→Board cùngroute/session phục hồi. Fixture chỉcho FE5173/4176, API/tempDB riêng. Khôngclaim arbitraryoffline cache hoặc mọibrowser.
+- AuthLocaleProvider cập nhậtdocument.lang, khôngđổiUser.locale/email preferences. Defaultbusy/multiple-draft text theoUIlocale. Englisherror map47workflowcodes bổ sung; khônglộserver.message. ENduplicate label409 giữinput/khôngtạothêm; unitchecks permission/cooldown/retention/redaction. BEpermissions/rates khôngđổi.
+- NavigationBack/Forward/hash/link/refresh/logout/in-flight writes vàdrafts ởTask/Comments/Project/Home/Workspace/settings/account/invite PASS. Feedbackqueue/layers/focus/accountboundary/bottomaction5width PASS. C2scope/login/register/verified/mismatch/switch/unknownaccept/token vàAuthVi-En5screens/5width/fakeGoogle PASS. CácbrowserS6–S11 đãchạylại ởS12d5b–d7.
+- FE21 unitPASS. BE67 nonMongo testsPASS;14Mongo suites skipped ởunit invocation; integrationriêng đạt113/113,0skip trênprivate replica set (2Org/standalone/Guest/migrations/retention/outboxfake). KhôngproductionDB/providers.
+- Chốt F0/S1–S12 gate local trongscope, khôngchứng nhận toàn-siteWCAG/mọibrowser/productionSLA/backup/worker/provider. Không chạyqueueSMTP/moderation/retention cũ củadev, legacybackfill hoặc27017/27018collections. Workers trongintegration chỉ xửlý fixture riêng.
+
+Implementation/locale/regression/asset-budget trong danh sách S12 đã hoàn tất. Môi trườngproduction vàmodule deferred chuyển sang nghiên cứu deploy/CI-CD; không coi đã triển khai.
