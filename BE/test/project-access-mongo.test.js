@@ -18,7 +18,7 @@ import { dispatchInvitationMail } from '../src/mail/invitation-mail.js';
 import { createApp } from '../src/app.js';
 import { testConfig } from '../test-support/auth-store.js';
 
-test('Project Lead and Guest scoped access on isolated MongoDB', { skip: !process.env.TEST_MONGODB_URI, timeout: 90_000 }, async t => {
+test('Project Guest and retired Lead access on isolated MongoDB', { skip: !process.env.TEST_MONGODB_URI, timeout: 90_000 }, async t => {
   assert.equal(new URL(process.env.TEST_MONGODB_URI).pathname.slice(1), 'workflow_auth_test');
   await connectDatabase(process.env.TEST_MONGODB_URI);
   const config = testConfig(), users = [], sessions = [], auths = [], workspaceIds = [], orgIds = [];
@@ -46,14 +46,15 @@ test('Project Lead and Guest scoped access on isolated MongoDB', { skip: !proces
     const b = (await work.createProject(auths[0], workspace.id, { name: 'Private B' })).project;
     task = (await work.createTask(auths[2], a.id, { title: 'Task A', assigneeId: uid(2) })).task;
     const privateTask = (await work.createTask(auths[0], b.id, { title: 'Task B', assigneeId: uid(2) })).task;
-    await t.test('Lead requires current Workspace membership and cannot manage other Projects or Workspace', async () => {
-      const lead = await work.lead(auths[0], a.id, { leadId: uid(1), expectedVersion: 0 }); assert.equal(lead.project.leadId, uid(1));
-      await assert.rejects(work.lead(auths[1], b.id, { leadId: uid(1), expectedVersion: 0 }), { code: 'OWNER_REQUIRED' });
-      await assert.rejects(work.lead(auths[0], b.id, { leadId: uid(3), expectedVersion: 0 }), { code: 'ASSIGNEE_NOT_MEMBER' });
-      assert.equal((await work.getProject(auths[1], a.id)).project.accessRole, 'lead');
-      task = (await work.updateTask(auths[1], task.id, { title: 'Lead edited', expectedVersion: 0 })).task;
-      await work.updateProject(auths[1], a.id, { description: content('Project goal'), expectedVersion: 1 });
-      await assert.rejects(work.updateProject(auths[1], a.id, { name: 'Unauthorized rename', expectedVersion: 2 }), { code: 'OWNER_REQUIRED' });
+    await t.test('Historical Lead no longer grants authority; retired HTTP endpoint fails closed', async () => {
+      await Project.collection.updateOne({ _id: new mongoose.Types.ObjectId(a.id) }, { $set: { leadId: users[1]._id } });
+      const current = (await work.getProject(auths[1], a.id)).project;
+      assert.equal(current.accessRole, 'member'); assert.equal(Object.hasOwn(current, 'leadId'), false); assert.equal(Object.hasOwn(current.permissions, 'manageLead'), false);
+      await assert.rejects(work.updateTask(auths[1], task.id, { title: 'Historical privilege', expectedVersion: 0 }), { code: 'TASK_EDIT_FORBIDDEN' });
+      await assert.rejects(work.createLabel(auths[1], a.id, { name: 'Unauthorized label' }), { code: 'PROJECT_MANAGEMENT_REQUIRED' });
+      task = (await work.updateTask(auths[0], task.id, { title: 'Owner edited', expectedVersion: 0 })).task;
+      await work.updateProject(auths[0], a.id, { description: content('Project goal'), expectedVersion: 0 });
+      await assert.rejects(work.updateProject(auths[1], a.id, { name: 'Unauthorized rename', expectedVersion: 1 }), { code: 'OWNER_REQUIRED' });
       await assert.rejects(work.updateTask(auths[1], privateTask.id, { title: 'Other project', expectedVersion: 0 }), { code: 'TASK_EDIT_FORBIDDEN' });
       await assert.rejects(work.inviteGuest(auths[1], a.id, { type: 'LINK' }), { code: 'OWNER_REQUIRED' });
     });
@@ -130,7 +131,7 @@ test('Project Lead and Guest scoped access on isolated MongoDB', { skip: !proces
       await assert.rejects(work.updateTask(auths[4], old.id, { title: 'Creator bypass', expectedVersion: old.version }), { code: 'TASK_EDIT_FORBIDDEN' });
       assert.equal((await inbox.get(auths[4], String(note._id))).notification.available, true);
     });
-    await t.test('Guest revoke/link revoke and concurrent Lead changes respect CAS and current access', async () => {
+    await t.test('Guest revoke/link revoke and concurrent Workspace role changes respect CAS and current access', async () => {
       const grant = await ProjectGuest.collection.findOne({ projectId: new mongoose.Types.ObjectId(a.id), userId: users[3]._id });
       const race = await Promise.allSettled([work.createComment(auths[3], task.id, { content: content('Racing feedback') }), work.revokeGuest(auths[0], a.id, uid(3), { expectedVersion: grant.version })]);
       assert.equal(race[1].status, 'fulfilled');
@@ -143,13 +144,13 @@ test('Project Lead and Guest scoped access on isolated MongoDB', { skip: !proces
       const fresh = await work.inviteGuest(auths[0], a.id, { type: 'LINK' });
       await Promise.all([1, 2].map(() => work.acceptGuestInvitation(auths[3], { token: token(fresh) })));
       assert.equal(await ProjectGuest.collection.countDocuments({ projectId: new mongoose.Types.ObjectId(a.id), userId: users[3]._id }), 1);
-      await work.lead(auths[0], a.id, { leadId: null, expectedVersion: 2 });
       await assert.rejects(work.updateTask(auths[1], task.id, { title: 'Former Lead', expectedVersion: task.version }), { code: 'TASK_EDIT_FORBIDDEN' });
-      const leads = await Promise.allSettled([1, 2].map(index => work.lead(auths[0], a.id, { leadId: uid(index), expectedVersion: 3 })));
-      assert.equal(leads.filter(result => result.status === 'fulfilled').length, 1);
-      assert.equal(leads.find(result => result.status === 'rejected').reason.code, 'VERSION_CONFLICT');
+      const changes = await Promise.allSettled([1, 2].map(() => ws.role(auths[0], workspace.id, uid(1), { role: 'manager', expectedVersion: 0, reason: 'CAS appointment' })));
+      assert.equal(changes.filter(result => result.status === 'fulfilled').length, 1);
+      assert.equal(changes.find(result => result.status === 'rejected').reason.code, 'VERSION_CONFLICT');
+      await ws.role(auths[0], workspace.id, uid(1), { role: 'member', expectedVersion: 1, reason: 'End fixture' });
     });
-    await t.test('Organization exit removes Lead and Guest grants including Archived; external Guest stays isolated', async () => {
+    await t.test('Organization exit cleans historical Lead and Guest grants including Archived; external Guest stays isolated', async () => {
       const org = (await orgs.create(auths[0], { name: 'Guest Org' })).organization; orgIds.push(new mongoose.Types.ObjectId(org.id));
       const orgWorkspace = (await orgs.createWorkspace(auths[0], org.id, { name: 'Org Workspace' })).workspace; workspaceIds.push(new mongoose.Types.ObjectId(orgWorkspace.id));
       const invite = await orgs.invite(auths[0], org.id, { email: users[2].email, workspaceId: orgWorkspace.id });
@@ -160,8 +161,8 @@ test('Project Lead and Guest scoped access on isolated MongoDB', { skip: !proces
       await work.acceptGuestInvitation(auths[2], { token: token(guestLink) });
       assert.notEqual((await work.getProject(auths[2], project.id)).project.accessRole, 'guest');
       await work.acceptGuestInvitation(auths[3], { token: token(guestLink) });
-      await work.lead(auths[0], project.id, { leadId: uid(2), expectedVersion: 0 });
-      await work.state(auths[0], project.id, { state: 'archived', expectedVersion: 1 });
+      await Project.collection.updateOne({ _id: new mongoose.Types.ObjectId(project.id) }, { $set: { leadId: users[2]._id } });
+      await work.state(auths[0], project.id, { state: 'archived', expectedVersion: 0 });
       const member = await OrganizationMembership.collection.findOne({ organizationId: orgIds[0], userId: users[2]._id });
       await orgs.leave(auths[2], org.id, { expectedVersion: member.version });
       const stored = await Project.collection.findOne({ _id: new mongoose.Types.ObjectId(project.id) }); assert.equal(stored.leadId, null);
@@ -176,6 +177,7 @@ test('Project Lead and Guest scoped access on isolated MongoDB', { skip: !proces
       server = createApp({ authService, authConfig: config, workService: work }).listen(0, '127.0.0.1'); await once(server, 'listening');
       const base = `http://127.0.0.1:${server.address().port}`;
       const headers = { authorization: 'Bearer fixture', origin: config.webOrigin, 'content-type': 'application/json' };
+      assert.equal((await fetch(`${base}/projects/${a.id}/lead`, { method: 'PATCH', headers, body: '{}' })).status, 410);
       assert.equal((await fetch(`${base}/shared-projects`, { headers })).status, 200);
       assert.equal((await fetch(`${base}/projects/${a.id}/board`, { headers })).status, 200);
       assert.equal((await fetch(`${base}/projects/${b.id}`, { headers })).status, 404);

@@ -3,7 +3,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import Avatar from "./Avatar.jsx";
 
 const statuses = { active: "Đang tham gia", organization_management: "Quản trị theo quyền tổ chức", guest: "Guest · Xem và bình luận", left_organization: "Đã rời tổ chức", left_workspace: "Đã rời Workspace", left_project: "Không còn tham gia Project", unavailable: "Không còn quyền trong Project" };
-const roles = { lead: "Project Lead", manager: "Workspace Manager", member: "Member", owner: "Workspace Owner", organization_owner: "Organization Owner", organization_admin: "Organization Admin", guest: "Guest" };
+const roles = { manager: "Workspace Manager", member: "Member", owner: "Workspace Owner", organization_owner: "Organization Owner", organization_admin: "Organization Admin", guest: "Guest" };
 export default function PersonProfile({ api, projectId, user, locale = 'vi' }) {
   const tr = (value, values) => taskText(value, locale, values);
   const [open, setOpen] = useState(false), [profile, setProfile] = useState(null), [error, setError] = useState("");

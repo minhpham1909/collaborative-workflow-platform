@@ -102,11 +102,7 @@ export function checklistTickInput(input) {
   if (typeof input.checked !== 'boolean') fail();
   return { checked: input.checked, expectedVersion: expectedVersion(input) };
 }
-export function leadInput(input) {
-  inputObject(input, ['leadId', 'expectedVersion']);
-  if (!Object.hasOwn(input, 'leadId')) fail();
-  return { leadId: input.leadId === null ? null : objectId(input.leadId), expectedVersion: expectedVersion(input) };
-}
+
 export function commentInput(input, edit = false) {
   inputObject(input, ['content', ...(edit ? ['expectedVersion'] : [])]);
   return { fields: { content: rich(input.content, 'comment', true) }, ...(edit ? { expectedVersion: expectedVersion(input) } : {}) };

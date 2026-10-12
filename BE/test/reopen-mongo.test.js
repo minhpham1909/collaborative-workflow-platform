@@ -37,6 +37,10 @@ test('C4 reopen approval and Project statistics', { skip: !process.env.TEST_MONG
       const user = new User({ displayName: `C4 User ${i}`, email: `${prefix}-${i}@example.com`, passwordHash, emailVerifiedAt: clock, termsAcceptance: { version: 'test', acceptedAt: clock } });
       await user.save(); users.push(user.toObject()); login.push(await auth.login({ email: user.email, password })); claims.push(await auth.authenticate(login[i].accessToken));
     }
+    const setManager = async (index, role) => {
+      const target = await WorkspaceMembership.collection.findOne({ workspaceId: O(workspace.id), userId: users[index]._id });
+      await ws.role(claims[0], workspace.id, String(users[index]._id), { expectedVersion: target.version, role, reason: 'Reopen fixture management' });
+    };
     workspace = (await ws.create(claims[0], { name: 'C4 workspace' })).workspace; workspaceIds.push(O(workspace.id));
     const invite = await ws.invite(claims[0], workspace.id, { type: 'LINK' });
     const token = new URLSearchParams(new URL(invite.url).hash.slice(1)).get('token');
@@ -62,22 +66,24 @@ test('C4 reopen approval and Project statistics', { skip: !process.env.TEST_MONG
       assert.equal(results.find(value => value.status === 'rejected').reason.code, 'REOPEN_REQUEST_PENDING');
       assert.equal(await TaskReopenRequest.collection.countDocuments({ taskId: O(task.id), state: 'pending' }), 1);
       const req = results.find(value => value.status === 'fulfilled').value.request;
+      assert.equal((await work.getTask(claims[0], task.id)).task.permissions.status, false);
+      await assert.rejects(work.status(claims[0], task.id, { expectedVersion: task.version, status: 'todo', reason: 'Bypass pending request' }), { code: 'REOPEN_REQUEST_PENDING' });
       await assert.rejects(review(task, req, 'approve', 1), { code: 'PROJECT_MANAGEMENT_REQUIRED' });
       const result = await review(task, req); assert.equal(result.request.state, 'approved'); assert.equal(result.task.status, 'in_progress'); assert.equal(result.task.completedAt, null);
       await assert.rejects(review(task, req), { code: 'VERSION_CONFLICT' });
       const history = await work.activity(claims[1], task.id, {}); assert.ok(history.items.some(value => value.reopenRequestId === req.id && value.reason === 'Đồng ý kiểm tra lại'));
       const mismatch = await doneTask(); await assert.rejects(work.reviewReopen(claims[0], mismatch.id, req.id, { expectedVersion: 0, expectedTaskVersion: mismatch.version, decision: 'approve', reason: 'Wrong Task' }), { code: 'RESOURCE_UNAVAILABLE' });
     });
-    await t.test('Owner/Lead cannot approve own pending request; new Lead takes over and old Lead loses authority', async () => {
+    await t.test('Owner/Manager cannot self-review; demoted Manager loses review authority', async () => {
       const task = await doneTask(0), req = (await request(task, 0)).request;
       await assert.rejects(review(task, req), { code: 'REOPEN_SELF_REVIEW_FORBIDDEN' });
       await assert.rejects(work.status(claims[0], task.id, { expectedVersion: task.version, status: 'todo', reason: 'Self bypass' }), { code: 'REOPEN_SELF_REVIEW_FORBIDDEN' });
-      project = (await work.lead(claims[0], project.id, { expectedVersion: project.version, leadId: String(users[1]._id) })).project;
-      project = (await work.lead(claims[0], project.id, { expectedVersion: project.version, leadId: String(users[2]._id) })).project;
+      await setManager(1, 'manager'); await setManager(1, 'member');
+      await setManager(2, 'manager');
       await assert.rejects(review(task, req, 'approve', 1), { code: 'PROJECT_MANAGEMENT_REQUIRED' });
       assert.equal((await work.projectReopenRequests(claims[2], project.id, {})).total, 1);
       assert.equal((await review(task, req, 'approve', 2)).request.state, 'approved');
-      project = (await work.lead(claims[0], project.id, { expectedVersion: project.version, leadId: null })).project;
+      await setManager(2, 'member');
     });
     await t.test('Rejection cooldown exact 24h and maximum 3 requests in rolling 7d, not lifecycle limit', async () => {
       const task = await doneTask(), baseTime = new Date(clock);
@@ -94,7 +100,7 @@ test('C4 reopen approval and Project statistics', { skip: !process.env.TEST_MONG
     });
     await t.test('Concurrent approval/rejection and archive/approval commit consistently', async () => {
       const task = await doneTask(), req = (await request(task)).request;
-      project = (await work.lead(claims[0], project.id, { expectedVersion: project.version, leadId: String(users[2]._id) })).project;
+      await setManager(2, 'manager');
       const results = await Promise.allSettled([review(task, req), review(task, req, 'reject', 2)]);
       assert.equal(results.filter(value => value.status === 'fulfilled').length, 1);
       const stored = await TaskReopenRequest.collection.findOne({ _id: O(req.id) }), current = (await work.getTask(claims[0], task.id)).task;

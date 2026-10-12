@@ -75,7 +75,7 @@ test('C6-A core end-to-end through HTTP: two organizations, independent Workspac
       projectA = (await call(0, `/workspaces/${wsA.id}/projects`, 'POST', { name: 'A Delivery' }, 201)).project;
       projectB = (await call(2, `/workspaces/${wsB.id}/projects`, 'POST', { name: 'Secret Org B delivery' }, 201)).project;
       projectS = (await call(0, `/workspaces/${independent.id}/projects`, 'POST', { name: 'Standalone project' }, 201)).project;
-      projectA = (await call(0, `/projects/${projectA.id}/lead`, 'PATCH', { expectedVersion: projectA.version, leadId: String(users[1]._id) })).project;
+      const managerContext = (await call(0, `/workspaces/${wsA.id}`)).workspace; await call(0, `/organizations/${orgA.id}/workspaces/${wsA.id}/manager`, 'PATCH', { expectedVersion: managerContext.version, managerId: String(users[1]._id) });
       const label = (await call(1, `/projects/${projectA.id}/labels`, 'POST', { name: 'Core delivery', color: 'mint' }, 201)).label;
       taskA = (await call(1, `/projects/${projectA.id}/tasks`, 'POST', { title: 'A implementation', assigneeId: String(users[1]._id), priority: 'high', labelIds: [label.id] }, 201)).task;
       taskB = (await call(3, `/projects/${projectB.id}/tasks`, 'POST', { title: 'Secret Org B task', assigneeId: String(users[3]._id) }, 201)).task;
@@ -114,6 +114,7 @@ test('C6-A core end-to-end through HTTP: two organizations, independent Workspac
       await call(0, `/moderation/project/${projectA.id}/bans/${users[4]._id}/unban`, 'POST', { expectedVersion: ban.version, reason: 'Revoke Ban' });
       await call(4, `/tasks/${taskA.id}`, 'GET', undefined, 404); // Unban does not regrant Guest.
       const member = (await call(0, `/organizations/${orgA.id}/members`)).items.find(value => value.userId === String(users[1]._id));
+      const beforeExit = (await call(0, `/workspaces/${wsA.id}`)).workspace; await call(0, `/organizations/${orgA.id}/workspaces/${wsA.id}/manager`, 'PATCH', { expectedVersion: beforeExit.version, managerId: String(users[0]._id) });
       await call(1, `/organizations/${orgA.id}/leave`, 'POST', { expectedVersion: member.version });
       await call(1, `/tasks/${taskA.id}`, 'GET', undefined, 404);
       assert.equal((await call(1, `/tasks/${taskS.id}`)).task.id, taskS.id);

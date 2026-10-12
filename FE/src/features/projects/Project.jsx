@@ -163,7 +163,7 @@ export default function Project({ api, id, user, section }) {
                   ? (project.state === 'archived' ? t("Dự án lưu trữ · Chỉ đọc") : t("Workspace lưu trữ · Chỉ đọc"))
                   : t("Đang hoạt động")}
               </span>
-              <span className="project-role">{project.accessRole === 'guest' ? t("Guest · Xem và bình luận") : project.accessRole === 'lead' ? 'Project Lead' : workspaceRoleLabel(project.accessRole, locale)}</span>
+              <span className="project-role">{project.accessRole === 'guest' ? t("Guest · Xem và bình luận") : workspaceRoleLabel(project.accessRole, locale)}</span>
               <span className="project-created muted">
                 {t("Tạo")}{" "}
                 {new Date(project.createdAt).toLocaleDateString(locale === "en" ? "en-GB" : "vi-VN", {

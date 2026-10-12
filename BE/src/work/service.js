@@ -1,7 +1,7 @@
 import {calendarQuery} from './calendar-input.js';
 import { objectId, versionInput, pageInput, invitationInput, invitationToken, fail } from '../workspaces/input.js';
 import { inputObject } from '../auth/account-input.js';
-import { projectInput, taskInput, statusInput, stateInput, commentInput, taskQuery, leadInput, commentDeleteInput, labelInput, checklistInput, checklistTickInput, reopenInput, reopenReviewInput, statisticsInput } from './input.js';
+import { projectInput, taskInput, statusInput, stateInput, commentInput, taskQuery, commentDeleteInput, labelInput, checklistInput, checklistTickInput, reopenInput, reopenReviewInput, statisticsInput } from './input.js';
 import { projectQuery } from './project-query.js';
 
 export function createWorkService({ store }) {
@@ -39,7 +39,6 @@ export function createWorkService({ store }) {
     previewGuestInvitation: input => store.previewGuestInvitation(invitationToken(input)),
     acceptGuestInvitation: (auth, input) => store.acceptGuestInvitation(auth.claims, invitationToken(input)),
     acceptGuestInvitationById: (auth, invitationId, input) => { inputObject(input, []); return store.acceptGuestInvitationById(auth.claims, objectId(invitationId)); },
-    lead: (auth, projectId, input) => store.lead(auth.claims, objectId(projectId), leadInput(input)),
     shared: (auth, query) => store.shared(auth.claims, projectQuery(query)),
     projects: (auth, workspaceId, query) => store.projects(auth.claims, objectId(workspaceId), projectQuery(query)),
     createProject: (auth, workspaceId, input) => store.createProject(auth.claims, objectId(workspaceId), projectInput(input)),

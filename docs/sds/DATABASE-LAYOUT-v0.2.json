@@ -403,6 +403,9 @@
         "No project membership",
         "Archived user writes blocked",
         "Description proposed maximum 10000 visible characters"
+      ],
+      "rules": [
+        "leadId is historical only; current access/DTOs do not derive Lead permissions; mutation route retired with 410"
       ]
     },
     {

@@ -24,7 +24,7 @@ export function createWorkRouter({ service, authService, config }) {
   route('post', '/projects/:projectId/labels', (r) => service.createLabel(r.auth, r.params.projectId, r.body), 201);
   route('patch', '/projects/:projectId/labels/:labelId', (r) => service.updateLabel(r.auth, r.params.projectId, r.params.labelId, r.body));
   route('get', '/projects/:projectId/people/:userId/profile', (r) => service.profile(r.auth, r.params.projectId, r.params.userId));
-  route('patch', '/projects/:projectId/lead', (r) => service.lead(r.auth, r.params.projectId, r.body));
+  route('patch', '/projects/:projectId/lead', () => { throw new AuthError('PROJECT_LEAD_RETIRED', 410); });
   route('get', '/shared-projects', (r) => service.shared(r.auth, r.query));
   route('post', '/projects/:projectId/guest-invitations', (r) => service.inviteGuest(r.auth, r.params.projectId, r.body), 201);
   route('get', '/projects/:projectId/guest-invitations', (r) => service.guestInvitations(r.auth, r.params.projectId, r.query));

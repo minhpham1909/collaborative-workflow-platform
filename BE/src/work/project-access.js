@@ -8,11 +8,11 @@ export async function projectAccess(workspace, project, userId, tx, { lock = tru
   await assertNotBanned(userId, { organizationId: workspace.organizationId, workspaceId: workspace._id, projectId: project._id }, tx);
   try {
     const access = await workspaceAccess(workspace, userId, tx, { lock });
-    return { access, guest: false, isLead: access.isMember && project.leadId != null && String(project.leadId) === String(userId) };
+    return { access, guest: false };
   } catch (error) { if (!(error instanceof AuthError) || error.status !== 404) throw error; }
   // External guests need no Org/Workspace membership, but the parent must still exist.
   if (workspace.organizationId && !await Organization.collection.findOne({ _id: workspace.organizationId }, { session: tx })) throw new AuthError('RESOURCE_UNAVAILABLE', 404);
   const grant = await ProjectGuest.collection.findOne({ workspaceId: workspace._id, projectId: project._id, userId, state: 'active' }, { session: tx });
   if (!grant) throw new AuthError('RESOURCE_UNAVAILABLE', 404);
-  return { access: { canManage: false, isMember: false, role: 'guest', membership: null }, guest: true, isLead: false };
+  return { access: { canManage: false, isMember: false, role: 'guest', membership: null }, guest: true };
 }

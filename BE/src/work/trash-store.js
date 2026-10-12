@@ -7,7 +7,7 @@ import { assertWorkspaceWritable } from '../workspaces/lifecycle.js';
 const id = value => new mongoose.Types.ObjectId(value);
 export function createTaskTrashStore({ run, projectScope, taskResponse, owner, checkVersion, update, assignee, activity, now }) {
   const deny = (code, status = 409) => { throw new AuthError(code, status); };
-  const canRestore = (context, task) => !context.guest && (owner(context) || context.isLead || sameId(task.createdBy, context.user._id));
+  const canRestore = (context, task) => !context.guest && (owner(context) || sameId(task.createdBy, context.user._id));
   async function scope(context, taskId) {
     let task = await Task.collection.findOne({ _id: id(taskId), deletedAt: { $type: 'date' } }, { session: context.tx });
     if (!task) deny('RESOURCE_UNAVAILABLE', 404);
@@ -28,7 +28,7 @@ export function createTaskTrashStore({ run, projectScope, taskResponse, owner, c
       context = await projectScope(context, projectId);
       if (context.guest) deny('TRASH_ACCESS_FORBIDDEN', 403);
       const criteria = { workspaceId: context.workspace._id, projectId: context.project._id, deletedAt: { $type: 'date' },
-        ...(owner(context) || context.isLead ? {} : { createdBy: context.user._id }) };
+        ...(owner(context) ? {} : { createdBy: context.user._id }) };
       const after = page.after.$or ? { $or: page.after.$or.map(part => part._id ? { ...part, _id: { $lt: id(part._id.$lt) } } : part) } : {};
       const records = await Task.collection.find({ ...criteria, ...after }, { session: context.tx }).sort({ deletedAt: -1, _id: -1 }).limit(page.limit + 1).toArray();
       const result = paged(records, page.limit, value => value, 'deletedAt'), items = [];

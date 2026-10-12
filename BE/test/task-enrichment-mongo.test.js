@@ -58,8 +58,8 @@ test('C4 Task enrichment transactional API', { skip: !process.env.TEST_MONGODB_U
       await assert.rejects(work.updateLabel(claims[0], project.id, label.id, { expectedVersion: 0, name: 'Stale' }), /VERSION_CONFLICT/u);
       assert.equal((await http(3, `/projects/${project.id}/labels`)).status, 404);
       assert.equal((await http(1, `/projects/${project.id}/labels`)).status, 200);
-      const led = (await work.lead(claims[0], project.id, { expectedVersion: project.version, leadId: String(users[2]._id) })).project; project = led;
-      assert.ok((await work.createLabel(claims[2], project.id, { name: 'Lead label' })).label.id);
+      const target = await WorkspaceMembership.collection.findOne({ workspaceId: O(project.workspaceId), userId: users[2]._id }); await ws.role(claims[0], project.workspaceId, String(users[2]._id), { expectedVersion: target.version, role: 'manager', reason: 'Label management' });
+      assert.ok((await work.createLabel(claims[2], project.id, { name: 'Manager label' })).label.id);
     });
     await t.test('Atomic readable codes, parallel creation, search and no reuse after deletion', async () => {
       const values = await Promise.all(Array.from({ length: 6 }, () => create()));
@@ -75,8 +75,8 @@ test('C4 Task enrichment transactional API', { skip: !process.env.TEST_MONGODB_U
     await t.test('Checklist structure/ticks preserve IDs and checked state; races and Done confirmation', async () => {
       task = (await work.checklist(claims[1], task.id, { expectedVersion: task.version, items: [{ text: 'Kiểm tra' }, { text: 'Bàn giao' }] })).task;
       const first = task.checklist[0].id;
-      // Assigned Lead can edit structure because Lead carries independent management rights.
-      await work.lead(claims[0], project.id, { expectedVersion: project.version, leadId: null });
+      // Assigned Manager has structure rights; after demotion only assignment ticking remains.
+      const target = await WorkspaceMembership.collection.findOne({ workspaceId: O(project.workspaceId), userId: users[2]._id }); await ws.role(claims[0], project.workspaceId, String(users[2]._id), { expectedVersion: target.version, role: 'member', reason: 'Assignee only' });
       await assert.rejects(work.checklist(claims[2], task.id, { expectedVersion: task.version, items: [] }), /TASK_EDIT_FORBIDDEN/u);
       const results = await Promise.allSettled([work.tickChecklist(claims[2], task.id, first, { expectedVersion: task.version, checked: true }), work.tickChecklist(claims[1], task.id, first, { expectedVersion: task.version, checked: false })]);
       // A no-op may succeed without consuming a version; force a second stale write below.

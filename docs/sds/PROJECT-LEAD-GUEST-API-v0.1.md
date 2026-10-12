@@ -1,3 +1,5 @@
+> 12/10/2026 — Lead portion retired by W2c: PATCH lead returns410, leadId is historical only, no current Lead permissions/DTO. Guest contract remains; current Workspace management replaces Lead. See [W2c](../qa/WORKSPACE-ONLY-NO-LEAD-W2C-CHECK.md). Nội dung bên dưới là đặc tả lịch sử khi còn Lead.
+
 # C2 increment 2 — Project Lead / Guest
 
 > Hiện hành 05/10: C2 core entry/scoped views đã nối và đạt [browser QA](../qa/C2-ENTRY-GUEST-UI-CHECK.md). Project DTO thêm `context.workspaceName/canOpenWorkspace` và `permissions.manageProject`, giữ capabilities sau update/state. FE Guest không gọi parent Workspace API. Public Org/Project invite pages/token intent đã có; các ghi nhận “chưa nối” dưới là lịch sử increment 2. SMTP/Google thật/redesign vẫn chưa nghiệm thu.

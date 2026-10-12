@@ -19,7 +19,7 @@ const id = (value) => new mongoose.Types.ObjectId(value);
 const deny = (code = 'RESOURCE_UNAVAILABLE', status = 404) => { throw new AuthError(code, status); };
 const owner = (context) => context.access?.canManage ?? sameId(context.workspace.ownerId, context.user._id);
 const commentModerator = context => owner(context) && !(!context.workspace.organizationId && context.access.role === 'manager');
-const editor = (context) => !context.guest && (owner(context) || context.isLead || sameId(context.task.createdBy, context.user._id));
+const editor = (context) => !context.guest && (owner(context) || sameId(context.task.createdBy, context.user._id));
 const checkVersion = (value, version) => { if (value.version !== version) deny('VERSION_CONFLICT', 409); };
 const after = (page) => page.after.$or ? { $or: page.after.$or.map((part) => part._id ? { ...part, _id: { $lt: id(part._id.$lt) } } : part) } : {};
 const changed = (previous, fields) => Object.fromEntries(Object.entries(fields).filter(([key, value]) => JSON.stringify(previous[key]) !== JSON.stringify(value)));
@@ -102,13 +102,13 @@ export function createMongoWorkStore({ now = () => new Date(), config } = {}) {
     return value;
   }
   const labelResponse = value => ({ id: String(value._id), projectId: String(value.projectId), name: value.name, color: value.color, archivedAt: value.archivedAt, version: value.version });
-  const projectResponse = (value, context = null) => ({ id: String(value._id), workspaceId: String(value.workspaceId), createdBy: String(value.createdBy), leadId: value.leadId ? String(value.leadId) : null,
+  const projectResponse = (value, context = null) => ({ id: String(value._id), workspaceId: String(value.workspaceId), createdBy: String(value.createdBy),
     name: value.name, icon: value.icon ?? 'folder', description: value.description, state: value.state, workspaceState: context?.workspace.state ?? 'active', readOnly: context ? projectReadOnly(context.workspace, value) : value.state !== 'active', version: value.version, archivedAt: value.archivedAt, createdAt: value.createdAt, updatedAt: value.updatedAt,
-    ...(context?.access ? { accessRole: context.guest ? 'guest' : context.isLead ? 'lead' : context.access.role,
+    ...(context?.access ? { accessRole: context.guest ? 'guest' : context.access.role,
       context: { workspaceName: context.workspace.name, canOpenWorkspace: !context.guest },
-      permissions: { createTask: !projectReadOnly(context.workspace, value) && !context.guest, manageAccess: !context.guest && owner(context), manageGuests: context.workspace.state !== 'archived' && owner(context), manageLead: !projectReadOnly(context.workspace, value) && owner(context),
-        manageProject: context.workspace.state !== 'archived' && owner(context), manageLabels: !projectReadOnly(context.workspace, value) && !context.guest && (owner(context) || context.isLead), manageReopen: !projectReadOnly(context.workspace, value) && !context.guest && (owner(context) || context.isLead),
-        editDescription: !projectReadOnly(context.workspace, value) && !context.guest && (owner(context) || context.isLead || sameId(value.createdBy, context.user._id)) } } : {}) });
+      permissions: { createTask: !projectReadOnly(context.workspace, value) && !context.guest, manageAccess: !context.guest && owner(context), manageGuests: context.workspace.state !== 'archived' && owner(context),
+        manageProject: context.workspace.state !== 'archived' && owner(context), manageLabels: !projectReadOnly(context.workspace, value) && !context.guest && (owner(context)), manageReopen: !projectReadOnly(context.workspace, value) && !context.guest && (owner(context)),
+        editDescription: !projectReadOnly(context.workspace, value) && !context.guest && (owner(context) || sameId(value.createdBy, context.user._id)) } } : {}) });
   async function identity(userId, context) {
     if (!userId) return null;
     const key=String(userId); if(context.identities.has(key))return context.identities.get(key);
@@ -128,14 +128,14 @@ export function createMongoWorkStore({ now = () => new Date(), config } = {}) {
       catch (error) { if (!(error instanceof AuthError)) throw error; }
     }
     const active = !projectReadOnly(context.workspace, context.project);
-    const canEdit = !context.guest && (owner(context) || context.isLead || sameId(value.createdBy, context.user._id));
+    const canEdit = !context.guest && (owner(context) || sameId(value.createdBy, context.user._id));
     const taskLabels = await ProjectLabel.collection.find({ _id: { $in: value.labelIds ?? [] }, projectId: context.project._id, workspaceId: context.workspace._id }, { session: context.tx }).toArray();
     return { id: String(value._id), workspaceId: String(value.workspaceId), projectId: String(value.projectId), createdBy: String(value.createdBy), creator: await identity(value.createdBy, context), assignee: await identity(value.assigneeId, context), title: value.title, description: value.description, status: value.status,
       code: value.code ?? null, priority: value.priority ?? 'medium', labelIds: (value.labelIds ?? []).map(String), labels: taskLabels.map(labelResponse), checklist: value.checklist ?? [], completedAt: value.completedAt ?? null, completionTimeKnown: value.status === 'done' && Boolean(value.completedAt),
       assigneeId: value.assigneeId ? String(value.assigneeId) : null, assigneeLeft: Boolean(value.assigneeId && !current), dueAt: value.dueAt, overdue: Boolean(value.dueAt && value.dueAt < now() && value.status !== 'done'), version: value.version, createdAt: value.createdAt, updatedAt: value.updatedAt,
       pendingReopenRequestId: pending ? String(pending._id) : null,
-      permissions: { edit: active && canEdit, delete: active && canEdit, status: active && !context.guest && (value.status === 'done' ? (owner(context) || context.isLead) && !sameId(pending?.requesterId, context.user._id) : canEdit || sameId(value.assigneeId, context.user._id)),
-        requestReopen: active && value.status === 'done' && !context.guest && !pending && (sameId(value.createdBy, context.user._id) || sameId(value.assigneeId, context.user._id)), manageReopen: active && !context.guest && (owner(context) || context.isLead),
+      permissions: { edit: active && canEdit, delete: active && canEdit, status: active && !context.guest && (value.status === 'done' ? owner(context) && !pending : canEdit || sameId(value.assigneeId, context.user._id)),
+        requestReopen: active && value.status === 'done' && !context.guest && !pending && (sameId(value.createdBy, context.user._id) || sameId(value.assigneeId, context.user._id)), manageReopen: active && !context.guest && (owner(context)),
         checklistStructure: active && canEdit, checklistTick: active && !context.guest && (canEdit || sameId(value.assigneeId, context.user._id)) } };
   }
   async function emit(context, before, task, changes) {
@@ -229,14 +229,14 @@ export function createMongoWorkStore({ now = () => new Date(), config } = {}) {
     }),
     createLabel: (claims, projectId, input) => run(claims, async context => {
       context = await projectScope(context, projectId, true);
-      if (!owner(context) && !context.isLead) deny('PROJECT_MANAGEMENT_REQUIRED', 403);
+      if (!owner(context)) deny('PROJECT_MANAGEMENT_REQUIRED', 403);
       if (await ProjectLabel.collection.findOne({ projectId: context.project._id, nameKey: input.fields.nameKey }, { session: context.tx })) deny('LABEL_NAME_CONFLICT', 409);
       const label = new ProjectLabel({ ...input.fields, projectId: context.project._id, workspaceId: context.workspace._id, createdBy: context.user._id });
       await label.save({ session: context.tx }); return { label: labelResponse(label.toObject()) };
     }),
     updateLabel: (claims, projectId, labelId, input) => run(claims, async context => {
       context = await projectScope(context, projectId, true);
-      if (!owner(context) && !context.isLead) deny('PROJECT_MANAGEMENT_REQUIRED', 403);
+      if (!owner(context)) deny('PROJECT_MANAGEMENT_REQUIRED', 403);
       const label = await ProjectLabel.collection.findOne({ _id: id(labelId), projectId: context.project._id, workspaceId: context.workspace._id }, { session: context.tx });
       if (!label) deny(); checkVersion(label, input.expectedVersion);
       const { archived, ...fields } = input.fields;
@@ -278,7 +278,7 @@ export function createMongoWorkStore({ now = () => new Date(), config } = {}) {
       context = await projectScope(context, projectId);
       const target = id(userId);
       const tasks = await Task.collection.find({ projectId: context.project._id, workspaceId: context.workspace._id, deletedAt: null }, { session: context.tx, projection: { _id: 1, createdBy: 1, assigneeId: 1 } }).toArray();
-      const associated = sameId(context.project.createdBy, target) || sameId(context.project.leadId, target) || tasks.some(task => sameId(task.createdBy, target) || sameId(task.assigneeId, target)) ||
+      const associated = sameId(context.project.createdBy, target) || tasks.some(task => sameId(task.createdBy, target) || sameId(task.assigneeId, target)) ||
         Boolean(await TaskComment.collection.findOne({ taskId: { $in: tasks.map(task => task._id) }, authorId: target, deletedAt: null }, { session: context.tx, projection: { _id: 1 } }));
       const member = await WorkspaceMembership.collection.findOne({ workspaceId: context.workspace._id, userId: target }, { session: context.tx });
       const guest = await ProjectGuest.collection.findOne({ projectId: context.project._id, workspaceId: context.workspace._id, userId: target }, { session: context.tx });
@@ -287,7 +287,7 @@ export function createMongoWorkStore({ now = () => new Date(), config } = {}) {
       let status = 'unavailable', role = null, blocked = false;
       try {
         const access = await projectAccess(context.workspace, context.project, target, context.tx);
-        status = access.guest ? 'guest' : access.access.isMember ? 'active' : 'organization_management'; role = access.guest ? 'guest' : access.isLead ? 'lead' : access.access.role;
+        status = access.guest ? 'guest' : access.access.isMember ? 'active' : 'organization_management'; role = access.guest ? 'guest' : access.access.role;
       } catch (error) {
         if (!(error instanceof AuthError)) throw error;
         blocked = error.code === 'ACCESS_BANNED';
@@ -296,16 +296,6 @@ export function createMongoWorkStore({ now = () => new Date(), config } = {}) {
       return { profile: { ...await identity(target, context), status, role,
         departedAt: status === 'left_organization' ? orgMember.leftAt : status === 'left_workspace' ? member.leftAt : status === 'left_project' ? guest.revokedAt : null,
         ...(owner(context) ? { blocked } : {}) } };
-    }),
-    lead: (claims, projectId, input) => run(claims, async context => {
-      context = await projectScope(context, projectId, true);
-      if (!owner(context)) deny('OWNER_REQUIRED', 403);
-      checkVersion(context.project, input.expectedVersion);
-      if (input.leadId) await assignee(context, input.leadId);
-      const value = await update(Project, context.project, { leadId: input.leadId ? id(input.leadId) : null }, context.tx);
-      if (!sameId(context.project.leadId ?? null, value.leadId ?? null)) await new ProjectAccessAudit({ workspaceId: context.workspace._id, projectId: value._id, actorId: context.user._id,
-        targetUserId: value.leadId, previousUserId: context.project.leadId ?? null, action: 'lead_changed' }).save({ session: context.tx });
-      return { project: projectResponse(value, { ...context, isLead: context.access.isMember && sameId(value.leadId, context.user._id) }) };
     }),
     shared: (claims, page) => run(claims, async context => {
       const records = await Project.collection.aggregate([
@@ -332,7 +322,7 @@ export function createMongoWorkStore({ now = () => new Date(), config } = {}) {
           { $group: { _id: '$projectId', total: { $sum: 1 }, done: { $sum: { $cond: [{ $eq: ['$status', 'done'] }, 1, 0] } } } }], { session: context.tx }).toArray();
         return { ...paged(records, page.limit, value => {
           const summary = summaries.find(row => sameId(row._id, value._id)) ?? { total: 0, done: 0 };
-          return { ...projectResponse(value, { ...context, isLead: context.access.isMember && sameId(value.leadId, context.user._id) }), taskSummary: { scope: 'whole_project', total: summary.total, done: summary.done, progressPercent: summary.total ? Math.round(summary.done / summary.total * 10000) / 100 : 0 } };
+          return { ...projectResponse(value, context), taskSummary: { scope: 'whole_project', total: summary.total, done: summary.done, progressPercent: summary.total ? Math.round(summary.done / summary.total * 10000) / 100 : 0 } };
         }), total: await Project.collection.countDocuments(criteria, { session: context.tx }) };
     }),
     createProject: (claims, workspaceId, input) => run(claims, async (context) => {
@@ -369,7 +359,7 @@ export function createMongoWorkStore({ now = () => new Date(), config } = {}) {
     updateProject: (claims, projectId, input) => run(claims, async (context) => {
       context = await projectScope(context, projectId, true);
       const descriptionOnly = Object.keys(input.fields).every(key => key === 'description');
-      if (context.guest || (!owner(context) && !(descriptionOnly && (context.isLead || sameId(context.project.createdBy, context.user._id))))) deny('OWNER_REQUIRED', 403);
+      if (context.guest || (!owner(context) && !(descriptionOnly && (sameId(context.project.createdBy, context.user._id))))) deny('OWNER_REQUIRED', 403);
       checkVersion(context.project, input.expectedVersion);
       return { project: projectResponse(await update(Project, context.project, input.fields, context.tx), context) };
     }),
@@ -465,11 +455,11 @@ export function createMongoWorkStore({ now = () => new Date(), config } = {}) {
       if (context.guest || (!editor(context) && !sameId(context.task.assigneeId, context.user._id))) deny('TASK_STATUS_FORBIDDEN', 403);
       checkVersion(context.task, input.expectedVersion);
       if (context.task.status === 'done' && input.status !== 'done') {
-        if (!owner(context) && !context.isLead) deny('REOPEN_APPROVAL_REQUIRED', 403);
+        if (!owner(context)) deny('REOPEN_APPROVAL_REQUIRED', 403);
         if (!input.reason) deny('REOPEN_REASON_REQUIRED', 400);
         await reconcileReopenRequests({ taskId: context.task._id }, now(), context.tx);
         const pending = await TaskReopenRequest.collection.findOne({ taskId: context.task._id, state: 'pending' }, { session: context.tx });
-        if (pending && sameId(pending.requesterId, context.user._id)) deny('REOPEN_SELF_REVIEW_FORBIDDEN', 403);
+        if (pending) deny(sameId(pending.requesterId, context.user._id) ? 'REOPEN_SELF_REVIEW_FORBIDDEN' : 'REOPEN_REQUEST_PENDING', sameId(pending.requesterId, context.user._id) ? 403 : 409);
         return { task: await taskResponse(await applyReopen(context, input.status, input.reason), context) };
       }
       const fields = { status: input.status };

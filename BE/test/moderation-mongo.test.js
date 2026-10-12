@@ -116,7 +116,7 @@ test('C3 scoped Ban, hard Comment moderation and cleanup jobs on MongoDB', { ski
       assert.equal(await TaskComment.collection.countDocuments({ _id: O(spam[0].id) }), 0);
     });
     await t.test('Project Member Ban overrides Creator/Assignee/Lead without blocking other Projects', async () => {
-      await work.lead(auths[0], a.id, { leadId: uid(3), expectedVersion: await parentVersion('project', a.id) });
+      await Project.collection.updateOne({ _id: O(a.id) }, { $set: { leadId: users[3]._id } });
       await ban(2, 'project', a.id, 3);
       await assert.rejects(work.getTask(auths[3], taskA.id), { code: 'ACCESS_BANNED' });
       await assert.rejects(work.updateTask(auths[3], taskA.id, { title: 'Creator bypass', expectedVersion: 0 }), { code: 'ACCESS_BANNED' });

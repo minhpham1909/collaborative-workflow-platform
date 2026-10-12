@@ -9,7 +9,7 @@ const deny = (code, status = 409) => { throw new AuthError(code, status); };
 const after = page => page.after.$or ? { $or: page.after.$or.map(part => part._id ? { ...part, _id: { $lt: id(part._id.$lt) } } : part) } : {};
 
 export function createReopenStore({ run, taskScope, projectScope, owner, checkVersion, now, identity, taskResponse, applyReopen }) {
-  const manager = context => !context.guest && (owner(context) || context.isLead);
+  const manager = context => !context.guest && (owner(context));
   const participant = context => !context.guest && [context.task.createdBy, context.task.assigneeId].some(value => sameId(value, context.user._id));
   async function response(value, context) {
     return { id: String(value._id), taskId: String(value.taskId), projectId: String(value.projectId), requester: await identity(value.requesterId, context),
