@@ -1,5 +1,6 @@
 import { projectText } from './project-text.js';
 const english = {
+  "Thông báo": "Notifications",
   "Bảng công việc": "Task board",
   "Làm mới công việc": "Refresh tasks",
   "+ Tạo Task": "+ Create task",

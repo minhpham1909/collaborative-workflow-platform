@@ -1,0 +1,4 @@
+.collection-view { display:flex; flex-wrap:wrap; gap:4px; width:fit-content; margin:12px 0; padding:4px; border:1px solid var(--wf-border); border-radius:14px; background:var(--wf-surface); }
+.collection-view button { display:inline-flex; align-items:center; gap:6px; min-height:44px; border:0; background:transparent; color:var(--wf-muted); }
+.collection-view button[aria-pressed=true] { color:var(--wf-on-accent); background:var(--wf-primary); }
+.collection-view .ui-icon { width:18px; height:18px; }

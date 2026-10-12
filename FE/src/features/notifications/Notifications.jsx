@@ -1,3 +1,5 @@
+import CollectionView,{useCollectionView} from '../../components/CollectionView.jsx';
+import {rememberInboxPosition,takeInboxPosition} from './inbox-position.js';
 import { useAuthLocale } from '../auth/AuthLocale.jsx';
 import { workflowText } from '../../lib/workflow-text.js';
 import {
@@ -134,6 +136,7 @@ export function InboxBadge({ api, userId }) {
 export default function Notifications({ api, id, user }) {
   const { locale } = useAuthLocale();
   const tr = (value, values) => workflowText(value, locale, values);
+  const [view,setView]=useCollectionView(user.id,'notifications',['detailed','compact'],'detailed');
   const [read, setRead] = useState(()=>inboxFilters().read),
     [category, setCategory] = useState(()=>inboxFilters().category),
     [q, setQ] = useState(()=>inboxFilters().q),
@@ -159,6 +162,8 @@ export default function Notifications({ api, id, user }) {
     ...(from ? { from } : {}),
     ...(to ? { to } : {}),
   }).toString();
+  const [returnPosition]=useState(()=>!id?takeInboxPosition(user.id,query):null);
+  const restored=useRef(false),restorationReady=useRef(false);
   useEffect(()=>{if(!id)history.replaceState(history.state,'','#notifications?'+query);},[id,query]);
   useEffect(()=>{if(id)return;const sync=()=>{if(location.hash.split('?')[0]!=='#notifications')return;const values=inboxFilters();setRead(values.read);setCategory(values.category);setQ(values.q);setFrom(values.from);setTo(values.to);};window.addEventListener('hashchange',sync);return()=>window.removeEventListener('hashchange',sync);},[id]);
   async function load(cursor = null, token = generation.current) {
@@ -172,6 +177,15 @@ export default function Notifications({ api, id, user }) {
               query +
               (cursor ? "&cursor=" + encodeURIComponent(cursor) : ""),
       );
+      if (!cursor && !id && returnPosition && !restored.current && returnPosition.query===query) {
+        let pages=1;
+        while(result.nextCursor && pages<returnPosition.pages && token===generation.current){
+          const more=await api.request('/notifications?'+query+'&cursor='+encodeURIComponent(result.nextCursor));
+          result.items=[...result.items,...more.items].filter((v,i,a)=>a.findIndex(x=>x.id===v.id)===i);
+          result.nextCursor=more.nextCursor;pages++;
+        }
+        if(token===generation.current)restorationReady.current=true;
+      }
       if (token === generation.current) {
         setLoaded(query);
         setData((old) =>
@@ -210,6 +224,19 @@ export default function Notifications({ api, id, user }) {
       generation.current++;
     };
   }, [id, query, revision]);
+  useEffect(()=>{
+    if(id||busy||!data||!restorationReady.current||restored.current)return;
+    restored.current=true;
+    const frame=requestAnimationFrame(()=>{
+      const anchor=document.querySelector('[data-note-id="'+returnPosition.anchorId+'"]');
+      window.scrollTo(0,anchor?anchor.getBoundingClientRect().top+window.scrollY-returnPosition.offset:returnPosition.scrollY);
+    });return()=>cancelAnimationFrame(frame);
+  },[id,busy,data]);
+  function remember(event,note){
+    if(id||event.button!==0||event.ctrlKey||event.metaKey||event.shiftKey||event.altKey)return;
+    const rect=event.currentTarget.closest('[data-note-id]').getBoundingClientRect();
+    rememberInboxPosition(user.id,query,note.id,rect.top,window.scrollY,data.items.length);
+  }
   async function mutate(path, body, kind) {
     if (pending.current || uncertain) return;
     pending.current = true;
@@ -248,9 +275,10 @@ export default function Notifications({ api, id, user }) {
       <article
         className={"notification-row studio-note category-"+note.category + (!note.readAt ? " unread" : "")}
         key={note.id}
+        data-note-id={note.id}
       >
         <span className="note-icon" aria-hidden="true"><Icon name={noteIcon(note)}/></span><div className="note-body">
-        <div className="note-category">{categories[note.category] ?? tr("Thông báo")}</div>
+        <div className="note-category">{tr(categories[note.category] ?? "Thông báo")}</div>
         <p className="muted">
           {note.readAt ? tr("Đã đọc") : tr("● Chưa đọc")} ·{" "}
           {new Date(note.createdAt).toLocaleString(locale === "en" ? "en-GB" : "vi-VN", {
@@ -259,7 +287,7 @@ export default function Notifications({ api, id, user }) {
         </p>
         <Content note={note} />
         <div className="buttons">
-          {!id && <a href={`#notification/${note.id}?returnTo=${encodeURIComponent('#notifications?'+query)}`}>{tr("Xem chi tiết")}</a>}
+          {!id && <a onClick={event=>remember(event,note)} href={`#notification/${note.id}?returnTo=${encodeURIComponent('#notifications?'+query)}`}>{tr("Xem chi tiết")}</a>}
           {!note.readAt && (
             <button
               disabled={mutating || busy || uncertain}
@@ -269,7 +297,7 @@ export default function Notifications({ api, id, user }) {
             >{tr("Đánh dấu đã đọc")}</button>
           )}
           {note.available && note.target?.type === "task" && (
-            <a href={`#task/${note.target.taskId}`}>{tr("Mở Task →")}</a>
+            <a onClick={event=>remember(event,note)} href={`#task/${note.target.taskId}?returnTo=${encodeURIComponent(id?inboxReturn():'#notifications?'+query)}`}>{tr("Mở Task →")}</a>
           )}
           {note.available && note.target?.type === "workspace" && (
             <a href={`#workspace/${note.target.workspaceId}`}>{tr("Mở Workspace →")}</a>
@@ -311,7 +339,7 @@ export default function Notifications({ api, id, user }) {
     );
   }
   return (
-    <main className="studio-notifications">
+    <main className={'studio-notifications '+(!id?'notification-view-'+view:'')}>
       {id && (
         <p className="breadcrumbs">
           <a href={inboxReturn()}>{tr("Thông báo")}</a> / {tr("Chi tiết")}
@@ -355,6 +383,7 @@ export default function Notifications({ api, id, user }) {
       </section>
       {!id && (
         <>
+          <CollectionView view={view} onChange={setView} locale={locale}/>
           <div className="notification-quick" aria-label={tr("Lọc nhanh thông báo")}>{[['all',tr("Tất cả thông báo")],['unread',tr("Chưa đọc")],['read',tr("Đã đọc")]].map(([value,label])=><button key={value} disabled={mutating} aria-pressed={read===value} onClick={()=>filter(setRead,value,read)}>{tr(label)}</button>)}</div>
           <fieldset className="notification-filter-fields" disabled={mutating}><FilterPanel locale={locale} compact advancedLabel={tr("Lọc nâng cao")}>
             <label>{tr("Trạng thái đọc")}<select
@@ -432,7 +461,7 @@ export default function Notifications({ api, id, user }) {
           row(data.notification)
         ) : (
           <>
-            {[[false,tr("Mới và chưa đọc")],[true,tr("Đã đọc trước đó")]].map(([isRead,label])=>{const items=data.items.filter(note=>Boolean(note.readAt)===isRead);return items.length?<section className="notification-group" key={tr(label)} aria-label={tr(label)}><div className="notification-group-heading"><h2>{tr(label)}</h2><p>{items.length} mục đã tải</p></div>{items.map(row)}</section>:null;})}
+            {[[false,tr("Mới và chưa đọc")],[true,tr("Đã đọc trước đó")]].map(([isRead,label])=>{const items=data.items.filter(note=>Boolean(note.readAt)===isRead);return items.length?<section className="notification-group" key={tr(label)} aria-label={tr(label)}><div className="notification-group-heading"><h2>{tr(label)}</h2><p>{tr("{count} mục đã tải", {count:items.length})}</p></div>{items.map(row)}</section>:null;})}
             {!data.items.length && (
               <EmptyState>
                 <h2>{tr("Không có thông báo phù hợp")}</h2>
