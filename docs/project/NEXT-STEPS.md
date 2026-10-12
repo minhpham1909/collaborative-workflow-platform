@@ -1,5 +1,7 @@
 # Trạng thái và bước tiếp theo
 
+12/10/2026 — **R4 integrated Home hero đạt**: slider ảnh là nền trong banner, caption/controls gọn, greeting/CTA đọc được cả sáng/tối; keyboard/reduced-motion/missing image và20states Vi/En/5width, HomeS1/FE23/build budgetPASS. [QA](../qa/UI-HOME-HERO-R4-CHECK.md). Tiếp R5 density có đo trước/sau; chưaM2–M4.
+
 12/10/2026 — **Patch đồng bộ màu management/toàn site đạt gate mở rộng**: token tại nguồn CSS cho tab/form/panel/editor/dialog; color policy chống literal màu ngoài palette. QA thật 24 màn/tab mỗi Light/Dark (không ghi nghiệp vụ), 12 regression management, Auth Light/Dark, 8 W2 journeys Việt–Anh desktop/mobile, theme foundation/5width, FE23/23/build budget PASS. [Chi tiết QA](../qa/UI-COLOR-CONSISTENCY-CHECK.md). Các lỗi màu trong ảnh đã sửa; tiếp R4 slider trong banner và R5 density, rồi M2–M4. Giữ dữ liệu/quyền, không worker/provider/backfill/deploy.
 
 12/10/2026 — **R1–R3 patch sửa lỗi theme đạt scoped gate**: semantic hero/empty/badge/cards, Task metadata/comment/editor/dialog; fixShared stretched-link chặnRefresh, Org gradient/Team hover vàlow/mint contrast. 8Light–Dark×Vi–En×1440/375fixture journeys +QA11dark screens/5width contrast/draft, FE22/22/S7a/build budgetPASS. [QA repair](../qa/UI-M1-REPAIR-CHECK.md). Tiếp R4 integrated hero vàR5 density, rồiM2–M4; khôngsuy mọi flow/WCAG/provider từgate này. Khôngdata nghiệp vụ/worker/backfill hoặcfeature mới; commit từngpatch vàpushdev.

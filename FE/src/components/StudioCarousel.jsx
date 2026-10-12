@@ -11,12 +11,14 @@ export default function StudioCarousel({ locale = 'vi' }) {
   return <figure className="studio-carousel" role="group" aria-roledescription={en ? 'image carousel' : 'slider ảnh'} aria-label={en ? 'Creative workspace illustrations' : 'Ảnh minh họa không gian sáng tạo'}>
     <div className="studio-carousel-photo" id={id}>
       <img key={scene[0]} src={'/images/studio/'+scene[0]+'.jpg'} alt="" width="720" height="300" loading="lazy" fetchPriority="low" onError={event=>{event.currentTarget.hidden=true;}} />
-      <figcaption aria-live="polite" aria-atomic="true"><small>{en ? 'ILLUSTRATION' : 'ẢNH MINH HỌA'}</small><strong>{scene[en ? 2 : 1]}</strong></figcaption>
     </div>
+    <figcaption className="studio-carousel-chrome">
+      <div className="studio-carousel-caption" aria-live="polite" aria-atomic="true"><small>{en ? 'ILLUSTRATION' : 'ẢNH MINH HỌA'}</small><strong>{scene[en ? 2 : 1]}</strong></div>
     <div className="studio-carousel-controls">
       <button type="button" aria-label={en ? 'Previous illustration' : 'Ảnh minh họa trước'} aria-controls={id} onClick={()=>setIndex(value=>(value+scenes.length-1)%scenes.length)}><Icon name="chevron-left" /></button>
       <span>{index+1}/{scenes.length}</span>
       <button type="button" aria-label={en ? 'Next illustration' : 'Ảnh minh họa tiếp theo'} aria-controls={id} onClick={()=>setIndex(value=>(value+1)%scenes.length)}><Icon name="chevron-right" /></button>
     </div>
+    </figcaption>
   </figure>;
 }

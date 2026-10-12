@@ -87,3 +87,5 @@ Các route quan sát: Home, Organizations, Organization detail, Workspace, Proje
 ## Follow-up management — 12/10/2026
 
 Ảnh mới của user cho thấy Workspace tabs/membership/settings/email còn nền trắng trong dark. Đã sửa CSS tại nguồn sang semantic palette, kiểm Workspace độc lập/trực thuộc, Organization Team/audit/management, Project management, Settings và các route chính. [QA đồng bộ màu](../qa/UI-COLOR-CONSISTENCY-CHECK.md). R4 slider trong banner và R5 density chưa thực hiện trong patch màu này.
+
+R4 hoàn tất12/10: ảnh là lớp nền của banner với scrim và controls bên trong; [QA20states + Home regression](../qa/UI-HOME-HERO-R4-CHECK.md). R5 còn pending.
