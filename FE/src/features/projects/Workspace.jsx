@@ -1,3 +1,4 @@
+import {ProjectPinButton} from '../../components/ProjectPins.jsx';
 import { useAuthLocale } from '../auth/AuthLocale.jsx';
 import { workspaceText } from '../../lib/workspace-text.js';
 import {
@@ -352,7 +353,7 @@ export default function Workspace({ api, id }) {
                         timeZone: "Asia/Ho_Chi_Minh",
                       })}
                     </p>
-                    <div className="project-card-actions"><span className="card-link pill-link" aria-hidden="true">{item.readOnly ? t("Xem Dự án") : t("Vào Bảng Kanban")} <Icon name="chevron-right" /></span>
+                    <div className="project-card-actions"><ProjectPinButton projectId={item.id}/><span className="card-link pill-link" aria-hidden="true">{item.readOnly ? t("Xem Dự án") : t("Vào Bảng Kanban")} <Icon name="chevron-right" /></span>
                     {!item.readOnly && item.permissions?.manageProject && <button aria-label={t("Sửa tên và biểu tượng {name}", { name: item.name })} onClick={() => setEditing(item)}>{t("Chỉnh sửa")}</button>}</div>
                   </div>
                 </article>

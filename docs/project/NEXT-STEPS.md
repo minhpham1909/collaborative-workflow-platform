@@ -1,5 +1,7 @@
 # Trạng thái và bước tiếp theo
 
+12/10/2026 — **M2 Project pins đạt**: personal max20/newest-first, same current-access guard, Archive readonly/Guest/OrgAdmin, unavailable metadata redacted but removable; sidebar/mobile vào Kanban, card/header toggle intent, loading/error/readback. BE119integration/67unit, FE23, browser8cases vàWorkspace/W2 regressions/build budgetPASS. [QA](../qa/UI-PROJECT-PINS-M2-CHECK.md). API local đã restart riêng; read-only QA smokePASS, không pin/seed data thật hoặc mở workers. Tiếp M3a Notifications view modes.
+
 12/10/2026 — **R5 fluid/density đạt; R1–R5 repair đóng trong scope**: sidebar224/header71/main fluid, grid tự phân cột/card gọn, body14px; trước/sau63states9clusters7width, Home/Board/Task regressions5width, banner20states, W2 DarkEN375/LightVI1440 vàFE23/build budgetPASS. [QA số đo](../qa/UI-DENSITY-R5-CHECK.md). Tiếp M2 pin Project cá nhân, rồi M3 list modes và M4 lịch; khôngproviders/workers/devbusinesswrites/deploy.
 
 12/10/2026 — **R4 integrated Home hero đạt**: slider ảnh là nền trong banner, caption/controls gọn, greeting/CTA đọc được cả sáng/tối; keyboard/reduced-motion/missing image và20states Vi/En/5width, HomeS1/FE23/build budgetPASS. [QA](../qa/UI-HOME-HERO-R4-CHECK.md). Tiếp R5 density có đo trước/sau; chưaM2–M4.

@@ -9,6 +9,7 @@ import "./foundation.css";
 import "./theme.css";
 import "./features/workspaces/home.css";
 import "./density.css";
+import "./project-pins.css";
 import "./features/organizations/organizations.css";
 import NotificationProvider from "./components/NotificationProvider.jsx";
 import {AuthLocaleProvider} from './features/auth/AuthLocale.jsx';

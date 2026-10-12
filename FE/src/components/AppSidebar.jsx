@@ -1,3 +1,4 @@
+import {ProjectPinsNav} from './ProjectPins.jsx';
 import { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import Icon from './Icon.jsx';
@@ -25,6 +26,7 @@ export default function AppSidebar({ route, user, api, mobileOpen, closeMobile }
         return <a key={kind} href={'#' + kind} className={active ? 'active' : ''} aria-current={active ? (route.kind === kind ? 'page' : 'location') : undefined}><Icon name={icon} /><span>{label}</span>{kind === 'notifications' && <InboxBadge key={user.id} api={api} userId={user.id} />}</a>;
       })}
     </nav>
+    <ProjectPinsNav route={route}/>
     <div className="sidebar-bottom"><p>{t('Một nơi cho những ý tưởng và công việc cùng tiến lên.')}</p></div>
   </>;
   return <>

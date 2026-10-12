@@ -7,7 +7,7 @@
 | M1a | Lucide, Tailwind prefix/no Preflight; metadata cùng hàng và density My Tasks | Đạt; commit33550fa |
 | M1b | System/Light/Dark, menu tài khoản, dark palette/core screens | R1–R3 đạt; bổ sung patch đồng bộ màu management/toàn site: token tại nguồn + Light/Dark regression; xem QA color consistency |
 | M1c | Home ảnh/slider local, density và motion | R4 hero và R5 fluid/density đạt; xem QA riêng từng patch |
-| M2 | Ghim Project cá nhân: BE persistence/current access, sidebar truy cập trực tiếp Kanban, Archived/mất quyền | Chưa triển khai |
+| M2 | Ghim Project cá nhân: BE persistence/current access, sidebar truy cập trực tiếp Kanban, Archived/mất quyền | Đạt; max20, redaction/unpin, Guest/Org access,8 browser cases; xem QA M2 |
 | M3a | Notifications Chi tiết/Thu gọn, nhớ cách xem, giữ read/filter/cursor và return position | Chưa triển khai |
 | M3b | Shared view controls áp từng collection; Team/audit giữ bảng phù hợp, lazy-load có fallback/guard | Chưa triển khai |
 | M4 | Lịch cá nhân riêng: deadline GMT+7, day counts đầy đủ từ BE, list ngày paged, Task panel, không hạn/readonly | Chưa triển khai |
@@ -21,3 +21,5 @@ Tiếp kiểm theme/spacing/state theo các cụm Workspace/Project/Task/Team tr
 R4 đã đạt: [QA banner Home](../qa/UI-HOME-HERO-R4-CHECK.md). Slider hiện là nền trong banner, manual và không đổi dữ liệu/API. Tiếp R5 đo trước/sau layout ở100%.
 
 R5 đạt: [QA số đo khung/density](../qa/UI-DENSITY-R5-CHECK.md). Main fluid/sidebar224/header71, grid theo vùng hiện có, font14 và dữ liệu giữ nguyên. Vòng repair R1–R5 kết thúc trong scope đã kiểm; bước kế là M2 pin cá nhân, chưa triển khai.
+
+M2 đã đạt: [contract](../ui-ux/PROJECT-PINS-M2-CONTRACT.md) và [QA](../qa/UI-PROJECT-PINS-M2-CHECK.md). Tiếp M3a Notifications Chi tiết/Thu gọn, sau đó M3b collection modes và M4 calendar.

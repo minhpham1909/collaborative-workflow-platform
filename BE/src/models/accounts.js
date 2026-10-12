@@ -20,8 +20,9 @@ export const userSchema = coreSchema({
   emailVerifiedAt: nullableDate(), locale: { type: String, enum: ['vi', 'en', null], default: null },
   emailPreferences: { type: emailPreferences, required: true, default: () => ({}) },
   termsAcceptance: { type: nested({ version: singleLine(100), acceptedAt: { type: Date, required: true } }), required: true },
+  projectPins: { type: [ref('Project')], default: [], validate: value => value.length <= 20 && new Set(value.map(String)).size === value.length },
   authVersion: integer(), authMutationRevision: integer(),
-}, { privateFields: ['passwordHash', 'emailCanonical', 'authVersion', 'authMutationRevision'] });
+}, { privateFields: ['passwordHash', 'emailCanonical', 'authVersion', 'authMutationRevision', 'projectPins'] });
 userSchema.pre('validate', function () {
   try { this.emailCanonical = canonicalEmail(this.email); } catch (error) { this.invalidate('email', error.message); }
   if (this.avatar?.source === 'google') {

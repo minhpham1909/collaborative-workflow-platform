@@ -1,3 +1,4 @@
+import {ProjectPinsProvider} from '../components/ProjectPins.jsx';
 import RouteFrame from '../components/RouteFrame.jsx';
 import { InlineMessage, LoadingState } from "../components/Feedback.jsx";
 import EmailVerificationActions from "../components/EmailVerificationActions.jsx";
@@ -180,6 +181,7 @@ export default function App() {
     return <Login api={api} connectionError={error} retry={start} />;
   }
   return (
+    <ProjectPinsProvider key={user.id} api={api} userId={user.id} verified={user.emailVerified} routeKey={route.kind+(route.id??'')}>
     <div className="shell">
       <AppSidebar route={route} user={user} api={api} mobileOpen={mobileOpen} closeMobile={closeMobile} />
       <div className="shell-content">
@@ -257,5 +259,6 @@ export default function App() {
         <AppFooter />
       </div>
     </div>
+    </ProjectPinsProvider>
   );
 }

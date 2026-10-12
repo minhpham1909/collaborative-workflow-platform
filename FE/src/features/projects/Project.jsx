@@ -1,3 +1,4 @@
+import {ProjectPinButton} from '../../components/ProjectPins.jsx';
 import { useAuthLocale } from '../auth/AuthLocale.jsx';
 import { projectText } from '../../lib/project-text.js';
 import { InlineMessage, LoadingState } from "../../components/Feedback.jsx";
@@ -171,6 +172,7 @@ export default function Project({ api, id, user, section }) {
               </span>
             </div>
             <div className="buttons">
+              <ProjectPinButton projectId={id}/>
               <button
                 disabled={busy || editingDescription || taskComposing}
                 onClick={() => {

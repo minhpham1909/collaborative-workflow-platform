@@ -1,3 +1,4 @@
+import {ProjectPinButton} from '../../components/ProjectPins.jsx';
 import { useAuthLocale } from '../auth/AuthLocale.jsx';
 import { projectText } from '../../lib/project-text.js';
 import { useEffect, useRef, useState } from "react";
@@ -51,6 +52,7 @@ export default function SharedProjects({ api }) {
           <span className={`badge state-${project.state}`}>{project.state === "archived" ? tr("Đã lưu trữ · Chỉ đọc") : tr("Đang hoạt động")}</span>
           <h2><a className="surface-link" href={`#project/${project.id}`}><Icon name={project.icon ?? "folder"} /> {project.name}</a></h2>
           <p>{project.context?.workspaceName}</p><p>{project.description?.plainText || tr("Project chưa có mô tả.")}</p>
+          <ProjectPinButton projectId={project.id}/>
           <p>{project.accessRole === "guest" ? tr("Guest · Xem và bình luận") : tr("Bạn có thêm quyền từ membership hiện tại.")}</p>
         </article>
       ))}</div>}

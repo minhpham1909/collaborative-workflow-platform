@@ -327,6 +327,30 @@ export function createMongoWorkStore({ now = () => new Date(), config } = {}) {
       const project = new Project({ ...input.fields, workspaceId: context.workspace._id, createdBy: context.user._id });
       await project.save({ session: context.tx }); return { project: projectResponse(project.toObject()) };
     }),
+    pins: claims => run(claims, async context => {
+      const items = [];
+      for (const projectId of context.user.projectPins ?? []) {
+        try {
+          const scope = await projectScope(context, String(projectId));
+          items.push({ projectId: String(projectId), available: true, name: scope.project.name, icon: scope.project.icon,
+            workspaceId: String(scope.workspace._id), workspaceName: scope.workspace.name,
+            readOnly: projectReadOnly(scope.workspace, scope.project) });
+        } catch (error) {
+          if (!(error instanceof AuthError) || (error.status !== 404 && error.code !== 'ACCESS_BANNED')) throw error;
+          // Keep the personal mark removable, without cached names or scope data.
+          items.push({ projectId: String(projectId), available: false });
+        }
+      }
+      return { items, limit: 20 };
+    }),
+    setPin: (claims, projectId, pinned) => run(claims, async context => {
+      if (pinned) await projectScope(context, projectId); // Read access, including Archived and Guest.
+      const pins = context.user.projectPins ?? [], exists = pins.some(value => sameId(value, projectId));
+      if (pinned && !exists && pins.length >= 20) deny('PIN_LIMIT_REACHED', 409);
+      const next = pinned ? (exists ? pins : [id(projectId), ...pins]) : pins.filter(value => !sameId(value, projectId));
+      await User.collection.updateOne({ _id: context.user._id }, { $set: { projectPins: next } }, { session: context.tx });
+      return { projectId, pinned };
+    }),
     getProject: (claims, projectId) => run(claims, async (context) => { context = await projectScope(context, projectId); return { project: projectResponse(context.project, context) }; }),
     updateProject: (claims, projectId, input) => run(claims, async (context) => {
       context = await projectScope(context, projectId, true);

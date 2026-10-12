@@ -24,7 +24,8 @@
         "authVersion": "Integer",
         "authMutationRevision": "Integer",
         "version": "Integer",
-        "updatedAt": "Date"
+        "updatedAt": "Date",
+        "projectPins": "ObjectId[]: personal Project IDs, unique, max 20, newest pin first; missing legacy field means empty; metadata/access resolved on read"
       },
       "privateFields": [
         "passwordHash",

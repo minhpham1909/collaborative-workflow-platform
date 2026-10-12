@@ -5,6 +5,12 @@ import { projectQuery } from './project-query.js';
 
 export function createWorkService({ store }) {
   return {
+    pins: (auth, query) => { inputObject(query, []); return store.pins(auth.claims); },
+    setPin: async (auth, projectId, input) => {
+      inputObject(input, ['pinned']); if (typeof input.pinned !== 'boolean') fail();
+      const result = await store.setPin(auth.claims, objectId(projectId), input.pinned);
+      return { ...result, ...await store.pins(auth.claims) };
+    },
     trash: (auth, projectId, query) => store.trash(auth.claims, objectId(projectId), pageInput(query, 'deletedAt')),
     restore: (auth, taskId, input) => store.restore(auth.claims, objectId(taskId), versionInput(input)),
     requestReopen: (auth, taskId, input) => store.requestReopen(auth.claims, objectId(taskId), reopenInput(input)),

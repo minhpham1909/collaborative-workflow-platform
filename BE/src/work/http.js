@@ -5,7 +5,7 @@ import { originPolicy, requestError } from '../http/policy.js';
 
 export function createWorkRouter({ service, authService, config }) {
   const router = express.Router({ caseSensitive: true, strict: true });
-  router.use((req, _res, next) => /^\/(?:projects(?:\/|$)|shared-projects(?:\/|$)|tasks(?:\/|$)|my-tasks(?:\/|$)|workspaces\/[^/]+\/projects(?:\/|$))/u.test(req.path) ? next() : next('router'));
+  router.use((req, _res, next) => /^\/(?:projects(?:\/|$)|project-pins(?:\/|$)|shared-projects(?:\/|$)|tasks(?:\/|$)|my-tasks(?:\/|$)|workspaces\/[^/]+\/projects(?:\/|$))/u.test(req.path) ? next() : next('router'));
   router.use(originPolicy({ webOrigin: config.webOrigin, methods: ['GET', 'POST', 'PATCH'] }));
   router.use(createRateLimiter());
   router.use(express.json({ limit: '256kb', strict: true }));
@@ -14,6 +14,8 @@ export function createWorkRouter({ service, authService, config }) {
   const route = (method, path, call, code = 200) => router[method](path, async (req, res) => res.status(code).json(await call(req)));
   route('get', '/workspaces/:workspaceId/projects', (r) => service.projects(r.auth, r.params.workspaceId, r.query));
   route('post', '/workspaces/:workspaceId/projects', (r) => service.createProject(r.auth, r.params.workspaceId, r.body), 201);
+  route('get', '/project-pins', r => service.pins(r.auth, r.query));
+  route('patch', '/projects/:projectId/pin', r => service.setPin(r.auth, r.params.projectId, r.body));
   route('get', '/projects/:projectId', (r) => service.getProject(r.auth, r.params.projectId));
   route('get', '/projects/:projectId/trash', (r) => service.trash(r.auth, r.params.projectId, r.query));
   route('get', '/projects/:projectId/statistics', (r) => service.statistics(r.auth, r.params.projectId, r.query));
