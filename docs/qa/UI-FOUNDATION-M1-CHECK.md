@@ -2,6 +2,10 @@
 
 12/10/2026. Theo yêu cầu dùng thư viện UI/icon, hỗ trợ sáng–tối, ảnh/slider và giảm khoảng trống. Áp dụng skill ui-ux vào codebase hiện có, giữ nhận diện Stitch/Jakarta/kem–tím. Mỗi patch có commit riêng; không thay quyền hoặc nghiệp vụ Task.
 
+## Mở lại gate visual theo feedback12/10
+
+Người dùng cung cấp lỗi Shared Projects hero/empty, Task metadata và comment empty trong dark; yêu cầu slider là lớp nền trong banner và bố cục tận dụng màn rộng. Các PASS chuyển theme/overflow/metadata/control trước không chứng minh các vùng này đã đúng. M1b/M1c visual acceptance mở lại; chưa sửa product trong lượt review. [Task R1–R5](../ui-ux/M1-VISUAL-REVIEW-R1.md). Giữ phần dưới như lịch sử phạm vi kiểm, không coi là nghiệm thu đầy đủ dark mode.
+
 ## Các thay đổi
 
 - Lucide React 1.55.0: thay SVG tự viết qua wrapper Icon, giữ toàn bộ tên gọi hiện có, static imports; SVG trang trí aria-hidden và focusable=false. Icon điều hướng/metadata/theme có màu theo vai trò.
