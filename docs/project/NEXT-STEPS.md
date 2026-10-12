@@ -1,5 +1,7 @@
 # Trạng thái và bước tiếp theo
 
+12/10/2026 — **W2b account QA đạt scoped gate**: theo yêu cầu mới, seed riêng `[QA-PEPE]` cho `pepe19092003@gmail.com` trên dev27018, giữ dữ liệu cũ và credentials/settings. 1 Studio/4 Workspace/5 Project/30 Task/17 comment/24 notification mô phỏng; browser local 19 nhóm PASS + FE21/21. Còn 2 Task trash, 11 notification chưa đọc; QA EmailOutbox0, seed chạy lại không trùng. [Báo cáo](../qa/WEB-ACCEPTANCE-ACCOUNT-QA.md). Giữ dữ liệu để người dùng thử; tiếp tài khoản bổ sung và role ở lượt riêng theo yêu cầu. Không SMTP/old queues/purge/backfill/deploy/CI-CD. Session QA tách riêng và thu hồi sau kiểm.
+
 11/10/2026 — **W2 browser journey đạt scoped gate**: UIOrg→Workspace→Project→Task→MyTasks→Inbox→Guest→Trash/restore;4caseVi/En×1440/375 builtpreview tuần tựPASS vàHome/Org/ManageAudit/Workspace regressionsPASS. [QA](../qa/WEB-ACCEPTANCE-W2-CHECK.md). Ghi riêng resource/moduleerrors khi chạy song song, khôngđánh giá load/capacity từfixture. Tiếp nghiệmthu web thực tế vàlỗi tái hiện; chưadeploy/CI-CD/provider/worker/devwrites.
 
 11/10/2026 — **Ưu tiên nghiệm thu web, hoãn chuyển sang deploy/CI-CD theo yêu cầu người dùng**. W0 localFE/API/DB ready, W1network/picker/TeamVi-En PASS; sửa selectors test cũ, không đổi businesscode. TiếpW2cross-role/manual-use acceptance theo [planweb](WEB-ACCEPTANCE-PLAN.md). GateS12technical khôngthayuser acceptance. Khôngworkers/oldqueues/backfill/devbusinesswrites.

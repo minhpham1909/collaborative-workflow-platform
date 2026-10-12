@@ -20,7 +20,13 @@ Hai script network/picker dùng tên nút/filter cũ (+TạoWorkspace, +TạoPro
 
 Kiểm xuyên cụm Auth → Home/Org/Workspace → Project/Task → MyTasks/Inbox/Trash, theo Owner/Admin/Manager/Lead/Member/Assignee/Guest. So sánh kết quả hiển thị với quyền/dữ liệu hiện tại, kiểm loading/empty/errors/read-only, Back/Forward/drafts, Vi-En vàdesktop/mobile. Dùng tài khoản/dữ liệu test tách riêng cho CRUD; luồng Google/email thật cần tách bằng chứng provider khỏi fixture.
 
-Ghi lỗi tái hiện, tác động, bước sửa và kiểm lại; ưu tiên lỗi mất dữ liệu/quyền/lưu trùng vàblocker luồng trước visual polish. Không gọi web đã ổn chỉ vì build/test scripts xanh. Không xử lý queue cũ hoặc dùng tài khoản thật để ghi dữ liệu hàng loạt.
+Ghi lỗi tái hiện, tác động, bước sửa và kiểm lại; ưu tiên lỗi mất dữ liệu/quyền/lưu trùng vàblocker luồng trước visual polish. Không gọi web đã ổn chỉ vì build/test scripts xanh. Không xử lý queue cũ. Ghi dữ liệu trên tài khoản thật cần phạm vi được người dùng cấp phép như W2b bên dưới.
+
+## W2b — Tài khoản chính và dữ liệu dev được cấp phép: đạt trong scope
+
+12/10/2026, người dùng yêu cầu seed dữ liệu giả cho pepe19092003@gmail.com; nhiều account/role để lượt sau. Đã tạo bộ `[QA-PEPE]` với 1 Studio/4 Workspace/5 Project/30 Task/17 comment/24 notification mô phỏng. Browser local 1440px 19 nhóm PASS; FE21/21; seed idempotent, không thay Task cũ, credentials/settings hoặc xử lý outbox cũ. QA EmailOutbox0, giữ 11 notification chưa đọc và 2 Task trash để thử tiếp. [Kết quả và giới hạn](../qa/WEB-ACCEPTANCE-ACCOUNT-QA.md).
+
+Đã cấp phép ghi lên bộ QA riêng trên dev27018; không chạy provider/SMTP/purge/moderation worker hoặc backfill legacy. Session test dùng riêng và thu hồi finally; không thay password/login người dùng. Thông báo một tài khoản dùng fixture rõ nhãn mô phỏng; chưa xác nhận phát notification giữa nhiều actor, role thực tế hoặc password/Google/provider trong lượt này. Tiếp nghiệm thu bằng dữ liệu đã giữ, rồi setup nhiều account khi người dùng yêu cầu; chưa chuyển deploy.
 
 ## W3 — Điều kiện chuyển sang deploy
 
