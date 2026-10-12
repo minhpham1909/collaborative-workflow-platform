@@ -1,12 +1,12 @@
 import {
-  Archive, Bell, CalendarDays, Check, ChevronRight, CodeXml, Eye, EyeOff,
+  Archive, Bell, CalendarDays, Check, ChevronLeft, ChevronRight, CodeXml, Eye, EyeOff,
   FileText, Folder, House, Layers, LayoutGrid, List, ListTodo, Megaphone,
   Menu, Monitor, Moon, Sun, Palette, Plus, RefreshCw, Search, Settings2, SlidersHorizontal, UsersRound, X,
 } from 'lucide-react';
 // Static imports retain the shared name API and allow tree shaking.
 const icons = {
   search: Search, refresh: RefreshCw, plus: Plus, menu: Menu, close: X,
-  'chevron-right': ChevronRight, grid: LayoutGrid, list: List, archive: Archive,
+  'chevron-left': ChevronLeft, 'chevron-right': ChevronRight, grid: LayoutGrid, list: List, archive: Archive,
   eye: Eye, 'eye-off': EyeOff, calendar: CalendarDays, check: Check, folder: Folder,
   palette: Palette, code: CodeXml, megaphone: Megaphone, layers: Layers,
   document: FileText, people: UsersRound, home: House, tasks: ListTodo,

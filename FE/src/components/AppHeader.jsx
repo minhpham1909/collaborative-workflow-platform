@@ -66,7 +66,7 @@ export default function AppHeader({ route, user, api, busy, logout, openMobile, 
           </a>
           <fieldset className="theme-options">
             <legend>{t('Giao diện')}</legend>
-            {[["system", "Hệ thống", "monitor"], ["light", "Sáng", "sun"], ["dark", "Tối", "moon"]].map(([value, label, icon]) => <button type="button" key={value} aria-pressed={preference === value} onClick={() => choose(value)}><Icon name={icon} />{t(label)}</button>)}
+            {[["system", "Hệ thống", "monitor"], ["light", "Sáng", "sun"], ["dark", "Tối", "moon"]].map(([value, label, icon]) => <button type="button" key={value} data-theme-option={value} aria-pressed={preference === value} onClick={() => choose(value)}><Icon name={icon} />{t(label)}</button>)}
             {!stored && <small>{t('Lựa chọn chỉ giữ trong phiên này vì trình duyệt không cho lưu.')}</small>}
           </fieldset>
           <button disabled={busy} onClick={logout}>

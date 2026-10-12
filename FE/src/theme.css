@@ -56,3 +56,18 @@ a { color:var(--wf-primary); }
 :root[data-theme=dark] .board-task .pill { color:var(--wf-primary); }
 :root[data-theme=dark] .board-task .status-in_progress { color:var(--wf-warning); }
 :root[data-theme=dark] .board-task .status-done { color:var(--wf-success); }
+
+:root[data-theme=dark] .studio-carousel figcaption small { color:#fff; background:transparent; }
+
+:root[data-theme=dark] .board-column-heading :is(h3,.column-count) { color:var(--wf-ink); }
+:root[data-theme=dark] .app-footer p { color:var(--wf-muted); }
+
+.theme-options [data-theme-option=light] .ui-icon { color:var(--wf-warning); }
+.theme-options [data-theme-option=dark] .ui-icon { color:var(--wf-primary); }
+.theme-options [data-theme-option=system] .ui-icon { color:var(--wf-blue); }
+.account-menu[open] .account-dropdown { transform-origin:top right; animation:account-menu-enter 140ms ease-out; }
+@keyframes account-menu-enter { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:none; } }
+@media(prefers-reduced-motion:reduce) { .account-menu[open] .account-dropdown { animation:none; } }
+
+:root[data-theme=dark] .breadcrumbs a { color:var(--wf-primary); }
+:root[data-theme=dark] .home-workspace-card .workspace-metrics > span { color:var(--wf-muted); }

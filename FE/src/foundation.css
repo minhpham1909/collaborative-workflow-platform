@@ -68,3 +68,6 @@ body { padding-bottom: var(--wf-toast-space, 0px); }
 }
 
 .ui-icon { display:inline-block; vertical-align:middle; flex-shrink:0; }
+
+/* Custom display rules must not expose hidden controls or failed images. */
+[hidden] { display:none !important; }

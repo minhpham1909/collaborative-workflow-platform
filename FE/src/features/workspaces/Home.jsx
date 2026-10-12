@@ -1,3 +1,4 @@
+import StudioCarousel from '../../components/StudioCarousel.jsx';
 import { useAuthLocale } from '../auth/AuthLocale.jsx';
 import { homeText } from '../../lib/home-text.js';
 import {
@@ -192,6 +193,7 @@ export default function Home({ api, user }) {
         >
           <Icon name="plus" /> {t("Tạo Workspace")}
         </button>
+        <StudioCarousel locale={locale} />
       </section>
       <HomeHighlights data={highlights} compact />
       <div className="home-collection-header"><div><p className="home-eyebrow">{t("CÙNG NHAU LÀM VIỆC")}</p><h2>{t("Workspace của bạn")} <span className="home-count">{data.total ?? '—'}</span></h2></div><div className="home-view-switch" role="group" aria-label={t("Cách xem Workspace")}><button aria-label={t("Xem Workspace dạng thẻ")} aria-pressed={view === 'grid'} onClick={() => setView('grid')}><Icon name="grid" /></button><button aria-label={t("Xem Workspace dạng danh sách")} aria-pressed={view === 'list'} onClick={() => setView('list')}><Icon name="list" /></button></div></div>
