@@ -21,7 +21,7 @@ export async function workspaceAccess(workspace, userId, tx, { lock = true, requ
   if ((!membership && !orgAdmin) || (requireMember && !membership)) throw new AuthError('WORKSPACE_UNAVAILABLE', 404);
   const role = orgAdmin ? `organization_${orgRole}` : workspace.organizationId
     ? (same(workspace.managerId, userId) ? 'manager' : 'member')
-    : (same(workspace.ownerId, userId) ? 'owner' : 'member');
+    : (same(workspace.ownerId, userId) ? 'owner' : membership.role === 'manager' ? 'manager' : 'member');
   return { role, canManage: orgAdmin || role === 'owner' || role === 'manager', isMember: Boolean(membership),
     membership: { ...(membership ?? { userId, version: null, emailOverrides: null }), effectiveRole: role } };
 }

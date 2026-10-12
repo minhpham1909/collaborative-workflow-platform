@@ -18,6 +18,7 @@ import { createTaskTrashStore } from './trash-store.js';
 const id = (value) => new mongoose.Types.ObjectId(value);
 const deny = (code = 'RESOURCE_UNAVAILABLE', status = 404) => { throw new AuthError(code, status); };
 const owner = (context) => context.access?.canManage ?? sameId(context.workspace.ownerId, context.user._id);
+const commentModerator = context => owner(context) && !(!context.workspace.organizationId && context.access.role === 'manager');
 const editor = (context) => !context.guest && (owner(context) || context.isLead || sameId(context.task.createdBy, context.user._id));
 const checkVersion = (value, version) => { if (value.version !== version) deny('VERSION_CONFLICT', 409); };
 const after = (page) => page.after.$or ? { $or: page.after.$or.map((part) => part._id ? { ...part, _id: { $lt: id(part._id.$lt) } } : part) } : {};
@@ -114,7 +115,7 @@ export function createMongoWorkStore({ now = () => new Date(), config } = {}) {
     const person = await User.collection.findOne({ _id: userId }, { session: context.tx, projection: { displayName: 1, avatar: 1 } });
     const result={ id: key, displayName: person?.displayName ?? 'Người dùng không còn khả dụng', avatar: person?.avatar ?? { source: 'initials', googlePictureUrl: null } };context.identities.set(key,result);return result;
   }
-  const commentResponse = async (value, context) => ({ id: String(value._id), taskId: String(value.taskId), authorId: String(value.authorId), author: await identity(value.authorId, context), content: value.content, version: value.version, createdAt: value.createdAt, updatedAt: value.updatedAt, permissions: { edit: !projectReadOnly(context.workspace, context.project) && sameId(value.authorId, context.user._id), delete: owner(context) || (!projectReadOnly(context.workspace, context.project) && sameId(value.authorId, context.user._id)), moderate: owner(context) && (projectReadOnly(context.workspace, context.project) || !sameId(value.authorId, context.user._id)) } });
+  const commentResponse = async (value, context) => ({ id: String(value._id), taskId: String(value.taskId), authorId: String(value.authorId), author: await identity(value.authorId, context), content: value.content, version: value.version, createdAt: value.createdAt, updatedAt: value.updatedAt, permissions: { edit: !projectReadOnly(context.workspace, context.project) && sameId(value.authorId, context.user._id), delete: commentModerator(context) || (!projectReadOnly(context.workspace, context.project) && sameId(value.authorId, context.user._id)), moderate: commentModerator(context) && (projectReadOnly(context.workspace, context.project) || !sameId(value.authorId, context.user._id)) } });
   async function taskResponse(value, context) {
     await reconcileReopenRequests({ taskId: value._id }, now(), context.tx);
     const pending = context.guest ? null : await TaskReopenRequest.collection.findOne({ taskId: value._id, state: 'pending' }, { session: context.tx, projection: { _id: 1, requesterId: 1 } });
@@ -512,7 +513,7 @@ export function createMongoWorkStore({ now = () => new Date(), config } = {}) {
       checkVersion(comment, input.expectedVersion);
       if (deleting) {
         const authorDelete = own && !projectReadOnly(context.workspace, context.project);
-        if (!authorDelete && !owner(context)) deny(projectReadOnly(context.workspace, context.project) ? context.workspace.state === 'archived' ? 'WORKSPACE_ARCHIVED' : 'PROJECT_ARCHIVED' : 'COMMENT_AUTHOR_REQUIRED', projectReadOnly(context.workspace, context.project) ? 409 : 403);
+        if (!authorDelete && !commentModerator(context)) deny(projectReadOnly(context.workspace, context.project) ? context.workspace.state === 'archived' ? 'WORKSPACE_ARCHIVED' : 'PROJECT_ARCHIVED' : 'COMMENT_AUTHOR_REQUIRED', projectReadOnly(context.workspace, context.project) ? 409 : 403);
         if (!authorDelete && !input.reason) deny('MODERATION_REASON_REQUIRED', 400);
         const result = await TaskComment.collection.deleteOne({ _id: comment._id, taskId: context.task._id, workspaceId: context.workspace._id, version: input.expectedVersion }, { session: context.tx });
         if (result.deletedCount !== 1) deny('VERSION_CONFLICT', 409);

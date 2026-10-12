@@ -262,7 +262,8 @@
         "membershipGeneration": "Integer",
         "emailOverrides": "EmailOverrides",
         "version": "Integer",
-        "updatedAt": "Date"
+        "updatedAt": "Date",
+        "role": "manager|member (legacy absent => member)"
       },
       "privateFields": [],
       "references": {
@@ -1317,6 +1318,34 @@
       ],
       "constraints": [
         "No Task title/body; metadata only; one audit per purged Task"
+      ]
+    },
+    {
+      "name": "workspace_role_audit",
+      "fields": {
+        "workspaceId": "ObjectId",
+        "actorId": "ObjectId",
+        "targetUserId": "ObjectId",
+        "previousRole": "owner|manager|member",
+        "role": "owner|manager|member",
+        "reason": "String(max2000)",
+        "membershipVersion": "Integer",
+        "createdAt": "Date"
+      },
+      "references": {
+        "workspaceId": "workspaces",
+        "actorId": "users",
+        "targetUserId": "users"
+      },
+      "indexes": [
+        {
+          "name": "workspace_role_history",
+          "keys": {
+            "workspaceId": 1,
+            "createdAt": -1,
+            "_id": -1
+          }
+        }
       ]
     }
   ],

@@ -516,5 +516,15 @@
       },
       "unique": true
     }
+  ],
+  "workspace_role_audit": [
+    {
+      "name": "workspace_role_history",
+      "keys": {
+        "workspaceId": 1,
+        "createdAt": -1,
+        "_id": -1
+      }
+    }
   ]
 }

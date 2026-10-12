@@ -16,8 +16,9 @@ const content = (value) => ({ ...emptyRichText(), document: { type: 'doc', conte
 const user = () => ({ displayName: 'Nguyễn An 👋', email: 'An@Example.com', termsAcceptance: { version: 'v1', acceptedAt: now } });
 const task = () => ({ workspaceId, projectId, createdBy: ownerId, title: 'Task mới', description: content('Tiếng Việt') });
 
-test('all 27 core models validate representative typed fixtures without DB', async () => {
+test('all 28 core models validate representative typed fixtures without DB', async () => {
   const fixtures = {
+    WorkspaceRoleAudit: { workspaceId, actorId: ownerId, targetUserId: ownerId, previousRole: 'member', role: 'manager', reason: 'Appointment', membershipVersion: 1 },
     WorkspaceLifecycleAudit: { workspaceId, actorId: ownerId, previousState: "active", state: "archived", reason: "Đóng nhóm", resourceVersion: 1 },
     TaskPurgeAudit: { workspaceId, projectId, taskId, deletedAt: now, purgedAt: now },
     TaskReopenRequest: { workspaceId, projectId, taskId, requesterId: ownerId, reason: "Thiếu kiểm thử", targetStatus: "todo" },
@@ -42,7 +43,7 @@ test('all 27 core models validate representative typed fixtures without DB', asy
     Notification: { workspaceId, taskId, recipientId: ownerId, eventId: 'event-1', category: 'work', changes: ['assignment'] },
     EmailOutbox: { userId: ownerId, workspaceId, taskId, eventId: 'event-1', recipientKey: 'user:1', category: 'work', templateKey: 'task_changed', eventTypes: ['assignment'], nextAttemptAt: now },
   };
-  assert.equal(Object.keys(models).length, 27);
+  assert.equal(Object.keys(models).length, 28);
   for (const [name, fixture] of Object.entries(fixtures)) await new models[name](fixture).validate();
 });
 test('Google-only account allowed; defaults match approved email preferences; no email auto-link', async () => {
@@ -59,7 +60,7 @@ test('Google-only account allowed; defaults match approved email preferences; no
 });
 test('schema rejects unknown/server-unmodelled fields and invalid enums/integer/IDs', async () => {
   assert.throws(() => new Task({ ...task(), attachments: [] }), /strict/u);
-  assert.throws(() => new WorkspaceMembership({ workspaceId, userId: ownerId, role: 'owner' }), /strict/u);
+  await assert.rejects(new WorkspaceMembership({ workspaceId, userId: ownerId, joinedAt: now, role: 'owner' }).validate());
   await assert.rejects(new Task({ ...task(), status: 'unexpected' }).validate());
   await assert.rejects(new Task({ ...task(), version: 0.5 }).validate());
   await assert.rejects(new Task({ ...task(), projectId: 'invalid' }).validate());

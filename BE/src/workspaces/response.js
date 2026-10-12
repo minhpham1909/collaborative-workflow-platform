@@ -1,7 +1,7 @@
 import { WORKSPACE_IDENTITY_DEFAULTS } from './identity.js';
 export const sameId = (left, right) => String(left) === String(right);
 export function workspaceResponse(workspace, membership) {
-  const role = membership.effectiveRole ?? (workspace.organizationId ? (sameId(workspace.managerId, membership.userId) ? 'manager' : 'member') : (sameId(workspace.ownerId, membership.userId) ? 'owner' : 'member'));
+  const role = membership.effectiveRole ?? (workspace.organizationId ? (sameId(workspace.managerId, membership.userId) ? 'manager' : 'member') : (sameId(workspace.ownerId, membership.userId) ? 'owner' : membership.role === 'manager' ? 'manager' : 'member'));
   const manage = ['owner', 'manager', 'organization_owner', 'organization_admin'].includes(role);
   const writable = workspace.state !== 'archived';
   return { id: String(workspace._id), name: workspace.name, description: workspace.description,
@@ -11,7 +11,7 @@ export function workspaceResponse(workspace, membership) {
     state: workspace.state ?? 'active', archivedAt: workspace.archivedAt ?? null, archivedBy: workspace.archivedBy ? String(workspace.archivedBy) : null,
     ownerId: workspace.ownerId ? String(workspace.ownerId) : null, organizationId: workspace.organizationId ? String(workspace.organizationId) : null,
     managerId: workspace.managerId ? String(workspace.managerId) : null, version: workspace.version, createdAt: workspace.createdAt,
-    role, permissions: { manage, edit: manage && writable, createProject: manage && writable, changeState: manage, emailPreferences: membership.version != null, invite: manage && !workspace.organizationId && writable,
+    role, permissions: { manage, edit: manage && writable, createProject: manage && writable, changeState: workspace.organizationId ? manage : role === 'owner', manageRoles: !workspace.organizationId && role === 'owner', transferOwnership: !workspace.organizationId && role === 'owner', emailPreferences: membership.version != null, invite: manage && !workspace.organizationId && writable,
       leave: membership.version != null && !sameId(workspace.ownerId, membership.userId) && !sameId(workspace.managerId, membership.userId) },
     membershipVersion: membership.version, emailOverrides: membership.emailOverrides ? { ...membership.emailOverrides } : null };
 }

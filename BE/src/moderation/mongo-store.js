@@ -54,6 +54,10 @@ export function createMongoModerationStore({ config, now = () => new Date() } = 
       if (target?.role === 'admin' && !['owner', 'organization_owner'].includes(context.role)) denied('ORGANIZATION_OWNER_REQUIRED');
     }
     if (same(context.workspace?.managerId, targetUserId) && !['organization_owner', 'organization_admin'].includes(context.role)) denied('ORGANIZATION_ADMIN_REQUIRED');
+    if (context.workspace && !context.workspace.organizationId) {
+      const target = await WorkspaceMembership.collection.findOne({ workspaceId: context.workspace._id, userId: id(targetUserId), state: 'active' }, { session: tx });
+      if (target?.role === 'manager' && context.role !== 'owner') denied('OWNER_REQUIRED');
+    }
   }
   const references = context => ({ scopeType: context.type, scopeId: context.scopeId, organizationId: context.organization?._id ?? null,
     workspaceId: context.workspace?._id ?? null, projectId: context.project?._id ?? null });
@@ -80,7 +84,7 @@ export function createMongoModerationStore({ config, now = () => new Date() } = 
         if (same(workspace.managerId, target)) { await takeOver(user, workspace, tx); takeoverWorkspaceIds.push(workspace._id); }
       }
       await WorkspaceMembership.collection.updateMany({ workspaceId: { $in: workspaceIds }, userId: target, state: 'active' },
-        { $set: { state: 'inactive', leftAt: now(), exitReason: 'removed', emailOverrides: { assignment: 'inherit', comment: 'inherit', content: 'inherit', status: 'inherit' }, updatedAt: now() }, $inc: { version: 1 } }, { session: tx });
+        { $set: { state: 'inactive', role: 'member', leftAt: now(), exitReason: 'removed', emailOverrides: { assignment: 'inherit', comment: 'inherit', content: 'inherit', status: 'inherit' }, updatedAt: now() }, $inc: { version: 1 } }, { session: tx });
       if (context.type === 'organization') await OrganizationMembership.collection.updateMany({ organizationId: context.organization._id, userId: target, state: 'active' },
         { $set: { state: 'inactive', leftAt: now(), exitReason: 'removed', role: 'member', updatedAt: now() }, $inc: { version: 1 } }, { session: tx });
     }

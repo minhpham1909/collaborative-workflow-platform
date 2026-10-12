@@ -40,6 +40,11 @@ export function workspaceStateInput(input) {
   return { expectedVersion: expectedVersion(input), state: input.state, confirmName: input.confirmName, reason: input.reason.trim() };
 }
 export function transferInput(input) { inputObject(input, ['expectedVersion', 'memberId']); return { expectedVersion: expectedVersion(input), memberId: objectId(input.memberId) }; }
+export function membershipRoleInput(input) {
+  inputObject(input, ['expectedVersion', 'role', 'reason']);
+  if (!['manager', 'member'].includes(input.role) || typeof input.reason !== 'string' || !input.reason.trim() || input.reason.length > 2000 || /[\u0000-\u001f\u007f\u2028\u2029]/u.test(input.reason)) fail();
+  return { expectedVersion: expectedVersion(input), role: input.role, reason: input.reason.trim() };
+}
 export function invitationInput(input) {
   inputObject(input, ['type', 'email']);
   if (!['EMAIL', 'LINK'].includes(input.type)) fail();

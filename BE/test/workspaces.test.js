@@ -1,8 +1,15 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { workspaceFields, invitationInput, overridesInput, pageInput, transferInput } from '../src/workspaces/input.js';
+import { workspaceFields, invitationInput, overridesInput, pageInput, transferInput, membershipRoleInput } from '../src/workspaces/input.js';
 import { emptyRichText } from '../src/content/rich-text.js';
 import { workspaceResponse } from '../src/workspaces/response.js';
+
+test('Workspace role mutations only accept scoped management/member intent with reason and membership CAS', () => {
+  assert.deepEqual(membershipRoleInput({ expectedVersion: 1, role: 'manager', reason: ' Appointment ' }), { expectedVersion: 1, role: 'manager', reason: 'Appointment' });
+  for (const fields of [{ role: 'owner' }, { reason: '' }, { reason: '\n' }, { expectedVersion: '1' }, { workspaceId: 'injection' }]) {
+    assert.throws(() => membershipRoleInput({ expectedVersion: 1, role: 'manager', reason: 'Appointment', ...fields }), /INVALID_INPUT/u);
+  }
+});
 
 test('Workspace metadata validates bounded summary and preset identity without accepting ownership fields', () => {
   assert.deepEqual(workspaceFields({ name: 'Design', summary: '  Mục tiêu  ', icon: 'palette', color: 'mint', coverId: 'campaign' }).fields,

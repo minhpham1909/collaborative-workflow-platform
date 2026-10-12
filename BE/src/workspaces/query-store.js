@@ -7,11 +7,13 @@ const id = value => new mongoose.Types.ObjectId(value);
 function mongoAfter(after) { return after.$or ? { $or: after.$or.map(part => part._id ? { ...part, _id: { $lt: id(part._id.$lt) } } : part) } : after; }
 // Caller authenticates/locks actor; Org caller additionally guards actual parent.
 export async function queryWorkspaceList(user, tx, page) {
-      const managed = { $or: [{ ownerId: user._id }, { managerId: user._id }, { 'organization.ownerId': user._id }, { 'organizationMembership.role': 'admin' }] };
+      const standaloneManager = { organizationId: null, 'membership.role': 'manager' };
+      const managed = { $or: [{ ownerId: user._id }, { managerId: user._id }, standaloneManager, { 'organization.ownerId': user._id }, { 'organizationMembership.role': 'admin' }] };
       const roleStages = page.role === 'managed' ? [{ $match: managed }] : page.role === 'member' ? [{ $match: { $nor: managed.$or } }] : [];
       const stateStages = page.state === 'active' ? [{ $match: { state: { $ne: 'archived' } } }] : page.state === 'archived' ? [{ $match: { state: 'archived' } }] : [];
       const base = [{ $match: { ...(page.organizationId ? { organizationId: page.organizationId } : {}), $and: [ ...(page.filters?.length ? page.filters : [{}]) ] } }, ...workspaceAccessStages(user._id)];
       const managedExpression = { $or: [{ $eq: ['$ownerId', user._id] }, { $eq: ['$managerId', user._id] },
+        { $and: [{ $eq: [{ $ifNull: ['$organizationId', null] }, null] }, { $in: ['manager', '$membership.role'] }] },
         { $in: [user._id, { $ifNull: ['$organization.ownerId', []] }] }, { $in: ['admin', { $ifNull: ['$organizationMembership.role', []] }] }] };
       const summaries = await Workspace.collection.aggregate([...base, { $facet: {
         total: [...roleStages, ...stateStages, { $count: 'total' }],

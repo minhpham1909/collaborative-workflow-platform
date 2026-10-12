@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 import { queryWorkspaceList } from './query-store.js';
 import { randomBytes, randomUUID } from 'node:crypto';
-import { User, Session, Workspace, WorkspaceMembership, WorkspaceInvitation, Project, Task, EmailOutbox, ProjectGuest, Organization, OrganizationMembership, WorkspaceLifecycleAudit } from '../models/index.js';
+import { User, Session, Workspace, WorkspaceMembership, WorkspaceInvitation, Project, Task, EmailOutbox, ProjectGuest, Organization, OrganizationMembership, WorkspaceLifecycleAudit, WorkspaceRoleAudit } from '../models/index.js';
 import { AuthError } from '../auth/errors.js';
 import { tokenHash } from '../auth/tokens.js';
 import { createDeliveryCrypto } from '../auth/delivery-crypto.js';
@@ -45,7 +45,7 @@ export function createMongoWorkspaceStore({ config, now = () => new Date() }) {
   const mailJob = (invitationId, tx) => EmailOutbox.collection.findOne({ invitationId, category: 'invitation' }, { session: tx });
   async function endMembership(workspace, membership, reason, tx) {
     const time = now();
-    await WorkspaceMembership.collection.updateOne({ _id: membership._id, version: membership.version }, { $set: { state: 'inactive', leftAt: time, exitReason: reason, emailOverrides: inherited(), updatedAt: time }, $inc: { version: 1 } }, { session: tx });
+    await WorkspaceMembership.collection.updateOne({ _id: membership._id, version: membership.version }, { $set: { state: 'inactive', role: 'member', leftAt: time, exitReason: reason, emailOverrides: inherited(), updatedAt: time }, $inc: { version: 1 } }, { session: tx });
     await Task.collection.updateMany({ workspaceId: workspace._id, assigneeId: membership.userId, deletedAt: null, status: { $ne: 'done' } }, { $set: { assigneeId: null, updatedAt: time }, $inc: { version: 1 } }, { session: tx });
     await Project.collection.updateMany({ workspaceId: workspace._id, leadId: membership.userId }, { $set: { leadId: null, updatedAt: time }, $inc: { version: 1 } }, { session: tx });
     await ProjectGuest.collection.updateMany({ workspaceId: workspace._id, userId: membership.userId, state: 'active' }, { $set: { state: 'inactive', revokedAt: time, updatedAt: time }, $inc: { version: 1 } }, { session: tx });
@@ -66,7 +66,7 @@ export function createMongoWorkspaceStore({ config, now = () => new Date() }) {
       if (value.acceptedAt && !(membership?.state === 'active' && sameId(value.acceptedBy, user._id))) throw new AuthError('INVITATION_UNAVAILABLE', 404);
       const existing = membership?.state === 'active';
       if (!existing) {
-        if (membership) membership = await WorkspaceMembership.collection.findOneAndUpdate({ _id: membership._id }, { $set: { state: 'active', joinedAt: now(), leftAt: null, exitReason: null, emailOverrides: inherited(), updatedAt: now() }, $inc: { membershipGeneration: 1, version: 1 } }, { session: tx, returnDocument: 'after' });
+        if (membership) membership = await WorkspaceMembership.collection.findOneAndUpdate({ _id: membership._id }, { $set: { state: 'active', role: 'member', joinedAt: now(), leftAt: null, exitReason: null, emailOverrides: inherited(), updatedAt: now() }, $inc: { membershipGeneration: 1, version: 1 } }, { session: tx, returnDocument: 'after' });
         else { const document = new WorkspaceMembership({ workspaceId: workspace._id, userId: user._id, joinedAt: now() }); await document.save({ session: tx }); membership = document.toObject(); }
       }
       if (value.type === 'EMAIL' && !value.acceptedAt) await WorkspaceInvitation.collection.updateOne({ _id: value._id }, { $set: { acceptedAt: now(), acceptedBy: user._id, updatedAt: now() }, $inc: { version: 1 } }, { session: tx });
@@ -84,6 +84,7 @@ export function createMongoWorkspaceStore({ config, now = () => new Date() }) {
     }),
     state: (claims, workspaceId, input) => run(claims, async (user, tx) => {
       const { workspace, membership } = await scope(user, workspaceId, tx, true);
+      if (!workspace.organizationId && !sameId(workspace.ownerId, user._id)) throw new AuthError('OWNER_REQUIRED', 403);
       if (workspace.version !== input.expectedVersion) conflict();
       if (input.confirmName !== workspace.name) throw new AuthError('WORKSPACE_CONFIRMATION_MISMATCH', 400);
       if ((workspace.state ?? 'active') === input.state) return { workspace: workspaceResponse(workspace, membership) };
@@ -132,11 +133,30 @@ export function createMongoWorkspaceStore({ config, now = () => new Date() }) {
         const member = users.find((value) => sameId(value._id, membership.userId));
         const protectedOwner = sameId(workspace.ownerId, membership.userId) || (organization && sameId(organization.ownerId, membership.userId));
         const protectedAdmin = membership.organizationMembership?.[0]?.role === 'admin' && access.role !== 'organization_owner';
-        const manager = sameId(workspace.managerId, membership.userId), self = sameId(user._id, membership.userId);
+        const manager = workspace.organizationId ? sameId(workspace.managerId, membership.userId) : membership.role === 'manager', self = sameId(user._id, membership.userId);
         const eligible = access.canManage && !self && !protectedOwner && !protectedAdmin;
-        return { userId: String(membership.userId), displayName: member?.displayName ?? 'Unavailable User', avatar: { source: member?.avatar?.source ?? 'initials', googlePictureUrl: member?.avatar?.googlePictureUrl ?? null }, role: workspace.organizationId ? (manager ? 'manager' : 'member') : (sameId(workspace.ownerId, membership.userId) ? 'owner' : 'member'), version: membership.version, joinedAt: membership.joinedAt,
-          permissions: { remove: Boolean(eligible && !manager), ban: Boolean(eligible && (!manager || ['organization_owner', 'organization_admin'].includes(access.role))), transfer: Boolean(access.role === 'owner' && !workspace.organizationId && !self) } };
+        const owner = access.role === 'owner' && !workspace.organizationId;
+        return { userId: String(membership.userId), displayName: member?.displayName ?? 'Unavailable User', avatar: { source: member?.avatar?.source ?? 'initials', googlePictureUrl: member?.avatar?.googlePictureUrl ?? null }, role: protectedOwner ? 'owner' : manager ? 'manager' : 'member', version: membership.version, joinedAt: membership.joinedAt,
+          permissions: { remove: Boolean(eligible && (!manager || owner)), ban: Boolean(eligible && (!manager || owner || ['organization_owner', 'organization_admin'].includes(access.role))), transfer: Boolean(owner && !self), changeRole: Boolean(owner && !protectedOwner && !self) } };
       }, 'joinedAt');
+    }),
+    role: (claims, workspaceId, memberId, input) => run(claims, async (user, tx) => {
+      const { workspace } = await scope(user, workspaceId, tx);
+      if (workspace.organizationId) throw new AuthError('WORKSPACE_ROLE_MODE_UNAVAILABLE', 409);
+      if (!sameId(workspace.ownerId, user._id)) throw new AuthError('OWNER_REQUIRED', 403);
+      if (sameId(workspace.ownerId, memberId)) throw new AuthError('CANNOT_CHANGE_OWNER_ROLE', 409);
+      const target = await WorkspaceMembership.collection.findOne({ workspaceId: workspace._id, userId: id(memberId), state: 'active' }, { session: tx });
+      if (!target) unavailable();
+      if (target.version !== input.expectedVersion) conflict();
+      await workspaceAccess(workspace, id(memberId), tx, { requireMember: true });
+      const person = await User.collection.findOne({ _id: id(memberId) }, { session: tx });
+      if (!person?.emailVerifiedAt) throw new AuthError('MEMBER_UNAVAILABLE', 409);
+      const previousRole = target.role ?? 'member';
+      if (previousRole === input.role) return { member: { userId: memberId, role: previousRole, version: target.version } };
+      const saved = await WorkspaceMembership.collection.findOneAndUpdate({ _id: target._id, state: 'active', version: target.version }, { $set: { role: input.role, updatedAt: now() }, $inc: { version: 1 } }, { session: tx, returnDocument: 'after' });
+      if (!saved) conflict();
+      await new WorkspaceRoleAudit({ workspaceId: workspace._id, actorId: user._id, targetUserId: target.userId, previousRole, role: input.role, reason: input.reason, membershipVersion: saved.version, createdAt: now() }).save({ session: tx });
+      return { member: { userId: memberId, role: saved.role, version: saved.version } };
     }),
     leave: (claims, workspaceId, expectedVersion) => run(claims, async (user, tx) => {
       const workspace = await guard(workspaceId, tx);
@@ -161,6 +181,7 @@ export function createMongoWorkspaceStore({ config, now = () => new Date() }) {
       if (sameId(workspace.managerId, memberId)) throw new AuthError('MANAGER_REPLACEMENT_REQUIRED', 409);
       const membership = await WorkspaceMembership.collection.findOne({ workspaceId: workspace._id, userId: id(memberId) }, { session: tx });
       if (!membership) unavailable();
+      if (!workspace.organizationId && membership.role === 'manager' && !sameId(workspace.ownerId, user._id)) throw new AuthError('OWNER_REQUIRED', 403);
       if (membership.state === 'inactive') return { code: 'MEMBER_ALREADY_INACTIVE' };
       if (membership.version !== expectedVersion) conflict();
       await endMembership(workspace, membership, 'removed', tx); return { code: 'MEMBER_REMOVED' };
@@ -168,10 +189,21 @@ export function createMongoWorkspaceStore({ config, now = () => new Date() }) {
     transfer: (claims, workspaceId, input) => run(claims, async (user, tx) => {
       const { workspace, membership } = await scope(user, workspaceId, tx, true);
       if (workspace.organizationId) throw new AuthError('ORGANIZATION_OWNERSHIP_REQUIRED', 409);
+      if (!sameId(workspace.ownerId, user._id)) throw new AuthError('OWNER_REQUIRED', 403);
       if (workspace.version !== input.expectedVersion) conflict();
-      if (sameId(user._id, input.memberId) || !await WorkspaceMembership.collection.findOne({ workspaceId: workspace._id, userId: id(input.memberId), state: 'active' }, { session: tx })) throw new AuthError('TRANSFER_TARGET_INVALID', 409);
+      const recipientMembership = await WorkspaceMembership.collection.findOne({ workspaceId: workspace._id, userId: id(input.memberId), state: 'active' }, { session: tx });
+      if (sameId(user._id, input.memberId) || !recipientMembership) throw new AuthError('TRANSFER_TARGET_INVALID', 409);
+      await workspaceAccess(workspace, id(input.memberId), tx, { requireMember: true });
+      const recipient = await User.collection.findOne({ _id: id(input.memberId) }, { session: tx });
+      if (!recipient?.emailVerifiedAt) throw new AuthError('TRANSFER_TARGET_INVALID', 409);
+      await WorkspaceMembership.collection.updateMany({ workspaceId: workspace._id, userId: { $in: [user._id, id(input.memberId)] }, state: 'active' }, { $set: { role: 'member', updatedAt: now() }, $inc: { version: 1 } }, { session: tx });
       const updated = await Workspace.collection.findOneAndUpdate({ _id: workspace._id, version: workspace.version, ownerId: user._id }, { $set: { ownerId: id(input.memberId), updatedAt: now() }, $inc: { version: 1 } }, { session: tx, returnDocument: 'after' });
-      if (!updated) conflict(); return { workspace: workspaceResponse(updated, { ...membership, effectiveRole: 'member' }) };
+      if (!updated) conflict();
+      for (const [targetUserId, previousRole, role, membershipVersion] of [
+        [user._id, 'owner', 'member', membership.version + 1],
+        [id(input.memberId), recipientMembership.role ?? 'member', 'owner', recipientMembership.version + 1],
+      ]) await new WorkspaceRoleAudit({ workspaceId: workspace._id, actorId: user._id, targetUserId, previousRole, role, reason: 'ownership_transferred', membershipVersion, createdAt: now() }).save({ session: tx });
+      return { workspace: workspaceResponse(updated, { ...membership, version: membership.version + 1, role: 'member', effectiveRole: 'member' }) };
     }),
     overrides: (claims, workspaceId, input) => run(claims, async (user, tx) => {
       const { membership, access } = await scope(user, workspaceId, tx);

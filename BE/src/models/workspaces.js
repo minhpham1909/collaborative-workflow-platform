@@ -23,14 +23,22 @@ workspaceSchema.pre('validate', function () {
 export const membershipSchema = coreSchema({
   workspaceId: { ...ref('Workspace'), immutable: true }, userId: { ...ref('User'), immutable: true },
   state: choice(['active', 'inactive'], 'active'), joinedAt: { type: Date, required: true },
+  role: choice(['manager', 'member'], 'member'),
   leftAt: nullableDate(), exitReason: { type: String, enum: ['left', 'removed', null], default: null },
   membershipGeneration: integer(1, 1), emailOverrides: { type: emailOverrides, required: true, default: () => ({}) },
 });
 membershipSchema.pre('validate', function() {
+  if (this.state === 'inactive' && this.role !== 'member') this.invalidate('role', 'Inactive membership cannot retain management');
   if (this.state === 'active' && (this.leftAt !== null || this.exitReason !== null)) this.invalidate('state', 'Active membership has no exit details');
   if (this.state === 'inactive' && (!this.leftAt || !this.exitReason)) this.invalidate('state', 'Inactive membership requires exit details');
   if (this.state === 'inactive' && this.emailOverrides && Object.values(this.emailOverrides.toObject()).some((value) => value !== 'inherit')) this.invalidate('emailOverrides', 'Leaving clears email overrides');
 });
+
+export const workspaceRoleAuditSchema = coreSchema({
+  workspaceId: { ...ref('Workspace'), immutable: true }, actorId: ref('User'), targetUserId: ref('User'),
+  previousRole: choice(['owner', 'manager', 'member']), role: choice(['owner', 'manager', 'member']),
+  reason: singleLine(2000), membershipVersion: integer(),
+}, { editable: false, updated: false });
 
 export const invitationSchema = coreSchema({
   workspaceId: { ...ref('Workspace'), immutable: true }, createdBy: { ...ref('User'), immutable: true },
