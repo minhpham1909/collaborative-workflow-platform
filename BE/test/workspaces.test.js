@@ -2,6 +2,22 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { workspaceFields, invitationInput, overridesInput, pageInput, transferInput } from '../src/workspaces/input.js';
 import { emptyRichText } from '../src/content/rich-text.js';
+import { workspaceResponse } from '../src/workspaces/response.js';
+
+test('Workspace metadata validates bounded summary and preset identity without accepting ownership fields', () => {
+  assert.deepEqual(workspaceFields({ name: 'Design', summary: '  Mục tiêu  ', icon: 'palette', color: 'mint', coverId: 'campaign' }).fields,
+    { name: 'Design', summary: 'Mục tiêu', icon: 'palette', color: 'mint', coverId: 'campaign' });
+  assert.equal(workspaceFields({ expectedVersion: 2, summary: '' }, true).fields.summary, null);
+  assert.equal(workspaceFields({ name: 'Design', summary: null }).fields.summary, null);
+  for (const fields of [{ summary: 'x'.repeat(501) }, { summary: 'bad\nline' }, { summary: '\n' }, { summary: {} }, { icon: 'script' }, { color: null }, { coverId: 'https://example.com/image' }, { role: 'manager' }]) {
+    assert.throws(() => workspaceFields({ name: 'Design', ...fields }), /INVALID_INPUT/u);
+  }
+  const legacy = { _id: 'workspace', ownerId: 'owner', managerId: null, name: 'Legacy', state: 'archived', createdAt: new Date(0), version: 0 };
+  const response = workspaceResponse(legacy, { userId: 'owner', version: 0 });
+  assert.equal(response.summary, null); assert.equal(response.icon, 'folder'); assert.equal(response.coverId, 'moodboard');
+  assert.equal(response.readOnly, true); assert.equal(response.readOnlyReason, 'workspace_archived');
+  assert.equal(Object.hasOwn(legacy, 'coverId'), false);
+});
 
 test('Workspace DTO rejects identity/role injection and unsafe content while deriving rich-text plain text', () => {
   const description = emptyRichText(); description.plainText = 'forged text';

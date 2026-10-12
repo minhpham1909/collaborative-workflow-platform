@@ -34,10 +34,12 @@ export async function queryWorkspaceList(user, tx, page) {
         { $group: { _id: '$workspaceId', count: { $sum: 1 } } },
       ], { session: tx }).toArray();
       const hiddenProjects = await bannedProjectIds(user._id, tx);
-      const activeIds = records.slice(0, page.limit).filter(value => value.state !== 'archived').map(value => value._id);
-      const projects = await Project.collection.aggregate([{ $match: { _id: { $nin: hiddenProjects }, workspaceId: { $in: activeIds }, state: 'active' } }, { $group: { _id: '$workspaceId', count: { $sum: 1 } } }], { session: tx }).toArray();
+      const projects = await Project.collection.aggregate([{ $match: { _id: { $nin: hiddenProjects }, workspaceId: { $in: ids } } }, { $group: {
+        _id: '$workspaceId', active: { $sum: { $cond: [{ $eq: ['$state', 'active'] }, 1, 0] } },
+        archived: { $sum: { $cond: [{ $eq: ['$state', 'archived'] }, 1, 0] } },
+      } }], { session: tx }).toArray();
       const values = [];
       for (const value of records) values.push({ ...value, access: await workspaceAccess(value, user._id, tx) });
-      return { ...paged(values, page.limit, (value) => ({ ...workspaceResponse(value, value.access.membership), memberCount: members.find(row => sameId(row._id, value._id))?.count ?? 0, activeProjectCount: projects.find(row => sameId(row._id, value._id))?.count ?? 0 })),
+      return { ...paged(values, page.limit, (value) => ({ ...workspaceResponse(value, value.access.membership), memberCount: members.find(row => sameId(row._id, value._id))?.count ?? 0, activeProjectCount: projects.find(row => sameId(row._id, value._id))?.active ?? 0, archivedProjectCount: projects.find(row => sameId(row._id, value._id))?.archived ?? 0 })),
         total: summary.total[0]?.total ?? 0, roleCounts: { ...roleCounts, all: roleCounts.managed + roleCounts.member }, stateCounts: { ...stateCounts, all: stateCounts.active + stateCounts.archived } };
 }

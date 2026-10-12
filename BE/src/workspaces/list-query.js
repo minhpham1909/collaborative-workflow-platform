@@ -13,6 +13,7 @@ export function workspaceQuery(query) {
     $or: [
       { name: { $regex: pattern, $options: "i" } },
       { "description.plainText": { $regex: pattern, $options: "i" } },
+      { summary: { $regex: pattern, $options: "i" } },
     ],
   }));
   if (from || to)

@@ -1,9 +1,14 @@
 import { coreSchema, ref, integer, nullableDate, nullableString, digest, choice, singleLine, emailOverrides, richText, contentHook } from './shared.js';
 import { canonicalEmail } from './accounts.js';
+import { WORKSPACE_ICONS, WORKSPACE_COLORS, WORKSPACE_COVERS, WORKSPACE_IDENTITY_DEFAULTS, validWorkspaceSummary } from '../workspaces/identity.js';
 
 export const workspaceSchema = coreSchema({
   ownerId: ref('User', true), organizationId: { ...ref('Organization', true), immutable: true },
   managerId: ref('User', true), name: singleLine(200), description: richText(), mutationRevision: integer(),
+  summary: { ...nullableString(500), validate: validWorkspaceSummary },
+  icon: choice(WORKSPACE_ICONS, WORKSPACE_IDENTITY_DEFAULTS.icon),
+  color: choice(WORKSPACE_COLORS, WORKSPACE_IDENTITY_DEFAULTS.color),
+  coverId: choice(WORKSPACE_COVERS, WORKSPACE_IDENTITY_DEFAULTS.coverId),
   state: choice(['active', 'archived'], 'active'), archivedAt: nullableDate(), archivedBy: ref('User', true),
 }, { privateFields: ['mutationRevision'] });
 contentHook(workspaceSchema, 'description', 'workspace');

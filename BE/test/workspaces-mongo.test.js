@@ -44,6 +44,36 @@ test('Workspace membership/invitation lifecycle on real MongoDB and HTTP', { ski
     server = createApp({ authService: auth, authConfig: config, workspaceService: service }).listen(0, '127.0.0.1'); await once(server, 'listening');
     const base = `http://127.0.0.1:${server.address().port}`;
     const http = (index, path, method = 'GET', body, extra = {}) => fetch(base + path, { method, headers: { Origin: config.webOrigin, 'Content-Type': 'application/json', ...(index !== null ? { Authorization: `Bearer ${logins[index].accessToken}` } : {}), ...extra }, ...(body !== undefined ? { body: JSON.stringify(body) } : {}) });
+    await t.test('Workspace metadata persists through create/update/search, protects writes and retains child-state counts after Archive', async () => {
+      const { workspace } = await service.create(identities[0], { name: `${prefix} Metadata`, summary: 'Mục tiêu đặc biệt', icon: 'palette', color: 'mint', coverId: 'campaign' });
+      const workspaceId = new mongoose.Types.ObjectId(workspace.id); workspaceIds.push(workspaceId);
+      assert.equal(workspace.summary, 'Mục tiêu đặc biệt'); assert.equal(workspace.coverId, 'campaign');
+      const invitation = await link(workspace); await join(1, raw(invitation));
+      assert.equal((await http(1, `/workspaces/${workspace.id}`, 'PATCH', { expectedVersion: 0, summary: 'Unauthorized' })).status, 403);
+      const saved = await service.update(identities[0], workspace.id, { expectedVersion: 0, summary: 'Searchable objective', icon: 'code' });
+      assert.equal(saved.workspace.version, 1); assert.equal(saved.workspace.color, 'mint');
+      await assert.rejects(service.update(identities[0], workspace.id, { expectedVersion: 0, color: 'blue' }), /VERSION_CONFLICT/u);
+      const search = await service.list(identities[0], { q: 'Searchable objective', limit: '1' });
+      assert.equal(search.items[0].id, workspace.id); assert.equal(search.total, 1);
+      for (const state of ['active', 'archived']) {
+        const project = new Project({ workspaceId, createdBy: users[0]._id, name: `Metadata ${state}`, state, ...(state === 'archived' ? { archivedAt: new Date(), archivedBy: users[0]._id } : {}) });
+        await project.save();
+      }
+      const archived = await service.state(identities[0], workspace.id, { expectedVersion: 1, state: 'archived', confirmName: workspace.name, reason: 'Fixture archive' });
+      assert.equal(archived.workspace.readOnly, true);
+      await assert.rejects(service.update(identities[0], workspace.id, { expectedVersion: 2, summary: null }), /WORKSPACE_ARCHIVED/u);
+      const row = (await service.list(identities[0], { q: 'Searchable objective' })).items[0];
+      assert.equal(row.activeProjectCount, 1); assert.equal(row.archivedProjectCount, 1);
+      await service.state(identities[0], workspace.id, { expectedVersion: 2, state: 'active', confirmName: workspace.name, reason: 'Fixture reopen' });
+      const cleared = await service.update(identities[0], workspace.id, { expectedVersion: 3, summary: null });
+      assert.equal(cleared.workspace.summary, null);
+      await Workspace.collection.updateOne({ _id: workspaceId }, { $unset: { summary: '', icon: '', color: '', coverId: '' } });
+      const legacy = (await service.get(identities[0], workspace.id)).workspace;
+      assert.equal(legacy.icon, 'folder'); assert.equal(legacy.summary, null);
+      assert.equal(Object.hasOwn(await Workspace.collection.findOne({ _id: workspaceId }), 'icon'), false);
+      for (const model of [Project, WorkspaceInvitation, WorkspaceMembership]) await model.collection.deleteMany({ workspaceId });
+      await Workspace.collection.deleteOne({ _id: workspaceId });
+    });
     await t.test('Server-side name search/time/cursor only returns current memberships', async () => {
       const first=await create(`${prefix} Sáng Tạo One`), second=await create(`${prefix} Sáng Tạo Two`);
       const hidden=await service.create(identities[2],{name:`${prefix} Sáng Tạo Hidden`});workspaceIds.push(new mongoose.Types.ObjectId(hidden.workspace.id));

@@ -217,7 +217,11 @@
         "managerId": "ObjectId|null",
         "state": "active|archived",
         "archivedAt": "Date|null",
-        "archivedBy": "ObjectId|null"
+        "archivedBy": "ObjectId|null",
+        "summary": "String(max500)|null",
+        "icon": "folder|palette|code|megaphone|layers|document",
+        "color": "lavender|coral|mint|blue|amber|gray",
+        "coverId": "moodboard|architecture|campaign"
       },
       "privateFields": [
         "mutationRevision"

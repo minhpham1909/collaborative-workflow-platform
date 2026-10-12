@@ -1,12 +1,14 @@
 import { inputObject, emailInput, tokenInput } from '../auth/account-input.js';
 import { AuthError } from '../auth/errors.js';
 import { normalizeRichText, CONTENT_LIMITS } from '../content/rich-text.js';
+import { WORKSPACE_ICONS, WORKSPACE_COLORS, WORKSPACE_COVERS, validWorkspaceSummary } from './identity.js';
 
 export const fail = (code = 'INVALID_INPUT', status = 400) => { throw new AuthError(code, status); };
 export function objectId(value) { if (typeof value !== 'string' || !/^[a-f0-9]{24}$/u.test(value)) fail(); return value; }
 export function expectedVersion(input) { if (!Number.isSafeInteger(input.expectedVersion) || input.expectedVersion < 0) fail(); return input.expectedVersion; }
 export function workspaceFields(input, editing = false) {
-  inputObject(input, editing ? ['expectedVersion', 'name', 'description'] : ['name', 'description']);
+  const allowed = ['name', 'description', 'summary', 'icon', 'color', 'coverId'];
+  inputObject(input, editing ? ['expectedVersion', ...allowed] : allowed);
   const fields = {};
   if (!editing || Object.hasOwn(input, 'name')) {
     if (typeof input.name !== 'string' || !input.name.trim() || input.name.length > 200 || /[\u0000-\u001f\u007f\u2028\u2029]/u.test(input.name)) fail();
@@ -14,6 +16,18 @@ export function workspaceFields(input, editing = false) {
   }
   if (Object.hasOwn(input, 'description')) {
     try { fields.description = normalizeRichText(input.description, { maxCharacters: CONTENT_LIMITS.workspace }); } catch { fail(); }
+  }
+  if (Object.hasOwn(input, 'summary')) {
+    if (typeof input.summary === 'string' && /[\u0000-\u001f\u007f\u2028\u2029]/u.test(input.summary)) fail();
+    const value = typeof input.summary === 'string' && !input.summary.trim() ? null : input.summary;
+    if (!validWorkspaceSummary(value)) fail();
+    fields.summary = value === null ? null : value.trim();
+  }
+  for (const [key, values] of [['icon', WORKSPACE_ICONS], ['color', WORKSPACE_COLORS], ['coverId', WORKSPACE_COVERS]]) {
+    if (Object.hasOwn(input, key)) {
+      if (typeof input[key] !== 'string' || !values.includes(input[key])) fail();
+      fields[key] = input[key];
+    }
   }
   if (editing && !Object.keys(fields).length) fail();
   return { fields, ...(editing ? { expectedVersion: expectedVersion(input) } : {}) };
