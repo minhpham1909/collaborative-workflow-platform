@@ -25,7 +25,7 @@ export default function AppSidebar({ route, user, api, mobileOpen, closeMobile }
         return <a key={kind} href={'#' + kind} className={active ? 'active' : ''} aria-current={active ? (route.kind === kind ? 'page' : 'location') : undefined}><Icon name={icon} /><span>{label}</span>{kind === 'notifications' && <InboxBadge key={user.id} api={api} userId={user.id} />}</a>;
       })}
     </nav>
-    <div className="sidebar-bottom"><a href="#settings" className={route.kind === 'settings' ? 'active' : ''}><Icon name="settings" /><span>{t('Tài khoản & Cài đặt')}</span></a><p>{t('Một nơi cho những ý tưởng và công việc cùng tiến lên.')}</p></div>
+    <div className="sidebar-bottom"><p>{t('Một nơi cho những ý tưởng và công việc cùng tiến lên.')}</p></div>
   </>;
   return <>
     <aside lang={locale} className="app-sidebar" aria-label={t('Thanh điều hướng')}>{content}</aside>

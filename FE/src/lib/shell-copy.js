@@ -1,4 +1,6 @@
 const english = {
+  'Giao diện': 'Appearance', 'Hệ thống': 'System', 'Sáng': 'Light', 'Tối': 'Dark',
+  'Lựa chọn chỉ giữ trong phiên này vì trình duyệt không cho lưu.': 'This choice is kept for this session because browser storage is unavailable.',
   'Không gian của bạn': 'Your space', 'Workspace & nhóm cộng tác': 'Workspaces & teams',
   'KHÔNG GIAN LÀM VIỆC': 'WORKSPACE', 'Điều hướng chính': 'Main navigation',
   'Trang chủ': 'Home', 'Tổ chức & Studio': 'Organizations & Studios', 'Tổ chức': 'Organization',

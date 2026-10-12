@@ -1,7 +1,7 @@
 import {
   Archive, Bell, CalendarDays, Check, ChevronRight, CodeXml, Eye, EyeOff,
   FileText, Folder, House, Layers, LayoutGrid, List, ListTodo, Megaphone,
-  Menu, Palette, Plus, RefreshCw, Search, Settings2, SlidersHorizontal, UsersRound, X,
+  Menu, Monitor, Moon, Sun, Palette, Plus, RefreshCw, Search, Settings2, SlidersHorizontal, UsersRound, X,
 } from 'lucide-react';
 // Static imports retain the shared name API and allow tree shaking.
 const icons = {
@@ -10,7 +10,7 @@ const icons = {
   eye: Eye, 'eye-off': EyeOff, calendar: CalendarDays, check: Check, folder: Folder,
   palette: Palette, code: CodeXml, megaphone: Megaphone, layers: Layers,
   document: FileText, people: UsersRound, home: House, tasks: ListTodo,
-  bell: Bell, settings: Settings2, filter: SlidersHorizontal,
+  sun: Sun, moon: Moon, monitor: Monitor, bell: Bell, settings: Settings2, filter: SlidersHorizontal,
 };
 export default function Icon({ name, className = '' }) {
   const Glyph = icons[name] ?? SlidersHorizontal;

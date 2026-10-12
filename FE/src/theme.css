@@ -1,0 +1,58 @@
+/* Semantic palette shared by the shell and feature components. */
+:root { --wf-on-accent:#fff; --wf-success:#087654; --wf-warning:#82591c; --wf-blue:#2855b2; --wf-blue-soft:#e8efff; --wf-amber:#fff0d5; }
+:root[data-theme=dark] {
+  --wf-page:#19171e; --wf-surface:#24212b; --wf-soft:#2d2834; --wf-hover:#38313f;
+  --wf-ink:#f5eef4; --wf-muted:#c0b5c8; --wf-primary:#b6a8ff; --wf-primary-hover:#cabfff;
+  --wf-border:#48404f; --wf-focus:#c2b5ff; --wf-lavender:#3f345b; --wf-mint:#203e34; --wf-coral:#4d2934;
+  --wf-danger:#ffabbc; --wf-danger-soft:#492630; --wf-success:#8ce0b8; --wf-warning:#f3cf90;
+  --wf-blue:#a9c4ff; --wf-blue-soft:#27374d; --wf-amber:#463822; --wf-on-accent:#211932;
+}
+:root { color:var(--wf-ink); background:var(--wf-page); --studio-ink:var(--wf-ink); --studio-border:var(--wf-border); }
+body { background:var(--wf-page); color:var(--wf-ink); }
+.theme-options { border:0; padding:8px 0; margin:4px 0; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:4px; }
+.theme-options legend { color:var(--wf-muted); font-size:12px; padding:0 8px; }
+.account-dropdown .theme-options button { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px; min-height:58px; padding:6px; font-size:12px; color:var(--wf-muted); border:1px solid transparent; }
+.theme-options button[aria-pressed=true] { background:var(--wf-lavender); color:var(--wf-primary); border-color:var(--wf-primary); }
+.theme-options button .ui-icon { width:18px; height:18px; }
+.theme-options small { grid-column:1/-1; }
+:root[data-theme=dark] button,:root[data-theme=dark] input,:root[data-theme=dark] select,:root[data-theme=dark] textarea { background-color:var(--wf-surface); color:var(--wf-ink); border-color:var(--wf-border); }
+:root[data-theme=dark] button:hover { background-color:var(--wf-hover); }
+:root[data-theme=dark] .primary,:root[data-theme=dark] .primary:hover,:root[data-theme=dark] button[aria-pressed=true]:not(.theme-options button) { background:var(--wf-primary); color:var(--wf-on-accent); border-color:var(--wf-primary); }
+:root[data-theme=dark] .theme-options button[aria-pressed=true] { background:var(--wf-lavender); color:var(--wf-primary); }
+:root[data-theme=dark] .person-profile-card,:root[data-theme=dark] .system-dialog,:root[data-theme=dark] .system-toast,:root[data-theme=dark] .auth-card,:root[data-theme=dark] .auth-page,:root[data-theme=dark] .editor,:root[data-theme=dark] .editor-toolbar { background-color:var(--wf-surface); color:var(--wf-ink); border-color:var(--wf-border); }
+:root[data-theme=dark] .muted,:root[data-theme=dark] .loading-state,:root[data-theme=dark] .feedback.note { color:var(--wf-muted); }
+:root[data-theme=dark] .feedback.error:not(.field-message) { background:var(--wf-danger-soft); color:var(--wf-danger); border-color:var(--wf-danger); }
+:root[data-theme=dark] .pill,:root[data-theme=dark] .badge,:root[data-theme=dark] .label-color-lavender { background:var(--wf-lavender); color:var(--wf-primary); }
+:root[data-theme=dark] .status-in_progress,:root[data-theme=dark] .priority-medium,:root[data-theme=dark] .label-color-amber,:root[data-theme=dark] .archive-banner { background:var(--wf-amber); color:var(--wf-warning); }
+:root[data-theme=dark] .status-done,:root[data-theme=dark] .group-completed .my-task-row,:root[data-theme=dark] .account-verification.verified,:root[data-theme=dark] .security-explanation { background:var(--wf-mint); color:var(--wf-success); }
+:root[data-theme=dark] .priority-high,:root[data-theme=dark] .overdue-chip { background:var(--wf-danger-soft); color:var(--wf-danger); }
+:root[data-theme=dark] .label-color-blue { background:var(--wf-blue-soft); color:var(--wf-blue); }
+:root[data-theme=dark] .my-task-stat.urgent strong,:root[data-theme=dark] .group-overdue h2 { color:var(--wf-danger); }
+:root[data-theme=dark] .my-task-stat.completed strong { color:var(--wf-success); }
+:root[data-theme=dark] .app-sidebar .app-navigation a.active,:root[data-theme=dark] .mobile-sidebar .app-navigation a.active { background:var(--wf-lavender); color:var(--wf-primary); }
+a { color:var(--wf-primary); }
+
+:root[data-theme=dark] input:not([type=checkbox]):not([type=radio]),:root[data-theme=dark] select,:root[data-theme=dark] textarea { background-color:var(--wf-surface) !important; color:var(--wf-ink) !important; border-color:var(--wf-border); }
+:root[data-theme=dark] .board-task { background:var(--wf-surface); color:var(--wf-ink); }
+:root[data-theme=dark] .board-column > header { background:var(--wf-soft); color:var(--wf-ink); }
+:root[data-theme=dark] .board-task :is(p,small),:root[data-theme=dark] .board-task .task-code { color:var(--wf-muted); }
+:root[data-theme=dark] .board-task h3 a { color:var(--wf-ink); }
+:root[data-theme=dark] .state-active { background:var(--wf-mint); color:var(--wf-success); }
+:root[data-theme=dark] .app-footer { color:var(--wf-muted); }
+:root[data-theme=dark] .studio-home-hero { background:linear-gradient(110deg,var(--wf-soft),var(--wf-lavender)) !important; }
+:root[data-theme=dark] .studio-home-hero small { background:var(--wf-surface); }
+:root[data-theme=dark] .editor-document,:root[data-theme=dark] .rich-editor,:root[data-theme=dark] .rich-editor-toolbar { background:var(--wf-surface); color:var(--wf-ink); border-color:var(--wf-border); }
+.app-navigation a[href="#home"] .ui-icon { color:var(--wf-primary); }
+.app-navigation a[href="#organizations"] .ui-icon { color:var(--wf-blue); }
+.app-navigation a[href="#mine"] .ui-icon { color:var(--wf-warning); }
+.app-navigation a[href="#notifications"] .ui-icon { color:var(--wf-danger); }
+
+:root[data-theme=dark] .board-column-heading { background:var(--wf-soft); color:var(--wf-ink); }
+:root[data-theme=dark] .home-role-badge,:root[data-theme=dark] .home-archived-badge { background:var(--wf-surface); color:var(--wf-ink); }
+:root[data-theme=dark] .board-project-header .badge.state-active { background:var(--wf-mint); color:var(--wf-success); }
+:root[data-theme=dark] .accent-mint .home-overview-icon { color:var(--wf-success); }
+:root[data-theme=dark] :is(.home-card-description,.workspace-metrics,.my-task-controls label,.board-filter-fields label,.filter-panel label) { color:var(--wf-muted); }
+:root[data-theme=dark] input::placeholder,:root[data-theme=dark] textarea::placeholder { color:var(--wf-muted); opacity:1; }
+:root[data-theme=dark] .board-task .pill { color:var(--wf-primary); }
+:root[data-theme=dark] .board-task .status-in_progress { color:var(--wf-warning); }
+:root[data-theme=dark] .board-task .status-done { color:var(--wf-success); }

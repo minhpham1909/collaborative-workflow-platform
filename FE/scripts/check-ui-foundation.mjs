@@ -1,0 +1,21 @@
+import assert from 'node:assert/strict';
+import {createRequire} from 'node:module';
+import {mkdir,readFile,writeFile} from 'node:fs/promises';
+import {withQaAccount} from '../../BE/scripts/seed-qa-account.mjs';
+const require=createRequire(import.meta.url),{chromium}=require(process.env.WORKFLOW_PLAYWRIGHT_MODULE);
+if(!process.argv.includes('--qa-account'))throw new Error('Use --qa-account to inspect the existing authorized local QA account');
+await mkdir('.local/ux-upgrade',{recursive:true});
+await withQaAccount('pepe19092003@gmail.com',async ({refresh,manifestPath})=>{
+ const manifest=JSON.parse(await readFile(manifestPath,'utf8')),browser=await chromium.launch({headless:true,executablePath:process.env.WORKFLOW_BROWSER_EXECUTABLE});
+ try {
+  const context=await browser.newContext({viewport:{width:1440,height:1000},colorScheme:'dark'});await context.addCookies([{name:'workflow_refresh',value:refresh,domain:'localhost',path:'/auth',httpOnly:true,sameSite:'Strict',secure:false}]);const page=await context.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));page.setDefaultTimeout(15000);await page.goto('http://localhost:5173/#mine');await page.locator('.my-task-row').first().waitFor();assert.equal(await page.locator('html').getAttribute('data-theme'),'dark');
+  const results=[];
+  for(const theme of ['light','dark']){
+   await page.locator('.account-menu summary').click();await page.getByRole('button',{name:theme==='light'?'Sáng':'Tối',exact:true}).click();await page.waitForFunction(value=>document.documentElement.dataset.theme===value,theme);await page.locator('.account-menu summary').click();
+   for(const width of [375,768,1024,1280,1440]){await page.setViewportSize({width,height:1000});const measure=await page.evaluate(()=>{const values=[...document.querySelectorAll('.my-task-date,.overdue-chip')].filter(e=>e.querySelector('svg')).map(el=>{const svg=el.querySelector('svg').getBoundingClientRect(),node=[...el.childNodes].find(n=>n.nodeType===Node.TEXT_NODE&&n.textContent.trim());if(!node)return null;const range=document.createRange();range.selectNodeContents(node);const text=range.getBoundingClientRect();return {centerDiff:Math.abs((svg.top+svg.height/2)-(text.top+text.height/2)),textLines:range.getClientRects().length};}).filter(Boolean);return {values,overflow:document.documentElement.scrollWidth>innerWidth+1,rowHeight:document.querySelector('.my-task-row')?.getBoundingClientRect().height};});assert.equal(measure.overflow,false);assert.ok(measure.values.length>0);assert.ok(measure.values.every(v=>v.centerDiff<=2&&v.textLines===1));results.push({theme,width,...measure});await page.screenshot({path:`.local/ux-upgrade/mine-${theme}-${width}.png`,fullPage:true});}
+  }
+  await page.reload();await page.locator('.my-task-row').first().waitFor();assert.equal(await page.locator('html').getAttribute('data-theme'),'dark');await page.locator('.account-menu summary').click();await page.getByRole('button',{name:'Hệ thống',exact:true}).click();await page.emulateMedia({colorScheme:'light'});await page.waitForFunction(()=>document.documentElement.dataset.theme==='light');await page.emulateMedia({colorScheme:'dark'});await page.waitForFunction(()=>document.documentElement.dataset.theme==='dark');await page.locator('.account-menu summary').click();await page.setViewportSize({width:1440,height:1000});
+  for(const [name,route]of [['home','#home'],['workspace','#workspace/'+manifest.primary.workspaceId],['project','#project/'+manifest.primary.projectId],['settings','#settings'],['inbox','#notifications'],['task','#task/'+manifest.primary.taskId]]){await page.goto('http://localhost:5173/'+route);await page.locator('main h1').first().waitFor();await page.waitForTimeout(500);await page.screenshot({path:'.local/ux-upgrade/dark-'+name+'.png',fullPage:true});}
+  assert.deepEqual(errors,[]);await writeFile('.local/ux-upgrade/report.json',JSON.stringify(results,null,2));console.log(JSON.stringify({pass:true,checks:'system/overrides/reload/OS change; five widths; one-line metadata; six dark screens',rowHeights:results.map(({theme,width,rowHeight})=>({theme,width,rowHeight})),maxIconTextOffset:Math.max(...results.flatMap(result=>result.values.map(value=>value.centerDiff)))}));
+ }finally{await browser.close();}
+});

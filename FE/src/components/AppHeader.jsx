@@ -1,3 +1,4 @@
+import { useTheme } from './ThemeProvider.jsx';
 import { useShellText } from '../lib/useShellText.js';
 import { useEffect, useRef } from "react";
 import Icon from "./Icon.jsx";
@@ -6,6 +7,7 @@ import Avatar from "./Avatar.jsx";
 
 export default function AppHeader({ route, user, api, busy, logout, openMobile, mobileOpen }) {
   const { locale, t } = useShellText();
+  const { preference, choose, stored } = useTheme();
   const menu = useRef(null);
   useEffect(() => {
     if (menu.current) menu.current.open = false;
@@ -62,6 +64,11 @@ export default function AppHeader({ route, user, api, busy, logout, openMobile, 
             <Icon name="settings" />
             {t('Tài khoản & Cài đặt')}
           </a>
+          <fieldset className="theme-options">
+            <legend>{t('Giao diện')}</legend>
+            {[["system", "Hệ thống", "monitor"], ["light", "Sáng", "sun"], ["dark", "Tối", "moon"]].map(([value, label, icon]) => <button type="button" key={value} aria-pressed={preference === value} onClick={() => choose(value)}><Icon name={icon} />{t(label)}</button>)}
+            {!stored && <small>{t('Lựa chọn chỉ giữ trong phiên này vì trình duyệt không cho lưu.')}</small>}
+          </fieldset>
           <button disabled={busy} onClick={logout}>
             {t(busy ? 'Đang đăng xuất…' : 'Đăng xuất')}
           </button>

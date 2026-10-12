@@ -5,7 +5,7 @@ import { gzipSync } from 'node:zlib';
 
 const dist = resolve(import.meta.dirname, '../dist');
 const html = await readFile(resolve(dist, 'index.html'), 'utf8');
-const entry = html.match(/<script[^>]+src="([^"]+\.js)"/)?.[1];
+const entry = html.match(/<script(?=[^>]*\btype=["']module["'])[^>]+src="([^"]+\.js)"/)?.[1];
 assert.ok(entry, 'Built HTML must have a JavaScript entry');
 const initial = new Set();
 async function visit(file) {
