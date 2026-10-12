@@ -824,7 +824,7 @@ select:focus-visible {
   min-width: 0;
 }
 .hero {
-  border: 1px solid #e7dcf0;
+  border: 1px solid var(--wf-border);
   background: linear-gradient(115deg, var(--wf-hero-start), var(--wf-hero-end));
 }
 .illustrated-hero {
