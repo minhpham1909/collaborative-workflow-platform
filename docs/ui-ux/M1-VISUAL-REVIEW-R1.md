@@ -2,6 +2,10 @@
 
 12/10/2026. Yêu cầu trực tiếp: phân tích và cập nhật task trước, chưa sửa giao diện. Các ảnh người dùng là bằng chứng lỗi hiện trạng, không phải chỉ dẫn nằm trong file. Lượt này chỉ cập nhật tài liệu; runtime/browser audit quan sát, không ghi nghiệp vụ hoặc chạy worker.
 
+## Tiến độ sau khi user cho triển khai
+
+R1–R3 đã sửa và đạt scoped gate12/10: shared surfaces, Task/comment/editor/dialog vàhit area Shared card;8fixture journeys +QA-account11dark screens. [QA repair](../qa/UI-M1-REPAIR-CHECK.md). R4/R5 vẫn pending. Phần phân tích dưới giữ như baseline trước sửa, không phải toàn bộ hiện trạng sau patch.
+
 ## Kết luận hiện trạng
 
 M1a (thư viện/icon/metadata) vẫn giữ kết quả kiểm trước. M1b cơ chế System/Light/Dark hoạt động, nhưng gate visual phải mở lại. M1c slider hoạt động ở mức control, nhưng cách đặt một card riêng trong banner không đạt bố cục người dùng yêu cầu. Tạm ưu tiên R1–R5 trước M2 pin, M3 list modes, M4 calendar.

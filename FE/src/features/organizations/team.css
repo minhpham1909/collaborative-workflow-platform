@@ -16,7 +16,7 @@
 .team-table th { background: var(--wf-soft); font-size: 12px; font-weight: 600; color: var(--wf-muted); padding: 18px 20px; }
 .team-table td { padding: 20px; border-top: 1px solid var(--wf-border); font-size: 13px; line-height: 1.7; overflow-wrap: anywhere; }
 .team-table td small { display: block; color: var(--wf-muted); font-size: 12px; margin-top: 4px; }
-.team-table tr:hover td { background: #fffcfa; }
+.team-table tr:hover td { background: var(--wf-table-hover); }
 .team-person { display: flex; gap: 12px; align-items: center; }
 .team-person strong { overflow-wrap: anywhere; min-width: 0; }
 .team-person .avatar { width: 40px; height: 40px; flex-shrink: 0; background: var(--wf-lavender); color: var(--wf-primary); }

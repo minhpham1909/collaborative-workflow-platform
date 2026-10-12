@@ -1,6 +1,6 @@
 /* Shared surfaces have paired foreground/background values in both themes. */
 :root {
-  --wf-hero-start:#f0e7fb; --wf-hero-end:#fff0e8; --wf-hero-muted:#665e70;
+  --wf-hero-accent:#f2edff; --wf-table-hover:#fffcfa; --wf-hero-start:#f0e7fb; --wf-hero-end:#fff0e8; --wf-hero-muted:#665e70;
   --wf-empty-border:#c6bae0; --wf-badge-bg:#e9ddfb; --wf-badge-ink:var(--wf-muted);
   --wf-meta-surface:#f9f1ed; --wf-meta-muted:#756b80; --wf-meta-ink:#39313e;
   --wf-comment-surface:#fffaf7; --wf-comment-action:#6f5b84;
@@ -8,7 +8,7 @@
   --wf-error-bg:#ffd8de; --wf-error-ink:#8b213a;
 }
 :root[data-theme=dark] {
-  --wf-hero-start:var(--wf-lavender); --wf-hero-end:var(--wf-soft); --wf-hero-muted:var(--wf-muted);
+  --wf-hero-accent:var(--wf-lavender); --wf-table-hover:var(--wf-hover); --wf-hero-start:var(--wf-lavender); --wf-hero-end:var(--wf-soft); --wf-hero-muted:var(--wf-muted);
   --wf-empty-border:var(--wf-border); --wf-badge-bg:var(--wf-lavender); --wf-badge-ink:var(--wf-primary);
   --wf-meta-surface:var(--wf-soft); --wf-meta-muted:var(--wf-muted); --wf-meta-ink:var(--wf-ink);
   --wf-comment-surface:var(--wf-soft); --wf-comment-action:var(--wf-primary);

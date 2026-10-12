@@ -1,5 +1,5 @@
 .shell main.organization-page { padding: 28px 32px 40px; color: var(--wf-ink); }
-.organization-hero { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 28px 30px; background: linear-gradient(110deg, var(--wf-soft), #f2edff); border-radius: 24px; margin-bottom: 24px; }
+.organization-hero { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 28px 30px; background: linear-gradient(110deg, var(--wf-soft), var(--wf-hero-accent)); border-radius: 24px; margin-bottom: 24px; }
 .organization-hero > div { min-width: 0; }
 .organization-hero h1 { font-size: clamp(26px, 2.5vw, 36px); line-height: 1.3; margin: 10px 0; overflow-wrap: anywhere; }
 .organization-hero p { color: var(--wf-muted); font-size: 13px; margin: 0; }
