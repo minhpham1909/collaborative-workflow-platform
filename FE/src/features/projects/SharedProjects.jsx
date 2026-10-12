@@ -1,3 +1,4 @@
+import CollectionView,{useCollectionView} from '../../components/CollectionView.jsx';
 import {ProjectPinButton} from '../../components/ProjectPins.jsx';
 import { useAuthLocale } from '../auth/AuthLocale.jsx';
 import { projectText } from '../../lib/project-text.js';
@@ -7,8 +8,9 @@ import FilterPanel from "../../components/FilterPanel.jsx";
 import Icon from "../../components/Icon.jsx";
 import { messageFor } from "../../lib/messages.js";
 
-export default function SharedProjects({ api }) {
+export default function SharedProjects({ api, userId }) {
   const { locale } = useAuthLocale();
+  const [view,setView]=useCollectionView(userId,'shared-projects',['grid','list'],'grid');
   const tr = (value, values) => projectText(value, locale, values);
   const [q, setQ] = useState(""), [state, setState] = useState("active"), [from, setFrom] = useState(""), [to, setTo] = useState("");
   const [data, setData] = useState(null), [busy, setBusy] = useState(true), [error, setError] = useState(""), [revision, setRevision] = useState(0);
@@ -36,6 +38,7 @@ export default function SharedProjects({ api }) {
         <div><small>{tr("CỘNG TÁC THEO PHẠM VI")}</small><h1>{tr("Dự án được chia sẻ")}</h1><p>{tr("Project bạn đã chấp nhận quyền Guest. Bạn được xem và bình luận theo quyền hiện tại.")}</p></div>
         <button disabled={busy} onClick={() => setRevision(value => value + 1)}>{tr("Làm mới danh sách")}</button>
       </section>
+      <CollectionView kind="layout" view={view} onChange={setView} locale={locale}/>
       <FilterPanel locale={locale} compact advancedLabel={tr("Bộ lọc")}>
         <label>{tr("Tìm Dự án được chia sẻ")}<input type="search" maxLength={200} value={q} onChange={e => setQ(e.target.value)} /></label>
         <label>{tr("Trạng thái Dự án")}<select aria-label={tr("Trạng thái Dự án")} value={state} onChange={e => setState(e.target.value)}><option value="active">{tr("Đang hoạt động")}</option><option value="archived">{tr("Đã lưu trữ")}</option><option value="all">{tr("Tất cả")}</option></select></label>
@@ -47,7 +50,7 @@ export default function SharedProjects({ api }) {
       {busy && <LoadingState>{tr("Đang tải Project được chia sẻ…")}</LoadingState>}
       {error && <InlineMessage>{tr(error)} <button disabled={busy} onClick={() => load()}>{tr("Thử lại")}</button></InlineMessage>}
       {data && !data.items.length && <EmptyState>{tr("Không có Project được chia sẻ phù hợp. Kiểm tra lời mời trong Thông báo hoặc thay đổi bộ lọc.")}</EmptyState>}
-      {data && <div className="cards project-cards" aria-busy={busy}>{data.items.map(project => (
+      {data && <div className={'cards project-cards collection-'+view} aria-busy={busy}>{data.items.map(project => (
         <article className="card" key={project.id}>
           <span className={`badge state-${project.state}`}>{project.state === "archived" ? tr("Đã lưu trữ · Chỉ đọc") : tr("Đang hoạt động")}</span>
           <h2><a className="surface-link" href={`#project/${project.id}`}><Icon name={project.icon ?? "folder"} /> {project.name}</a></h2>

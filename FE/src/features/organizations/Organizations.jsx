@@ -1,3 +1,4 @@
+import CollectionView,{useCollectionView} from '../../components/CollectionView.jsx';
 import { useAuthLocale } from '../auth/AuthLocale.jsx';
 import { organizationText } from '../../lib/organization-text.js';
 import { useEffect, useRef, useState } from 'react';
@@ -10,8 +11,9 @@ import { notify } from '../../components/NotificationProvider.jsx';
 import { messageFor } from '../../lib/messages.js';
 
 export const organizationRoleLabel = (role, locale = 'vi') => organizationText(({ owner: 'Chủ sở hữu', admin: 'Quản trị viên', member: 'Thành viên' })[role] ?? 'Có quyền truy cập', locale);
-export default function Organizations({ api }) {
+export default function Organizations({ api, userId }) {
   const { locale } = useAuthLocale();
+  const [view,setView]=useCollectionView(userId,'organizations',['grid','list'],'grid');
   const t = (value, values) => organizationText(value, locale, values);
   const [q, setQ] = useState(''), [role, setRole] = useState('all'), [from, setFrom] = useState(''), [to, setTo] = useState('');
   const [data, setData] = useState({ items: [] }), [busy, setBusy] = useState(true), [error, setError] = useState(''), [creating, setCreating] = useState(false), [revision, setRevision] = useState(0);
@@ -40,7 +42,7 @@ export default function Organizations({ api }) {
     {error && <InlineMessage>{t(error)}<button onClick={() => setRevision(v => v + 1)}>{t("Thử lại")}</button></InlineMessage>}
     {busy && <LoadingState>{t("Đang tải tổ chức…")}</LoadingState>}
     <div className="home-collection-header"><h2>{t("Đội ngũ của bạn")} <span className="home-count">{data.total ?? '—'}</span></h2><span className="muted">{t("Vai trò của bạn")}</span></div>
-    <div className="organization-grid" aria-busy={busy}>{!invalid && data.items.map(org => <article className="organization-card" key={org.id}><div className="organization-cover"><StudioCover id={org.id} /><span className="home-role-badge">{organizationRoleLabel(org.role, locale)}</span></div><div className="organization-card-body"><span className={'organization-initials tone-' + studioTone(org.id)}>{org.name.slice(0, 2).toUpperCase()}</span><h2><a href={`#organization/${org.id}`}>{org.name}</a></h2><p>{org.role === 'member' ? t("Xem những Workspace bạn đã được thêm vào.") : t("Điều phối Workspace và công việc của đội ngũ.")}</p><div className="organization-card-footer"><span>{t("Tạo {date}", { date: new Date(org.createdAt).toLocaleDateString(locale === 'en' ? 'en-GB' : 'vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }) })}</span><span className="home-card-action" aria-hidden="true">{t("Vào tổ chức")}<Icon name="chevron-right" /></span></div></div></article>)}</div>
+    <CollectionView kind="layout" view={view} onChange={setView} locale={locale}/><div className={'organization-grid collection-'+view} aria-busy={busy}>{!invalid && data.items.map(org => <article className="organization-card" key={org.id}><div className="organization-cover"><StudioCover id={org.id} /><span className="home-role-badge">{organizationRoleLabel(org.role, locale)}</span></div><div className="organization-card-body"><span className={'organization-initials tone-' + studioTone(org.id)}>{org.name.slice(0, 2).toUpperCase()}</span><h2><a href={`#organization/${org.id}`}>{org.name}</a></h2><p>{org.role === 'member' ? t("Xem những Workspace bạn đã được thêm vào.") : t("Điều phối Workspace và công việc của đội ngũ.")}</p><div className="organization-card-footer"><span>{t("Tạo {date}", { date: new Date(org.createdAt).toLocaleDateString(locale === 'en' ? 'en-GB' : 'vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }) })}</span><span className="home-card-action" aria-hidden="true">{t("Vào tổ chức")}<Icon name="chevron-right" /></span></div></div></article>)}</div>
     {!busy && !error && !invalid && !data.items.length && <EmptyState><h2>{q || from || to || role !== 'all' ? t("Không có tổ chức phù hợp") : t("Bạn chưa tham gia tổ chức")}</h2><p>{q || from || to || role !== 'all' ? t("Thử thay đổi từ khóa hoặc bộ lọc.") : t("Bạn có thể tạo tổ chức hoặc tiếp tục dùng Workspace độc lập.")}</p></EmptyState>}
     {data.nextCursor && <button disabled={busy || invalid} onClick={() => load(data.nextCursor)}>{t("Tải thêm tổ chức")}</button>}
     {creating && <NameDialog locale={locale} title={t("Tạo tổ chức")} label={t("Tên tổ chức / Studio")} submitLabel={t("Tạo tổ chức")} onSave={async name => { await api.request('/organizations', { method: 'POST', body: { name } }); clear(); setRevision(v => v + 1); notify(t('Đã tạo tổ chức.')); }} onClose={uncertain => { setCreating(false); if (uncertain) { clear(); setRevision(v => v + 1); } }}><p className="muted">{t("Bạn sẽ là Chủ sở hữu. Sau khi tạo, bạn có thể thiết lập Workspace cho đội ngũ.")}</p></NameDialog>}

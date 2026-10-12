@@ -1,3 +1,4 @@
+import CollectionLoadMore from '../../components/CollectionLoadMore.jsx';
 import CollectionView,{useCollectionView} from '../../components/CollectionView.jsx';
 import {rememberInboxPosition,takeInboxPosition} from './inbox-position.js';
 import { useAuthLocale } from '../auth/AuthLocale.jsx';
@@ -201,7 +202,7 @@ export default function Notifications({ api, id, user }) {
       }
     } catch (e) {
       if (token === generation.current) {
-        setData(null);
+        if(!cursor||[401,403,404].includes(e.status))setData(null);
         setError(messageFor(e));
       }
     } finally {
@@ -467,12 +468,7 @@ export default function Notifications({ api, id, user }) {
                 <h2>{tr("Không có thông báo phù hợp")}</h2>
               </EmptyState>
             )}
-            {data.nextCursor && (
-              <button
-                disabled={busy || mutating}
-                onClick={() => load(data.nextCursor)}
-              >{tr("Tải thêm thông báo")}</button>
-            )}
+            {data.nextCursor && <CollectionLoadMore cursor={data.nextCursor} busy={busy||mutating} error={error} queryKey={query} onLoad={load} locale={locale}/>}
           </>
         ))}
     </main>

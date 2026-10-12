@@ -1,3 +1,4 @@
+import CollectionView,{useCollectionView} from '../../components/CollectionView.jsx';
 import StudioCarousel from '../../components/StudioCarousel.jsx';
 import { useAuthLocale } from '../auth/AuthLocale.jsx';
 import { homeText } from '../../lib/home-text.js';
@@ -34,7 +35,8 @@ function plain(node) {
 export default function Home({ api, user }) {
   const { locale } = useAuthLocale();
   const t = (value, values) => homeText(value, locale, values);
-  const [role, setRole] = useState("all"), [state, setState] = useState("all"), [view, setView] = useState("grid");
+  const [view,setView]=useCollectionView(user.id,'home-workspaces',['grid','list'],'grid');
+  const [role, setRole] = useState("all"), [state, setState] = useState("all");
   const [q, setQ] = useState(""),
     [from, setFrom] = useState(""),
     [to, setTo] = useState(""),
@@ -196,7 +198,7 @@ export default function Home({ api, user }) {
         </div>
       </section>
       <HomeHighlights data={highlights} compact />
-      <div className="home-collection-header"><div><p className="home-eyebrow">{t("CÙNG NHAU LÀM VIỆC")}</p><h2>{t("Workspace của bạn")} <span className="home-count">{data.total ?? '—'}</span></h2></div><div className="home-view-switch" role="group" aria-label={t("Cách xem Workspace")}><button aria-label={t("Xem Workspace dạng thẻ")} aria-pressed={view === 'grid'} onClick={() => setView('grid')}><Icon name="grid" /></button><button aria-label={t("Xem Workspace dạng danh sách")} aria-pressed={view === 'list'} onClick={() => setView('list')}><Icon name="list" /></button></div></div>
+      <div className="home-collection-header"><div><p className="home-eyebrow">{t("CÙNG NHAU LÀM VIỆC")}</p><h2>{t("Workspace của bạn")} <span className="home-count">{data.total ?? '—'}</span></h2></div><CollectionView kind="layout" view={view} onChange={setView} locale={locale} labels={[t("Xem Workspace dạng thẻ"),t("Xem Workspace dạng danh sách")]}/></div>
       <div className="home-filters">
       <FilterPanel locale={locale} compact advancedLabel={t("Thời gian")}>
         <label>

@@ -1,5 +1,7 @@
 # Trạng thái và bước tiếp theo
 
+12/10/2026 — **M3b đạt; M3a–M3b hoàn tất**: shared account-scoped card/list6collections (MyTasks density); Team/audit giữ bảng; Inbox lazy opt-in3pages/manual fallback, dedup/pending/error guards và không mất60rows khi append failure. 4cases×6collections×5width, lazy80+ fixture vàHome/Workspace/Team/MyTasks/Inbox regressionsPASS, FE25/build budgetPASS. [QA](../qa/UI-COLLECTION-VIEWS-M3-CHECK.md). Tiếp M4 calendar dùng BE counts/current rights, không12-item snapshot. KhôngBE migration/devwrites/providers/workers.
+
 12/10/2026 — **M3a Notifications views đạt**: shared control/hook account-scoped local preference, detailed/compact giữ action/read/filter/cursor; Task/detail return re-fetch+anchor bounded20pages, không cache bodies. Light/Dark+Vi/En/5width/S9a vàFE25/buildbudgetPASS. [QA](../qa/UI-COLLECTION-VIEWS-M3-CHECK.md). Tiếp M3b phù hợp collections/lazy fallback; khôngdevwrites/providers.
 
 12/10/2026 — **M2 Project pins đạt**: personal max20/newest-first, same current-access guard, Archive readonly/Guest/OrgAdmin, unavailable metadata redacted but removable; sidebar/mobile vào Kanban, card/header toggle intent, loading/error/readback. BE119integration/67unit, FE23, browser8cases vàWorkspace/W2 regressions/build budgetPASS. [QA](../qa/UI-PROJECT-PINS-M2-CHECK.md). API local đã restart riêng; read-only QA smokePASS, không pin/seed data thật hoặc mở workers. Tiếp M3a Notifications view modes.

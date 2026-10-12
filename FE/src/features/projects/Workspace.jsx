@@ -1,3 +1,4 @@
+import CollectionView,{useCollectionView} from '../../components/CollectionView.jsx';
 import {ProjectPinButton} from '../../components/ProjectPins.jsx';
 import { useAuthLocale } from '../auth/AuthLocale.jsx';
 import { workspaceText } from '../../lib/workspace-text.js';
@@ -21,8 +22,9 @@ import Team from "./Team.jsx";
 import WorkspaceSettings from "./WorkspaceSettings.jsx";
 import DescriptionPreview from "../../components/DescriptionPreview.jsx";
 
-export default function Workspace({ api, id }) {
+export default function Workspace({ api, id, userId }) {
   const { locale } = useAuthLocale();
+  const [view,setView]=useCollectionView(userId,'workspace-projects',['grid','list'],'grid');
   const t = (value, values) => workspaceText(value, locale, values);
   const [workspace, setWorkspace] = useState(null),
     [tab, setTab] = useState("projects"),
@@ -305,7 +307,7 @@ export default function Workspace({ api, id }) {
       )}
       {tab === "projects" && (
         <>
-          <div className="cards project-cards" aria-busy={busy}>
+          <CollectionView kind="layout" view={view} onChange={setView} locale={locale}/><div className={'cards project-cards collection-'+view} aria-busy={busy}>
             {data.items.map((item, i) =>
               tab === "projects" ? (
                 <article

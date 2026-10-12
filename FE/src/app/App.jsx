@@ -233,17 +233,17 @@ export default function App() {
             <EmailVerificationActions api={api} />
           </main>,locale)
         ) : route.kind === "organizations" ? (
-          <Organizations key={user.id} api={api} />
+          <Organizations key={user.id} api={api}  userId={user.id} />
         ) : route.kind === "organization" ? (
-          route.section === 'team' ? <OrganizationTeam key={user.id + route.id} api={api} id={route.id} user={user} /> : <Organization key={user.id + route.id} api={api} id={route.id} />
+          route.section === 'team' ? <OrganizationTeam key={user.id + route.id} api={api} id={route.id} user={user} /> : <Organization key={user.id + route.id} api={api} id={route.id}  userId={user.id} />
         ) : route.kind === "shared" ? (
-          <SharedProjects key={user.id} api={api} />
+          <SharedProjects key={user.id} api={api}  userId={user.id} />
         ) : route.kind === "task" ? (
           <TaskDetail key={user.id + route.id} api={api} id={route.id} />
         ) : route.kind === "mine" ? (
-          <MyTasks key={user.id} api={api} />
+          <MyTasks key={user.id} api={api}  userId={user.id} />
         ) : route.kind === "workspace" ? (
-          <Workspace key={user.id + route.id} api={api} id={route.id} />
+          <Workspace key={user.id + route.id} api={api} id={route.id}  userId={user.id} />
         ) : route.kind === "project" ? (
           <Project
             key={user.id + route.id}
