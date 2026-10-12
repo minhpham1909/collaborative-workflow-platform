@@ -11,6 +11,7 @@ export function createWorkspaceService({ store }) {
     update: (auth, workspaceId, input) => store.update(auth.claims, objectId(workspaceId), workspaceFields(input, true)),
     members: (auth, workspaceId, query) => store.members(auth.claims, objectId(workspaceId), teamQuery(query)),
     role: (auth, workspaceId, memberId, input) => store.role(auth.claims, objectId(workspaceId), objectId(memberId), membershipRoleInput(input)),
+    roleAudit: (auth, workspaceId, query) => store.roleAudit(auth.claims, objectId(workspaceId), teamQuery(query, false, 'createdAt')),
     leave: (auth, workspaceId, input) => store.leave(auth.claims, objectId(workspaceId), versionInput(input)),
     remove: (auth, workspaceId, memberId, input) => store.remove(auth.claims, objectId(workspaceId), objectId(memberId), versionInput(input)),
     transfer: (auth, workspaceId, input) => store.transfer(auth.claims, objectId(workspaceId), transferInput(input)),

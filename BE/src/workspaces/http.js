@@ -23,6 +23,7 @@ export function createWorkspaceRouter({ service, authService, config }) {
   value.patch('/:workspaceId/state', async (req, res) => res.json(await service.state(req.auth, req.params.workspaceId, req.body)));
   value.get('/:workspaceId/members', async (req, res) => res.json(await service.members(req.auth, req.params.workspaceId, req.query)));
   value.patch('/:workspaceId/members/:memberId/role', async (req, res) => res.json(await service.role(req.auth, req.params.workspaceId, req.params.memberId, req.body)));
+  value.get('/:workspaceId/role-audit', async (req, res) => res.json(await service.roleAudit(req.auth, req.params.workspaceId, req.query)));
   value.post('/:workspaceId/leave', async (req, res) => res.json(await service.leave(req.auth, req.params.workspaceId, req.body)));
   value.post('/:workspaceId/members/:memberId/remove', async (req, res) => res.json(await service.remove(req.auth, req.params.workspaceId, req.params.memberId, req.body)));
   value.patch('/:workspaceId/ownership', async (req, res) => res.json(await service.transfer(req.auth, req.params.workspaceId, req.body)));

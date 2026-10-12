@@ -127,7 +127,7 @@ export function createMongoWorkspaceStore({ config, now = () => new Date() }) {
         ...(page.patterns.length ? [{ $match: { $and: page.patterns.map(pattern => ({ 'identity.displayName': { $regex: pattern, $options: 'i' } })) } }] : []),
         { $sort: { joinedAt: -1, _id: -1 } }, { $limit: page.limit + 1 },
       ], { session: tx }).toArray();
-      const users = await User.collection.find({ _id: { $in: records.map((value) => value.userId) } }, { session: tx, projection: { displayName: 1, avatar: 1 } }).toArray();
+      const users = await User.collection.find({ _id: { $in: records.map((value) => value.userId) } }, { session: tx, projection: { displayName: 1, avatar: 1, emailVerifiedAt: 1 } }).toArray();
       const organization = workspace.organizationId ? await Organization.collection.findOne({ _id: workspace.organizationId }, { session: tx }) : null;
       return paged(records, page.limit, (membership) => {
         const member = users.find((value) => sameId(value._id, membership.userId));
@@ -137,8 +137,22 @@ export function createMongoWorkspaceStore({ config, now = () => new Date() }) {
         const eligible = access.canManage && !self && !protectedOwner && !protectedAdmin;
         const owner = access.role === 'owner' && !workspace.organizationId;
         return { userId: String(membership.userId), displayName: member?.displayName ?? 'Unavailable User', avatar: { source: member?.avatar?.source ?? 'initials', googlePictureUrl: member?.avatar?.googlePictureUrl ?? null }, role: protectedOwner ? 'owner' : manager ? 'manager' : 'member', version: membership.version, joinedAt: membership.joinedAt,
-          permissions: { remove: Boolean(eligible && (!manager || owner)), ban: Boolean(eligible && (!manager || owner || ['organization_owner', 'organization_admin'].includes(access.role))), transfer: Boolean(owner && !self), changeRole: Boolean(owner && !protectedOwner && !self) } };
+          permissions: { remove: Boolean(eligible && (!manager || owner)), ban: Boolean(eligible && (!manager || owner || ['organization_owner', 'organization_admin'].includes(access.role))), transfer: Boolean(owner && !self), changeRole: Boolean(owner && !protectedOwner && !self && member?.emailVerifiedAt) } };
       }, 'joinedAt');
+    }),
+    roleAudit: (claims, workspaceId, page) => run(claims, async (user, tx) => {
+      const { workspace } = await scope(user, workspaceId, tx, true);
+      const criteria = { workspaceId: workspace._id, $and: page.filters.length ? page.filters : [{}] };
+      const base = [{ $match: criteria },
+        { $lookup: { from: 'users', localField: 'actorId', foreignField: '_id', pipeline: [{ $project: { displayName: 1 } }], as: 'actor' } },
+        { $lookup: { from: 'users', localField: 'targetUserId', foreignField: '_id', pipeline: [{ $project: { displayName: 1 } }], as: 'target' } },
+        ...(page.patterns.length ? [{ $match: { $and: page.patterns.map(pattern => ({ $or: [{ 'actor.displayName': { $regex: pattern, $options: 'i' } }, { 'target.displayName': { $regex: pattern, $options: 'i' } }, { reason: { $regex: pattern, $options: 'i' } }] })) } }] : []),
+      ];
+      const counts = await WorkspaceRoleAudit.collection.aggregate([...base, { $count: 'total' }], { session: tx }).toArray();
+      const records = await WorkspaceRoleAudit.collection.aggregate([...base, { $match: mongoAfter(page.after) }, { $sort: { createdAt: -1, _id: -1 } }, { $limit: page.limit + 1 }], { session: tx }).toArray();
+      return { ...paged(records, page.limit, row => ({ id: String(row._id), createdAt: row.createdAt, previousRole: row.previousRole, role: row.role, reason: row.reason, membershipVersion: row.membershipVersion,
+        actor: { id: String(row.actorId), displayName: row.actor[0]?.displayName ?? null },
+        target: { id: String(row.targetUserId), displayName: row.target[0]?.displayName ?? null } })), total: counts[0]?.total ?? 0 };
     }),
     role: (claims, workspaceId, memberId, input) => run(claims, async (user, tx) => {
       const { workspace } = await scope(user, workspaceId, tx);

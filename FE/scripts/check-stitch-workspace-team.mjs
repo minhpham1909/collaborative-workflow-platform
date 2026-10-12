@@ -69,13 +69,14 @@ try {
   const fixtureApp=()=>createApp({ authService: auth, authConfig: config, workspaceService: workspaces, workService: work, organizationService: organizations, moderationService: mod, notificationsService: createNotificationsService({ store: createMongoNotificationsStore({ cutoff }), cutoff }) });server=fixtureApp().listen(0,'127.0.0.1'); await once(server, 'listening');
   let origin = `http://127.0.0.1:${server.address().port}`;async function rotateFixture(){const previous=server;server=fixtureApp().listen(0,'127.0.0.1');await once(server,'listening');origin='http://127.0.0.1:'+server.address().port;await new Promise(resolve=>previous.close(resolve));}
   browser = await chromium.launch({ executablePath: process.env.WORKFLOW_BROWSER_EXECUTABLE, headless: true });
-  let fail = false, delay = false, lostStateResponse = false, stateWrites = 0;
+  let fail = false, delay = false, lostStateResponse = false, stateWrites = 0, lostRoleResponse = false, roleWrites = 0;
   async function pageFor(index) {
     const context = await browser.newContext({colorScheme:process.env.WORKFLOW_REGRESSION_THEME==='dark'?'dark':'light', viewport: { width: 1440, height: 1000 } });
     await context.route('http://localhost:4000/**', async route => {
       if (fail && route.request().url().includes(`/workspaces/${standalone.id}/projects?`)) return route.abort();
       if (delay && route.request().url().includes('/organizations?')) await new Promise(resolve => setTimeout(resolve, new URL(route.request().url()).searchParams.get('q') === 'Hà' ? 900 : 50));
       const relay=origin;let response;try{response=await route.fetch({url:route.request().url().replace('http://localhost:4000',relay)});}catch{if(closing||relay!==origin)return route.abort().catch(()=>{});throw new Error('Fixture relay failed: '+new URL(route.request().url()).pathname);}
+      if (route.request().method() === 'PATCH' && route.request().url().endsWith('/role')) { roleWrites++; if (lostRoleResponse) { lostRoleResponse = false; return route.abort(); } }
       if (route.request().method() === 'PATCH' && route.request().url().endsWith('/state')) { stateWrites++; if (lostStateResponse) { lostStateResponse = false; return route.abort(); } }
       await route.fulfill({ response });
     });
@@ -86,6 +87,22 @@ try {
   const ownerPage = await pageFor(0); await ownerPage.goto(`http://localhost:5173/#workspace/${standalone.id}`); await ownerPage.getByRole('heading', { name: 'Website Bloom', exact: true }).waitFor(); await ownerPage.locator('.workspace-tabs').getByRole('button', { name: 'Thành viên', exact: true }).click(); await ownerPage.getByRole('table', { name: 'Thành viên Workspace', exact: true }).getByText('Lan', { exact: true }).waitFor();
   for(const width of [1440,1280,1024,768,375]) { await ownerPage.setViewportSize({ width, height: 1000 }); await ownerPage.screenshot({ path: `${out}/members-${width}.png`, fullPage: true }); assert.ok(await ownerPage.evaluate(() => document.documentElement.scrollWidth <= innerWidth+1), `WS Team overflow ${width}`); }
   await ownerPage.setViewportSize({ width: 1440, height: 1000 });
+
+  const roleRow = () => ownerPage.getByRole('table', { name: 'Thành viên Workspace', exact: true }).locator('tbody tr').filter({ hasText: 'Lan' });
+  await roleRow().getByRole('button', { name: 'Bổ nhiệm Manager', exact: true }).click();
+  let roleDialog = ownerPage.getByRole('dialog'); await roleDialog.getByLabel('Lý do thay đổi vai trò', { exact: true }).fill('Điều phối thiết kế'); await roleDialog.getByRole('button', { name: 'Bổ nhiệm Manager', exact: true }).click(); await roleDialog.waitFor({ state: 'hidden' });
+  await roleRow().getByRole('button', { name: 'Hạ xuống Member', exact: true }).waitFor();
+  const auditSummary = ownerPage.locator('summary').filter({ hasText: 'Nhật ký bổ nhiệm & chuyển quyền' }); await auditSummary.click(); await ownerPage.getByRole('table', { name: 'Nhật ký vai trò Workspace', exact: true }).getByText('Điều phối thiết kế', { exact: true }).waitFor(); await auditSummary.click();
+  await roleRow().getByRole('button', { name: 'Hạ xuống Member', exact: true }).click(); roleDialog = ownerPage.getByRole('dialog'); await roleDialog.getByLabel('Lý do thay đổi vai trò', { exact: true }).fill('Bàn giao công việc'); const beforeRoleWrites = roleWrites; lostRoleResponse = true; await roleDialog.getByRole('button', { name: 'Hạ xuống Member', exact: true }).click(); await roleDialog.getByText('Chưa xác nhận kết quả. Đóng và tải lại danh sách trước khi gửi tiếp.', { exact: true }).waitFor(); assert.equal(await roleDialog.getByRole('button', { name: 'Hạ xuống Member', exact: true }).isDisabled(), true); assert.equal(roleWrites, beforeRoleWrites + 1); assert.equal((await WorkspaceMembership.collection.findOne({ workspaceId: new mongoose.Types.ObjectId(standalone.id), userId: users[1]._id })).role, 'member'); await roleDialog.getByRole('button', { name: 'Đóng', exact: true }).click(); await ownerPage.locator('.system-dialog button.primary').click(); await roleDialog.waitFor({ state: 'hidden' });
+  await roleRow().getByRole('button', { name: 'Bổ nhiệm Manager', exact: true }).waitFor();
+  await roleRow().getByRole('button', { name: 'Bổ nhiệm Manager', exact: true }).click(); roleDialog = ownerPage.getByRole('dialog'); await roleDialog.getByLabel('Lý do thay đổi vai trò', { exact: true }).fill('Nháp khi mất quyền Owner');
+  const beforeRoleLoss = (await workspaces.get(auths[0], standalone.id)).workspace; await workspaces.transfer(auths[0], standalone.id, { expectedVersion: beforeRoleLoss.version, memberId: users[1].id });
+  await roleDialog.getByRole('button', { name: 'Bổ nhiệm Manager', exact: true }).click(); await roleDialog.getByRole('button', { name: 'Bổ nhiệm Manager', exact: true }).waitFor({ state: 'visible' });
+  await ownerPage.waitForFunction(() => document.querySelector('[aria-labelledby="workspace-role-title"] button.primary')?.disabled);
+  assert.equal(await roleDialog.getByLabel('Lý do thay đổi vai trò', { exact: true }).inputValue(), 'Nháp khi mất quyền Owner'); await roleDialog.getByRole('button', { name: 'Đóng', exact: true }).click(); await ownerPage.locator('.system-dialog button.primary').click(); await roleDialog.waitFor({ state: 'hidden' });
+  const newOwnerContext = (await workspaces.get(auths[1], standalone.id)).workspace; await workspaces.transfer(auths[1], standalone.id, { expectedVersion: newOwnerContext.version, memberId: users[0].id });
+  await ownerPage.getByRole('button', { name: 'Làm mới danh sách', exact: true }).click(); await roleRow().getByRole('button', { name: 'Bổ nhiệm Manager', exact: true }).waitFor();
+  await new Promise(resolve => setTimeout(resolve, 55000));
   const memberRow = () => ownerPage.locator('.team-table tbody tr').filter({ hasText: 'Lan' });
   await memberRow().getByRole('button', { name: 'Gỡ khỏi nhóm', exact: true }).click(); await ownerPage.getByRole('dialog').getByRole('button', { name: 'Loại thành viên', exact: true }).click(); await ownerPage.getByRole('dialog').waitFor({ state: 'hidden' }); assert.equal((await Task.collection.findOne({ _id: new mongoose.Types.ObjectId(assigned.id) })).assigneeId, null); assert.equal(await TaskComment.collection.countDocuments({ authorId: users[1]._id }), 2);
   await workspaces.accept(auths[1], { token: new URLSearchParams(new URL(reusableLink.url).hash.slice(1)).get('token') }); assert.equal((await Task.collection.findOne({ _id: new mongoose.Types.ObjectId(assigned.id) })).assigneeId, null);

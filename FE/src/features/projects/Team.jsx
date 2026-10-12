@@ -1,5 +1,5 @@
 import { useAuthLocale } from '../auth/AuthLocale.jsx';
-import { workspaceText } from '../../lib/workspace-text.js';
+import { workspaceRoleText as workspaceText } from '../../lib/workspace-role-text.js';
 import {
   EmptyState,
   InlineMessage,
@@ -11,6 +11,8 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import WorkspaceModeration, { BanDialog } from './WorkspaceModeration.jsx';
 import AddWorkspaceMember from './AddWorkspaceMember.jsx';
+import WorkspaceRoleDialog from './WorkspaceRoleDialog.jsx';
+import WorkspaceRoleAudit from './WorkspaceRoleAudit.jsx';
 import { workspaceRoleLabel } from '../../lib/ui-copy.js';
 import '../../features/organizations/team.css';
 import './team.css';
@@ -122,7 +124,7 @@ export default function Team({ api, id, invitations, onContext, onUnavailable })
       </div>
       {invitations && workspace && (!workspace.permissions?.manage || workspace.organizationId) ? (
         <InlineMessage tone="info">
-          {t("Lời mời chỉ được tạo bởi Owner của Workspace độc lập đang hoạt động. Workspace thuộc tổ chức dùng luồng phân bổ thành viên của tổ chức.")}
+          {t("Owner và Manager của Workspace độc lập đang hoạt động được mời Member. Workspace thuộc tổ chức dùng luồng phân bổ thành viên của tổ chức.")}
         </InlineMessage>
       ) : (
         <>
@@ -211,7 +213,7 @@ export default function Team({ api, id, invitations, onContext, onUnavailable })
           )}
           {error && <InlineMessage>{t(error)}</InlineMessage>}
           {busy && <LoadingState>{t("Đang tải danh sách…")}</LoadingState>}
-          <div className="team-table-wrap"><table className="team-table" aria-label={invitations ? t("Lời mời Workspace") : t("Thành viên Workspace")} aria-busy={busy}><thead><tr><th>{invitations ? t("Người nhận / loại") : t("Thành viên")}</th><th>{invitations ? t("Trạng thái") : t("Vai trò Workspace")}</th><th>{invitations ? t("Ngày tạo / hết hạn") : t("Ngày gia nhập")}</th><th>{t("Thao tác")}</th></tr></thead><tbody>{data.items.map(item => <tr key={item.id ?? item.userId}><td data-label={t("Thành viên")}>{invitations ? <strong>{item.email ?? t("Liên kết tham gia")}</strong> : <div className="team-person"><Avatar user={item} /><strong>{item.displayName}</strong></div>}</td><td data-label={invitations ? t("Trạng thái") : t("Vai trò Workspace")}><span className="team-role">{invitations ? t(states[item.state]) : workspaceRoleLabel(item.role, locale)}</span>{invitations && item.emailDelivery && <small>{t("Email: {state}", { state: t(delivery[item.emailDelivery]) })}</small>}</td><td data-label={t(invitations ? "Ngày tạo / hết hạn" : "Ngày gia nhập")}>{date(item.joinedAt ?? item.createdAt, locale)}{invitations && <small>{t("Hết hạn {date}", { date: date(item.expiresAt, locale) })}</small>}</td><td data-label={t("Thao tác")}><div className="team-member-actions">{invitations ? owner && item.state === 'active' && <><button disabled={busy} onClick={() => setAction({ kind: 'revoke', item })}>{t("Thu hồi")}</button>{workspace.state !== 'archived' && item.emailDelivery === 'failed' && <button disabled={busy} onClick={() => setAction({ kind: 'retry', item })}>{t("Thử gửi lại email")}</button>}</> : <>{item.permissions?.remove && <button disabled={busy} onClick={() => setAction({ kind: 'remove', item })}>{t("Gỡ khỏi nhóm")}</button>}{item.permissions?.ban && <button disabled={busy} onClick={() => setAction({ kind: 'ban', item })}>{t("Chặn truy cập")}</button>}{item.permissions?.transfer && <button disabled={busy} onClick={() => setAction({ kind: 'transfer', item })}>{t("Chuyển quyền sở hữu")}</button>}</>}</div></td></tr>)}</tbody></table></div>
+          <div className="team-table-wrap"><table className="team-table" aria-label={invitations ? t("Lời mời Workspace") : t("Thành viên Workspace")} aria-busy={busy}><thead><tr><th>{invitations ? t("Người nhận / loại") : t("Thành viên")}</th><th>{invitations ? t("Trạng thái") : t("Vai trò Workspace")}</th><th>{invitations ? t("Ngày tạo / hết hạn") : t("Ngày gia nhập")}</th><th>{t("Thao tác")}</th></tr></thead><tbody>{data.items.map(item => <tr key={item.id ?? item.userId}><td data-label={t("Thành viên")}>{invitations ? <strong>{item.email ?? t("Liên kết tham gia")}</strong> : <div className="team-person"><Avatar user={item} /><strong>{item.displayName}</strong></div>}</td><td data-label={invitations ? t("Trạng thái") : t("Vai trò Workspace")}><span className="team-role">{invitations ? t(states[item.state]) : workspaceRoleLabel(item.role, locale)}</span>{invitations && item.emailDelivery && <small>{t("Email: {state}", { state: t(delivery[item.emailDelivery]) })}</small>}</td><td data-label={t(invitations ? "Ngày tạo / hết hạn" : "Ngày gia nhập")}>{date(item.joinedAt ?? item.createdAt, locale)}{invitations && <small>{t("Hết hạn {date}", { date: date(item.expiresAt, locale) })}</small>}</td><td data-label={t("Thao tác")}><div className="team-member-actions">{invitations ? owner && item.state === 'active' && <><button disabled={busy} onClick={() => setAction({ kind: 'revoke', item })}>{t("Thu hồi")}</button>{workspace.state !== 'archived' && item.emailDelivery === 'failed' && <button disabled={busy} onClick={() => setAction({ kind: 'retry', item })}>{t("Thử gửi lại email")}</button>}</> : <>{workspace.permissions?.manageRoles && item.permissions?.changeRole && <button disabled={busy} onClick={() => setAction({ kind: 'role', item })}>{t(item.role === 'manager' ? 'Hạ xuống Member' : 'Bổ nhiệm Manager')}</button>}{item.permissions?.remove && <button disabled={busy} onClick={() => setAction({ kind: 'remove', item })}>{t("Gỡ khỏi nhóm")}</button>}{item.permissions?.ban && <button disabled={busy} onClick={() => setAction({ kind: 'ban', item })}>{t("Chặn truy cập")}</button>}{item.permissions?.transfer && <button disabled={busy} onClick={() => setAction({ kind: 'transfer', item })}>{t("Chuyển quyền sở hữu")}</button>}</>}</div></td></tr>)}</tbody></table></div>
           {!busy && !error && !invalid && !data.items.length && (
             <EmptyState>
               {t(invitations ? "Không có lời mời phù hợp." : "Không có thành viên phù hợp.")}
@@ -229,7 +231,7 @@ export default function Team({ api, id, invitations, onContext, onUnavailable })
           <h3>{t("Tư cách thành viên của bạn")}</h3>
           {!workspace.permissions?.leave ? (
             <p>
-              {t("Owner cần chuyển quyền sở hữu, Manager cần được thay thế trước khi rời. Quản trị tổ chức chưa tham gia Workspace không có membership để rời.")}
+              {t(workspace.organizationId ? "Owner cần chuyển quyền sở hữu, Manager cần được thay thế trước khi rời. Quản trị tổ chức chưa tham gia Workspace không có membership để rời." : "Owner cần chuyển quyền sở hữu trước khi rời Workspace.")}
             </p>
           ) : (
             <>
@@ -247,9 +249,11 @@ export default function Team({ api, id, invitations, onContext, onUnavailable })
         </section>
       )}
       {!invitations && owner && workspace && <WorkspaceModeration api={api} workspace={workspace} />}
+      {!invitations && owner && workspace && !workspace.organizationId && <WorkspaceRoleAudit api={api} workspace={workspace} revision={revision} onContext={fresh => { setWorkspace(fresh); onContext(fresh); setData({ items: [] }); setRevision(value => value + 1); }} onUnavailable={onUnavailable} />}
+      {action?.kind === 'role' && workspace && <WorkspaceRoleDialog api={api} workspace={workspace} member={action.item} onContext={fresh => { setWorkspace(fresh); onContext(fresh); }} onUnavailable={onUnavailable} onDone={() => { setAction(null); setRevision(value => value + 1); }} />}
       {action?.kind === 'ban' && workspace && <BanDialog api={api} workspace={workspace} member={action.item} onClose={() => { setAction(null); setRevision(v => v + 1); }} />}
       {action?.kind === 'add' && workspace && <AddWorkspaceMember api={api} workspace={workspace} onClose={() => { setAction(null); setRevision(v => v + 1); }} />}
-      {action && !['ban', 'add'].includes(action.kind) && workspace && (
+      {action && !['ban', 'add', 'role'].includes(action.kind) && workspace && (
         <TeamAction
           api={api}
           workspace={workspace}
