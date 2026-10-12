@@ -89,8 +89,13 @@ try {
   await ownerPage.setViewportSize({ width: 1440, height: 1000 });
   await ownerPage.getByRole('button', { name: 'Chỉnh sửa mô tả Workspace', exact: true }).click();
   await ownerPage.getByLabel('Tên Workspace', { exact: true }).fill('Studio đã cập nhật');
+  await ownerPage.getByLabel('Mục tiêu ngắn', { exact: true }).fill('Giao diện và trải nghiệm cho nhóm');
+  await ownerPage.getByRole('button', { name: 'Marketing', exact: true }).click(); await ownerPage.getByLabel('Màu nhận diện', { exact: true }).selectOption('mint'); await ownerPage.getByLabel('Ảnh bìa mẫu', { exact: true }).selectOption('campaign');
+  assert.ok((await ownerPage.locator('.workspace-identity-preview img').getAttribute('src')).endsWith('/campaign.jpg'));
   await ownerPage.getByRole('button', { name: 'Lưu cài đặt', exact: true }).click();
   await ownerPage.getByRole('heading', { name: 'Studio đã cập nhật', exact: true }).waitFor();
+  const savedMetadata = await Workspace.collection.findOne({ _id: new mongoose.Types.ObjectId(standalone.id) }); assert.equal(savedMetadata.summary, 'Giao diện và trải nghiệm cho nhóm'); assert.equal(savedMetadata.icon, 'megaphone'); assert.equal(savedMetadata.color, 'mint'); assert.equal(savedMetadata.coverId, 'campaign');
+  for (const width of [375, 768, 1440]) { await ownerPage.setViewportSize({ width, height: 1000 }); assert.ok(await ownerPage.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)); }
   await ownerPage.getByRole('button', { name: 'Dự án', exact: true }).click();
   await ownerPage.getByRole('heading', { name: 'Website Bloom', exact: true }).waitFor();
   await ownerPage.getByRole('button', { name: 'Sửa tên và biểu tượng Website Bloom', exact: true }).click();
@@ -146,6 +151,26 @@ try {
   const memberPage = await pageFor(1); await memberPage.goto(`http://localhost:5173/#workspace/${standalone.id}`);
   await memberPage.getByRole('heading', { name: 'Bloom Website V2', exact: true }).waitFor();
   for (const name of ['Tạo Dự án','Lưu trữ Workspace','Cài đặt nhóm']) assert.equal(await memberPage.getByRole('button', { name, exact: true }).count(), 0);
+  await rotateFixture();
+  const managerBefore = await WorkspaceMembership.collection.findOne({ workspaceId: new mongoose.Types.ObjectId(standalone.id), userId: users[1]._id });
+  await workspaces.role(auths[0], standalone.id, users[1].id, { expectedVersion: managerBefore.version, role: 'manager', reason: 'Metadata form test' });
+  await memberPage.reload(); await memberPage.getByRole('button', { name: 'Cài đặt nhóm', exact: true }).click();
+  await memberPage.getByLabel('Mục tiêu ngắn', { exact: true }).fill('Nháp giữ lại khi mất quyền');
+  await memberPage.getByLabel('Màu nhận diện', { exact: true }).selectOption('blue');
+  await workspaces.role(auths[0], standalone.id, users[1].id, { expectedVersion: managerBefore.version + 1, role: 'member', reason: 'Demotion during draft' });
+  await memberPage.getByRole('button', { name: 'Lưu cài đặt', exact: true }).click();
+  const preservedDraft = memberPage.getByLabel('Nội dung chưa lưu', { exact: true }); await preservedDraft.waitFor();
+  assert.ok((await preservedDraft.inputValue()).includes('Nháp giữ lại khi mất quyền'));
+  assert.equal(await memberPage.getByRole('button', { name: 'Lưu cài đặt', exact: true }).count(), 0);
+  assert.equal((await Workspace.collection.findOne({ _id: new mongoose.Types.ObjectId(standalone.id) })).summary, 'Giao diện và trải nghiệm cho nhóm');
+  const activeMember = await WorkspaceMembership.collection.findOne({ workspaceId: new mongoose.Types.ObjectId(standalone.id), userId: users[1]._id });
+  await workspaces.role(auths[0], standalone.id, users[1].id, { expectedVersion: activeMember.version, role: 'manager', reason: 'Read access loss test' });
+  await memberPage.reload(); await memberPage.getByRole('button', { name: 'Cài đặt nhóm', exact: true }).click(); await memberPage.getByLabel('Mục tiêu ngắn', { exact: true }).fill('Draft before membership removal');
+  await workspaces.remove(auths[0], standalone.id, users[1].id, { expectedVersion: activeMember.version + 1 });
+  await memberPage.getByRole('button', { name: 'Lưu cài đặt', exact: true }).click();
+  await memberPage.getByRole('heading', { name: 'Studio đã cập nhật', exact: true }).waitFor({ state: 'hidden' });
+  assert.equal(await memberPage.getByLabel('Mục tiêu ngắn', { exact: true }).count(), 0); assert.equal(await memberPage.getByLabel('Nội dung chưa lưu', { exact: true }).count(), 0);
+
   await memberPage.goto(`http://localhost:5173/#workspace/${first.id}`);
   await memberPage.getByRole('button', { name: 'Tạo Dự án', exact: true }).waitFor(); await memberPage.getByText('Quản lý Workspace', { exact: true }).waitFor();
   const adminPage = await pageFor(2); await adminPage.goto(`http://localhost:5173/#workspace/${second.id}`);

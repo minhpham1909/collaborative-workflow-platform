@@ -130,7 +130,8 @@ export default function Workspace({ api, id, userId }) {
           <section className="hero workspace-hero">
             <div>
               <small className="home-eyebrow">{t("KHÔNG GIAN CỦA ĐỘI NGŨ")}</small>
-              <h1>{workspace.name}</h1>
+              <div className="workspace-title"><span className={'symbol label-color-' + workspace.color}><Icon name={workspace.icon} /></span><h1>{workspace.name}</h1></div>
+              {workspace.summary && <p className="workspace-summary">{workspace.summary}</p>}
               <div className="workspace-meta"><span className="badge">{workspaceRoleLabel(workspace.role, locale)}</span><span>{workspace.state === "archived" ? t("Đã lưu trữ · Chỉ đọc") : t("Đang hoạt động")}</span></div>
               <div className="workspace-description">
                 <div className="section-heading">
@@ -239,6 +240,7 @@ export default function Workspace({ api, id, userId }) {
           onContext={setWorkspace}
           onDirty={setDirty}
           onSaving={setSaving}
+          onUnavailable={failure => { setWorkspace(null); setError(messageFor(failure)); }}
         />
       )}
       {tab === "projects" && (

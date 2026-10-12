@@ -1,6 +1,12 @@
 import { messageText } from './messages.js';
 import { translateAuthText } from '../features/auth/auth-translations.js';
 const english = {
+  "Workspace {name} đã sẵn sàng. Bạn có thể bổ sung mô tả chi tiết, mời thành viên và tạo dự án đầu tiên.": "Workspace {name} is ready. Add a detailed description, invite members and create your first project.",
+  "Tiếp tục thiết lập": "Continue setup",
+  "Đóng hướng dẫn thiết lập": "Dismiss setup guidance",
+  "Bỏ thông tin Workspace chưa lưu?": "Discard unsaved workspace details?",
+  "Mục tiêu cần một dòng, tối đa 500 ký tự.": "The goal must be one line, up to 500 characters.",
+  "Chỉ tên bắt buộc. Mô tả chi tiết và mời thành viên có thể thiết lập sau.": "Only the name is required. Add a detailed description and invite members later.",
   "Bỏ nội dung chưa lưu và chuyển trang?": "Discard unsaved content and leave this page?",
   "Bỏ các thay đổi chưa lưu và chuyển trang?": "Discard unsaved changes and leave this page?",
   "Đang xử lý yêu cầu. Vui lòng chờ kết quả trước khi rời trang.": "A request is in progress. Wait for the result before leaving this page.",

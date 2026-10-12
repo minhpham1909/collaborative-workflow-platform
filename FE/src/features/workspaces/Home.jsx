@@ -1,3 +1,5 @@
+import WorkspaceIdentityFields from '../../components/WorkspaceIdentityFields.jsx';
+import { defaultWorkspaceIdentity, validWorkspaceSummary, workspaceIdentityBody } from '../../lib/workspace-identity.js';
 import CollectionView,{useCollectionView} from '../../components/CollectionView.jsx';
 import StudioCarousel from '../../components/StudioCarousel.jsx';
 import { useAuthLocale } from '../auth/AuthLocale.jsx';
@@ -17,7 +19,7 @@ import HomeHighlights, {
   HomeDay,
   useHomeHighlights,
 } from "./HomeHighlights.jsx";
-import StudioCover, { studioTone } from "../../components/StudioCover.jsx";
+import StudioCover from "../../components/StudioCover.jsx";
 import Icon from "../../components/Icon.jsx";
 import { isUncertainMutation } from "../../lib/mutation-outcome.js";
 import FilterPanel from "../../components/FilterPanel.jsx";
@@ -50,10 +52,12 @@ export default function Home({ api, user }) {
     [uncertain, setUncertain] = useState(false),
     [createError, setCreateError] = useState(""),
     [nameError, setNameError] = useState("");
+  const [identity, setIdentity] = useState({ ...defaultWorkspaceIdentity }), [summaryError, setSummaryError] = useState(''), [createdWorkspace, setCreatedWorkspace] = useState(null);
+  const identityDirty = JSON.stringify(identity) !== JSON.stringify(defaultWorkspaceIdentity);
   const generation = useRef(0),
     mutation = useRef(false);
   useDraftGuard({
-    dirty: creating && Boolean(name),
+    dirty: creating && (Boolean(name) || identityDirty),
     busy: saving,
     busyMessage: t("Đang xử lý yêu cầu. Vui lòng chờ kết quả trước khi rời trang."),
     message: t("Bỏ Workspace đang tạo?"),
@@ -120,15 +124,16 @@ export default function Home({ api, user }) {
   closeDialog.current = async () => {
     if (
       !saving &&
-      (!name ||
+      (!(name || identityDirty) ||
         (await confirmDialog(
           uncertain
             ? t("Đóng form và tải lại để kiểm tra Workspace đã tạo chưa?")
-            : t("Bỏ tên Workspace chưa lưu?"),
+            : t("Bỏ thông tin Workspace chưa lưu?"),
         )))
     ) {
       setCreating(false);
       setName("");
+      setIdentity({ ...defaultWorkspaceIdentity }); setSummaryError('');
       setNameError("");
       if (uncertain) {
         setQ("");
@@ -151,13 +156,16 @@ export default function Home({ api, user }) {
       e.currentTarget.querySelector("input")?.focus();
       return;
     }
+    if (!validWorkspaceSummary(identity.summary)) { setSummaryError('Mục tiêu cần một dòng, tối đa 500 ký tự.'); return; }
     mutation.current = true;
     setSaving(true);
     setCreateError("");
     try {
-      await api.request("/workspaces", { method: "POST", body: { name } });
+      const result = await api.request("/workspaces", { method: "POST", body: { name, ...workspaceIdentityBody(identity) } });
+      setCreatedWorkspace(result.workspace);
       setCreating(false);
       setName("");
+      setIdentity({ ...defaultWorkspaceIdentity }); setSummaryError('');
       setQ(""); setFrom(""); setTo(""); setRole("all"); setState("all");
       notify(t("Đã tạo Workspace."));
       setRefresh((v) => v + 1);
@@ -198,6 +206,7 @@ export default function Home({ api, user }) {
         </div>
       </section>
       <HomeHighlights data={highlights} compact />
+      {createdWorkspace && <InlineMessage tone="info">{t("Workspace {name} đã sẵn sàng. Bạn có thể bổ sung mô tả chi tiết, mời thành viên và tạo dự án đầu tiên.", { name: createdWorkspace.name })} <a href={`#workspace/${createdWorkspace.id}`}>{t("Tiếp tục thiết lập")}</a><button onClick={() => setCreatedWorkspace(null)} aria-label={t("Đóng hướng dẫn thiết lập")}>{t("Đóng")}</button></InlineMessage>}
       <div className="home-collection-header"><div><p className="home-eyebrow">{t("CÙNG NHAU LÀM VIỆC")}</p><h2>{t("Workspace của bạn")} <span className="home-count">{data.total ?? '—'}</span></h2></div><CollectionView kind="layout" view={view} onChange={setView} locale={locale} labels={[t("Xem Workspace dạng thẻ"),t("Xem Workspace dạng danh sách")]}/></div>
       <div className="home-filters">
       <FilterPanel locale={locale} compact advancedLabel={t("Thời gian")}>
@@ -267,9 +276,9 @@ export default function Home({ api, user }) {
       <div className={`cards workspace-cards home-workspace-cards view-${view}`} aria-busy={busy}>
         {!invalid && data.items.map(w => (
           <article className={`card workspace-card home-workspace-card${w.state === 'archived' ? ' is-archived' : ''}`} key={w.id}>
-            <div className="home-card-media"><StudioCover id={w.id} archived={w.state === 'archived'} /><span className="home-role-badge">{workspaceRoleLabel(w.role, locale)}</span>{w.state === 'archived' && <span className="home-archived-badge"><Icon name="archive" />{t("Chỉ đọc")}</span>}</div>
-            <div className="home-card-content"><div className="home-card-title"><h2><a href={`#workspace/${w.id}`}>{w.name}</a></h2><span className={'symbol tone-' + studioTone(w.id)}><Icon name={['palette', 'code', 'megaphone'][studioTone(w.id)]} /></span></div>
-              <p className="home-card-description">{plain(w.description) || t('Không gian để cùng nhau làm việc.')}</p>
+            <div className="home-card-media"><StudioCover id={w.id} coverId={w.coverId} archived={w.state === 'archived'} /><span className="home-role-badge">{workspaceRoleLabel(w.role, locale)}</span>{w.state === 'archived' && <span className="home-archived-badge"><Icon name="archive" />{t("Chỉ đọc")}</span>}</div>
+            <div className="home-card-content"><div className="home-card-title"><h2><a href={`#workspace/${w.id}`}>{w.name}</a></h2><span className={'symbol label-color-' + w.color}><Icon name={w.icon} /></span></div>
+              <p className="home-card-description">{w.summary || plain(w.description) || t('Không gian để cùng nhau làm việc.')}</p>
               <div className="workspace-metrics"><span><Icon name="people" /><div>{t("Thành viên")}<strong>{t('{count} người', { count: w.memberCount ?? '—' })}</strong></div></span><span><Icon name="folder" /><div>{t("Dự án hoạt động")}<strong>{t('{count} dự án', { count: w.activeProjectCount ?? '—' })}</strong></div></span></div>
               <div className="studio-card-footer"><p className="muted">{t("Tạo {date}", { date: new Date(w.createdAt).toLocaleDateString(locale === 'en' ? 'en-GB' : 'vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }) })}</p><span className="home-card-action" aria-hidden="true">{t(w.state === 'archived' ? 'Xem Workspace' : 'Mở Workspace')}<Icon name="chevron-right" /></span></div>
             </div>
@@ -328,10 +337,12 @@ export default function Home({ api, user }) {
                         setName(e.target.value);
                         setNameError("");
                       }}
-                      disabled={saving}
+                      disabled={saving || uncertain}
                     />
                   )}
                 </FormField>
+                <WorkspaceIdentityFields name={name} value={identity} locale={locale} disabled={saving || uncertain} error={summaryError ? t(summaryError) : undefined} onChange={next => { setIdentity(next); setSummaryError(''); }} />
+                <p className="muted">{t('Chỉ tên bắt buộc. Mô tả chi tiết và mời thành viên có thể thiết lập sau.')}</p>
                 {createError && <InlineMessage>{t(createError)}</InlineMessage>}
                 <div className="buttons">
                   <button

@@ -1,3 +1,6 @@
+import { projectIcons } from '../../components/ProjectIconPicker.jsx';
+import WorkspaceIdentityFields from '../../components/WorkspaceIdentityFields.jsx';
+import { workspaceIdentity, workspaceIdentityBody, validWorkspaceSummary, workspaceColors, workspaceCovers } from '../../lib/workspace-identity.js';
 import { useAuthLocale } from '../auth/AuthLocale.jsx';
 import { workspaceText } from '../../lib/workspace-text.js';
 import { InlineMessage, LoadingState } from "../../components/Feedback.jsx";
@@ -22,6 +25,7 @@ export default function WorkspaceSettings({
   onContext,
   onDirty,
   onSaving,
+  onUnavailable,
 }) {
   const { locale } = useAuthLocale();
   const t = (value, values) => workspaceText(value, locale, values);
@@ -37,11 +41,13 @@ export default function WorkspaceSettings({
     [revision, setRevision] = useState(0),
     [dirty, setDirty] = useState(false),
     [uncertain, setUncertain] = useState(false);
+  const [identity, setIdentity] = useState(workspaceIdentity), [blockedDraft, setBlockedDraft] = useState('');
   const pending = useRef(false);
   const [fieldErrors, setFieldErrors] = useState({});
   useEffect(() => {
     let live = true;
     setBusy(true);
+    setBlockedDraft('');
     setSnapshot(null);
     setError("");
     setNote("");
@@ -58,10 +64,12 @@ export default function WorkspaceSettings({
         onContext(workspace);
         setGlobal(user?.emailPreferences ?? null);
         setName(workspace.name);
+        setIdentity(workspaceIdentity(workspace));
         setDescription(workspace.description ?? envelope(emptyDocument()));
         setOverrides(workspace.emailOverrides);
       } catch (e) {
         if (live) setError(messageFor(e));
+        if (live && [401,403,404].includes(e.status)) onUnavailable?.(e);
       } finally {
         if (live) setBusy(false);
       }
@@ -92,6 +100,7 @@ export default function WorkspaceSettings({
   async function submit(e, reset = false) {
     e?.preventDefault();
     if (pending.current || uncertain || !snapshot || (!emailOnly && !snapshot.permissions?.edit) || (emailOnly && !snapshot.permissions?.emailPreferences)) return;
+    if (!emailOnly && !validWorkspaceSummary(identity.summary)) { setFieldErrors(old => ({ ...old, summary: t('Mục tiêu cần một dòng, tối đa 500 ký tự.') })); return; }
     if (
       !emailOnly &&
       (!name.trim() ||
@@ -146,7 +155,7 @@ export default function WorkspaceSettings({
                 expectedVersion: snapshot.membershipVersion,
                 ...(!reset ? { emailOverrides: overrides } : {}),
               }
-            : { expectedVersion: snapshot.version, name, description },
+            : { expectedVersion: snapshot.version, name, description, ...workspaceIdentityBody(identity) },
         },
       );
       const next = emailOnly
@@ -159,6 +168,7 @@ export default function WorkspaceSettings({
       setSnapshot(next);
       onContext(next);
       if (emailOnly) setOverrides(result.emailOverrides);
+      else setIdentity(workspaceIdentity(next));
       setDirty(false);
       onDirty(false);
       setNote(reset ? t("Đã trở về cài đặt chung.") : t("Đã lưu cài đặt."));
@@ -170,10 +180,9 @@ export default function WorkspaceSettings({
           : t("Chưa xác nhận đã lưu. Tải lại cài đặt để kiểm tra trước khi gửi tiếp."),
       );
       if (isUncertainMutation(e)) setUncertain(true);
+      const retainedDraft = [name, identity.summary, t(projectIcons.find(([key]) => key === identity.icon)?.[1] ?? ''), t(workspaceColors.find(([key]) => key === identity.color)?.[1] ?? ''), t(workspaceCovers.find(([key]) => key === identity.coverId)?.[1] ?? ''), description?.plainText ?? ''].filter(Boolean).join('\n\n');
       if (
-        ["WORKSPACE_UNAVAILABLE", "OWNER_REQUIRED", "UNAUTHENTICATED"].includes(
-          e.code,
-        )
+        [401,403,404].includes(e.status) || ["WORKSPACE_UNAVAILABLE", "OWNER_REQUIRED", "UNAUTHENTICATED"].includes(e.code)
       ) {
         setSnapshot(null);
         setDescription(null);
@@ -185,7 +194,10 @@ export default function WorkspaceSettings({
         if (e.code === "OWNER_REQUIRED") {
           try {
             onContext((await api.request(`/workspaces/${id}`)).workspace);
-          } catch {}
+            if (!emailOnly) setBlockedDraft(retainedDraft);
+          } catch (readError) { onUnavailable?.(readError); }
+        } else {
+          onUnavailable?.(e);
         }
       }
     } finally {
@@ -205,6 +217,7 @@ export default function WorkspaceSettings({
       {busy && <LoadingState>{t("Đang tải cài đặt…")}</LoadingState>}
       {error && <InlineMessage>{t(error)}</InlineMessage>}
       {note && <InlineMessage tone="info">{t(note)}</InlineMessage>}
+      {blockedDraft && <div className="workspace-blocked-draft"><FormField label={t('Nội dung chưa lưu')} hint={t('Bạn không còn quyền sửa. Sao chép nội dung trước khi rời trang.')}>{props => <textarea {...props} readOnly value={blockedDraft} />}</FormField></div>}
       {snapshot &&
         ((!emailOnly && !snapshot.permissions?.edit) || (emailOnly && !snapshot.permissions?.emailPreferences) ? (
           <InlineMessage tone="info">
@@ -279,6 +292,7 @@ export default function WorkspaceSettings({
                       />
                     )}
                   </FormField>
+                  <WorkspaceIdentityFields name={name} value={identity} locale={locale} disabled={saving || uncertain} error={fieldErrors.summary} onChange={next => { setIdentity(next); setFieldErrors(old => ({ ...old, summary: '' })); setDirty(true); }} />
                   <RichEditor
                     locale={locale}
                     value={description}

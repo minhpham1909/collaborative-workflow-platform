@@ -8,11 +8,11 @@ export const projectIcons = [
   ["layers", "Design System"],
   ["document", "Tài liệu"],
 ];
-export default function ProjectIconPicker({ value, onChange, disabled, locale = "vi" }) {
+export default function ProjectIconPicker({ value, onChange, disabled, locale = "vi", label }) {
   const t = value => workspaceText(value, locale);
   return (
     <fieldset className="project-icon-picker" disabled={disabled}>
-      <legend>{t("Biểu tượng Dự án")}</legend>
+      <legend>{label ?? t("Biểu tượng Dự án")}</legend>
       <div>
         {projectIcons.map(([key, label]) => (
           <button
