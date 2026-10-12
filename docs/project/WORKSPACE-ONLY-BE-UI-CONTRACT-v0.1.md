@@ -127,3 +127,7 @@ Không cần viết lại auth core, rich-text engine, Task code allocator hoặ
 ## 9. Quyết định bổ sung đã xác nhận
 
 Owner/Manager direct reopen khi chưa có pending request, bắt buộc lý do và nhật ký. Khi có pending, dùng review request với current rights/CAS; không tự duyệt và không direct reopen để bypass. Member Creator/Assignee vẫn dùng request flow. Các quyền labels/restore/metadata/lifecycle, comment exceptions, quota precision và mapping migration còn là thiết kế đề xuất cần review.
+
+## 10. Khung dữ liệu theo từng màn hình
+
+Bảng contract ở trên được mở rộng thành [screen data spec](WORKSPACE-ONLY-SCREEN-DATA-SPEC-v0.1.md): từng khối/fields/source/scopes/null-states, list-vs-detail payload, metrics và các chức năng Stitch chưa có nguồn nghiệp vụ. Đây là đầu vào để chốt API schema trước refactor, không chỉ ma trận quyền.
