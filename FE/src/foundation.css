@@ -66,3 +66,5 @@ body { padding-bottom: var(--wf-toast-space, 0px); }
   .account-menu summary { padding: 5px; }
   .shell .app-footer { padding: 20px 16px; }
 }
+
+.ui-icon { display:inline-block; vertical-align:middle; flex-shrink:0; }

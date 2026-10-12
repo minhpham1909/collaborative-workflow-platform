@@ -1,0 +1,9 @@
+/* Existing base styles stay in place. Prefix avoids legacy class collisions. */
+@layer theme, utilities;
+@import 'tailwindcss/theme.css' layer(theme) prefix(tw);
+@import 'tailwindcss/utilities.css' layer(utilities) prefix(tw);
+@theme inline {
+  --color-accent: var(--wf-primary);
+  --color-surface: var(--wf-surface);
+  --color-content: var(--wf-ink);
+}
