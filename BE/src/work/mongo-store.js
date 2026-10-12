@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import { randomUUID } from 'node:crypto';
-import { User, Session, Workspace, WorkspaceMembership, Project, Task, TaskComment, Notification, EmailOutbox, ProjectAccessAudit, ProjectGuest, ModerationAction, OrganizationMembership, ProjectLabel, TaskActivity, TaskReopenRequest } from '../models/index.js';
+import { User, Session, Workspace, WorkspaceMembership, Project, Task, TaskComment, Notification, EmailOutbox, ProjectAccessAudit, ProjectGuest, ModerationAction, OrganizationMembership, ProjectLabel, TaskActivity, TaskReopenRequest, AccessBan } from '../models/index.js';
 import { AuthError } from '../auth/errors.js';
 import { sameId, paged } from '../workspaces/response.js';
 import { statuses } from './input.js';
@@ -14,6 +14,7 @@ import { createReopenStore } from './reopen-store.js';
 import { cancelReopenRequests, reconcileReopenRequests } from './reopen-lifecycle.js';
 import { assertWorkspaceWritable, projectReadOnly } from '../workspaces/lifecycle.js';
 import { createTaskTrashStore } from './trash-store.js';
+import { TASK_LIST_PROJECTION, taskListPermissions } from './task-list.js';
 
 const id = (value) => new mongoose.Types.ObjectId(value);
 const deny = (code = 'RESOURCE_UNAVAILABLE', status = 404) => { throw new AuthError(code, status); };
@@ -128,15 +129,12 @@ export function createMongoWorkStore({ now = () => new Date(), config } = {}) {
       catch (error) { if (!(error instanceof AuthError)) throw error; }
     }
     const active = !projectReadOnly(context.workspace, context.project);
-    const canEdit = !context.guest && (owner(context) || sameId(value.createdBy, context.user._id));
     const taskLabels = await ProjectLabel.collection.find({ _id: { $in: value.labelIds ?? [] }, projectId: context.project._id, workspaceId: context.workspace._id }, { session: context.tx }).toArray();
     return { id: String(value._id), workspaceId: String(value.workspaceId), projectId: String(value.projectId), createdBy: String(value.createdBy), creator: await identity(value.createdBy, context), assignee: await identity(value.assigneeId, context), title: value.title, description: value.description, status: value.status,
       code: value.code ?? null, priority: value.priority ?? 'medium', labelIds: (value.labelIds ?? []).map(String), labels: taskLabels.map(labelResponse), checklist: value.checklist ?? [], completedAt: value.completedAt ?? null, completionTimeKnown: value.status === 'done' && Boolean(value.completedAt),
       assigneeId: value.assigneeId ? String(value.assigneeId) : null, assigneeLeft: Boolean(value.assigneeId && !current), dueAt: value.dueAt, overdue: Boolean(value.dueAt && value.dueAt < now() && value.status !== 'done'), version: value.version, createdAt: value.createdAt, updatedAt: value.updatedAt,
       pendingReopenRequestId: pending ? String(pending._id) : null,
-      permissions: { edit: active && canEdit, delete: active && canEdit, status: active && !context.guest && (value.status === 'done' ? owner(context) && !pending : canEdit || sameId(value.assigneeId, context.user._id)),
-        requestReopen: active && value.status === 'done' && !context.guest && !pending && (sameId(value.createdBy, context.user._id) || sameId(value.assigneeId, context.user._id)), manageReopen: active && !context.guest && (owner(context)),
-        checklistStructure: active && canEdit, checklistTick: active && !context.guest && (canEdit || sameId(value.assigneeId, context.user._id)) } };
+      permissions: taskListPermissions({ active, guest: context.guest, manager: owner(context), creator: sameId(value.createdBy, context.user._id), assignee: sameId(value.assigneeId, context.user._id), done: value.status === 'done', pending: Boolean(pending) }) };
   }
   async function emit(context, before, task, changes) {
     if (!changes.length) return;
@@ -198,8 +196,44 @@ export function createMongoWorkStore({ now = () => new Date(), config } = {}) {
       ];
   }
   async function taskPage(records, page, contextFor) {
-    const values = [];
-    for (const value of records.slice(0, page.limit)) values.push(await taskResponse(value, await contextFor(value)));
+    const selected = records.slice(0, page.limit), values = [], contexts = new Map();
+    if (!selected.length) return { items: [], nextCursor: null };
+    // Recheck each distinct Project once within this transaction, never cache across requests.
+    for (const value of selected) if (!contexts.has(String(value.projectId))) contexts.set(String(value.projectId), await contextFor(value));
+    const context = contexts.values().next().value, tx = context.tx, asOf = now();
+    const ids = selected.map(value => value._id), workspaceIds = [...contexts.values()].map(value => value.workspace._id);
+    const organizationIds = [...contexts.values()].map(value => value.workspace.organizationId).filter(Boolean);
+    const assigneeIds = selected.map(value => value.assigneeId).filter(Boolean);
+    const labelIds = selected.flatMap(value => value.labelIds ?? []);
+    await reconcileReopenRequests({ taskId: { $in: ids } }, asOf, tx);
+    // Operations sharing a Mongo transaction/session are deliberately sequential.
+    const pendingRows = await TaskReopenRequest.collection.find({ taskId: { $in: ids }, state: 'pending' }, { session: tx, projection: { taskId: 1, projectId: 1, workspaceId: 1 } }).toArray();
+    const people = await User.collection.find({ _id: { $in: assigneeIds } }, { session: tx, projection: { displayName: 1, avatar: 1 } }).toArray();
+    const memberships = await WorkspaceMembership.collection.find({ workspaceId: { $in: workspaceIds }, userId: { $in: assigneeIds }, state: 'active' }, { session: tx, projection: { workspaceId: 1, userId: 1 } }).toArray();
+    const orgMembers = organizationIds.length ? await OrganizationMembership.collection.find({ organizationId: { $in: organizationIds }, userId: { $in: assigneeIds }, state: 'active' }, { session: tx, projection: { organizationId: 1, userId: 1, role: 1 } }).toArray() : [];
+    const bans = await AccessBan.collection.find({ userId: { $in: assigneeIds }, state: 'active', scopeId: { $in: [...workspaceIds, ...organizationIds, ...selected.map(value => value.projectId)] } }, { session: tx, projection: { userId: 1, scopeType: 1, scopeId: 1 } }).toArray();
+    const labels = await ProjectLabel.collection.find({ _id: { $in: labelIds }, workspaceId: { $in: workspaceIds } }, { session: tx }).toArray();
+    const comments = await TaskComment.collection.aggregate([{ $match: { taskId: { $in: ids }, workspaceId: { $in: workspaceIds }, deletedAt: null } }, { $group: { _id: { taskId: '$taskId', workspaceId: '$workspaceId' }, total: { $sum: 1 } } }], { session: tx }).toArray();
+    const peopleById = new Map(people.map(person => [String(person._id), person]));
+    for (const value of selected) {
+      const current = contexts.get(String(value.projectId));
+      if (!sameId(value.workspaceId, current.workspace._id)) deny();
+      const person = value.assigneeId ? peopleById.get(String(value.assigneeId)) : null;
+      const assignee = value.assigneeId ? { id: String(value.assigneeId), displayName: person?.displayName ?? 'Người dùng không còn khả dụng', avatar: person?.avatar ?? { source: 'initials', googlePictureUrl: null } } : null;
+      const blocked = bans.some(ban => sameId(ban.userId, value.assigneeId) && ((ban.scopeType === 'workspace' && sameId(ban.scopeId, value.workspaceId)) || (ban.scopeType === 'project' && sameId(ban.scopeId, value.projectId)) || (ban.scopeType === 'organization' && sameId(ban.scopeId, current.workspace.organizationId))));
+      const eligible = memberships.some(row => sameId(row.userId, value.assigneeId) && sameId(row.workspaceId, value.workspaceId)) && (!current.workspace.organizationId || orgMembers.some(row => sameId(row.userId, value.assigneeId) && sameId(row.organizationId, current.workspace.organizationId) && ['admin', 'member'].includes(row.role))) && !blocked;
+      const pending = current.guest ? null : pendingRows.find(row => sameId(row.taskId, value._id) && sameId(row.projectId, value.projectId) && sameId(row.workspaceId, value.workspaceId));
+      const readOnly = projectReadOnly(current.workspace, current.project);
+      values.push({ id: String(value._id), workspaceId: String(value.workspaceId), projectId: String(value.projectId), createdBy: String(value.createdBy), assigneeId: value.assigneeId ? String(value.assigneeId) : null,
+        title: value.title, code: value.code ?? null, status: value.status, priority: value.priority ?? 'medium', descriptionExcerpt: value.descriptionExcerpt ?? '',
+        labelIds: (value.labelIds ?? []).map(String), labels: labels.filter(label => (value.labelIds ?? []).some(key => sameId(key, label._id)) && sameId(label.projectId, value.projectId) && sameId(label.workspaceId, value.workspaceId)).map(labelResponse),
+        assignee, assigneeLeft: Boolean(value.assigneeId && !eligible), dueAt: value.dueAt ?? null, completedAt: value.completedAt ?? null, completionTimeKnown: value.status === 'done' && Boolean(value.completedAt),
+        overdue: Boolean(value.dueAt && value.dueAt < asOf && value.status !== 'done'), checklistSummary: value.checklistSummary ?? { total: 0, checked: 0 },
+        commentCount: comments.find(row => sameId(row._id.taskId, value._id) && sameId(row._id.workspaceId, value.workspaceId))?.total ?? 0,
+        version: value.version, createdAt: value.createdAt, updatedAt: value.updatedAt, pendingReopenRequestId: pending ? String(pending._id) : null,
+        readOnly, readOnlyReason: current.workspace.state === 'archived' ? 'workspace_archived' : current.project.state === 'archived' ? 'project_archived' : null,
+        permissions: taskListPermissions({ active: !readOnly, guest: current.guest, manager: owner(current), creator: sameId(value.createdBy, current.user._id), assignee: sameId(value.assigneeId, current.user._id), done: value.status === 'done', pending: Boolean(pending) }) });
+    }
     const result = paged(records, page.limit, (value) => value);
     return { items: values, nextCursor: result.nextCursor };
   }
@@ -373,14 +407,14 @@ export function createMongoWorkStore({ now = () => new Date(), config } = {}) {
     tasks: (claims, projectId, query) => run(claims, async (context) => {
       context = await projectScope(context, projectId);
       const criteria = { projectId: context.project._id, workspaceId: context.workspace._id, ...filter(query) };
-      const records = await Task.collection.find({ ...criteria, ...after(query) }, { session: context.tx }).sort({ createdAt: -1, _id: -1 }).limit(query.limit + 1).toArray();
+      const records = await Task.collection.find({ ...criteria, ...after(query) }, { session: context.tx, projection: TASK_LIST_PROJECTION }).sort({ createdAt: -1, _id: -1 }).limit(query.limit + 1).toArray();
       return { ...await taskPage(records, query, async () => context), total: await Task.collection.countDocuments(criteria, { session: context.tx }), project: projectResponse(context.project, context) };
     }),
     board: (claims, projectId, query) => run(claims, async (context) => {
       context = await projectScope(context, projectId); const columns = {};
       for (const status of statuses) {
         const criteria = { projectId: context.project._id, workspaceId: context.workspace._id, $and: [filter(query), { status }] };
-        const records = await Task.collection.find({ ...criteria, ...after(query) }, { session: context.tx }).sort({ createdAt: -1, _id: -1 }).limit(query.limit + 1).toArray();
+        const records = await Task.collection.find({ ...criteria, ...after(query) }, { session: context.tx, projection: TASK_LIST_PROJECTION }).sort({ createdAt: -1, _id: -1 }).limit(query.limit + 1).toArray();
         columns[status] = { ...await taskPage(records, query, async () => context), total: await Task.collection.countDocuments(criteria, { session: context.tx }) };
       }
       const asOf = now();
@@ -404,7 +438,7 @@ export function createMongoWorkStore({ now = () => new Date(), config } = {}) {
       const pipeline=await assignedPipeline(context,query),dateMatch=query.day==='none'?{dueAt:null}:{dueAt:{$gte:query.dayStart,$lt:new Date(query.dayStart.getTime()+86400000)}};
       const scoped=[...pipeline,{$match:dateMatch}];
       const counts=await Task.collection.aggregate([...scoped,{$count:'total'}],{session:context.tx}).toArray();
-      const records=await Task.collection.aggregate([...scoped,{$match:after(query)},{$sort:{createdAt:-1,_id:-1}},{$limit:query.limit+1}],{session:context.tx}).toArray();
+      const records=await Task.collection.aggregate([...scoped,{$match:after(query)},{$sort:{createdAt:-1,_id:-1}},{$limit:query.limit+1},{$project:{...TASK_LIST_PROJECTION,"project.name":1,"project.state":1,"workspace.name":1,"workspace.state":1}}],{session:context.tx}).toArray();
       const result=await taskPage(records,query,async value=>projectScope(context,String(value.projectId)));
       result.items=result.items.map((task,i)=>({...task,workspaceName:records[i].workspace.name,projectName:records[i].project.name,readOnly:projectReadOnly(records[i].workspace,records[i].project)}));
       return {...result,total:counts[0]?.total??0,day:query.day,timeZone:'+07:00',asOf:now()};
@@ -420,7 +454,7 @@ export function createMongoWorkStore({ now = () => new Date(), config } = {}) {
         groups: [{ $group: { _id: deadlineGroupExpression(asOf), total: { $sum: 1 } } }],
       } }], { session: context.tx }).toArray();
       const counts = summary[0]?.counts ?? [], groups = summary[0]?.groups ?? [];
-      const records = await Task.collection.aggregate([...pipeline, { $match: after(query) }, { $sort: { createdAt: -1, _id: -1 } }, { $limit: query.limit + 1 }], { session: context.tx }).toArray();
+      const records = await Task.collection.aggregate([...pipeline, { $match: after(query) }, { $sort: { createdAt: -1, _id: -1 } }, { $limit: query.limit + 1 }, { $project: { ...TASK_LIST_PROJECTION, "project.name": 1, "project.state": 1, "workspace.name": 1, "workspace.state": 1 } }], { session: context.tx }).toArray();
       const result = await taskPage(records, query, async (value) => projectScope(context, String(value.projectId)));
       result.items = result.items.map((value, index) => ({ ...value, deadlineGroup: deadlineGroup(records[index], asOf), workspaceName: records[index].workspace.name, projectName: records[index].project.name, projectState: records[index].project.state, workspaceState: records[index].workspace.state ?? 'active', readOnly: projectReadOnly(records[index].workspace, records[index].project) }));
       const groupCounts = Object.fromEntries(['overdue', 'today', 'upcoming', 'no_deadline', 'completed'].map(key => [key, groups.find(value => value._id === key)?.total ?? 0]));

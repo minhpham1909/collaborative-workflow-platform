@@ -167,8 +167,8 @@ export default function TaskList({
             </p>
           ) : (
             <>
-              {t.description?.plainText && (
-                <p className="board-task-excerpt">{t.description.plainText}</p>
+              {t.descriptionExcerpt && (
+                <p className="board-task-excerpt">{t.descriptionExcerpt}</p>
               )}
               <p className="board-assignee">
                 {t.assignee ? (
@@ -181,7 +181,7 @@ export default function TaskList({
           )}
         </div>
         {!mine && t.labels?.length > 0 && <div className="board-labels">{t.labels.map(label => <span key={label.id} className={'label-color-' + label.color}>{label.name}{label.archivedAt ? tr(" · Đã lưu trữ") : ''}</span>)}</div>}
-        {!mine && t.checklist?.length > 0 && <p className="board-checklist"><Icon name="check" />{tr("{count} mục checklist", { count: `${t.checklist.filter(item => item.checked).length}/${t.checklist.length}` })}</p>}
+        {!mine && t.checklistSummary?.total > 0 && <p className="board-checklist"><Icon name="check" />{tr("{count} mục checklist", { count: `${t.checklistSummary.checked}/${t.checklistSummary.total}` })}</p>}
         {!mine && t.status === 'done' && <p className="board-completed">{t.completedAt ? tr("Hoàn thành {date}", { date: new Date(t.completedAt).toLocaleDateString(locale === "en" ? "en-GB" : "vi-VN", { timeZone: "Asia/Ho_Chi_Minh" }) }) : tr("Chưa ghi nhận ngày hoàn thành")}</p>}
         <div className="task-row-meta">
           <p>
