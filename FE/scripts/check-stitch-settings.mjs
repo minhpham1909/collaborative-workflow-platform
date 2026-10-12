@@ -1,3 +1,4 @@
+import {installManagementColorChecks,assertManagementColors} from './management-colors.mjs';
 import assert from 'node:assert/strict';
 import {createRequire} from 'node:module';
 import {once} from 'node:events';
@@ -42,10 +43,10 @@ try {
   await rotate();browser=await chromium.launch({executablePath:process.env.WORKFLOW_BROWSER_EXECUTABLE,headless:true});
   let failMe=false,lostProfile=false,lostLink=false,profileWrites=0,linkWrites=0,passwordWrites=0;
   async function pageFor(index){
-    const context=await browser.newContext({viewport:{width:1440,height:1000}});
+    const context=await browser.newContext({colorScheme:process.env.WORKFLOW_REGRESSION_THEME==='dark'?'dark':'light',viewport:{width:1440,height:1000}});
     await context.addInitScript(()=>{window.google={accounts:{id:{initialize(options){window.fixtureGoogleCallback=options.callback;},renderButton(target){const button=document.createElement('button');button.textContent='Google fixture';button.type='button';button.onclick=()=>window.fixtureGoogleCallback({credential:window.fixtureCredential??'same-email'});target.append(button);}}}};});
     await context.route('http://localhost:4000/**',async route=>{const path=new URL(route.request().url()).pathname,method=route.request().method();if(failMe&&path==='/users/me')return route.abort();const response=await route.fetch({url:route.request().url().replace('http://localhost:4000',origin)});if(method==='PATCH'&&path==='/users/me/profile'){profileWrites++;if(lostProfile){lostProfile=false;return route.abort();}}if(method==='POST'&&path==='/auth/password/change')passwordWrites++;if(method==='POST'&&path==='/auth/google/link'){linkWrites++;if(lostLink){lostLink=false;return route.abort();}}await route.fulfill({response});});
-    const page=await context.newPage();page.setDefaultTimeout(15000);page.on('pageerror',error=>errors.push(error.message));
+    const page=await context.newPage();if(process.env.WORKFLOW_COLOR_CHECKS==='1')installManagementColorChecks(page);page.setDefaultTimeout(15000);page.on('pageerror',error=>errors.push(error.message));
     if(index===2){await context.addCookies([{name:'workflow_refresh',value:sessions[2].refreshToken,domain:'localhost',path:'/auth',httpOnly:true,secure:false,sameSite:'Strict'}]);await page.goto('http://localhost:5173/#settings');}
     else {await page.goto('http://localhost:5173/');await page.getByLabel('Email',{exact:true}).fill(users[index].email);await page.getByLabel('Mật khẩu',{exact:true}).fill(password);await page.getByRole('button',{name:'Đăng nhập',exact:true}).click();await page.locator('.app-header').waitFor();await page.goto('http://localhost:5173/#settings');}
     await page.getByLabel('Tên hiển thị',{exact:true}).waitFor();return page;

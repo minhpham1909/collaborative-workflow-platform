@@ -4,7 +4,7 @@
 .notification-hero small { font-size:12px; color:var(--wf-primary); }.notification-hero p { font-size:14px; line-height:1.8; color:var(--wf-muted); text-wrap:pretty; }
 .notification-hero .buttons { flex-shrink:0; flex-wrap:wrap; justify-content:flex-end; }
 .notification-quick { display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin:20px 0; }
-.notification-quick button { font-size:13px; border-radius:999px; }.notification-quick button[aria-pressed=true] { background:var(--wf-primary); border-color:var(--wf-primary); color:white; }
+.notification-quick button { font-size:13px; border-radius:999px; }.notification-quick button[aria-pressed=true] { background:var(--wf-primary); border-color:var(--wf-primary); color:var(--wf-on-accent); }
 .notification-quick a { margin-left:auto; min-height:44px; display:flex; align-items:center; font-size:13px; }
 .notification-preferences { font-size:13px; color:var(--wf-muted); line-height:1.8; }.notification-preferences a { display:inline-flex; min-height:44px; align-items:center; }
 .notification-filter-fields { border:0; padding:0; min-width:0; margin:0; }
@@ -18,7 +18,7 @@
 .studio-notifications .studio-note { display:flex; align-items:flex-start; gap:18px; border:1px solid var(--wf-border); background:var(--wf-soft); padding:24px; border-radius:18px; margin:12px 0; }
 .studio-notifications .studio-note.unread { background:var(--wf-surface); border-left:4px solid var(--wf-primary); }
 .note-icon { width:44px; height:44px; flex:0 0 44px; border-radius:14px; display:grid; place-items:center; background:var(--wf-lavender); color:var(--wf-primary); }
-.category-work .note-icon { background:var(--wf-mint); color:#126047; }.note-icon .ui-icon { width:22px; height:22px; }
+.category-work .note-icon { background:var(--wf-mint); color:var(--wf-success); }.note-icon .ui-icon { width:22px; height:22px; }
 .note-body { min-width:0; flex:1; }.note-category { font-size:12px; color:var(--wf-primary); margin:0 0 8px; }
 .studio-note h2,.studio-note h3 { font-size:18px; line-height:1.6; margin:10px 0; overflow-wrap:anywhere; text-wrap:pretty; }
 .studio-note p { font-size:14px; line-height:1.8; color:var(--wf-muted); margin:8px 0; overflow-wrap:anywhere; text-wrap:pretty; }

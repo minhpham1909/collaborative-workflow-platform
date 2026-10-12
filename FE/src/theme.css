@@ -1,3 +1,6 @@
+/* Fixed white is only for text over photographs; UI text uses on-accent. */
+:root { --wf-on-image:#fff; --wf-photo-shade:rgba(24,18,28,.88); --wf-overlay:rgba(52,38,63,.4); --wf-shadow-color:rgba(48,40,63,.12); --wf-focus-soft:rgba(79,70,229,.12); }
+:root[data-theme=dark] { --wf-overlay:rgba(0,0,0,.62); --wf-shadow-color:rgba(0,0,0,.45); --wf-focus-soft:rgba(182,168,255,.18); }
 /* Shared surfaces have paired foreground/background values in both themes. */
 :root {
   --wf-hero-accent:#f2edff; --wf-table-hover:#fffcfa; --wf-hero-start:#f0e7fb; --wf-hero-end:#fff0e8; --wf-hero-muted:#665e70;

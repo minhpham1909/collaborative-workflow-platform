@@ -1,3 +1,4 @@
+import {installManagementColorChecks} from './management-colors.mjs';
 import assert from 'node:assert/strict';
 import {createRequire} from 'node:module';
 import {once} from 'node:events';
@@ -41,10 +42,10 @@ try {
   async function rotate(){if(server)await new Promise(resolve=>server.close(resolve));server=app().listen(0,'127.0.0.1');await once(server,'listening');origin='http://127.0.0.1:'+server.address().port;}await rotate();
   browser=await chromium.launch({executablePath:process.env.WORKFLOW_BROWSER_EXECUTABLE,headless:true});let lostRegister=false,lostReset=false,failCaps=false;const writes=[];
   async function pageFor(url){
-    const context=await browser.newContext({viewport:{width:1440,height:1000}});
+    const context=await browser.newContext({colorScheme:process.env.WORKFLOW_REGRESSION_THEME==='dark'?'dark':'light',viewport:{width:1440,height:1000}});
     await context.addInitScript(()=>{window.google={accounts:{id:{initialize(options){window.fixtureGoogleCallback=options.callback;},renderButton(target){const button=document.createElement('button');button.type='button';button.textContent='Google fixture';button.onclick=()=>window.fixtureGoogleCallback({credential:'fixture-google'});target.append(button);}}}};});
     await context.route('http://localhost:4000/**',async route=>{const path=new URL(route.request().url()).pathname,method=route.request().method();if(failCaps&&path==='/auth/capabilities'){failCaps=false;return route.abort();}const response=await route.fetch({url:route.request().url().replace('http://localhost:4000',origin)});if(method==='POST')writes.push(path);if(lostRegister&&path==='/auth/register'){lostRegister=false;return route.abort();}if(lostReset&&path==='/auth/password/reset'){lostReset=false;return route.abort();}await route.fulfill({response});});
-    const page=await context.newPage();page.setDefaultTimeout(15000);page.on('pageerror',error=>errors.push(error.message));await page.goto(url);return page;
+    const page=await context.newPage();if(process.env.WORKFLOW_COLOR_CHECKS==='1')installManagementColorChecks(page);page.setDefaultTimeout(15000);page.on('pageerror',error=>errors.push(error.message));await page.goto(url);return page;
   }
   const crypto=createDeliveryCrypto(config.mailKeyHex);
   async function tokenFor(id,purpose){const job=await EmailOutbox.collection.findOne({userId:new mongoose.Types.ObjectId(id),templateKey:purpose},{sort:{createdAt:-1}});return crypto.open(job.encryptedDeliveryData,job.eventId).token;}

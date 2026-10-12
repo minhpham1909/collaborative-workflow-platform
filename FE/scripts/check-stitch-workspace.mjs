@@ -1,3 +1,4 @@
+import {installManagementColorChecks,assertManagementColors} from './management-colors.mjs';
 const {createUsersService}=await import('../../BE/src/users/service.js');
 const {createMongoUsersStore}=await import('../../BE/src/users/mongo-store.js');
 import assert from 'node:assert/strict';
@@ -65,7 +66,7 @@ try {
   browser = await chromium.launch({ executablePath: process.env.WORKFLOW_BROWSER_EXECUTABLE, headless: true });
   let fail = false, delay = false, lostStateResponse = false, stateWrites = 0;
   async function pageFor(index) {
-    const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+    const context = await browser.newContext({colorScheme:process.env.WORKFLOW_REGRESSION_THEME==='dark'?'dark':'light', viewport: { width: 1440, height: 1000 } });
     await context.route('http://localhost:4000/**', async route => {
       if (fail && route.request().url().includes(`/workspaces/${standalone.id}/projects?`)) return route.abort();
       if (delay && route.request().url().includes('/organizations?')) await new Promise(resolve => setTimeout(resolve, new URL(route.request().url()).searchParams.get('q') === 'Hà' ? 900 : 50));
@@ -73,7 +74,7 @@ try {
       if (route.request().method() === 'PATCH' && route.request().url().endsWith('/state')) { stateWrites++; if (lostStateResponse) { lostStateResponse = false; return route.abort(); } }
       await route.fulfill({ response });
     });
-    const page = await context.newPage(); page.setDefaultTimeout(15000); page.on('pageerror', error => errors.push(error.message));
+    const page = await context.newPage();if(process.env.WORKFLOW_COLOR_CHECKS==='1')installManagementColorChecks(page); page.setDefaultTimeout(15000); page.on('pageerror', error => errors.push(error.message));
     await page.goto('http://localhost:5173/'); await page.getByLabel('Email', { exact: true }).fill(users[index].email); await page.getByLabel('Mật khẩu', { exact: true }).fill(password); await page.getByRole('button', { name: 'Đăng nhập', exact: true }).click();
     await page.locator('.studio-home').waitFor(); await page.goto('http://localhost:5173/#organizations'); await page.locator('.organization-page').waitFor(); return page;
   }
@@ -109,7 +110,7 @@ try {
     const dialog = page.getByRole('dialog'); await dialog.getByLabel('Nhập lại tên Workspace', { exact: true }).fill('Wrong'); await dialog.getByLabel('Lý do', { exact: true }).fill('Browser fixture confirmation');
     assert.equal(await dialog.getByRole('button', { name: action, exact: true }).isDisabled(), true);
     await dialog.getByLabel('Nhập lại tên Workspace', { exact: true }).fill(name);
-    await dialog.screenshot({ path: `${out}/${action.startsWith('Mở') ? 'unarchive' : 'archive'}-dialog.png` });
+    if(process.env.WORKFLOW_COLOR_CHECKS==='1')await assertManagementColors(ownerPage); await dialog.screenshot({ path: `${out}/${action.startsWith('Mở') ? 'unarchive' : 'archive'}-dialog.png` });
     await dialog.getByRole('button', { name: action, exact: true }).click(); await dialog.waitFor({ state: 'hidden' });
   }
   await changeState(ownerPage, 'Studio đã cập nhật', 'Lưu trữ Workspace');

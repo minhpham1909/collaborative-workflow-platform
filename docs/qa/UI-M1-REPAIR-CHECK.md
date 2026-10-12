@@ -49,3 +49,8 @@ node --env-file=BE/.env FE/scripts/check-ui-foundation.mjs --qa-account
 ```
 
 Playwright/Edge thông qua WORKFLOW_PLAYWRIGHT_MODULE/WORKFLOW_BROWSER_EXECUTABLE như các runner trước. Không thêm test dependencies.Ảnh.local/web-journey/owner-restored-{theme}-dev-{locale}-{width}.png và.local/ux-upgrade/ignored.
+
+
+## Bổ sung audit management ngày 12/10/2026
+
+User phát hiện các tab quản lý chưa thuộc coverage R1–R3 cũ. Đã mở rộng patch tại nguồn CSS và kiểm toàn bộ cụm management cùng các route chính; [kết quả và phạm vi kiểm tra](UI-COLOR-CONSISTENCY-CHECK.md). Phạm vi cũ ở trên là lịch sử, không dùng để suy coverage các tab quản lý. R4–R5 vẫn riêng.

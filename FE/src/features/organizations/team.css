@@ -6,7 +6,7 @@
 .team-permission-note .ui-icon { color: var(--wf-primary); flex-shrink: 0; }
 .team-tabs { display: flex; gap: 8px; margin-bottom: 16px; }
 .team-tabs button { border: 0; background: var(--wf-soft); font-size: 13px; }
-.team-tabs button[aria-pressed=true] { background: var(--wf-primary); color: white; }
+.team-tabs button[aria-pressed=true] { background: var(--wf-primary); color: var(--wf-on-accent); }
 .team-list-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 24px 0 14px; }
 .team-list-heading h2 { margin: 0; font-size: 20px; }
 .team-list-heading h2 span { padding: 3px 8px; font-size: 12px; background: var(--wf-lavender); border-radius: 8px; color: var(--wf-primary); }
@@ -22,7 +22,7 @@
 .team-person .avatar { width: 40px; height: 40px; flex-shrink: 0; background: var(--wf-lavender); color: var(--wf-primary); }
 .team-role { display: inline-flex; font-size: 12px; padding: 4px 10px; border-radius: 9px; background: var(--wf-soft); color: var(--wf-muted); }
 .team-role.role-owner, .team-role.role-admin, .team-role.role-active { background: var(--wf-lavender); color: var(--wf-primary); }
-.team-role.role-accepted { background: var(--wf-mint); color: #126047; }
+.team-role.role-accepted { background: var(--wf-mint); color: var(--wf-success); }
 .team-role-guide { margin-top: 32px; }
 .team-role-guide h2 { font-size: 20px; }
 .team-role-guide > div { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }

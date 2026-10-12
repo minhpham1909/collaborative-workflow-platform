@@ -1,3 +1,4 @@
+import {installManagementColorChecks,assertManagementColors} from './management-colors.mjs';
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 import { once } from 'node:events';
@@ -70,7 +71,7 @@ try {
   browser = await chromium.launch({ executablePath: process.env.WORKFLOW_BROWSER_EXECUTABLE, headless: true });
   let fail = false, delay = false, lostStateResponse = false, stateWrites = 0;
   async function pageFor(index) {
-    const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+    const context = await browser.newContext({colorScheme:process.env.WORKFLOW_REGRESSION_THEME==='dark'?'dark':'light', viewport: { width: 1440, height: 1000 } });
     await context.route('http://localhost:4000/**', async route => {
       if (fail && route.request().url().includes(`/workspaces/${standalone.id}/projects?`)) return route.abort();
       if (delay && route.request().url().includes('/organizations?')) await new Promise(resolve => setTimeout(resolve, new URL(route.request().url()).searchParams.get('q') === 'Hà' ? 900 : 50));
@@ -78,7 +79,7 @@ try {
       if (route.request().method() === 'PATCH' && route.request().url().endsWith('/state')) { stateWrites++; if (lostStateResponse) { lostStateResponse = false; return route.abort(); } }
       await route.fulfill({ response });
     });
-    const page = await context.newPage(); page.setDefaultTimeout(15000); page.on('pageerror', error => errors.push(error.message));
+    const page = await context.newPage();if(process.env.WORKFLOW_COLOR_CHECKS==='1')installManagementColorChecks(page); page.setDefaultTimeout(15000); page.on('pageerror', error => errors.push(error.message));
     await page.goto('http://localhost:5173/'); await page.getByLabel('Email', { exact: true }).fill(users[index].email); await page.getByLabel('Mật khẩu', { exact: true }).fill(password); await page.getByRole('button', { name: 'Đăng nhập', exact: true }).click();
     await page.locator('.studio-home').waitFor(); await page.goto('http://localhost:5173/#organizations'); await page.locator('.organization-page').waitFor(); return page;
   }
@@ -90,7 +91,7 @@ try {
   await workspaces.accept(auths[1], { token: new URLSearchParams(new URL(reusableLink.url).hash.slice(1)).get('token') }); assert.equal((await Task.collection.findOne({ _id: new mongoose.Types.ObjectId(assigned.id) })).assigneeId, null);
   const currentWs = (await workspaces.get(auths[0], standalone.id)).workspace; await workspaces.state(auths[0], standalone.id, { expectedVersion: currentWs.version, state: 'archived', confirmName: currentWs.name, reason: 'Test security exceptions on archived parent' });
   await ownerPage.getByRole('button', { name: 'Làm mới danh sách', exact: true }).click(); await memberRow().getByRole('button', { name: 'Chặn truy cập', exact: true }).click();
-  const ban = ownerPage.getByRole('dialog'); await ban.getByLabel('Bình luận cần dọn', { exact: true }).selectOption('all'); await ban.getByLabel('Lý do', { exact: true }).fill('Spam tài khoản'); await ban.getByRole('button', { name: 'Xem trước tác động', exact: true }).click(); await ban.getByText(/2 bình luận thuộc phạm vi/).waitFor(); assert.equal(await ban.getByRole('button', { name: 'Chặn truy cập', exact: true }).isDisabled(), true); await ban.getByLabel('Xác nhận dọn bình luận', { exact: true }).fill('XÓA BÌNH LUẬN'); await ban.screenshot({ path: `${out}/ban-preview.png` }); await ban.getByRole('button', { name: 'Chặn truy cập', exact: true }).click(); await ban.waitFor({ state: 'hidden' });
+  const ban = ownerPage.getByRole('dialog'); await ban.getByLabel('Bình luận cần dọn', { exact: true }).selectOption('all'); await ban.getByLabel('Lý do', { exact: true }).fill('Spam tài khoản'); await ban.getByRole('button', { name: 'Xem trước tác động', exact: true }).click(); await ban.getByText(/2 bình luận thuộc phạm vi/).waitFor(); assert.equal(await ban.getByRole('button', { name: 'Chặn truy cập', exact: true }).isDisabled(), true); await ban.getByLabel('Xác nhận dọn bình luận', { exact: true }).fill('XÓA BÌNH LUẬN'); if(process.env.WORKFLOW_COLOR_CHECKS==='1')await assertManagementColors(ownerPage); await ban.screenshot({ path: `${out}/ban-preview.png` }); await ban.getByRole('button', { name: 'Chặn truy cập', exact: true }).click(); await ban.waitFor({ state: 'hidden' });
   await ownerPage.locator('.workspace-moderation .audit-list').getByText('Lan', { exact: true }).waitFor(); await assert.rejects(workspaces.accept(auths[1], { token: new URLSearchParams(new URL(reusableLink.url).hash.slice(1)).get('token') })); assert.equal(await TaskComment.collection.countDocuments({ authorId: users[1]._id }), 2); const job = await ModerationAction.collection.findOne({ scopeId: new mongoose.Types.ObjectId(standalone.id), action: 'ban' }); assert.equal(job.state, 'pending'); assert.equal(job.matchedCount, 2);
   await ownerPage.locator('.workspace-moderation').getByRole('button', { name: 'Nhật ký xử lý', exact: true }).click(); await ownerPage.getByText(/0\/2 bình luận đã xử lý/).waitFor();
   await ModerationAction.collection.updateOne({ _id: job._id }, { $set: { state: 'failed', lastErrorCode: 'FIXTURE_FAILURE' } }); await ownerPage.locator('.workspace-moderation').getByRole('button', { name: 'Tải lại', exact: true }).click(); await ownerPage.getByRole('button', { name: 'Xếp hàng xử lý lại', exact: true }).click(); await ownerPage.locator('.system-dialog button.primary').click(); await ownerPage.getByText(/Chờ xử lý/).waitFor(); assert.equal((await ModerationAction.collection.findOne({ _id: job._id })).state, 'pending');

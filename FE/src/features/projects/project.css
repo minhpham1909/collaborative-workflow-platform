@@ -58,7 +58,7 @@
 .task-label-picker label { display: flex; align-items: center; gap: 8px; padding: 8px 0; min-height: 40px; font-size: 13px; }
 .project-management { background: var(--wf-surface); border: 1px solid var(--wf-border); padding: 22px; border-radius: 20px; margin: 20px 0; }
 .project-management > p, .project-management-dialog p { font-size: 14px; line-height: 1.8; color: var(--wf-muted); text-wrap: pretty; }
-.project-management-dialog select { min-height: 44px; background: var(--wf-surface); border: 1px solid #ddd5e8; border-radius: 12px; padding: 10px 12px; color: var(--wf-ink); font-family: inherit; width: 100%; }
+.project-management-dialog select { min-height: 44px; background: var(--wf-surface); border: 1px solid var(--wf-border); border-radius: 12px; padding: 10px 12px; color: var(--wf-ink); font-family: inherit; width: 100%; }
 .project-management .team-tabs { flex-wrap: wrap; }
 .project-management-list { list-style: none; padding: 0; }
 .project-management-list li { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; padding: 18px 0; border-bottom: 1px solid var(--wf-border); }
@@ -69,8 +69,8 @@
 .project-management-dialog .buttons { flex-wrap: wrap; }
 .board-labels .label-color-coral { background: var(--wf-coral); color: var(--wf-danger); }
 .board-labels .label-color-mint { background: var(--wf-mint); color: var(--wf-success); }
-.board-labels .label-color-blue { background: #e6efff; color: #2556a4; }
-.board-labels .label-color-amber { background: #fff0ce; color: #775500; }
+.board-labels .label-color-blue { background: var(--wf-blue-soft); color: var(--wf-blue); }
+.board-labels .label-color-amber { background: var(--wf-amber); color: var(--wf-warning); }
 .board-labels .label-color-gray { background: var(--wf-soft); color: var(--wf-muted); }
 @media (max-width: 650px) {
   .project-management { padding: 18px; }

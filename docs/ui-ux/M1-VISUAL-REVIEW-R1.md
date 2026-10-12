@@ -82,3 +82,8 @@ Browser computed style xác nhận:
 - Viewport CSS2133px: Home1600/available1889, gutter144.5px mỗi bên chưa tính padding. Đây là đo viewport CSS; chưa chạy zoom90% thật. Không document overflow ở các route quan sát, nhưng điều đó không chứng minh không có lỗi màu/state.
 
 Các route quan sát: Home, Organizations, Organization detail, Workspace, Project, My Tasks, Shared Projects, Inbox, Settings, Task có comment, Task empty comment, Trash. Loading/error/readonly/Guest-populated/composer và dialog không được suy là PASS từ các mẫu này; vẫn nằm trong ma trận R3. Không sửa FE/BE trong lượt này.
+
+
+## Follow-up management — 12/10/2026
+
+Ảnh mới của user cho thấy Workspace tabs/membership/settings/email còn nền trắng trong dark. Đã sửa CSS tại nguồn sang semantic palette, kiểm Workspace độc lập/trực thuộc, Organization Team/audit/management, Project management, Settings và các route chính. [QA đồng bộ màu](../qa/UI-COLOR-CONSISTENCY-CHECK.md). R4 slider trong banner và R5 density chưa thực hiện trong patch màu này.

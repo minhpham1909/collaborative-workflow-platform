@@ -1,4 +1,6 @@
+import {installManagementColorChecks,assertManagementColors} from './management-colors.mjs';
 import assert from 'node:assert/strict';
+import {organizationText} from '../src/lib/organization-text.js';
 import { createRequire } from 'node:module';
 import { once } from 'node:events';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
@@ -53,7 +55,7 @@ try {
   browser = await chromium.launch({ executablePath: process.env.WORKFLOW_BROWSER_EXECUTABLE, headless: true });
   let fail = false, delay = false, lostInviteResponse = false;
   async function pageFor(index) {
-    const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+    const context = await browser.newContext({colorScheme:process.env.WORKFLOW_REGRESSION_THEME==='dark'?'dark':'light', viewport: { width: 1440, height: 1000 } });
     await context.route('http://localhost:4000/**', async route => {
       if (fail && route.request().url().includes(`/organizations/${org.id}/members?`)) return route.abort();
       if (delay && route.request().url().includes(`/organizations/${org.id}/members?`)) await new Promise(resolve => setTimeout(resolve, new URL(route.request().url()).searchParams.get('q') === 'Lan' ? 900 : 50));
@@ -61,7 +63,7 @@ try {
       if (lostInviteResponse && route.request().method() === 'POST' && route.request().url().endsWith('/invitations')) { lostInviteResponse = false; return route.abort(); }
       await route.fulfill({ response });
     });
-    const page = await context.newPage(); page.setDefaultTimeout(15000); page.on('pageerror', error => errors.push(error.message));
+    const page = await context.newPage();if(process.env.WORKFLOW_COLOR_CHECKS==='1')installManagementColorChecks(page); page.setDefaultTimeout(15000); page.on('pageerror', error => errors.push(error.message));
     await page.goto('http://localhost:5173/'); await page.getByLabel('Email', { exact: true }).fill(users[index].email); await page.getByLabel('Mật khẩu', { exact: true }).fill(password); await page.getByRole('button', { name: 'Đăng nhập', exact: true }).click();
     await page.locator('.studio-home').waitFor(); await page.goto('http://localhost:5173/#organizations'); await page.locator('.organization-page').waitFor(); return page;
   }
@@ -76,7 +78,7 @@ try {
   await ownerPage.getByRole('button', { name: 'Mời thành viên', exact: true }).click();
   await ownerPage.getByLabel('Email người nhận', { exact: true }).fill('alpha-new@example.com');
   await ownerPage.getByLabel('Workspace đích (không bắt buộc)', { exact: true }).selectOption(first.id);
-  await ownerPage.getByRole('dialog').screenshot({ path: `${out}/invite-dialog.png` });
+  if(process.env.WORKFLOW_COLOR_CHECKS==='1')await assertManagementColors(ownerPage); await ownerPage.getByRole('dialog').screenshot({ path: `${out}/invite-dialog.png` });
   await ownerPage.getByRole('dialog').getByRole('button', { name: 'Tạo lời mời', exact: true }).click();
   await ownerPage.getByRole('table', { name: 'Lời mời tổ chức', exact: true }).getByText('alpha-new@example.com', { exact: true }).waitFor();
   const invitation = await OrganizationInvitation.collection.findOne({ email: 'alpha-new@example.com', organizationId: new mongoose.Types.ObjectId(org.id) }); assert.equal(String(invitation.workspaceId), first.id);
@@ -106,7 +108,7 @@ try {
   // Create same-document history before testing the in-flight revoke guard.
   await ownerPage.evaluate(id=>{location.hash='organization/'+id;},org.id);await ownerPage.getByRole('heading',{name:org.name,exact:true}).waitFor();await ownerPage.getByRole('link',{name:'Members & permissions',exact:true}).click();await ownerPage.getByRole('button',{name:'Invitations',exact:true}).click();await ownerPage.getByText('english-invite@example.com',{exact:true}).waitFor();
   let revokeWrites=0;const started=new Promise(resolve=>{seeRevoke=resolve;});await ownerPage.context().route('**/invitations/'+englishInvite.id+'/revoke',async route=>{revokeWrites++;const response=await route.fetch({url:route.request().url().replace('http://localhost:4000',origin)});seeRevoke();await new Promise(resolve=>{releaseRevoke=resolve;});await route.fulfill({response});});
-  await ownerPage.locator('.team-table tbody tr').filter({hasText:'english-invite@example.com'}).getByRole('button',{name:'Revoke',exact:true}).click();await ownerPage.getByRole('dialog',{name:'Revoke invitation',exact:true}).getByRole('button',{name:'Revoke',exact:true}).click();await started;await ownerPage.goBack();await ownerPage.getByText('A request is being processed. Wait for the outcome before leaving.',{exact:false}).waitFor();await ownerPage.waitForURL('**/#organization/'+org.id+'/team');releaseRevoke();await ownerPage.locator('.team-table tbody tr').filter({hasText:'english-invite@example.com'}).getByText('Revoked',{exact:true}).waitFor();assert.equal(revokeWrites,1);
+  await ownerPage.locator('.team-table tbody tr').filter({hasText:'english-invite@example.com'}).getByRole('button',{name:'Revoke',exact:true}).click();await ownerPage.getByRole('dialog',{name:'Revoke invitation',exact:true}).getByRole('button',{name:'Revoke',exact:true}).click();await started;await ownerPage.goBack();await ownerPage.getByText(organizationText('Đang xử lý yêu cầu. Vui lòng chờ kết quả trước khi rời trang.','en'),{exact:true}).waitFor();await ownerPage.waitForURL('**/#organization/'+org.id+'/team');releaseRevoke();await ownerPage.locator('.team-table tbody tr').filter({hasText:'english-invite@example.com'}).getByText('Revoked',{exact:true}).waitFor();assert.equal(revokeWrites,1);
   await rotateFixture();await memberPage.evaluate(()=>localStorage.setItem('workflow.auth.locale','en'));await memberPage.reload();await memberPage.getByRole('table',{name:'Organization members',exact:true}).waitFor();assert.equal(await memberPage.getByRole('button',{name:'Invite member',exact:true}).count(),0);assert.equal(await memberPage.getByRole('button',{name:'Invitations',exact:true}).count(),0);
   assert.deepEqual(errors, []);
   if (process.env.WORKFLOW_SKILL_PROBE === '1') {
