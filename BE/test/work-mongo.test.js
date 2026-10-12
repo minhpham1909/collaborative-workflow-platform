@@ -296,6 +296,54 @@ test('Project, Task, Comment and scoped queries on real MongoDB/HTTP', { skip: !
       const calendar = await service.calendarTasks(claims[1], { month: '2026-10', day: '2026-10-12', q: `${prefix} Compact` }); assert.equal(calendar.items[0].id, item.id);
       assert.ok(JSON.stringify(row).length < JSON.stringify(detail).length / 2);
     });
+    await t.test('Home overview and priority use authorized full-set counts, unique attention and deterministic priority order', async () => {
+      const home = createWorkService({ store: createMongoWorkStore({ config, now: () => new Date('2026-10-12T05:00:00.000Z') }) });
+      const homeUser = new User({ displayName: 'Home isolated member', email: `${prefix}-home@example.com`, passwordHash: encoded, emailVerifiedAt: new Date(), termsAcceptance: { version: 'test', acceptedAt: new Date() } }); await homeUser.save();
+      users.push(homeUser.toObject()); const homeLogin = await auth.login({ email: homeUser.email, password }); logins.push(homeLogin); const subject = await auth.authenticate(homeLogin.accessToken); claims.push(subject);
+      const actorIndex = users.length - 1;
+      assert.equal((await http(actorIndex, '/home/overview')).status, 200);
+      assert.equal((await http(actorIndex, '/home/overview?userId=forged')).status, 400);
+      assert.equal((await http(actorIndex, '/home/priority-tasks?limit=6')).status, 400);
+      assert.equal((await http(null, '/home/overview')).status, 401);
+      assert.equal((await http(4, '/home/overview')).status, 403);
+      assert.equal((await home.homeOverview(subject, {})).attentionOpenCount, 0);
+      const groups = [], projects = [];
+      for (let i = 0; i < 2; i++) {
+        const group = (await workspaces.create(claims[0], { name: `${prefix} Home ${i}` })).workspace; groups.push(group); workspaceIds.push(O(group.id));
+        const link = await workspaces.invite(claims[0], group.id, { type: 'LINK' });
+        await workspaces.accept(subject, { token: new URLSearchParams(new URL(link.url).hash.slice(1)).get('token') });
+        projects.push((await home.createProject(claims[0], group.id, { name: 'Home priority fixture' })).project);
+      }
+      const add = async (title, dueAt, priority = 'medium', index = 0) => (await home.createTask(claims[0], projects[index].id, { title: `${prefix} ${title}`, dueAt, priority, assigneeId: String(homeUser._id) })).task;
+      const yesterday = await add('Yesterday high', '2026-10-11T05:00:00.000Z', 'high');
+      const earlier = await add('Today high', '2026-10-12T01:00:00.000Z', 'high');
+      const low = await add('Today low', '2026-10-12T02:00:00.000Z', 'low', 1);
+      await add('Today future', '2026-10-12T06:00:00.000Z', 'high', 1);
+      await add('Tomorrow', '2026-10-13T01:00:00.000Z'); await add('No deadline', null);
+      const done = await add('Done excluded', '2026-10-12T01:00:00.000Z'); await home.status(subject, done.id, { expectedVersion: done.version, status: 'done' });
+      const trash = await add('Trash excluded', '2026-10-12T01:00:00.000Z'); await home.deleteTask(claims[0], trash.id, { expectedVersion: trash.version });
+      // Query only fixture title with MyTasks below; Home must count the complete active assigned scope.
+      const before = (await home.homeOverview(subject, {}));
+      const mineToday = await home.mine(subject, { status: 'open', state: 'active', timeField: 'dueAt', from: before.day, to: before.day });
+      assert.equal(before.day, '2026-10-12'); assert.equal(before.timeZone, '+07:00');
+      assert.equal(before.dueTodayOpenCount, mineToday.total);
+      const slice = await home.homePriority(subject, { limit: '3' });
+      const attention = await home.mine(subject, { status: 'open', state: 'active', timeField: 'dueAt', to: before.day });
+      assert.equal(slice.totalMatching, before.attentionOpenCount); assert.equal(slice.totalMatching, attention.total);
+      assert.equal(slice.items.length, 3);
+      const fixtureSlice = slice.items.filter(item => item.title.startsWith(prefix));
+      // The isolated account gives deterministic whole-scope order independent of other fixtures.
+      const full = await home.homePriority(subject, { limit: '5' });
+      const ordered = full.items.filter(item => [yesterday.id, earlier.id, low.id].includes(item.id)).map(item => item.id);
+      assert.deepEqual(ordered, [yesterday.id, earlier.id, low.id]);
+      assert.ok(fixtureSlice.every(item => !Object.hasOwn(item, 'description') && item.workspaceName));
+      assert.equal((await home.homePriority(subject, { limit: '1' })).totalMatching, slice.totalMatching);
+      assert.equal(before.dueTodayOpenCount, 3); assert.equal(before.overdueOpenCount, 3); assert.equal(before.attentionOpenCount, 4); assert.equal(before.dueTodayWorkspaceCount, 2);
+      await service.state(claims[0], projects[1].id, { expectedVersion: projects[1].version, state: 'archived' });
+      const after = await home.homeOverview(subject, {});
+      assert.equal(after.attentionOpenCount, before.attentionOpenCount - 2);
+      assert.equal(after.dueTodayWorkspaceCount, before.dueTodayWorkspaceCount - 1);
+    });
     await t.test('Revoked session rechecked inside repository transaction', async () => {
       await Session.collection.updateOne({ _id: O(claims[3].claims.sid) }, { $set: { revokedAt: new Date() } });
       await assert.rejects(service.createTask(claims[3], project.id, { title: 'No stale session' }), /UNAUTHENTICATED/u);

@@ -3,6 +3,7 @@ import { homeText } from '../../lib/home-text.js';
 import { InlineMessage, LoadingState } from "../../components/Feedback.jsx";
 import { useEffect, useState } from "react";
 import Icon from "../../components/Icon.jsx";
+import { homeTaskLink } from '../../lib/home-task-link.js';
 function vietnamDay() {
   const parts = new Intl.DateTimeFormat("en", {
     timeZone: "Asia/Ho_Chi_Minh",
@@ -26,23 +27,20 @@ export function useHomeHighlights(api, revision = 0) {
     async function load() {
       const token = ++sequence;
       const results = await Promise.allSettled([
-        api.request(
-          `/my-tasks?limit=3&status=open&state=active&timeField=dueAt&from=${day}&to=${day}`,
-        ),
-        api.request("/my-tasks?limit=3&status=open&state=active&overdue=true"),
+        api.request('/home/overview'),
+        api.request('/home/priority-tasks?limit=3'),
         api.request("/notifications?limit=1&read=unread"),
       ]);
-      if (live && token === sequence)
-        setData(
-          Object.fromEntries(
-            ["today", "overdue", "inbox"].map((key, index) => [
-              key,
-              results[index].status === "fulfilled"
-                ? results[index].value
-                : null,
-            ]),
-          ),
-        );
+      if (live && token === sequence) {
+        const overview = results[0].status === 'fulfilled' ? results[0].value : null;
+        setData({
+          overview,
+          today: overview ? { total: overview.dueTodayOpenCount, workspaceCount: overview.dueTodayWorkspaceCount } : null,
+          overdue: overview ? { total: overview.overdueOpenCount } : null,
+          priority: results[1].status === 'fulfilled' ? results[1].value : null,
+          inbox: results[2].status === 'fulfilled' ? results[2].value : null,
+        });
+      }
     }
     setData({});
     load();
@@ -54,7 +52,7 @@ export function useHomeHighlights(api, revision = 0) {
       window.removeEventListener("workflow-inbox-changed", load);
     };
   }, [api, day, revision]);
-  return { ...data, day };
+  return { ...data, day: data.overview?.day ?? data.priority?.day ?? day };
 }
 export function HomeDay({ data }) {
   const { locale } = useAuthLocale();
@@ -70,7 +68,7 @@ export function HomeDay({ data }) {
       {data.today && (
         <>
           {" "}
-          · {t("Bạn có")} <a href="#mine">{t("{count} việc đến hạn hôm nay", { count: data.today.total })}</a>
+          · {t("Bạn có")} <a href={homeTaskLink('today', data.day)}>{t("{count} việc đến hạn hôm nay", { count: data.today.total })}</a>
           {data.today.total > 0 &&
             ` ${t("tại {count} Workspace", { count: data.today.workspaceCount })}`}
           .
@@ -87,15 +85,14 @@ export default function HomeHighlights({ data, compact = false }) {
   const t = (value, values) => homeText(value, locale, values);
   const note = data.inbox?.items?.[0];
   if (compact) return <section className="home-overview" aria-label={t("Tổng quan cá nhân hôm nay")}>
-    {[['calendar', 'Đến hạn hôm nay', data.today?.total, 'Công việc chưa hoàn thành', 'lavender'], ['tasks', 'Đang quá hạn', data.overdue?.total, 'Cần kiểm tra và xử lý', 'coral'], ['bell', 'Thông báo chưa đọc', data.inbox?.unreadCount, 'Cập nhật từ nhóm của bạn', 'mint']].map(([icon, label, count, hint, tone]) => <a className={`home-overview-card accent-${tone}`} href={icon === 'bell' ? '#notifications' : '#mine'} key={label}><div><span>{t(label)}</span><strong>{count ?? '—'}</strong><small>{t(hint)}</small></div><span className="home-overview-icon"><Icon name={icon} /></span></a>)}
+    {[['calendar', 'Đến hạn hôm nay', data.today?.total, 'Công việc chưa hoàn thành', 'lavender'], ['tasks', 'Đang quá hạn', data.overdue?.total, 'Cần kiểm tra và xử lý', 'coral'], ['bell', 'Thông báo chưa đọc', data.inbox?.unreadCount, 'Cập nhật từ nhóm của bạn', 'mint']].map(([icon, label, count, hint, tone]) => <a className={`home-overview-card accent-${tone}`} href={icon === 'bell' ? '#notifications?read=unread' : homeTaskLink(icon === 'calendar' ? 'today' : 'overdue', data.day)} key={label}><div><span>{t(label)}</span><strong>{count ?? '—'}</strong><small>{t(hint)}</small></div><span className="home-overview-icon"><Icon name={icon} /></span></a>)}
   </section>;
-  const seen = new Set();
-  const tasks = [...(data.overdue?.items ?? []), ...(data.today?.items ?? [])].filter(task => { if (seen.has(task.id)) return false; seen.add(task.id); return true; });
+  const tasks = data.priority?.items ?? [];
   return <section className="home-highlights home-attention">
-    <article className="highlight-card"><div className="highlight-heading"><span className="highlight-icon"><Icon name="tasks" /></span><div><h2>{t("Việc cần chú ý")}</h2><p>{t("Quá hạn hoặc đến hạn hôm nay · Được giao cho bạn")}</p></div><a className="home-text-link" href="#mine">{t("Xem công việc →")}</a></div>
-      {data.today === undefined || data.overdue === undefined ? <LoadingState>{t("Đang tải công việc…")}</LoadingState> : <>
-        {(data.today === null || data.overdue === null) && <InlineMessage>{t("Chưa tải được một phần công việc.")} <a href="#mine">{t("Mở Công việc của tôi để thử lại.")}</a></InlineMessage>}
-        {tasks.length ? <ul className="priority-tasks">{tasks.map(task => <li key={task.id}><div><small>{task.code ?? t('Công việc')} · {task.projectName}</small><a href={`#task/${task.id}`}>{task.title}</a><span>{task.workspaceName}</span></div><span className={task.overdue ? 'attention-deadline overdue' : 'attention-deadline'}>{t(task.overdue ? 'Quá hạn' : 'Hôm nay')} · {new Date(task.dueAt).toLocaleTimeString(locale === 'en' ? 'en-GB' : 'vi-VN', { timeZone: 'Asia/Ho_Chi_Minh', hour: '2-digit', minute: '2-digit' })}</span></li>)}</ul> : data.today && data.overdue && <p className="highlight-empty">{t("Bạn không có công việc quá hạn hoặc đến hạn hôm nay.")}</p>}
+    <article className="highlight-card"><div className="highlight-heading"><span className="highlight-icon"><Icon name="tasks" /></span><div><h2>{t("Việc cần chú ý")}</h2><p>{t("Quá hạn hoặc đến hạn hôm nay · Được giao cho bạn")}</p></div><a className="home-text-link" href={homeTaskLink('attention', data.day)}>{t("Xem công việc →")}</a></div>
+      {data.priority === undefined ? <LoadingState>{t("Đang tải công việc…")}</LoadingState> : <>
+        {data.priority === null && <InlineMessage>{t("Chưa tải được một phần công việc.")} <a href="#mine">{t("Mở Công việc của tôi để thử lại.")}</a></InlineMessage>}
+        {tasks.length ? <ul className="priority-tasks">{tasks.map(task => <li key={task.id}><div><small>{task.code ?? t('Công việc')} · {task.projectName}</small><a href={`#task/${task.id}`}>{task.title}</a><span>{task.workspaceName}</span></div><span className={task.overdue ? 'attention-deadline overdue' : 'attention-deadline'}>{t(task.overdue ? 'Quá hạn' : 'Hôm nay')} · {new Date(task.dueAt).toLocaleTimeString(locale === 'en' ? 'en-GB' : 'vi-VN', { timeZone: 'Asia/Ho_Chi_Minh', hour: '2-digit', minute: '2-digit' })}</span></li>)}</ul> : data.priority && <p className="highlight-empty">{t("Bạn không có công việc quá hạn hoặc đến hạn hôm nay.")}</p>}
       </>}
     </article>
     <article className="highlight-card notification-highlight"><div className="highlight-heading"><span className="highlight-icon"><Icon name="bell" /></span><div><h2>{t("Thông báo mới")}</h2><p>{t("Những cập nhật cần bạn xem.")}</p></div></div>

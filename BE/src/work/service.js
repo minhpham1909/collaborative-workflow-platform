@@ -3,9 +3,12 @@ import { objectId, versionInput, pageInput, invitationInput, invitationToken, fa
 import { inputObject } from '../auth/account-input.js';
 import { projectInput, taskInput, statusInput, stateInput, commentInput, taskQuery, commentDeleteInput, labelInput, checklistInput, checklistTickInput, reopenInput, reopenReviewInput, statisticsInput } from './input.js';
 import { projectQuery } from './project-query.js';
+import { homePriorityQuery } from './home-input.js';
 
 export function createWorkService({ store }) {
   return {
+    homeOverview: (auth, query) => { inputObject(query, []); return store.homeOverview(auth.claims); },
+    homePriority: (auth, query) => store.homePriority(auth.claims, homePriorityQuery(query)),
     calendar: (auth,query) => store.calendar(auth.claims,calendarQuery(query)),
     calendarTasks: (auth,query) => store.calendarTasks(auth.claims,calendarQuery(query,true)),
     pins: (auth, query) => { inputObject(query, []); return store.pins(auth.claims); },

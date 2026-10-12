@@ -5,13 +5,15 @@ import { originPolicy, requestError } from '../http/policy.js';
 
 export function createWorkRouter({ service, authService, config }) {
   const router = express.Router({ caseSensitive: true, strict: true });
-  router.use((req, _res, next) => /^\/(?:projects(?:\/|$)|project-pins(?:\/|$)|shared-projects(?:\/|$)|tasks(?:\/|$)|my-tasks(?:\/|$)|my-calendar(?:\/|$)|workspaces\/[^/]+\/projects(?:\/|$))/u.test(req.path) ? next() : next('router'));
+  router.use((req, _res, next) => /^\/(?:home(?:\/|$)|projects(?:\/|$)|project-pins(?:\/|$)|shared-projects(?:\/|$)|tasks(?:\/|$)|my-tasks(?:\/|$)|my-calendar(?:\/|$)|workspaces\/[^/]+\/projects(?:\/|$))/u.test(req.path) ? next() : next('router'));
   router.use(originPolicy({ webOrigin: config.webOrigin, methods: ['GET', 'POST', 'PATCH'] }));
   router.use(createRateLimiter());
   router.use(express.json({ limit: '256kb', strict: true }));
   router.use((req, _res, next) => ['POST', 'PATCH'].includes(req.method) && !req.is('application/json') ? next(new AuthError('JSON_REQUIRED', 415)) : next());
   router.use(requireAuthentication(authService, { verified: true }));
   const route = (method, path, call, code = 200) => router[method](path, async (req, res) => res.status(code).json(await call(req)));
+  route('get', '/home/overview', r => service.homeOverview(r.auth, r.query));
+  route('get', '/home/priority-tasks', r => service.homePriority(r.auth, r.query));
   route('get', '/workspaces/:workspaceId/projects', (r) => service.projects(r.auth, r.params.workspaceId, r.query));
   route('post', '/workspaces/:workspaceId/projects', (r) => service.createProject(r.auth, r.params.workspaceId, r.body), 201);
   route('get', '/project-pins', r => service.pins(r.auth, r.query));

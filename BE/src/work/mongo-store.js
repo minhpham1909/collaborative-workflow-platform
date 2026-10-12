@@ -15,6 +15,7 @@ import { cancelReopenRequests, reconcileReopenRequests } from './reopen-lifecycl
 import { assertWorkspaceWritable, projectReadOnly } from '../workspaces/lifecycle.js';
 import { createTaskTrashStore } from './trash-store.js';
 import { TASK_LIST_PROJECTION, taskListPermissions } from './task-list.js';
+import { createHomeStore } from './home-store.js';
 
 const id = (value) => new mongoose.Types.ObjectId(value);
 const deny = (code = 'RESOURCE_UNAVAILABLE', status = 404) => { throw new AuthError(code, status); };
@@ -238,6 +239,7 @@ export function createMongoWorkStore({ now = () => new Date(), config } = {}) {
     return { items: values, nextCursor: result.nextCursor };
   }
   return {
+    ...createHomeStore({ run, assignedPipeline, taskPage, projectScope, now }),
     ...createMongoProjectGuestStore({ config, now }),
     ...createReopenStore({ run, taskScope, projectScope, owner, checkVersion, now, identity, taskResponse, applyReopen }),
     ...createTaskTrashStore({ run, projectScope, taskResponse, owner, checkVersion, update, assignee, activity, now }),

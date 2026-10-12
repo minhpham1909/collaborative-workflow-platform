@@ -57,14 +57,15 @@ try {
   const project = (await work.createProject(auths[0], owned.id, { name: 'Thiết kế Website Bloom' })).project;
   const minute = new Date(Math.floor(Date.now() / 60_000) * 60_000);
   await work.createTask(auths[1], project.id, { title: 'Hoàn thiện giao diện trang chủ', assigneeId: users[0].id, dueAt: new Date(minute.getTime() - 60_000).toISOString() });
-  await work.createTask(auths[1], project.id, { title: 'Kiểm tra luồng đăng nhập', assigneeId: users[0].id, dueAt: new Date(minute.getTime() + 60_000).toISOString() });
+  await work.createTask(auths[1], project.id, { title: 'Kiểm tra luồng đăng nhập', assigneeId: users[0].id, dueAt: new Date(minute.getTime() + 3600_000).toISOString() });
   const cutoff = cutoffCodec(config.accessKeyHex);
   server = createApp({ authService: auth, authConfig: config, workspaceService: workspaces, workService: work, notificationsService: createNotificationsService({ store: createMongoNotificationsStore({ cutoff }), cutoff }) }).listen(0, '127.0.0.1'); await once(server, 'listening');
   const apiOrigin = `http://127.0.0.1:${server.address().port}`;
   browser = await chromium.launch({ executablePath: process.env.WORKFLOW_BROWSER_EXECUTABLE, headless: true });
   const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
-  let fail = false, delay = false;
+  let fail = false, delay = false, failOverview = false;
   await context.route('http://localhost:4000/**', async route => {
+    if (failOverview && route.request().url().endsWith('/home/overview')) return route.abort();
     if (fail && route.request().url().includes('/workspaces?')) return route.abort();
     if (delay && route.request().url().includes('/workspaces?')) await new Promise(resolve => setTimeout(resolve, 400));
     const response = await route.fetch({ url: route.request().url().replace('http://localhost:4000', apiOrigin) }); await route.fulfill({ response });
@@ -73,6 +74,15 @@ try {
   await page.goto('http://localhost:5173/'); await page.getByLabel('Email', { exact: true }).fill(users[0].email); await page.getByLabel('Mật khẩu', { exact: true }).fill(password); await page.getByRole('button', { name: 'Đăng nhập', exact: true }).click();
   const cards = page.locator('.home-workspace-card'); await page.getByRole('heading', { name: 'Sáng Tạo Studio', exact: true }).waitFor();
   await page.waitForFunction(() => document.querySelectorAll('.home-workspace-card').length === 5);
+  const homeOverview = await work.homeOverview(auths[0], {}); const priority = await work.homePriority(auths[0], { limit: '3' });
+  await page.waitForFunction(count => document.querySelector('.home-overview-card strong')?.textContent === String(count), homeOverview.dueTodayOpenCount);
+  assert.ok((await page.locator('.home-overview-card').first().getAttribute('href')).includes('from='+homeOverview.day));
+  assert.ok((await page.locator('.home-overview-card').nth(1).getAttribute('href')).includes('overdue=true'));
+  assert.equal(await page.locator('.priority-tasks li').count(), priority.items.length);
+  assert.deepEqual(await page.locator('.priority-tasks li div > a').allTextContents(), priority.items.map(item => item.title));
+  failOverview = true; await page.evaluate(() => window.dispatchEvent(new Event('focus'))); await page.getByText('Chưa tải được tổng quan công việc.', { exact: false }).waitFor();
+  assert.equal(await page.locator('.home-overview-card strong').first().textContent(), '—'); assert.equal(await page.locator('.priority-tasks li').count(), priority.items.length);
+  failOverview = false; await page.evaluate(() => window.dispatchEvent(new Event('focus'))); await page.waitForFunction(count => document.querySelector('.home-overview-card strong')?.textContent === String(count), homeOverview.dueTodayOpenCount);
   assert.equal(await page.getByText('Private hidden workspace').count(), 0); assert.equal(await page.getByText('Quản trị tổ chức', { exact: true }).count(), 1);
   for (const width of [1440, 1280, 1024, 768, 375]) {
     await page.setViewportSize({ width, height: 1000 }); await page.screenshot({ path: `${out}/home-${width}.png`, fullPage: true });
