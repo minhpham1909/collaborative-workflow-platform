@@ -1,5 +1,7 @@
 # Trạng thái và bước tiếp theo
 
+12/10/2026 — **Nghiệm thu mở lại UX và chuyển hướng Workspace-only**: user chọn Owner/Admin/Member, Guest theo Project; bỏ lớp Org/Studio là hướng tái cấu trúc, chưa migration. Sidebar/toolbar/mode/refresh/avatar và metadata cần sửa; compact technicalPASS không đủ useracceptance. [Phân tích và backlog](WORKSPACE-ONLY-RESTRUCTURE-v0.1.md). Chốt quyền mời/ma trận/mapping trước BE+data; không tiếp xây Org settings, không đổi dữ liệu trong lượt review.
+
 12/10/2026 — **M4 calendar đạt; M1–M4 UI upgrade triển khai xong trong scope**: same assigned/current-rights pipelineMyTasks, GMT7fullmonthcounts/none/paged day, sidebar/mobile, keyboard/readonly/Task return andrefresh. BE122integration+68unit, FE26,4Calendarcases5width, S8/W2 regressions/buildbudget/liveQAread-onlyPASS. [QA](../qa/UI-CALENDAR-M4-CHECK.md). Tiếpnghiệmthuweb trực tiếp theoactor/flow trước deploy/CI-CD; khôngworker/providers/backfill/devwrites.
 
 12/10/2026 — **M3b đạt; M3a–M3b hoàn tất**: shared account-scoped card/list6collections (MyTasks density); Team/audit giữ bảng; Inbox lazy opt-in3pages/manual fallback, dedup/pending/error guards và không mất60rows khi append failure. 4cases×6collections×5width, lazy80+ fixture vàHome/Workspace/Team/MyTasks/Inbox regressionsPASS, FE25/build budgetPASS. [QA](../qa/UI-COLLECTION-VIEWS-M3-CHECK.md). Tiếp M4 calendar dùng BE counts/current rights, không12-item snapshot. KhôngBE migration/devwrites/providers/workers.

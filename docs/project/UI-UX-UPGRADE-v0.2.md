@@ -1,5 +1,7 @@
 # Vòng nâng cấp UI/UX sau QA dữ liệu
 
+**Nghiệm thu12/10 mở lại UX**: các technical gates bên dưới là lịch sử triển khai, chưa đạt user acceptance. M3 density chỉ đổi font/padding cần thiết kế lại cấu trúc đọc; toolbar/nav/refresh/avatar cần chỉnh. Hướng Workspace-only đã chọn bộ role Owner/Admin/Member và Guest Project; [backlog tái cấu trúc](WORKSPACE-ONLY-RESTRUCTURE-v0.1.md), chưa đổi code/data.
+
 12/10/2026. Dùng Stitch local/Jakarta/kem–tím, thêm thư viện để hỗ trợ triển khai. Hoàn thành và kiểm từng patch trước khi chuyển; mỗi patch commit riêng. Giữ luồng/quyền/capabilities và không tạo dữ liệu thống kê giả vì mockup.
 
 | Mốc | Nội dung | Trạng thái |
