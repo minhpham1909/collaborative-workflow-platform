@@ -1,5 +1,7 @@
 # Trạng thái và bước tiếp theo
 
+12/10/2026 — **Workspace-only business analysis chi tiết; role Owner/Manager/Member** theo sửa của user (Manager chỉ scoped Workspace). [Spec tạo/settings/RBAC/admission/lifecycle/migration/UX gates](WORKSPACE-ONLY-BUSINESS-SPEC-v0.1.md). Đã chốt nhiềuManager/Owner+Manager mờiMember/chỉtênrequired, có thiết lập tiếp; cần review matrix/lifecycle/Lead/migration trước code. Chưa code/migration hoặc worker/email. Không coi bỏ Org menu là bỏ xong nghiệp vụ.
+
 12/10/2026 — **Nghiệm thu mở lại UX và chuyển hướng Workspace-only**: user chọn Owner/Admin/Member, Guest theo Project; bỏ lớp Org/Studio là hướng tái cấu trúc, chưa migration. Sidebar/toolbar/mode/refresh/avatar và metadata cần sửa; compact technicalPASS không đủ useracceptance. [Phân tích và backlog](WORKSPACE-ONLY-RESTRUCTURE-v0.1.md). Chốt quyền mời/ma trận/mapping trước BE+data; không tiếp xây Org settings, không đổi dữ liệu trong lượt review.
 
 12/10/2026 — **M4 calendar đạt; M1–M4 UI upgrade triển khai xong trong scope**: same assigned/current-rights pipelineMyTasks, GMT7fullmonthcounts/none/paged day, sidebar/mobile, keyboard/readonly/Task return andrefresh. BE122integration+68unit, FE26,4Calendarcases5width, S8/W2 regressions/buildbudget/liveQAread-onlyPASS. [QA](../qa/UI-CALENDAR-M4-CHECK.md). Tiếpnghiệmthuweb trực tiếp theoactor/flow trước deploy/CI-CD; khôngworker/providers/backfill/devwrites.
