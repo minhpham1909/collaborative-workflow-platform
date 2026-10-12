@@ -177,3 +177,7 @@ Không đồng thời giữ role/effectiveRole hoặc flat/nested counts hai cá
 - API tests verify counts độc lập page size, filters không làm sai overview khác scope, payload list không full rich document/checklist, role change/ban không leak qua aggregate; UI verify CTA dẫn đúng dataset/count và modes thật khác cấu trúc.
 
 Trước sửa code, chuyển bảng này thành API schema + screen checklist có coverage. Read-only data inventory/rehearsal vẫn là bước riêng; không chạy migration/SMTP/purge/backfill hoặc thêm chức năng từ mockup ngoài scope đã chốt.
+
+## 13. Draft API và checklist tiếp theo
+
+[Read API draft](../sds/WORKSPACE-ONLY-READ-API-DRAFT-v0.1.md) cụ thể hóa fields/types/nullability/query/counts/errors. Draft chọn giữ role/readOnly boolean/memberCount flat để giảm đổi consumer; ví dụ nested ở mục11 chỉ minh họa, không áp song song hai format. [Checklist DATA-01–22](../qa/WORKSPACE-ONLY-SCREEN-DATA-ACCEPTANCE-v0.1.md) đều pending, chưa chạy. Chốt contract/policy rồi mới schema/implementation và fixture tests.
