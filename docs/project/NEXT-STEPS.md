@@ -1,5 +1,7 @@
 # Trạng thái và bước tiếp theo
 
+12/10/2026 — **R5 fluid/density đạt; R1–R5 repair đóng trong scope**: sidebar224/header71/main fluid, grid tự phân cột/card gọn, body14px; trước/sau63states9clusters7width, Home/Board/Task regressions5width, banner20states, W2 DarkEN375/LightVI1440 vàFE23/build budgetPASS. [QA số đo](../qa/UI-DENSITY-R5-CHECK.md). Tiếp M2 pin Project cá nhân, rồi M3 list modes và M4 lịch; khôngproviders/workers/devbusinesswrites/deploy.
+
 12/10/2026 — **R4 integrated Home hero đạt**: slider ảnh là nền trong banner, caption/controls gọn, greeting/CTA đọc được cả sáng/tối; keyboard/reduced-motion/missing image và20states Vi/En/5width, HomeS1/FE23/build budgetPASS. [QA](../qa/UI-HOME-HERO-R4-CHECK.md). Tiếp R5 density có đo trước/sau; chưaM2–M4.
 
 12/10/2026 — **Patch đồng bộ màu management/toàn site đạt gate mở rộng**: token tại nguồn CSS cho tab/form/panel/editor/dialog; color policy chống literal màu ngoài palette. QA thật 24 màn/tab mỗi Light/Dark (không ghi nghiệp vụ), 12 regression management, Auth Light/Dark, 8 W2 journeys Việt–Anh desktop/mobile, theme foundation/5width, FE23/23/build budget PASS. [Chi tiết QA](../qa/UI-COLOR-CONSISTENCY-CHECK.md). Các lỗi màu trong ảnh đã sửa; tiếp R4 slider trong banner và R5 density, rồi M2–M4. Giữ dữ liệu/quyền, không worker/provider/backfill/deploy.

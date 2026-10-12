@@ -182,7 +182,7 @@ export default function App() {
   return (
     <div className="shell">
       <AppSidebar route={route} user={user} api={api} mobileOpen={mobileOpen} closeMobile={closeMobile} />
-      <div>
+      <div className="shell-content">
         <AppHeader
           route={route}
           user={user}
