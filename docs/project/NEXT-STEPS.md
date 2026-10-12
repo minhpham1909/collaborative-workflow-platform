@@ -1,3 +1,5 @@
+12/10/2026 — **Workspace-only phân tích BE/UI tiếp**: user chốt bỏ Project Lead. [Contract theo màn hình](WORKSPACE-ONLY-BE-UI-CONTRACT-v0.1.md) nối UI→DTO/API/quyền, xác định Lead đang quản labels/reopen/restore; đề xuất Owner/Manager tiếp nhận, former Lead không tự nâng Manager. Đã chốt Owner/Manager direct reopen khi chưa pending có reason/audit; pending phải review không self-review. Rà role loss/lifecycle và sai khác quota hiện theo Task+requester. Chờ chốt policy còn mở, rồi API/DB plan và read-only inventory/rehearsal. Chưa đổi BE/FE/data/workers; commit docs riêng.
+
 # Trạng thái và bước tiếp theo
 
 12/10/2026 — **Workspace-only business analysis chi tiết; role Owner/Manager/Member** theo sửa của user (Manager chỉ scoped Workspace). [Spec tạo/settings/RBAC/admission/lifecycle/migration/UX gates](WORKSPACE-ONLY-BUSINESS-SPEC-v0.1.md). Đã chốt nhiềuManager/Owner+Manager mờiMember/chỉtênrequired, có thiết lập tiếp; cần review matrix/lifecycle/Lead/migration trước code. Chưa code/migration hoặc worker/email. Không coi bỏ Org menu là bỏ xong nghiệp vụ.

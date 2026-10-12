@@ -12,7 +12,8 @@
 | Owner+Manager mời Member, chỉ Owner bổ nhiệm Manager | Đã chốt |
 | Tạo Workspace chỉ tên bắt buộc; có bước thiết lập tiếp cho thông tin khác | Đã chốt |
 | Member xem các Project trong Workspace; Guest từng Project | Giữ phạm vi hiện tại; không thêm private Project/custom RBAC vào lần đầu |
-| Project Lead là người phụ trách Project, không role Workspace | Đề xuất giữ nghiệp vụ Lead hiện có; cần rà ma trận task/reopen trước chốt |
+| Project Lead | Đã chốt bỏ; không còn bổ nhiệm Lead hoặc quyền suy từ Lead. Quyền thay thế dưới đây là đề xuất cần review |
+| Reopen Owner/Manager | Đã chốt: direct có lý do/nhật ký khi chưa pending; có pending phải review, không tự duyệt |
 | Tên UI “Nhóm làm việc”/Team | Đề xuất cũ, chưa chốt; tài liệu dùng Workspace |
 
 Ba quyết định về số Manager/quyền mời/create required fields đã được user xác nhận trong lượt phân tích. Các mục khác ghi “đề xuất” vẫn cần review, không hiểu là user đã duyệt.
@@ -79,9 +80,9 @@ Khi triển khai cần contract chống duplicate-create (request ID/operation o
 | Xem Workspace/các Project trong nhóm | Có | Có | Có | Chỉ Project được cấp và context tối thiểu |
 | Đổi tên/summary/description/nhận diện | Có | Có | Không | Không |
 | Tạo Project; sửa tên/icon/Archive Project | Có | Có | Không | Không |
-| Sửa mô tả/mục tiêu Project | Có | Có | Creator hoặc Lead theo quyền hiện có | Không |
+| Sửa mô tả/mục tiêu Project | Có | Có | Creator theo đề xuất giữ quyền mô tả hiện có | Không |
 | Tạo/nhận Task | Có | Có | Có | Không |
-| Quản lý Task toàn Workspace | Có | Có | Creator/Assignee/Lead theo quyền Task | Không |
+| Quản lý Task toàn Workspace | Có | Có | Creator/Assignee theo quyền Task | Không |
 | Invite Member/thu hồi lời mời | Có | Có; lời mời chỉ cấp Member | Không | Không |
 | Bổ nhiệm/hạ Manager | Có | Không | Không | Không |
 | Kick/Ban Member, Project Guest trong phạm vi | Có | Có, không nhắm Owner/Manager | Không | Không |
@@ -94,7 +95,7 @@ Khi triển khai cần contract chống duplicate-create (request ID/operation o
 
 Quyền xóa bình luận không được mở rộng âm thầm thành quyền quản lý nội dung. Ban+cleanup spam theo cơ chế đã yêu cầu là ngoại lệ riêng: preview/range/confirm/reason/audit; không sửa lời tác giả và không mở worker tự động. Rà chức năng gỡ comment hiện tại với quyết định user trước khi giữ/bỏ trong refactor.
 
-Task Creator/Assignee vẫn là quan hệ trên Task, không membership role. Assignee chỉ đổi status/tick checklist theo rule hiện có; không tự sửa cấu trúc/checklist/deadline/nội dung/xóa. Project Lead nếu giữ chỉ trong Project đó, phải là active Workspace member; không tự cấp quyền Workspace. Chính sách reopen/approval/cooldown hiện có được kiểm lại, không mất vì bỏ Organization.
+Task Creator/Assignee vẫn là quan hệ trên Task, không membership role. Assignee chỉ đổi status/tick checklist theo rule hiện có; không tự sửa cấu trúc/checklist/deadline/nội dung/xóa. Project Lead đã được user chốt bỏ. Đề xuất Owner/Manager tiếp nhận quản lý labels, review reopen và quản lý/restore Task toàn nhóm; former Lead không tự thành Manager. Không tự duyệt yêu cầu reopen của mình; đã chốt direct reopen khi chưa pending có lý do/nhật ký, có pending phải review request, không bypass self-review. Chính sách reopen/approval/cooldown hiện có được kiểm lại, không mất vì bỏ Organization.
 
 ## 7. Membership và ownership
 
@@ -102,9 +103,9 @@ User chốt nhiều Managers để phân công vận hành, không bắt thay m�
 
 Data model đề xuất: Workspace.ownerId là nguồn sở hữu duy nhất; membership giữ role manager/member, Owner là effective role từ ownerId + active membership. Không global role trên User. Không cần một managerId singular nếu chốt nhiều Manager. Transfer phải cập nhật nguyên tử và ghi audit: người nhận là active verified member, không bị Ban trong phạm vi liên quan; người cũ trở thành Member mặc định hoặc Manager theo lựa chọn explicit đã kiểm quyền. Không tự khôi phục một quyền quản lý ngầm chỉ vì người đó từng giữ role.
 
-Role change do Owner thực hiện với target/version/reason và guard pending/CAS; Manager không tự nâng mình, cấp Manager khác hoặc đổi Owner. Membership inactive không quản lý bất cứ tài nguyên nào; quay lại dùng Member, không tự phục hồi Manager/Project Lead/email overrides/task assignment đã bỏ.
+Role change do Owner thực hiện với target/version/reason và guard pending/CAS; Manager không tự nâng mình, cấp Manager khác hoặc đổi Owner. Membership inactive không quản lý bất cứ tài nguyên nào; quay lại dùng Member, không tự phục hồi Manager/email overrides/task assignment đã bỏ.
 
-Khi exit: unfinished Tasks unassign kể cả Archived; Done giữ lịch sử/assignee cũ, profile tooltip nêu đã rời; reopen kiểm lại assignee. Creator/comment/history giữ ID/tác giả, không xóa dữ liệu làm việc. Project Lead và grants Guest cùng Workspace của người rời cần thu hồi để không đi vòng trở lại; rejoin cần admission mới. Guest độc lập chưa là Member không bị kéo thành Member.
+Khi exit: unfinished Tasks unassign kể cả Archived; Done giữ lịch sử/assignee cũ, profile tooltip nêu đã rời; reopen kiểm lại assignee. Creator/comment/history giữ ID/tác giả, không xóa dữ liệu làm việc. Grants Guest cùng Workspace của người rời cần thu hồi để không đi vòng trở lại; rejoin cần admission mới. Guest độc lập chưa là Member không bị kéo thành Member.
 
 ## 8. Invitations và Guest
 
@@ -153,12 +154,16 @@ Tất cả đọc/ghi kiểm workspace membership + Ban + session/verified hiệ
 
 ## 13. Gate trước phát triển và nghiệm thu
 
-W0: ba quyết định đã chốt; tiếp review Project Lead/matrix/lifecycle/announcements scope, cập nhật SRS addendum/SDS/API/DB plan. W1: audit/mapping/dry-run. W2: BE RBAC/membership/lifecycle/refactor+các test có nhiều accounts. W3: tạo/settings Workspace đầy đủ. W4: toolbar/mode/initials/shared refetch. W5: nghiệm thu toàn luồng trên web trước deploy.
+W0: ba quyết định đã chốt; Project Lead đã chốt bỏ; tiếp review quyền thay thế/matrix/lifecycle/announcements scope, cập nhật SRS addendum/SDS/API/DB plan. W1: audit/mapping/dry-run. W2: BE RBAC/membership/lifecycle/refactor+các test có nhiều accounts. W3: tạo/settings Workspace đầy đủ. W4: toolbar/mode/initials/shared refetch. W5: nghiệm thu toàn luồng trên web trước deploy.
 
 Tests bắt buộc: create atomic/duplicate outcome; Manager chỉ nhóm được cấp; forbidden promotion/owner removal; simultaneous transfer/leave/role/Task writes; Guest isolation; invitation accept/revoke/ban; exit unfinished/Done/Archived; Archive/restore; stale settings draft; query full-set/paging/calendar/pins; migration no unauthorized grants/notification replay. UI acceptance cần xác nhận hai cấu trúc đọc khác nhau có ích, không dùng thay font/padding để đóng mốc.
 
 ## 14. Tổng kết quyết định mới12/10
 
-- Đã chốt: Owner/Manager/Member, nhiều Manager do Owner bổ nhiệm, Owner+Manager invite Member, create chỉ tên bắt buộc; thông tin còn lại có bước thiết lập tiếp. Mô tả không bắt buộc nhưng UI/form/settings phải đủ và rõ, không chỉ một ô tên.
-- Quyền sở hữu/danger actions, Project Lead, member Project visibility, announcement publish và migration mapping cần review tiếp. Ma trận trong spec là đề xuất cụ thể để review, không code đã đổi.
+- Đã chốt: Owner/Manager/Member, nhiều Manager do Owner bổ nhiệm, Owner+Manager invite Member, create chỉ tên bắt buộc; thông tin còn lại có bước thiết lập tiếp; bỏ Project Lead. Mô tả không bắt buộc nhưng UI/form/settings phải đủ và rõ, không chỉ một ô tên.
+- Quyền sở hữu/danger actions, quyền thay thế Lead, member Project visibility, announcement publish và migration mapping cần review tiếp. Ma trận trong spec là đề xuất cụ thể để review, không code đã đổi.
 - Không mở rộng biểu mẫu bằng các trường doanh nghiệp không phục vụ cộng tác. Ưu tiên thông tin/mục tiêu/nhận diện, thành viên/lời mời, quyền, audit và lifecycle.
+
+## 15. Thiết kế BE cùng nhu cầu UI
+
+User yêu cầu phân tích cả hai lớp trước refactor. Xem [contract màn hình–nghiệp vụ–BE](WORKSPACE-ONLY-BE-UI-CONTRACT-v0.1.md). Bỏ Organization/Lead là quyết định đã chốt; API mới, quyền thay thế, trường dữ liệu và sequencing trong contract còn là thiết kế đề xuất. Không thực thi migration hoặc đổi code trong lượt phân tích này.

@@ -6,11 +6,11 @@
 
 Account → Workspace → Project → Task / Comment. Một người có thể tham gia nhiều Workspace độc lập. Không còn membership/vai trò quản trị Organization hoặc quyền ngầm trên mọi Workspace. UI đề xuất “Nhóm làm việc” (Team), code/DB giữ Workspace để tránh đổi tên kỹ thuật không cần thiết; tên hiển thị còn là đề xuất.
 
-Giữ nghiệp vụ đã có: Project/Task, Creator/Assignee, Guest chỉ đọc/bình luận từng Project, rich text, checklist/priority/labels, approval reopen, CAS/lịch sử, Archive/trash30ngày, notifications/email preferences, My Tasks/Calendar, personal pins. Project Lead nếu giữ là người phụ trách từng Project, không thêm một role Workspace. Quyền Lead và các ngoại lệ Task cần rà lại cùng ma trận mới.
+Giữ nghiệp vụ đã có: Project/Task, Creator/Assignee, Guest chỉ đọc/bình luận từng Project, rich text, checklist/priority/labels, approval reopen, CAS/lịch sử, Archive/trash30ngày, notifications/email preferences, My Tasks/Calendar, personal pins. Project Lead đã chốt bỏ ngày12/10. Quyền quản lý trước đây của Lead cần chuyển theo ma trận Owner/Manager; former Lead không tự được nâng vai trò.
 
 ## Vai trò — đã chốt bộ role; chi tiết dưới là đề xuất cần xác nhận
 
-Owner: quyền sở hữu, chuyển Owner, cấp/thu hồi Manager và thao tác quan trọng toàn nhóm. Manager: quản lý trong Workspace được giao, không sở hữu hoặc tự nâng quyền; Member làm việc theo quyền Project/Task hiện tại. Guest cấp theo Project, không thành Workspace Member, không tạo/nhận Task. Đã chốt mới: Owner và Manager được mời Member; chỉ Owner bổ nhiệm Manager. Workspace có thể nhiều Manager. Archive Workspace/Project và trách nhiệm Project Lead cũng cần ma trận cụ thể.
+Owner: quyền sở hữu, chuyển Owner, cấp/thu hồi Manager và thao tác quan trọng toàn nhóm. Manager: quản lý trong Workspace được giao, không sở hữu hoặc tự nâng quyền; Member làm việc theo quyền Project/Task hiện tại. Guest cấp theo Project, không thành Workspace Member, không tạo/nhận Task. Đã chốt mới: Owner và Manager được mời Member; chỉ Owner bổ nhiệm Manager. Workspace có thể nhiều Manager. Archive Workspace/Project và quyền thay thế Lead cũng cần ma trận cụ thể.
 
 ## Backlog UX mở lại sau nghiệm thu
 
@@ -37,7 +37,7 @@ Refresh strategy là thay data fetching, không gọi window reload hoặc polli
 
 ## Trình tự
 
-1. Chốt tên UI, ma trận Owner/Manager/Member/Project Lead/Guest và quyền mời.
+1. Chốt tên UI, ma trận Owner/Manager/Member/Guest và quyền thay thế Lead và quyền mời.
 2. Audit inventory/mapping read-only, làm migration rehearsal trên DB tạm; phân loại dữ liệu thật/test, bảo vệ quyền cũ và hồ sơ. Chuẩn bị kết quả reviewable trước khi xin duyệt chạy data migration.
 3. Refactor BE theo Workspace-only, kiểm role boundaries/lifecycle/Guest/assignments/history.
 4. FE navigation + Workspace metadata, toolbar chung và hai dạng hiển thị thực sự khác nhau.
@@ -47,3 +47,7 @@ M1–M4 có technical tests nhưng user acceptance UX chưa đạt; không dùng
 
 
 User sửa tên role12/10 thành Owner/Manager/Member. [Đặc tả nghiệp vụ chi tiết](WORKSPACE-ONLY-BUSINESS-SPEC-v0.1.md) là tài liệu phân tích chính cho bước chốt tiếp;3quyết định đã chốt: nhiềuManager/Owner+Manager mờiMember/chỉtênrequired, chưa đổi code/data. OrgAdmin nhắc trong migration là role lịch sử, không role đích.
+
+## Phân tích BE/UI tiếp theo
+
+User chốt bỏ Project Lead; xem [contract màn hình và API đề xuất](WORKSPACE-ONLY-BE-UI-CONTRACT-v0.1.md). Chưa đổi schema/API/UI/data; cần review ma trận quyền và rehearsal mapping trước triển khai.
