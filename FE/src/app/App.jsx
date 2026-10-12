@@ -17,6 +17,7 @@ const Organization = lazy(() => import("../features/organizations/Organization.j
 const Workspace = lazy(() => import("../features/projects/Workspace.jsx"));
 const OrganizationTeam = lazy(() => import("../features/organizations/OrganizationTeam.jsx"));
 const Project = lazy(() => import("../features/projects/Project.jsx"));
+const Calendar = lazy(() => import("../features/tasks/Calendar.jsx"));
 const MyTasks = lazy(() => import("../features/tasks/MyTasks.jsx"));
 const TaskDetail = lazy(() => import("../features/tasks/TaskDetail.jsx"));
 const SharedProjects = lazy(() => import("../features/projects/SharedProjects.jsx"));
@@ -240,6 +241,8 @@ export default function App() {
           <SharedProjects key={user.id} api={api}  userId={user.id} />
         ) : route.kind === "task" ? (
           <TaskDetail key={user.id + route.id} api={api} id={route.id} />
+        ) : route.kind === "calendar" ? (
+          <Calendar key={user.id} api={api}/>
         ) : route.kind === "mine" ? (
           <MyTasks key={user.id} api={api}  userId={user.id} />
         ) : route.kind === "workspace" ? (

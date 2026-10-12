@@ -183,6 +183,19 @@ export function createMongoWorkStore({ now = () => new Date(), config } = {}) {
     if (query.overdue === 'false') clauses.push({ $or: [{ status: 'done' }, { dueAt: null }, { dueAt: { $gte: now() } }] });
     return { $and: clauses };
   }
+  async function assignedPipeline(context,query) {
+      const eligible = await Workspace.collection.aggregate([
+        ...(query.workspaceId ? [{ $match: { _id: id(query.workspaceId) } }] : []),
+        ...workspaceAccessStages(context.user._id, { requireMember: true }),
+      ], { session: context.tx }).toArray();
+      return [
+        { $match: { projectId: { $nin: await bannedProjectIds(context.user._id, context.tx), ...(query.projectId ? { $eq: id(query.projectId) } : {}) }, workspaceId: { $in: eligible.map((value) => value._id) }, assigneeId: context.user._id, ...filter(query) } },
+        { $lookup: { from: 'projects', localField: 'projectId', foreignField: '_id', as: 'project' } }, { $unwind: '$project' },
+        { $match: { $expr: { $eq: ['$workspaceId', '$project.workspaceId'] } } },
+        { $lookup: { from: 'workspaces', localField: 'workspaceId', foreignField: '_id', as: 'workspace' } }, { $unwind: '$workspace' },
+        ...(query.state === 'all' ? [] : [{ $match: query.state === 'active' ? { 'project.state': 'active', 'workspace.state': { $ne: 'archived' } } : { $or: [{ 'project.state': 'archived' }, { 'workspace.state': 'archived' }] } }]),
+      ];
+  }
   async function taskPage(records, page, contextFor) {
     const values = [];
     for (const value of records.slice(0, page.limit)) values.push(await taskResponse(value, await contextFor(value)));
@@ -387,19 +400,27 @@ export function createMongoWorkStore({ now = () => new Date(), config } = {}) {
       const { total = 0, done = 0, overdue = 0 } = rows[0] ?? {};
       return { columns, project: projectResponse(context.project, context), statistics: { scope: 'whole_project', projectId: String(context.project._id), total, done, overdue, progressPercent: total ? Math.round(done / total * 10000) / 100 : 0, asOf } };
     }),
+    calendar: (claims,query) => run(claims,async context=>{
+      const asOf=now(),pipeline=await assignedPipeline(context,query);
+      const rows=await Task.collection.aggregate([...pipeline,{$facet:{
+        days:[{$match:{dueAt:{$gte:query.start,$lt:query.end}}},{$group:{_id:{$dateToString:{date:'$dueAt',format:'%Y-%m-%d',timezone:'+07:00'}},total:{$sum:1},done:{$sum:{$cond:[{$eq:['$status','done']},1,0]}},overdue:{$sum:{$cond:[{$and:[{$ne:['$status','done']},{$lt:['$dueAt',asOf]}]},1,0]}}}},{$sort:{_id:1}}],
+        noDeadline:[{$match:{dueAt:null}},{$count:'total'}]
+      }}],{session:context.tx}).toArray();
+      const days=(rows[0]?.days??[]).map(({_id,...counts})=>({day:_id,...counts}));
+      return {month:query.month,timeZone:'+07:00',days,total:days.reduce((sum,day)=>sum+day.total,0),noDeadlineCount:rows[0]?.noDeadline[0]?.total??0,asOf};
+    }),
+    calendarTasks: (claims,query) => run(claims,async context=>{
+      const pipeline=await assignedPipeline(context,query),dateMatch=query.day==='none'?{dueAt:null}:{dueAt:{$gte:query.dayStart,$lt:new Date(query.dayStart.getTime()+86400000)}};
+      const scoped=[...pipeline,{$match:dateMatch}];
+      const counts=await Task.collection.aggregate([...scoped,{$count:'total'}],{session:context.tx}).toArray();
+      const records=await Task.collection.aggregate([...scoped,{$match:after(query)},{$sort:{createdAt:-1,_id:-1}},{$limit:query.limit+1}],{session:context.tx}).toArray();
+      const result=await taskPage(records,query,async value=>projectScope(context,String(value.projectId)));
+      result.items=result.items.map((task,i)=>({...task,workspaceName:records[i].workspace.name,projectName:records[i].project.name,readOnly:projectReadOnly(records[i].workspace,records[i].project)}));
+      return {...result,total:counts[0]?.total??0,day:query.day,timeZone:'+07:00',asOf:now()};
+    }),
     mine: (claims, query) => run(claims, async (context) => {
       const asOf = now();
-      const eligible = await Workspace.collection.aggregate([
-        ...(query.workspaceId ? [{ $match: { _id: id(query.workspaceId) } }] : []),
-        ...workspaceAccessStages(context.user._id, { requireMember: true }),
-      ], { session: context.tx }).toArray();
-      const pipeline = [
-        { $match: { projectId: { $nin: await bannedProjectIds(context.user._id, context.tx), ...(query.projectId ? { $eq: id(query.projectId) } : {}) }, workspaceId: { $in: eligible.map((value) => value._id) }, assigneeId: context.user._id, ...filter(query) } },
-        { $lookup: { from: 'projects', localField: 'projectId', foreignField: '_id', as: 'project' } }, { $unwind: '$project' },
-        { $match: { $expr: { $eq: ['$workspaceId', '$project.workspaceId'] } } },
-        { $lookup: { from: 'workspaces', localField: 'workspaceId', foreignField: '_id', as: 'workspace' } }, { $unwind: '$workspace' },
-        ...(query.state === 'all' ? [] : [{ $match: query.state === 'active' ? { 'project.state': 'active', 'workspace.state': { $ne: 'archived' } } : { $or: [{ 'project.state': 'archived' }, { 'workspace.state': 'archived' }] } }]),
-      ];
+      const pipeline = await assignedPipeline(context,query);
       // Count and deadline groups share the same authorized/filter input. Keep
       // page documents outside the facet so rich-text pages cannot hit its
       // combined-document size limit.

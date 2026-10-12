@@ -1,5 +1,7 @@
 # Trạng thái và bước tiếp theo
 
+12/10/2026 — **M4 calendar đạt; M1–M4 UI upgrade triển khai xong trong scope**: same assigned/current-rights pipelineMyTasks, GMT7fullmonthcounts/none/paged day, sidebar/mobile, keyboard/readonly/Task return andrefresh. BE122integration+68unit, FE26,4Calendarcases5width, S8/W2 regressions/buildbudget/liveQAread-onlyPASS. [QA](../qa/UI-CALENDAR-M4-CHECK.md). Tiếpnghiệmthuweb trực tiếp theoactor/flow trước deploy/CI-CD; khôngworker/providers/backfill/devwrites.
+
 12/10/2026 — **M3b đạt; M3a–M3b hoàn tất**: shared account-scoped card/list6collections (MyTasks density); Team/audit giữ bảng; Inbox lazy opt-in3pages/manual fallback, dedup/pending/error guards và không mất60rows khi append failure. 4cases×6collections×5width, lazy80+ fixture vàHome/Workspace/Team/MyTasks/Inbox regressionsPASS, FE25/build budgetPASS. [QA](../qa/UI-COLLECTION-VIEWS-M3-CHECK.md). Tiếp M4 calendar dùng BE counts/current rights, không12-item snapshot. KhôngBE migration/devwrites/providers/workers.
 
 12/10/2026 — **M3a Notifications views đạt**: shared control/hook account-scoped local preference, detailed/compact giữ action/read/filter/cursor; Task/detail return re-fetch+anchor bounded20pages, không cache bodies. Light/Dark+Vi/En/5width/S9a vàFE25/buildbudgetPASS. [QA](../qa/UI-COLLECTION-VIEWS-M3-CHECK.md). Tiếp M3b phù hợp collections/lazy fallback; khôngdevwrites/providers.

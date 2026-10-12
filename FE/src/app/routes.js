@@ -11,6 +11,7 @@ export function readRoute(hash) {
   return {
     kind: [
       "mine",
+      "calendar",
       "organizations",
       "notifications",
       "settings",

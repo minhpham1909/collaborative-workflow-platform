@@ -1,3 +1,4 @@
+import {calendarReturn} from './calendar-state.js';
 import {inboxReturn} from '../notifications/inbox-filters.js';
 import { useAuthLocale } from '../auth/AuthLocale.jsx';
 import { taskText } from '../../lib/task-text.js';
@@ -17,7 +18,7 @@ import './task-detail.css';
 import { useDraftGuard } from '../../lib/draft-navigation.js';
 import { messageFor } from "../../lib/messages.js";
 import { statuses, deadline } from "../../lib/content.js";
-export default function TaskDetail({ api, id, expectedProjectId, onBusyChange, onDeleted, onReturnProject, onReturnMine, returnTo = myTaskReturn() ?? (new URLSearchParams(location.hash.split('?')[1]??'').get('returnTo')?.split('?')[0]==='#notifications'?inboxReturn():null) }) {
+export default function TaskDetail({ api, id, expectedProjectId, onBusyChange, onDeleted, onReturnProject, onReturnMine, returnTo = myTaskReturn() ?? calendarReturn() ?? (new URLSearchParams(location.hash.split('?')[1]??'').get('returnTo')?.split('?')[0]==='#notifications'?inboxReturn():null) }) {
   const { locale } = useAuthLocale();
   const tr = (value, values) => taskText(value, locale, values);
   const [composing, setComposing] = useState(false);
@@ -129,7 +130,7 @@ export default function TaskDetail({ api, id, expectedProjectId, onBusyChange, o
     <main className="studio-task-detail">
       <p className="breadcrumbs">
         <a href="#home">{tr("Trang chủ")}</a>
-        {returnTo && <> / <a href={returnTo} onClick={event=>{if(onReturnMine){event.preventDefault();onReturnMine();}}}>{tr(returnTo?.startsWith('#notifications')?"Thông báo":"Công việc của tôi")}</a></>}
+        {returnTo && <> / <a href={returnTo} onClick={event=>{if(onReturnMine){event.preventDefault();onReturnMine();}}}>{tr(returnTo?.startsWith('#notifications')?"Thông báo":returnTo?.startsWith('#calendar')?"Lịch công việc":"Công việc của tôi")}</a></>}
         {project?.accessRole === "guest" && <> / <a href="#shared">{tr("Dự án được chia sẻ")}</a> / <span>{project.context?.workspaceName ?? tr("Project được chia sẻ")}</span></>}
         {workspace && (
           <>

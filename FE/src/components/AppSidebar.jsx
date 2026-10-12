@@ -21,7 +21,7 @@ export default function AppSidebar({ route, user, api, mobileOpen, closeMobile }
     <a className="sidebar-context" href="#home"><span className="context-symbol"><Icon name="people" /></span><span><strong>{t('Không gian của bạn')}</strong><small>{t('Workspace & nhóm cộng tác')}</small></span><Icon name="chevron-right" /></a>
     <p className="sidebar-label">{t('KHÔNG GIAN LÀM VIỆC')}</p>
     <nav className="app-navigation" aria-label={t('Điều hướng chính')}>
-      {[['home', t('Trang chủ'), 'home'], ['organizations', t('Tổ chức & Studio'), 'people'], ['mine', t('Công việc của tôi'), 'tasks'], ['shared', t('Dự án được chia sẻ'), 'folder'], ['notifications', t('Thông báo'), 'bell']].map(([kind, label, icon]) => {
+      {[['home', t('Trang chủ'), 'home'], ['organizations', t('Tổ chức & Studio'), 'people'], ['mine', t('Công việc của tôi'), 'tasks'], ['calendar', locale==='en'?'Work calendar':'Lịch công việc', 'calendar'], ['shared', t('Dự án được chia sẻ'), 'folder'], ['notifications', t('Thông báo'), 'bell']].map(([kind, label, icon]) => {
         const active = route.kind === kind || (kind === 'organizations' && route.kind === 'organization') || (kind === 'home' && ['workspace', 'project', 'task'].includes(route.kind)) || (kind === 'notifications' && route.kind === 'notification');
         return <a key={kind} href={'#' + kind} className={active ? 'active' : ''} aria-current={active ? (route.kind === kind ? 'page' : 'location') : undefined}><Icon name={icon} /><span>{label}</span>{kind === 'notifications' && <InboxBadge key={user.id} api={api} userId={user.id} />}</a>;
       })}

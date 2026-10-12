@@ -5,7 +5,7 @@ import { originPolicy, requestError } from '../http/policy.js';
 
 export function createWorkRouter({ service, authService, config }) {
   const router = express.Router({ caseSensitive: true, strict: true });
-  router.use((req, _res, next) => /^\/(?:projects(?:\/|$)|project-pins(?:\/|$)|shared-projects(?:\/|$)|tasks(?:\/|$)|my-tasks(?:\/|$)|workspaces\/[^/]+\/projects(?:\/|$))/u.test(req.path) ? next() : next('router'));
+  router.use((req, _res, next) => /^\/(?:projects(?:\/|$)|project-pins(?:\/|$)|shared-projects(?:\/|$)|tasks(?:\/|$)|my-tasks(?:\/|$)|my-calendar(?:\/|$)|workspaces\/[^/]+\/projects(?:\/|$))/u.test(req.path) ? next() : next('router'));
   router.use(originPolicy({ webOrigin: config.webOrigin, methods: ['GET', 'POST', 'PATCH'] }));
   router.use(createRateLimiter());
   router.use(express.json({ limit: '256kb', strict: true }));
@@ -36,6 +36,8 @@ export function createWorkRouter({ service, authService, config }) {
   route('get', '/projects/:projectId/tasks', (r) => service.tasks(r.auth, r.params.projectId, r.query));
   route('get', '/projects/:projectId/board', (r) => service.board(r.auth, r.params.projectId, r.query));
   route('post', '/projects/:projectId/tasks', (r) => service.createTask(r.auth, r.params.projectId, r.body), 201);
+  route('get', '/my-calendar', r => service.calendar(r.auth,r.query));
+  route('get', '/my-calendar/tasks', r => service.calendarTasks(r.auth,r.query));
   route('get', '/my-tasks', (r) => service.mine(r.auth, r.query));
   route('get', '/tasks/:taskId', (r) => service.getTask(r.auth, r.params.taskId));
   route('get', '/tasks/:taskId/reopen-requests', (r) => service.reopenRequests(r.auth, r.params.taskId, r.query));

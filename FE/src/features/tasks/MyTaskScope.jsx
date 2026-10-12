@@ -5,10 +5,10 @@ import FormField from '../../components/FormField.jsx';
 import { messageFor } from '../../lib/messages.js';
 
 // Both selectors use authorized, paginated server lists, never the current Task page.
-export default function MyTaskScope({ api, workspaceId, projectId, labelId, onProject, onLabel }) {
+export default function MyTaskScope({ api, workspaceId, projectId, labelId, onProject, onLabel, includeLabels=true }) {
   const { locale } = useAuthLocale();
   const tr = (value, values) => workflowText(value, locale, values);
-  return <><ScopeSelect key={'project:'+workspaceId} api={api} path={`/workspaces/${workspaceId}/projects?state=all&limit=20`} label="Project" value={projectId} onChange={onProject} empty={tr("Tất cả Project")} disabled={!workspaceId}/><ScopeSelect key={'label:'+projectId} api={api} path={`/projects/${projectId}/labels?limit=20`} label={tr("Nhãn")} value={labelId} onChange={onLabel} empty={tr("Tất cả nhãn")} disabled={!projectId}/></>;
+  return <><ScopeSelect key={'project:'+workspaceId} api={api} path={`/workspaces/${workspaceId}/projects?state=all&limit=20`} label="Project" value={projectId} onChange={onProject} empty={tr("Tất cả Project")} disabled={!workspaceId}/>{includeLabels&&<ScopeSelect key={'label:'+projectId} api={api} path={`/projects/${projectId}/labels?limit=20`} label={tr("Nhãn")} value={labelId} onChange={onLabel} empty={tr("Tất cả nhãn")} disabled={!projectId}/>}</>;
 }
 function ScopeSelect({ api, path, label, value, onChange, empty, disabled }) {
   const { locale } = useAuthLocale();

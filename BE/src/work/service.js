@@ -1,3 +1,4 @@
+import {calendarQuery} from './calendar-input.js';
 import { objectId, versionInput, pageInput, invitationInput, invitationToken, fail } from '../workspaces/input.js';
 import { inputObject } from '../auth/account-input.js';
 import { projectInput, taskInput, statusInput, stateInput, commentInput, taskQuery, leadInput, commentDeleteInput, labelInput, checklistInput, checklistTickInput, reopenInput, reopenReviewInput, statisticsInput } from './input.js';
@@ -5,6 +6,8 @@ import { projectQuery } from './project-query.js';
 
 export function createWorkService({ store }) {
   return {
+    calendar: (auth,query) => store.calendar(auth.claims,calendarQuery(query)),
+    calendarTasks: (auth,query) => store.calendarTasks(auth.claims,calendarQuery(query,true)),
     pins: (auth, query) => { inputObject(query, []); return store.pins(auth.claims); },
     setPin: async (auth, projectId, input) => {
       inputObject(input, ['pinned']); if (typeof input.pinned !== 'boolean') fail();
