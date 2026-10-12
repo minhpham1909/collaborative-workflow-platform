@@ -241,14 +241,15 @@ main {
   gap: 22px;
 }
 .card {
+  position: relative;
   padding: 24px;
-  border: 1px solid #eee6e1;
+  border: 1px solid var(--wf-border);
   border-radius: 22px;
-  background: white;
+  background: var(--wf-surface);
   overflow-wrap: anywhere;
 }
 .card p {
-  color: #665e70;
+  color: var(--wf-hero-muted);
 }
 .symbol {
   display: inline-grid;
@@ -628,9 +629,9 @@ fieldset {
   min-width: 0;
 }
 .rich-editor {
-  border: 1px solid #ded7e5;
+  border: 1px solid var(--wf-border);
   border-radius: 16px;
-  background: white;
+  background: var(--wf-surface);
   margin: 12px 0;
   overflow: hidden;
 }
@@ -639,7 +640,7 @@ fieldset {
   gap: 4px;
   flex-wrap: wrap;
   padding: 8px;
-  background: #f4eff9;
+  background: var(--wf-editor-toolbar);
 }
 .editor-toolbar button {
   padding: 6px 9px;
@@ -647,7 +648,7 @@ fieldset {
 .tiptap {
   padding: 16px;
   min-height: 140px;
-  outline-color: #ac90d6;
+  outline-color: var(--wf-focus);
   overflow-wrap: anywhere;
 }
 .tiptap p {
@@ -671,11 +672,11 @@ fieldset {
   font-size: 23px;
 }
 .tiptap a {
-  color: #6952ba;
+  color: var(--wf-editor-link);
   text-decoration: underline;
 }
 .comment {
-  border-top: 1px solid #ebe4ef;
+  border-top: 1px solid var(--wf-border);
   padding: 22px 0;
 }
 .check {

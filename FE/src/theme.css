@@ -88,3 +88,5 @@ a { color:var(--wf-primary); }
 
 :root[data-theme=dark] .breadcrumbs a { color:var(--wf-primary); }
 :root[data-theme=dark] .home-workspace-card .workspace-metrics > span { color:var(--wf-muted); }
+
+:root[data-theme=dark] .system-dialog.danger .primary { background:var(--wf-danger); color:var(--wf-on-accent); border-color:var(--wf-danger); }

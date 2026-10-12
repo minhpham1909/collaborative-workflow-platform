@@ -1007,9 +1007,9 @@
   max-width: 1120px;
 }
 .task-detail-header {
-  background: #fff;
+  background: var(--wf-surface);
   padding: 28px;
-  border-color: #eee6e1;
+  border-color: var(--wf-border);
 }
 .task-detail-header h1 {
   font-size: clamp(26px, 2.5vw, 34px);
@@ -1018,19 +1018,19 @@
 .task-detail-header .badge {
   float: none;
   display: inline-block;
-  color: #5143a3;
-  background: #eeebff;
+  color: var(--wf-primary);
+  background: var(--wf-lavender);
 }
 .studio-task-detail .project-info {
   padding: 26px;
-  background: white;
+  background: var(--wf-surface);
   border-radius: 22px;
-  border: 1px solid #eee6e1;
+  border: 1px solid var(--wf-border);
 }
 .detail-meta-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  background: #f9f1ed;
+  background: var(--wf-meta-surface);
   border-radius: 18px;
   padding: 22px;
   gap: 22px;
@@ -1038,7 +1038,7 @@
 }
 .detail-meta-grid > p {
   margin: 0;
-  color: #756b80;
+  color: var(--wf-meta-muted);
   font-size: 12px;
 }
 .detail-meta-grid > p strong {
@@ -1046,11 +1046,11 @@
   align-items: center;
   gap: 8px;
   margin-top: 8px;
-  color: #39313e;
+  color: var(--wf-meta-ink);
   font-size: 13px;
 }
 .detail-meta-grid label {
-  color: #756b80;
+  color: var(--wf-meta-muted);
   font-size: 12px;
 }
 .detail-meta-grid select {
@@ -1066,15 +1066,15 @@
   margin-top: 28px;
 }
 .studio-task-detail .project-info > .rich-editor {
-  background: #fffaf7;
+  background: var(--wf-comment-surface);
   padding: 20px;
   border-radius: 16px;
 }
 .studio-task-detail .comments {
   padding: 26px;
-  border: 1px solid #eee6e1;
+  border: 1px solid var(--wf-border);
   border-radius: 22px;
-  background: #fff;
+  background: var(--wf-surface);
   margin-top: 24px;
 }
 .studio-task-detail .comment .section-title {
@@ -1092,13 +1092,13 @@
 }
 .studio-task-detail .comment > .rich-editor {
   margin-left: 42px;
-  background: #fffaf7;
+  background: var(--wf-comment-surface);
   padding: 16px;
   border-radius: 16px;
 }
 .studio-task-detail .comment .buttons button {
   font-size: 11px;
-  color: #6f5b84;
+  color: var(--wf-comment-action);
 }
 @media (max-width: 1000px) {
   .detail-meta-grid {
@@ -1156,7 +1156,7 @@
   min-width: 160px;
 }
 .detail-meta-grid strong.overdue {
-  color: #a84435;
+  color: var(--wf-danger);
 }
 .task-list-title {
   font-size: 26px;
@@ -1183,7 +1183,7 @@
   margin: 16px 0 10px;
 }
 .system-dialog p {
-  color: #756b80;
+  color: var(--wf-meta-muted);
   line-height: 1.8;
 }
 .dialog-emblem {
@@ -1191,9 +1191,9 @@
   place-items: center;
   width: 48px;
   height: 48px;
-  background: #ece6ff;
+  background: var(--wf-lavender);
   border-radius: 16px;
-  color: #5143eb;
+  color: var(--wf-primary);
   font-size: 26px;
   font-weight: 700;
 }
@@ -1201,12 +1201,13 @@
   width: 100%;
 }
 .system-dialog.danger .dialog-emblem {
-  color: #b83b4b;
-  background: #ffe9ed;
+  color: var(--wf-danger);
+  background: var(--wf-danger-soft);
 }
 .system-dialog.danger .primary {
-  background: #b83b4b;
-  border-color: #b83b4b;
+  background: var(--wf-danger);
+  color: var(--wf-on-accent);
+  border-color: var(--wf-danger);
 }
 .toast-stack {
   position: fixed;
@@ -1612,13 +1613,13 @@ textarea:focus-visible {
   margin: 0;
   min-height: 20px;
   font-size: 12px;
-  color: #706675;
+  color: var(--wf-meta-muted);
 }
 .field-message.error {
-  color: #a52e48;
+  color: var(--wf-danger);
 }
 .form-field [aria-invalid="true"] {
-  border-color: #c94b63;
+  border-color: var(--wf-danger);
 }
 .member-picker {
   min-width: 0;
