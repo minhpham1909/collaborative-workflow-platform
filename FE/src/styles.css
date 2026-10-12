@@ -206,18 +206,18 @@ main {
   justify-content: space-between;
   padding: 32px;
   border-radius: 24px;
-  background: linear-gradient(120deg, #f8efe8, #fce8e9 70%, #eeebff);
+  background: linear-gradient(120deg, var(--wf-hero-start), var(--wf-hero-end));
 }
 .hero h1 {
   max-width: 680px;
 }
 .hero small {
-  color: #5143eb;
+  color: var(--wf-primary);
   font-weight: 700;
   letter-spacing: 1px;
 }
 .hero p {
-  color: #665e70;
+  color: var(--wf-hero-muted);
 }
 .hero button {
   white-space: nowrap;
@@ -278,15 +278,16 @@ main {
   font-size: 11px;
 }
 .empty {
-  background: white;
-  border: 1px dashed #c6bae0;
+  background: var(--wf-surface);
+  color: var(--wf-ink);
+  border: 1px dashed var(--wf-empty-border);
   padding: 40px;
   border-radius: 22px;
   text-align: center;
 }
 .error {
-  background: #ffd8de;
-  color: #8b213a;
+  background: var(--wf-error-bg);
+  color: var(--wf-error-ink);
   padding: 14px 18px;
   border-radius: 12px;
   overflow-wrap: anywhere;
@@ -712,7 +713,8 @@ h1 {
   display: inline-block;
   padding: 2px 8px;
   border-radius: 999px;
-  background: #e9ddfb;
+  background: var(--wf-badge-bg);
+  color: var(--wf-badge-ink);
   font-size: 12px;
 }
 nav + nav {
@@ -822,7 +824,7 @@ select:focus-visible {
 }
 .hero {
   border: 1px solid #e7dcf0;
-  background: linear-gradient(115deg, #f0e7fb, #fff0e8);
+  background: linear-gradient(115deg, var(--wf-hero-start), var(--wf-hero-end));
 }
 .illustrated-hero {
   position: relative;
