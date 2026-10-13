@@ -5,7 +5,7 @@ import { AuthError } from '../auth/errors.js';
 import { sameId, paged } from '../workspaces/response.js';
 import { statuses } from './input.js';
 import { workspaceAccess, workspaceAccessStages } from '../workspaces/access.js';
-import { projectAccess } from './project-access.js';
+import { projectAccess, projectGuestParentStages } from './project-access.js';
 import { createMongoProjectGuestStore } from './guest-store.js';
 import { bannedProjectIds, banFilterStages, assertNotBanned } from '../moderation/guard.js';
 import { nextTaskCode } from './task-codes.js';
@@ -340,9 +340,7 @@ export function createMongoWorkStore({ now = () => new Date(), config } = {}) {
           { $match: { userId: context.user._id, state: 'active', $expr: { $and: [{ $eq: ['$projectId', '$$project'] }, { $eq: ['$workspaceId', '$$workspace'] }] } } },
         ], as: 'grant' } }, { $match: { 'grant.0': { $exists: true } } },
         { $lookup: { from: 'workspaces', localField: 'workspaceId', foreignField: '_id', as: 'workspace' } }, { $unwind: '$workspace' },
-        { $lookup: { from: 'organizations', localField: 'workspace.organizationId', foreignField: '_id', as: 'organization' } },
-        ...banFilterStages(context.user._id, { organization: '$workspace.organizationId', workspace: '$workspaceId', project: '$_id' }),
-        { $match: { $or: [{ 'workspace.organizationId': null }, { 'organization.0': { $exists: true } }] } },
+        ...projectGuestParentStages(context.user._id),
         { $sort: { createdAt: -1, _id: -1 } }, { $limit: page.limit + 1 },
       ], { session: context.tx }).toArray();
       const values = [];

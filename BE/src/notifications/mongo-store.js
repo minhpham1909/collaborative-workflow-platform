@@ -13,7 +13,7 @@ import {
 import { AuthError } from "../auth/errors.js";
 import { paged } from "../workspaces/response.js";
 import { inboxQuery } from "./input.js";
-import { workspaceAccess } from '../workspaces/access.js';
+import { workspaceAccess, supportedWorkspace, historicalWorkspaceFixture } from '../workspaces/access.js';
 import { projectAccess } from '../work/project-access.js';
 import { assertNotBanned } from '../moderation/guard.js';
 
@@ -62,6 +62,7 @@ export function createMongoNotificationsStore({
       target: null,
     };
     if (value.category === 'organization_invitation') {
+      if(!historicalWorkspaceFixture())return {...base,code:'ORGANIZATIONS_RETIRED'};
       try { await assertNotBanned(user._id, { organizationId: value.organizationId }, tx); }
       catch (error) { if (error instanceof AuthError) return base; throw error; }
       const invitation = await OrganizationInvitation.collection.findOne({ _id: value.organizationInvitationId, organizationId: value.organizationId,
@@ -79,7 +80,7 @@ export function createMongoNotificationsStore({
       { _id: value.workspaceId },
       { session: tx },
     );
-    if (!workspace) return base;
+    if (!supportedWorkspace(workspace)) return base;
     try { await assertNotBanned(user._id, { organizationId: workspace.organizationId, workspaceId: workspace._id, projectId: value.projectId }, tx); }
     catch (error) { if (error instanceof AuthError) return base; throw error; }
     if (value.category === 'project_invitation') {

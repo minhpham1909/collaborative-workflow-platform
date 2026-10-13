@@ -17,8 +17,6 @@ const { createWorkspaceService } = await import('../../BE/src/workspaces/service
 const { createMongoWorkspaceStore } = await import('../../BE/src/workspaces/mongo-store.js');
 const { createWorkService } = await import('../../BE/src/work/service.js');
 const { createMongoWorkStore } = await import('../../BE/src/work/mongo-store.js');
-const { createOrganizationService } = await import('../../BE/src/organizations/service.js');
-const { createMongoOrganizationStore } = await import('../../BE/src/organizations/mongo-store.js');
 const { createNotificationsService } = await import('../../BE/src/notifications/service.js');
 const { createMongoNotificationsStore } = await import('../../BE/src/notifications/mongo-store.js');
 const { cutoffCodec } = await import('../../BE/src/notifications/input.js');
@@ -37,14 +35,12 @@ try {
   repl=await MongoMemoryReplSet.create({binary:{version:'8.0.17',downloadDir:fileURLToPath(new URL('../../.local/mongodb-binaries/',import.meta.url))},instanceOpts:[{launchTimeout:30000}],replSet:{count:1,storageEngine:'wiredTiger',ip:'127.0.0.1'}});
   await mongoose.connect(repl.getUri('workflow_pin_browser_test'));for(const model of Object.values(models))await model.createIndexes();
   const config={...testConfig(),webOrigin:feOrigin,secureCookies:false},password='Web journey fixture password',hash=await hashPassword(password);
-  const auth=await createAuthService({store:createMongoAuthStore(),config}),organizations=createOrganizationService({store:createMongoOrganizationStore({config})}),workspaces=createWorkspaceService({store:createMongoWorkspaceStore({config})}),work=createWorkService({store:createMongoWorkStore({config})}),usersService=createUsersService({store:createMongoUsersStore()});
+  const auth=await createAuthService({store:createMongoAuthStore(),config}),workspaces=createWorkspaceService({store:createMongoWorkspaceStore({config})}),work=createWorkService({store:createMongoWorkStore({config})}),usersService=createUsersService({store:createMongoUsersStore()});
   const cutoff=cutoffCodec(config.accessKeyHex),notificationsService=createNotificationsService({store:createMongoNotificationsStore({cutoff}),cutoff});
   const users=[],auths=[];for(let i=0;i<3;i++){const user=await User.create({email:`journey-${i}@example.com`,displayName:['QA Owner','QA Member','QA Guest'][i],passwordHash:hash,emailVerifiedAt:new Date(),termsAcceptance:{version:'fixture',acceptedAt:new Date()}});users.push(user);auths.push(await auth.authenticate((await auth.login({email:user.email,password})).accessToken));}
-  const org=(await organizations.create(auths[0],{name:'QA Studio'})).organization;
-  const invite=await organizations.invite(auths[0],org.id,{email:users[1].email});await organizations.acceptInvitationById(auths[1],invite.invitation.id,{});
-  const ws=(await organizations.createWorkspace(auths[0],org.id,{name:'QA Workspace'})).workspace;
-  await organizations.addMember(auths[0],org.id,ws.id,{expectedVersion:ws.version,userId:users[1].id});
-  const app=()=>createApp({authService:auth,authConfig:config,usersService,workspaceService:workspaces,workService:work,organizationService:organizations,notificationsService});
+  const ws=(await workspaces.create(auths[0],{name:'QA Workspace'})).workspace;
+  const invite=await workspaces.invite(auths[0],ws.id,{type:'LINK'});await workspaces.accept(auths[1],{token:new URLSearchParams(new URL(invite.url).hash.slice(1)).get('token')});
+  const app=()=>createApp({authService:auth,authConfig:config,usersService,workspaceService:workspaces,workService:work,notificationsService});
   async function rotate(){const previous=server;server=app().listen(0,'127.0.0.1');await once(server,'listening');origin=`http://127.0.0.1:${server.address().port}`;if(previous)await new Promise(resolve=>previous.close(resolve));}
   await rotate();browser=await chromium.launch({executablePath:process.env.WORKFLOW_BROWSER_EXECUTABLE,headless:true});
   async function pageFor(index){const context=await browser.newContext({viewport:{width,height:1000},colorScheme:theme});await context.route('http://localhost:4000/**',async route=>{const response=await route.fetch({url:route.request().url().replace('http://localhost:4000',origin)});await route.fulfill({response});});const page=await context.newPage();await page.addInitScript(value=>localStorage.setItem('workflow.auth.locale',value),language);await page.addInitScript(value=>localStorage.setItem('workflow.theme',value),theme);page.setDefaultTimeout(15000);page.on('pageerror',error=>errors.push(error.message));page.on('console',message=>{if(message.type()==='error'&&!/status of (401|404)/.test(message.text()))console.log('Browser diagnostic:',message.text().slice(0,1200));});page.on('requestfailed',request=>{if(new URL(request.url()).pathname.startsWith('/src/')||new URL(request.url()).pathname.startsWith('/assets/'))console.log('Asset request failure:',new URL(request.url()).pathname,request.failure()?.errorText);});await page.goto(feOrigin+'/');await page.getByLabel('Email',{exact:true}).fill(users[index].email);await page.getByLabel(ui('Mật khẩu','Password'),{exact:true}).fill(password);await page.getByRole('button',{name:ui('Đăng nhập','Sign in'),exact:true}).click();await page.locator('.studio-home').waitFor();return page;}
@@ -54,7 +50,7 @@ try {
   const guestInvite=await work.inviteGuest(auths[0],projects[0].id,{type:'LINK'});await work.acceptGuestInvitation(auths[2],{token:new URLSearchParams(new URL(guestInvite.url).hash.slice(1)).get('token')});
   const owner=await pageFor(0),guest=await pageFor(2);
   let reads=0;owner.on('request',r=>{if(r.url().startsWith('http://localhost:4000/'))reads++;});
-  for(const [key,route,selector]of [['home','#home','.home-workspace-card'],['orgs','#organizations','.organization-card'],['org','#organization/'+org.id,'.organization-card'],['workspace','#workspace/'+ws.id,'.project-card'],['mine','#mine','.my-task-row']]){
+  for(const [key,route,selector]of [['home','#home','.home-workspace-card'],['workspace','#workspace/'+ws.id,'.project-card'],['mine','#mine','.my-task-row']]){
    await rotate();await owner.goto(feOrigin+'/'+route);await owner.locator(selector).first().waitFor();await owner.waitForTimeout(400);
    const before=reads,count=await owner.locator(selector).count(),control=owner.locator('.collection-view');
    await control.getByRole('button').nth(1).click();await owner.waitForTimeout(250);assert.equal(await owner.locator(selector).count(),count);assert.equal(reads,before,'View changes network query');
@@ -65,6 +61,6 @@ try {
   for(const w of [375,768,1024,1280,1440]){await guest.setViewportSize({width:w,height:1000});assert.ok(await guest.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));await assertReadable(guest,'.collection-view button,.project-cards .card p');await guest.screenshot({path:out+'/shared-'+theme+'-'+language+'-'+w+'.png',fullPage:true});}
   // Account defaults remain separate despite Owner preferences in another context.
   await guest.goto(feOrigin+'/#home');await guest.locator('.collection-view button').first().waitFor();assert.equal(await guest.locator('.collection-view button').first().getAttribute('aria-pressed'),'true');
-  assert.deepEqual(errors,[]);console.log('PASS M3b '+theme+'/'+language+': six collection/density modes, same items/query, account-local reload, second account defaults, list layouts/5 widths, Guest Shared; fixtures only.');
+  assert.deepEqual(errors,[]);console.log('PASS M3b '+theme+'/'+language+': Workspace-only collection modes, same items/query, account-local reload, second account defaults, list layouts/5 widths, Guest Shared; fixtures only.');
 }catch(error){if(browser)for(const context of browser.contexts())for(const page of context.pages()){await page.screenshot({path:out+'/failure.png',fullPage:true});console.log((await page.locator('main').innerText()).slice(-1000));}throw error;}
 finally{await browser?.close();if(server)await new Promise(resolve=>server.close(resolve));await mongoose.disconnect();await repl?.stop();}

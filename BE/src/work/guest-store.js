@@ -2,9 +2,9 @@ import mongoose from 'mongoose';
 import { reconcileReopenRequests } from './reopen-lifecycle.js';
 import { assertWorkspaceWritable } from '../workspaces/lifecycle.js';
 import { randomBytes, randomUUID } from 'node:crypto';
-import { User, Session, Workspace, Organization, Project, ProjectGuest, ProjectGuestInvitation, ProjectAccessAudit, Notification, EmailOutbox } from '../models/index.js';
+import { User, Session, Workspace, Project, ProjectGuest, ProjectGuestInvitation, ProjectAccessAudit, Notification, EmailOutbox } from '../models/index.js';
 import { AuthError } from '../auth/errors.js';
-import { workspaceAccess } from '../workspaces/access.js';
+import { workspaceAccess, supportedWorkspace, historicalWorkspaceFixture } from '../workspaces/access.js';
 import { paged, invitationState } from '../workspaces/response.js';
 import { tokenHash } from '../auth/tokens.js';
 import { createDeliveryCrypto } from '../auth/delivery-crypto.js';
@@ -29,12 +29,8 @@ export function createMongoProjectGuestStore({ config, now = () => new Date() } 
     if (!project) unavailable();
     const workspace = lock ? await Workspace.collection.findOneAndUpdate({ _id: project.workspaceId }, { $inc: { mutationRevision: 1 } }, { session: tx, returnDocument: 'after' })
       : await Workspace.collection.findOne({ _id: project.workspaceId }, { session: tx });
-    if (!workspace) unavailable();
-    if (workspace.organizationId) {
-      const org = lock ? await Organization.collection.findOneAndUpdate({ _id: workspace.organizationId }, { $inc: { mutationRevision: 1 } }, { session: tx, returnDocument: 'after' })
-        : await Organization.collection.findOne({ _id: workspace.organizationId }, { session: tx });
-      if (!org) unavailable();
-    }
+    if (!supportedWorkspace(workspace)) unavailable();
+    const historical=historicalWorkspaceFixture();if(historical)await historical.validateGuestParent(workspace,tx,lock);
     project = await Project.collection.findOne({ _id: project._id, workspaceId: workspace._id }, { session: tx });
     if (!project) unavailable();
     return { project, workspace };

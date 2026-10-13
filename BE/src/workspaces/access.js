@@ -6,9 +6,10 @@ let historicalFixture = null;
 // A private fixture registration does not enable legacy behavior on dev/production DBs.
 export function registerHistoricalWorkspaceFixture(value){historicalFixture=value;}
 export function historicalWorkspaceFixture(){return process.env.NODE_ENV !== 'production' && historicalFixture && /^workflow_.*_test$/u.test(mongoose.connection.name??'') && ['127.0.0.1','localhost','::1'].includes(mongoose.connection.host) ? historicalFixture : null;}
+export function supportedWorkspace(workspace){return Boolean(workspace && (historicalWorkspaceFixture() || workspace.organizationId == null && workspace.ownerId));}
 export async function workspaceAccess(workspace,userId,tx,options={}){
  const historical=historicalWorkspaceFixture();if(historical)return historical.workspaceAccess(workspace,userId,tx,options);
- if(!workspace || workspace.organizationId != null || !workspace.ownerId)throw new AuthError('WORKSPACE_UNAVAILABLE',404);
+ if(!supportedWorkspace(workspace))throw new AuthError('WORKSPACE_UNAVAILABLE',404);
  await assertNotBanned(userId,{workspaceId:workspace._id},tx);
  const membership=await WorkspaceMembership.collection.findOne({workspaceId:workspace._id,userId,state:'active'},{session:tx});
  if(!membership)throw new AuthError('WORKSPACE_UNAVAILABLE',404);
