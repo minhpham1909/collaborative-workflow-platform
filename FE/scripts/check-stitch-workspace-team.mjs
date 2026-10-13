@@ -69,10 +69,11 @@ try {
   const fixtureApp=()=>createApp({ authService: auth, authConfig: config, workspaceService: workspaces, workService: work, organizationService: organizations, moderationService: mod, notificationsService: createNotificationsService({ store: createMongoNotificationsStore({ cutoff }), cutoff }) });server=fixtureApp().listen(0,'127.0.0.1'); await once(server, 'listening');
   let origin = `http://127.0.0.1:${server.address().port}`;async function rotateFixture(){const previous=server;server=fixtureApp().listen(0,'127.0.0.1');await once(server,'listening');origin='http://127.0.0.1:'+server.address().port;await new Promise(resolve=>previous.close(resolve));}
   browser = await chromium.launch({ executablePath: process.env.WORKFLOW_BROWSER_EXECUTABLE, headless: true });
-  let fail = false, delay = false, lostStateResponse = false, stateWrites = 0, lostRoleResponse = false, roleWrites = 0;
+  let failAudit = false, delayAudit = false, fail = false, delay = false, lostStateResponse = false, stateWrites = 0, lostRoleResponse = false, roleWrites = 0;
   async function pageFor(index) {
     const context = await browser.newContext({colorScheme:process.env.WORKFLOW_REGRESSION_THEME==='dark'?'dark':'light', viewport: { width: 1440, height: 1000 } });
     await context.route('http://localhost:4000/**', async route => {
+      if (route.request().url().includes('/audit?')) { if (failAudit) return route.abort(); if (delayAudit) await new Promise(resolve => setTimeout(resolve, new URL(route.request().url()).searchParams.get('q') === 'stale' ? 900 : 40)); }
       if (fail && route.request().url().includes(`/workspaces/${standalone.id}/projects?`)) return route.abort();
       if (delay && route.request().url().includes('/organizations?')) await new Promise(resolve => setTimeout(resolve, new URL(route.request().url()).searchParams.get('q') === 'Hà' ? 900 : 50));
       const relay=origin;let response;try{response=await route.fetch({url:route.request().url().replace('http://localhost:4000',relay)});}catch{if(closing||relay!==origin)return route.abort().catch(()=>{});throw new Error('Fixture relay failed: '+new URL(route.request().url()).pathname);}
@@ -93,6 +94,31 @@ try {
   let roleDialog = ownerPage.getByRole('dialog'); await roleDialog.getByLabel('Lý do thay đổi vai trò', { exact: true }).fill('Điều phối thiết kế'); await roleDialog.getByRole('button', { name: 'Bổ nhiệm Manager', exact: true }).click(); await roleDialog.waitFor({ state: 'hidden' });
   await roleRow().getByRole('button', { name: 'Hạ xuống Member', exact: true }).waitFor();
   const auditSummary = ownerPage.locator('summary').filter({ hasText: 'Nhật ký bổ nhiệm & chuyển quyền' }); await auditSummary.click(); await ownerPage.getByRole('table', { name: 'Nhật ký vai trò Workspace', exact: true }).getByText('Điều phối thiết kế', { exact: true }).waitFor(); await auditSummary.click();
+  // Forward management history reuses Team styles; existing role history remains independently available.
+  let metadataVersion = (await workspaces.get(auths[0], standalone.id)).workspace.version;
+  for (let index = 0; index < 13; index++) metadataVersion = (await workspaces.update(auths[0], standalone.id, { expectedVersion: metadataVersion, summary: `Audit fixture ${index}` })).workspace.version;
+  const management = ownerPage.locator('.workspace-management-audit'), managementSummary = management.locator('summary');
+  await managementSummary.click(); const auditTable = management.getByRole('table', { name: 'Nhật ký quản lý Workspace', exact: true });
+  await ownerPage.waitForFunction(() => document.querySelectorAll('.workspace-management-audit tbody tr').length === 12);
+  failAudit = true; await management.getByRole('button', { name: 'Tải thêm', exact: true }).click(); await management.getByRole('button', { name: 'Thử lại', exact: true }).waitFor();
+  assert.equal(await auditTable.locator('tbody tr').count(), 12); // A failed next page keeps confirmed rows.
+  failAudit = false; await management.getByRole('button', { name: 'Thử lại', exact: true }).click();
+  await management.getByRole('button', { name: 'Tải thêm', exact: true }).click(); await auditTable.getByText('Điều phối thiết kế', { exact: true }).waitFor();
+  const totalAudit = (await workspaces.audit(auths[0], standalone.id, { limit: '100' })).total;
+  assert.equal(await auditTable.locator('tbody tr').count(), totalAudit);
+  await management.getByLabel('Loại thao tác', { exact: true }).selectOption('role_changed'); await auditTable.getByText('Điều phối thiết kế', { exact: true }).waitFor();
+  await ownerPage.waitForFunction(() => document.querySelectorAll('.workspace-management-audit tbody tr').length === 1);
+  for (const width of [1440,1280,1024,768,375]) { await ownerPage.setViewportSize({ width, height: 1000 }); await management.screenshot({ path: `${out}/management-history-${width}.png` }); assert.ok(await ownerPage.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), `Management history overflow ${width}`); }
+  await ownerPage.setViewportSize({ width: 1440, height: 1000 });
+  delayAudit = true; await management.getByLabel('Tìm tên hoặc lý do', { exact: true }).fill('stale'); await new Promise(resolve => setTimeout(resolve, 350)); await management.getByLabel('Tìm tên hoặc lý do', { exact: true }).fill('Điều phối');
+  await auditTable.getByText('Điều phối thiết kế', { exact: true }).waitFor(); await new Promise(resolve => setTimeout(resolve, 1000)); assert.equal(await auditTable.locator('tbody tr').count(), 1); delayAudit = false;
+  await management.getByLabel('Tìm tên hoặc lý do', { exact: true }).fill('No matching audit'); await management.getByText('Chưa có thao tác phù hợp được ghi từ bản nâng cấp nhật ký.', { exact: true }).waitFor();
+  await management.getByRole('button', { name: 'Xóa bộ lọc', exact: true }).click(); await management.getByRole('button', { name: 'Tải thêm', exact: true }).waitFor();
+  await management.locator('.compact-filter-bar button[aria-expanded]').click();
+  await management.getByLabel('Từ ngày tạo', { exact: true }).fill('2026-10-14'); await management.getByLabel('Đến ngày tạo', { exact: true }).fill('2026-10-13'); await management.getByText('Ngày bắt đầu phải trước hoặc bằng ngày kết thúc.', { exact: true }).waitFor();
+  await management.getByRole('button', { name: 'Xóa bộ lọc', exact: true }).click(); await managementSummary.click();
+  // Give the unchanged default API limiter a fresh fixture instance before the next interaction cluster.
+  await rotateFixture();
   await roleRow().getByRole('button', { name: 'Hạ xuống Member', exact: true }).click(); roleDialog = ownerPage.getByRole('dialog'); await roleDialog.getByLabel('Lý do thay đổi vai trò', { exact: true }).fill('Bàn giao công việc'); const beforeRoleWrites = roleWrites; lostRoleResponse = true; await roleDialog.getByRole('button', { name: 'Hạ xuống Member', exact: true }).click(); await roleDialog.getByText('Chưa xác nhận kết quả. Đóng và tải lại danh sách trước khi gửi tiếp.', { exact: true }).waitFor(); assert.equal(await roleDialog.getByRole('button', { name: 'Hạ xuống Member', exact: true }).isDisabled(), true); assert.equal(roleWrites, beforeRoleWrites + 1); assert.equal((await WorkspaceMembership.collection.findOne({ workspaceId: new mongoose.Types.ObjectId(standalone.id), userId: users[1]._id })).role, 'member'); await roleDialog.getByRole('button', { name: 'Đóng', exact: true }).click(); await ownerPage.locator('.system-dialog button.primary').click(); await roleDialog.waitFor({ state: 'hidden' });
   await roleRow().getByRole('button', { name: 'Bổ nhiệm Manager', exact: true }).waitFor();
   await roleRow().getByRole('button', { name: 'Bổ nhiệm Manager', exact: true }).click(); roleDialog = ownerPage.getByRole('dialog'); await roleDialog.getByLabel('Lý do thay đổi vai trò', { exact: true }).fill('Nháp khi mất quyền Owner');
@@ -102,6 +128,18 @@ try {
   assert.equal(await roleDialog.getByLabel('Lý do thay đổi vai trò', { exact: true }).inputValue(), 'Nháp khi mất quyền Owner'); await roleDialog.getByRole('button', { name: 'Đóng', exact: true }).click(); await ownerPage.locator('.system-dialog button.primary').click(); await roleDialog.waitFor({ state: 'hidden' });
   const newOwnerContext = (await workspaces.get(auths[1], standalone.id)).workspace; await workspaces.transfer(auths[1], standalone.id, { expectedVersion: newOwnerContext.version, memberId: users[0].id });
   await ownerPage.getByRole('button', { name: 'Làm mới danh sách', exact: true }).click(); await roleRow().getByRole('button', { name: 'Bổ nhiệm Manager', exact: true }).waitFor();
+  const auditScopeWs = (await workspaces.create(auths[0], { name: 'Audit manager rights fixture' })).workspace;
+  const auditScopeInvite = await workspaces.invite(auths[0], auditScopeWs.id, { type: 'LINK' });
+  await workspaces.accept(auths[1], { token: new URLSearchParams(new URL(auditScopeInvite.url).hash.slice(1)).get('token') });
+  await workspaces.role(auths[0], auditScopeWs.id, users[1].id, { expectedVersion: 0, role: 'manager', reason: 'Audit-only management note' });
+  const auditManagerPage = await pageFor(1); await auditManagerPage.goto(`http://localhost:5173/#workspace/${auditScopeWs.id}`);
+  await auditManagerPage.locator('.workspace-tabs').getByRole('button', { name: 'Thành viên', exact: true }).click();
+  await auditManagerPage.locator('.workspace-management-audit summary').click(); await auditManagerPage.locator('.workspace-management-audit').getByText('Audit-only management note', { exact: true }).waitFor();
+  await workspaces.role(auths[0], auditScopeWs.id, users[1].id, { expectedVersion: 1, role: 'member', reason: 'Demotion for audit guard test' });
+  await auditManagerPage.evaluate(() => window.dispatchEvent(new Event('focus')));
+  await auditManagerPage.locator('.workspace-management-audit').waitFor({ state: 'hidden' });
+  assert.equal(await auditManagerPage.getByText('Audit-only management note', { exact: true }).count(), 0);
+  await auditManagerPage.context().close();
   await new Promise(resolve => setTimeout(resolve, 55000));
   const memberRow = () => ownerPage.locator('.team-table tbody tr').filter({ hasText: 'Lan' });
   await memberRow().getByRole('button', { name: 'Gỡ khỏi nhóm', exact: true }).click(); await ownerPage.getByRole('dialog').getByRole('button', { name: 'Loại thành viên', exact: true }).click(); await ownerPage.getByRole('dialog').waitFor({ state: 'hidden' }); assert.equal((await Task.collection.findOne({ _id: new mongoose.Types.ObjectId(assigned.id) })).assigneeId, null); assert.equal(await TaskComment.collection.countDocuments({ authorId: users[1]._id }), 2);
@@ -129,7 +167,14 @@ try {
   await ownerPage.getByRole('button',{name:'+ Create invitation',exact:true}).click();await ownerPage.getByRole('dialog').getByLabel('Recipient email',{exact:true}).fill('english-ws-invite@example.com');await ownerPage.getByRole('dialog').getByRole('button',{name:'Create invitation',exact:true}).click();await ownerPage.getByText('Invitation created; email is queued.',{exact:true}).waitFor();await ownerPage.getByRole('button',{name:'Close result',exact:true}).click();await ownerPage.getByText('english-ws-invite@example.com',{exact:true}).waitFor();
   for(const width of [375,768,1024,1280,1440]){await ownerPage.setViewportSize({width,height:1000});await ownerPage.screenshot({path:out+'/invites-en-'+width+'.png',fullPage:true});assert.ok(await ownerPage.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'EN WS invitations overflow '+width);}
   await ownerPage.locator('.team-table tbody tr').filter({hasText:'english-ws-invite@example.com'}).getByRole('button',{name:'Revoke',exact:true}).click();await ownerPage.getByRole('dialog').getByRole('button',{name:'Revoke invitation',exact:true}).click();await ownerPage.getByRole('dialog').waitFor({state:'hidden'});
-  await rotateFixture();await ownerPage.locator('.workspace-tabs').getByRole('button',{name:'Member',exact:true}).click();await ownerPage.getByText('Bình',{exact:true}).waitFor();await ownerPage.locator('.team-table tbody tr').filter({hasText:'Bình'}).getByRole('button',{name:'Transfer ownership',exact:true}).click();await ownerPage.getByLabel('Type the workspace name to confirm',{exact:true}).fill('Wrong name');assert.equal(await ownerPage.getByRole('dialog').getByRole('button',{name:'Transfer ownership',exact:true}).isDisabled(),true);await ownerPage.getByLabel('Type the workspace name to confirm',{exact:true}).fill(standalone.name);await ownerPage.getByRole('dialog').getByRole('button',{name:'Transfer ownership',exact:true}).click();await ownerPage.getByRole('dialog').waitFor({state:'hidden'});await ownerPage.getByRole('button',{name:'Leave workspace',exact:true}).waitFor();const enTransferred=(await workspaces.get(auths[3],standalone.id)).workspace;await workspaces.transfer(auths[3],standalone.id,{expectedVersion:enTransferred.version,memberId:users[0].id});await ownerPage.getByRole('button',{name:'Refresh list',exact:true}).click();await ownerPage.locator('.team-table tbody tr').filter({hasText:'Bình'}).getByRole('button',{name:'Remove from workspace',exact:true}).waitFor();
+  await rotateFixture();await ownerPage.locator('.workspace-tabs').getByRole('button',{name:'Member',exact:true}).click();
+  const enManagement = ownerPage.locator('.workspace-management-audit'); await enManagement.locator('summary').click();
+  await enManagement.getByRole('table', { name: 'Workspace management history', exact: true }).waitFor();
+  await enManagement.getByLabel('Action type', { exact: true }).selectOption('metadata_updated');
+  await enManagement.getByText('Short goal', { exact: true }).first().waitFor();
+  assert.equal(await enManagement.getByText('Nhật ký quản lý Workspace', { exact: true }).count(), 0);
+  await enManagement.locator('summary').click();
+await ownerPage.getByText('Bình',{exact:true}).waitFor();await ownerPage.locator('.team-table tbody tr').filter({hasText:'Bình'}).getByRole('button',{name:'Transfer ownership',exact:true}).click();await ownerPage.getByLabel('Type the workspace name to confirm',{exact:true}).fill('Wrong name');assert.equal(await ownerPage.getByRole('dialog').getByRole('button',{name:'Transfer ownership',exact:true}).isDisabled(),true);await ownerPage.getByLabel('Type the workspace name to confirm',{exact:true}).fill(standalone.name);await ownerPage.getByRole('dialog').getByRole('button',{name:'Transfer ownership',exact:true}).click();await ownerPage.getByRole('dialog').waitFor({state:'hidden'});await ownerPage.getByRole('button',{name:'Leave workspace',exact:true}).waitFor();const enTransferred=(await workspaces.get(auths[3],standalone.id)).workspace;await workspaces.transfer(auths[3],standalone.id,{expectedVersion:enTransferred.version,memberId:users[0].id});await ownerPage.getByRole('button',{name:'Refresh list',exact:true}).click();await ownerPage.locator('.team-table tbody tr').filter({hasText:'Bình'}).getByRole('button',{name:'Remove from workspace',exact:true}).waitFor();
   const kickTask=(await work.createTask(auths[0],project.id,{title:'English Kick case',assigneeId:users[3].id})).task;await ownerPage.locator('.team-table tbody tr').filter({hasText:'Bình'}).getByRole('button',{name:'Remove from workspace',exact:true}).click();await ownerPage.getByRole('dialog').getByRole('button',{name:'Remove member',exact:true}).click();await ownerPage.getByRole('dialog').waitFor({state:'hidden'});assert.equal((await Task.findById(kickTask.id)).assigneeId,null);
   await workspaces.accept(auths[1], { token: new URLSearchParams(new URL(reusableLink.url).hash.slice(1)).get('token') });
   await memberPage.evaluate(()=>localStorage.setItem('workflow.auth.locale','en'));await memberPage.goto(`http://localhost:5173/#workspace/${standalone.id}`);await memberPage.reload();await memberPage.locator('.workspace-tabs').getByRole('button',{name:'Member',exact:true}).click();await memberPage.getByRole('button',{name:'Leave workspace',exact:true}).click();await memberPage.getByRole('dialog').getByRole('button',{name:'Leave workspace',exact:true}).click();await memberPage.waitForURL('**/#home');await assert.rejects(workspaces.get(auths[1],standalone.id));
@@ -205,7 +250,8 @@ try {
     let source = await readFile('C:/Users/Acer/.agents/skills/ui-ux/scripts/probe.mjs', 'utf8');
     source = source.replace('chromium.launch();', 'chromium.launch({ executablePath: process.env.WORKFLOW_BROWSER_EXECUTABLE });');
     const setup = `async function fixtureSetup(context) {
-      await context.route('http://localhost:4000/**', async route => { const response = await route.fetch({ url: route.request().url().replace('http://localhost:4000', process.env.WORKFLOW_FIXTURE_API) }); await route.fulfill({ response }); });
+      await context.route('http://localhost:4000/**', async route => {
+      if (route.request().url().includes('/audit?')) { if (failAudit) return route.abort(); if (delayAudit) await new Promise(resolve => setTimeout(resolve, new URL(route.request().url()).searchParams.get('q') === 'stale' ? 900 : 40)); } const response = await route.fetch({ url: route.request().url().replace('http://localhost:4000', process.env.WORKFLOW_FIXTURE_API) }); await route.fulfill({ response }); });
       const response = await fetch(process.env.WORKFLOW_FIXTURE_API + '/auth/login', { method: 'POST', headers: { Origin: 'http://localhost:5173', 'Content-Type': 'application/json' }, body: JSON.stringify({ email: process.env.WORKFLOW_FIXTURE_EMAIL, password: process.env.WORKFLOW_FIXTURE_PASSWORD }) });
       if (!response.ok) throw new Error('FIXTURE_LOGIN_FAILED');
       const cookie = response.headers.get('set-cookie').split(';')[0], pivot = cookie.indexOf('=');
@@ -220,7 +266,7 @@ try {
     }
   }
   console.log(`PASS WS Team and moderation Vi-En plusS5: Kick/rejoin distinction, archived Ban preview/confirmed cleanup queue, protected tasks/history, job retry, Unban without membership/cleanup cancellation, leave, member denial, 5 widths. No dev data/providers/workers. Screens ${out}`);
-} catch (error) { if (browser) for (const [index, context] of browser.contexts().entries()) for (const page of context.pages()) { await page.screenshot({ path: `${out}/failure-${index}.png`, fullPage: true }); console.log((await page.locator('main').innerText()).slice(-1800)); } throw error;
+} catch (error) { if (browser) for (const [index, context] of browser.contexts().entries()) for (const page of context.pages()) { await page.screenshot({ path: `${out}/failure-${index}.png`, fullPage: true }); console.log((await page.locator('body').innerText({timeout:2000}).catch(()=>'' )).slice(-1800)); } throw error;
 } finally { closing=true; await browser?.close(); if (server) await new Promise(resolve => server.close(resolve)); await mongoose.disconnect(); await repl?.stop(); }
 
 

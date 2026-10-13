@@ -249,6 +249,7 @@ export default function Team({ api, id, invitations, onContext, onUnavailable })
         </section>
       )}
       {!invitations && owner && workspace && <WorkspaceModeration api={api} workspace={workspace} />}
+      {!invitations && owner && workspace && !workspace.organizationId && <WorkspaceRoleAudit management api={api} workspace={workspace} revision={revision} onContext={fresh => { setWorkspace(fresh); onContext(fresh); setData({ items: [] }); setRevision(value => value + 1); }} onUnavailable={onUnavailable} />}
       {!invitations && owner && workspace && !workspace.organizationId && <WorkspaceRoleAudit api={api} workspace={workspace} revision={revision} onContext={fresh => { setWorkspace(fresh); onContext(fresh); setData({ items: [] }); setRevision(value => value + 1); }} onUnavailable={onUnavailable} />}
       {action?.kind === 'role' && workspace && <WorkspaceRoleDialog api={api} workspace={workspace} member={action.item} onContext={fresh => { setWorkspace(fresh); onContext(fresh); }} onUnavailable={onUnavailable} onDone={() => { setAction(null); setRevision(value => value + 1); }} />}
       {action?.kind === 'ban' && workspace && <BanDialog api={api} workspace={workspace} member={action.item} onClose={() => { setAction(null); setRevision(v => v + 1); }} />}

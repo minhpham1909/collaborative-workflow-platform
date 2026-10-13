@@ -10,3 +10,5 @@
 .workspace-role-audit > summary { min-height:44px; display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:700; }
 .workspace-role-audit[open] > summary .ui-icon { transform:rotate(90deg); }
 .workspace-role-audit td { overflow-wrap:anywhere; }
+
+.workspace-audit-context { display: grid; gap: 4px; min-width: 0; overflow-wrap: anywhere; }
