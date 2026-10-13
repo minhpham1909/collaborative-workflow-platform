@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 import { randomUUID } from 'node:crypto';
 import { EmailOutbox, Workspace, WorkspaceMembership, User, Task, Project } from '../models/index.js';
-import { workspaceAccess } from '../organizations/workspace-access.js';
+import { workspaceAccess } from '../workspaces/access.js';
 import { AuthError } from '../auth/errors.js';
 import { assertNotBanned } from '../moderation/guard.js';
 

@@ -7,7 +7,7 @@ import { AuthError } from '../auth/errors.js';
 import { tokenHash } from '../auth/tokens.js';
 import { createDeliveryCrypto } from '../auth/delivery-crypto.js';
 import { sameId, workspaceResponse, invitationResponse, invitationState, paged } from './response.js';
-import { workspaceAccess, workspaceAccessStages } from '../organizations/workspace-access.js';
+import { workspaceAccess, workspaceAccessStages } from '../workspaces/access.js';
 import { assertNotBanned, bannedProjectIds } from '../moderation/guard.js';
 import { reconcileReopenRequests, cancelReopenRequests } from '../work/reopen-lifecycle.js';
 import { assertWorkspaceWritable } from './lifecycle.js';

@@ -1,20 +1,19 @@
 import mongoose from 'mongoose';
 import { Workspace, WorkspaceMembership, Project } from '../models/index.js';
-import { workspaceAccess, workspaceAccessStages } from '../organizations/workspace-access.js';
+import { workspaceAccess, workspaceAccessStages, historicalWorkspaceFixture } from '../workspaces/access.js';
 import { bannedProjectIds } from '../moderation/guard.js';
 import { sameId, workspaceResponse, paged } from './response.js';
 const id = value => new mongoose.Types.ObjectId(value);
 function mongoAfter(after) { return after.$or ? { $or: after.$or.map(part => part._id ? { ...part, _id: { $lt: id(part._id.$lt) } } : part) } : after; }
-// Caller authenticates/locks actor; Org caller additionally guards actual parent.
+// Caller authenticates/locks actor; runtime lists use only Workspace membership authority.
 export async function queryWorkspaceList(user, tx, page) {
+      const historical=historicalWorkspaceFixture(); if(historical)return historical.queryWorkspaceList(user,tx,page);
       const standaloneManager = { organizationId: null, 'membership.role': 'manager' };
-      const managed = { $or: [{ ownerId: user._id }, { managerId: user._id }, standaloneManager, { 'organization.ownerId': user._id }, { 'organizationMembership.role': 'admin' }] };
+      const managed = { $or: [{ ownerId: user._id }, standaloneManager] };
       const roleStages = page.role === 'managed' ? [{ $match: managed }] : page.role === 'member' ? [{ $match: { $nor: managed.$or } }] : [];
       const stateStages = page.state === 'active' ? [{ $match: { state: { $ne: 'archived' } } }] : page.state === 'archived' ? [{ $match: { state: 'archived' } }] : [];
-      const base = [{ $match: { ...(page.organizationId ? { organizationId: page.organizationId } : {}), $and: [ ...(page.filters?.length ? page.filters : [{}]) ] } }, ...workspaceAccessStages(user._id)];
-      const managedExpression = { $or: [{ $eq: ['$ownerId', user._id] }, { $eq: ['$managerId', user._id] },
-        { $and: [{ $eq: [{ $ifNull: ['$organizationId', null] }, null] }, { $in: ['manager', '$membership.role'] }] },
-        { $in: [user._id, { $ifNull: ['$organization.ownerId', []] }] }, { $in: ['admin', { $ifNull: ['$organizationMembership.role', []] }] }] };
+      const base = [{ $match: { $and: [ ...(page.filters?.length ? page.filters : [{}]) ] } }, ...workspaceAccessStages(user._id)];
+      const managedExpression = { $or: [{ $eq: ['$ownerId', user._id] }, { $in: ['manager', '$membership.role'] }] };
       const summaries = await Workspace.collection.aggregate([...base, { $facet: {
         total: [...roleStages, ...stateStages, { $count: 'total' }],
         roles: [...stateStages, { $group: { _id: { $cond: [managedExpression, 'managed', 'member'] }, total: { $sum: 1 } } }],
@@ -28,11 +27,6 @@ export async function queryWorkspaceList(user, tx, page) {
       const ids = records.slice(0, page.limit).map(value => value._id);
       const members = await WorkspaceMembership.collection.aggregate([
         { $match: { workspaceId: { $in: ids }, state: 'active' } },
-        { $lookup: { from: 'workspaces', localField: 'workspaceId', foreignField: '_id', as: 'workspace' } }, { $unwind: '$workspace' },
-        { $lookup: { from: 'organization_memberships', let: { organization: '$workspace.organizationId', user: '$userId' }, pipeline: [
-          { $match: { state: 'active', $expr: { $and: [{ $eq: ['$organizationId', '$$organization'] }, { $eq: ['$userId', '$$user'] }] } } },
-        ], as: 'organizationMembership' } },
-        { $match: { $or: [{ 'workspace.organizationId': null }, { 'organizationMembership.0': { $exists: true } }] } },
         { $group: { _id: '$workspaceId', count: { $sum: 1 } } },
       ], { session: tx }).toArray();
       const hiddenProjects = await bannedProjectIds(user._id, tx);

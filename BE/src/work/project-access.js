@@ -1,6 +1,6 @@
 import { Organization, ProjectGuest } from '../models/index.js';
 import { AuthError } from '../auth/errors.js';
-import { workspaceAccess } from '../organizations/workspace-access.js';
+import { workspaceAccess } from '../workspaces/access.js';
 import { assertNotBanned } from '../moderation/guard.js';
 
 export async function projectAccess(workspace, project, userId, tx, { lock = true } = {}) {

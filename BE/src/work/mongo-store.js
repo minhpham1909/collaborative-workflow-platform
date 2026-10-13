@@ -4,7 +4,7 @@ import { User, Session, Workspace, WorkspaceMembership, Project, Task, TaskComme
 import { AuthError } from '../auth/errors.js';
 import { sameId, paged } from '../workspaces/response.js';
 import { statuses } from './input.js';
-import { workspaceAccess, workspaceAccessStages } from '../organizations/workspace-access.js';
+import { workspaceAccess, workspaceAccessStages } from '../workspaces/access.js';
 import { projectAccess } from './project-access.js';
 import { createMongoProjectGuestStore } from './guest-store.js';
 import { bannedProjectIds, banFilterStages, assertNotBanned } from '../moderation/guard.js';

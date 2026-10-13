@@ -50,10 +50,8 @@ try {
     await work.createProject(auths[actor], ws.id, { name: `${ws.name} Project` });
   }
   await workspaces.state(auths[0], archived.id, { expectedVersion: archived.version, state: 'archived', confirmName: archived.name, reason: 'Fixture archive' });
-  const org = new Organization({ ownerId: users[1].id, name: 'Fixture organization' }); await org.save();
-  for (const [index, role] of [[0, 'admin'], [1, 'member']]) await new OrganizationMembership({ organizationId: org.id, userId: users[index].id, role, joinedAt: new Date() }).save();
-  const attached = new Workspace({ name: 'Nhóm sản phẩm của tổ chức', ownerId: null, organizationId: org.id, managerId: users[1].id }); await attached.save();
-  await WorkspaceMembership.create({ workspaceId: attached.id, userId: users[1].id, joinedAt: new Date() });
+  const attached = (await workspaces.create(auths[1], {name:'Nhóm sản phẩm mở rộng'})).workspace;
+  await WorkspaceMembership.create({workspaceId:attached.id,userId:users[0].id,joinedAt:new Date(),role:'manager'});
   const project = (await work.createProject(auths[0], owned.id, { name: 'Thiết kế Website Bloom' })).project;
   const minute = new Date(Math.floor(Date.now() / 60_000) * 60_000);
   await work.createTask(auths[1], project.id, { title: 'Hoàn thiện giao diện trang chủ', assigneeId: users[0].id, dueAt: new Date(minute.getTime() - 60_000).toISOString() });
@@ -94,7 +92,7 @@ try {
   failOverview = true; await page.evaluate(() => window.dispatchEvent(new Event('focus'))); await page.getByText('Chưa tải được tổng quan công việc.', { exact: false }).waitFor();
   assert.equal(await page.locator('.home-overview-card strong').first().textContent(), '—'); assert.equal(await page.locator('.priority-tasks li').count(), priority.items.length);
   failOverview = false; await page.evaluate(() => window.dispatchEvent(new Event('focus'))); await page.waitForFunction(count => document.querySelector('.home-overview-card strong')?.textContent === String(count), homeOverview.dueTodayOpenCount);
-  assert.equal(await page.getByText('Private hidden workspace').count(), 0); assert.equal(await page.getByText('Quản trị tổ chức', { exact: true }).count(), 1);
+  assert.equal(await page.getByText('Private hidden workspace').count(), 0); assert.equal(await page.getByText('Quản trị tổ chức', { exact: true }).count(), 0);
   for (const width of [1440, 1280, 1024, 768, 375]) {
     await page.setViewportSize({ width, height: 1000 }); await page.screenshot({ path: `${out}/home-${width}.png`, fullPage: true });
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), `Home overflow ${width}`);

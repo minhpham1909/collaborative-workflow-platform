@@ -13,7 +13,7 @@ import {
 import { AuthError } from "../auth/errors.js";
 import { paged } from "../workspaces/response.js";
 import { inboxQuery } from "./input.js";
-import { workspaceAccess } from '../organizations/workspace-access.js';
+import { workspaceAccess } from '../workspaces/access.js';
 import { projectAccess } from '../work/project-access.js';
 import { assertNotBanned } from '../moderation/guard.js';
 

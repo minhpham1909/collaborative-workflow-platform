@@ -4,7 +4,7 @@ import { assertWorkspaceWritable } from '../workspaces/lifecycle.js';
 import { randomBytes, randomUUID } from 'node:crypto';
 import { User, Session, Workspace, Organization, Project, ProjectGuest, ProjectGuestInvitation, ProjectAccessAudit, Notification, EmailOutbox } from '../models/index.js';
 import { AuthError } from '../auth/errors.js';
-import { workspaceAccess } from '../organizations/workspace-access.js';
+import { workspaceAccess } from '../workspaces/access.js';
 import { paged, invitationState } from '../workspaces/response.js';
 import { tokenHash } from '../auth/tokens.js';
 import { createDeliveryCrypto } from '../auth/delivery-crypto.js';

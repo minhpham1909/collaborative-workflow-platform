@@ -1,3 +1,6 @@
+import {registerHistoricalWorkspaceFixture} from '../src/workspaces/access.js';
+import * as historicalWorkspace from './legacy-workspace-access.js';
+registerHistoricalWorkspaceFixture(historicalWorkspace);
 // Historical fixtures only. This wrapper is never imported by src/server.js or src/app.js.
 import express from 'express';
 import mongoose from 'mongoose';

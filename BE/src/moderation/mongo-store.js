@@ -3,7 +3,7 @@ import { cancelReopenRequests } from '../work/reopen-lifecycle.js';
 import { User, Session, Organization, OrganizationMembership, OrganizationInvitation, Workspace, WorkspaceMembership, WorkspaceInvitation, Project, ProjectGuest, ProjectGuestInvitation, Task, TaskComment, EmailOutbox, AccessBan, ModerationAction } from '../models/index.js';
 import { AuthError } from '../auth/errors.js';
 import { organizationAccess } from '../organizations/access.js';
-import { workspaceAccess } from '../organizations/workspace-access.js';
+import { workspaceAccess } from '../workspaces/access.js';
 import { projectAccess } from '../work/project-access.js';
 import { assertNotBanned } from './guard.js';
 import { previewCodec } from './preview.js';
