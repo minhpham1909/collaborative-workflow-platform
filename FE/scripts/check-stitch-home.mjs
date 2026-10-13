@@ -62,13 +62,18 @@ try {
   server = createApp({ authService: auth, authConfig: config, workspaceService: workspaces, workService: work, notificationsService: createNotificationsService({ store: createMongoNotificationsStore({ cutoff }), cutoff }) }).listen(0, '127.0.0.1'); await once(server, 'listening');
   const apiOrigin = `http://127.0.0.1:${server.address().port}`;
   browser = await chromium.launch({ executablePath: process.env.WORKFLOW_BROWSER_EXECUTABLE, headless: true });
-  const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
-  let fail = false, delay = false, failOverview = false;
+  const context = await browser.newContext({ colorScheme: process.env.WORKFLOW_REGRESSION_THEME === 'dark' ? 'dark' : 'light', viewport: { width: 1440, height: 1000 } });
+  let fail = false, delay = false, failOverview = false, dropCreate = null, creationWrites = 0;
   await context.route('http://localhost:4000/**', async route => {
     if (failOverview && route.request().url().endsWith('/home/overview')) return route.abort();
     if (fail && route.request().url().includes('/workspaces?')) return route.abort();
     if (delay && route.request().url().includes('/workspaces?')) await new Promise(resolve => setTimeout(resolve, 400));
-    const response = await route.fetch({ url: route.request().url().replace('http://localhost:4000', apiOrigin) }); await route.fulfill({ response });
+    const creation = route.request().method() === 'POST' && route.request().url() === 'http://localhost:4000/workspaces';
+    if (creation) creationWrites++;
+    if (creation && dropCreate === 'before') { dropCreate = null; return route.abort(); }
+    const response = await route.fetch({ url: route.request().url().replace('http://localhost:4000', apiOrigin) });
+    if (creation && dropCreate === 'after') { dropCreate = null; return route.abort(); }
+    await route.fulfill({ response });
   });
   const page = await context.newPage(); page.setDefaultTimeout(15000); page.on('pageerror', error => errors.push(error.message));
   await page.goto('http://localhost:5173/'); await page.getByLabel('Email', { exact: true }).fill(users[0].email); await page.getByLabel('Mật khẩu', { exact: true }).fill(password); await page.getByRole('button', { name: 'Đăng nhập', exact: true }).click();
@@ -107,12 +112,30 @@ try {
   assert.equal(await page.locator('#home-search').inputValue(), '');
   const createdMetadata = await Workspace.collection.findOne({ name: 'Nhóm mới từ Home' }); assert.equal(createdMetadata.summary, 'Nhóm làm việc ngắn hạn'); assert.equal(createdMetadata.color, 'coral'); assert.equal(createdMetadata.coverId, 'architecture');
   const createdCard = cards.filter({ hasText: 'Nhóm mới từ Home' }); assert.ok((await createdCard.locator('.studio-cover img').getAttribute('src')).endsWith('/architecture.jpg')); await page.getByRole('link', { name: 'Tiếp tục thiết lập', exact: true }).waitFor();
+  // Unknown result: a committed response is dropped, then a reload must retain its original identity.
+  for (const [mode, name] of [['after', 'Receipt committed'], ['before', 'Receipt retry']]) {
+    const before = creationWrites; dropCreate = mode;
+    await page.getByRole('button', { name: 'Tạo Workspace', exact: true }).first().click();
+    await page.getByLabel('Tên Workspace', { exact: true }).fill(name);
+    await page.getByRole('dialog').getByRole('button', { name: 'Tạo Workspace', exact: true }).click();
+    await page.getByRole('button', { name: 'Kiểm tra kết quả', exact: true }).waitFor();
+    assert.equal(await page.getByLabel('Tên Workspace', { exact: true }).isDisabled(), true);
+    await page.reload(); await page.getByRole('button', { name: 'Kiểm tra yêu cầu', exact: true }).click();
+    assert.equal(await page.getByLabel('Tên Workspace', { exact: true }).inputValue(), name);
+    await page.getByRole('button', { name: 'Kiểm tra kết quả', exact: true }).click();
+    if (mode === 'before') await page.getByRole('button', { name: 'Gửi lại yêu cầu này', exact: true }).click();
+    await page.getByRole('dialog', { name: 'Tạo Workspace', exact: true }).waitFor({ state: 'hidden' });
+    await page.getByRole('heading', { name, exact: true }).waitFor();
+    assert.equal(creationWrites - before, mode === 'before' ? 2 : 1);
+    assert.equal(await Workspace.countDocuments({ name }), 1);
+    assert.equal(await page.evaluate(() => Object.keys(sessionStorage).filter(key => key.startsWith('workflow.workspace-creation')).length), 0);
+  }
   // Mouse event hits the card's stretched real anchor over its media.
   await cards.filter({ hasText: 'Sáng Tạo Studio' }).locator('.home-card-media').click({ force: true }); await page.waitForURL(`**/#workspace/${owned.id}`); await page.goBack(); await page.locator('.studio-home').waitFor();
   fail = true; await page.getByRole('button', { name: 'Làm mới', exact: true }).click(); await page.getByRole('button', { name: 'Thử lại', exact: true }).waitFor(); fail = false; await page.getByRole('button', { name: 'Thử lại', exact: true }).click(); await page.getByRole('heading', { name: 'Sáng Tạo Studio', exact: true }).waitFor();
   delay = true; await page.locator('#home-search').fill('Tài liệu'); await page.locator('#home-search').fill('Marketing'); await page.waitForFunction(() => document.querySelectorAll('.home-workspace-card').length === 1); assert.equal(await cards.first().getByRole('heading').innerText(), 'Marketing & Tăng Trưởng'); delay = false;
   await page.getByRole('button', { name: 'Xóa bộ lọc' }).click(); await page.getByRole('heading', { name: 'Sáng Tạo Studio', exact: true }).waitFor();
-  for (let index = 0; index < 14; index++) await workspaces.create(auths[0], { name: `Pagination fixture ${index}` });
+  for (let index = 0; index < 12; index++) await workspaces.create(auths[0], { name: `Pagination fixture ${index}` });
   await page.getByRole('button', { name: 'Làm mới', exact: true }).click(); await page.waitForFunction(() => document.querySelector('.home-count')?.textContent === '20'); assert.equal(await cards.count(), 12);
   await page.getByRole('button', { name: 'Tải thêm', exact: true }).click(); await page.waitForFunction(() => document.querySelectorAll('.home-workspace-card').length === 20);
   assert.equal(new Set(await cards.getByRole('heading').allTextContents()).size, 20);

@@ -18,6 +18,7 @@ export function createWorkspaceRouter({ service, authService, config }) {
   const value = router(config); value.use(requireAuthentication(authService, { verified: true }));
   value.get('/', async (req, res) => res.json(await service.list(req.auth, req.query)));
   value.post('/', createRateLimiter({ limit: 10 }), async (req, res) => res.status(201).json(await service.create(req.auth, req.body)));
+  value.get('/creation-requests/:requestId', async (req, res) => res.json(await service.creation(req.auth, req.params.requestId, req.query)));
   value.get('/:workspaceId', async (req, res) => res.json(await service.get(req.auth, req.params.workspaceId)));
   value.patch('/:workspaceId', async (req, res) => res.json(await service.update(req.auth, req.params.workspaceId, req.body)));
   value.patch('/:workspaceId/state', async (req, res) => res.json(await service.state(req.auth, req.params.workspaceId, req.body)));

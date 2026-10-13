@@ -8,7 +8,7 @@ export function objectId(value) { if (typeof value !== 'string' || !/^[a-f0-9]{2
 export function expectedVersion(input) { if (!Number.isSafeInteger(input.expectedVersion) || input.expectedVersion < 0) fail(); return input.expectedVersion; }
 export function workspaceFields(input, editing = false) {
   const allowed = ['name', 'description', 'summary', 'icon', 'color', 'coverId'];
-  inputObject(input, editing ? ['expectedVersion', ...allowed] : allowed);
+  inputObject(input, editing ? ['expectedVersion', ...allowed] : ['requestId', ...allowed]);
   const fields = {};
   if (!editing || Object.hasOwn(input, 'name')) {
     if (typeof input.name !== 'string' || !input.name.trim() || input.name.length > 200 || /[\u0000-\u001f\u007f\u2028\u2029]/u.test(input.name)) fail();
@@ -30,8 +30,9 @@ export function workspaceFields(input, editing = false) {
     }
   }
   if (editing && !Object.keys(fields).length) fail();
-  return { fields, ...(editing ? { expectedVersion: expectedVersion(input) } : {}) };
+  return { fields, ...(editing ? { expectedVersion: expectedVersion(input) } : { requestId: input.requestId === undefined ? null : creationRequestId(input.requestId) }) };
 }
+export function creationRequestId(value) { if (typeof value !== 'string' || !/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/u.test(value)) fail(); return value; }
 export function versionInput(input) { inputObject(input, ['expectedVersion']); return expectedVersion(input); }
 export function workspaceStateInput(input) {
   inputObject(input, ['expectedVersion', 'state', 'confirmName', 'reason']);

@@ -1,3 +1,4 @@
+import { readCreationDraft, saveCreationDraft, clearCreationDraft } from '../../lib/workspace-creation-draft.js';
 import WorkspaceIdentityFields from '../../components/WorkspaceIdentityFields.jsx';
 import { defaultWorkspaceIdentity, validWorkspaceSummary, workspaceIdentityBody } from '../../lib/workspace-identity.js';
 import CollectionView,{useCollectionView} from '../../components/CollectionView.jsx';
@@ -28,6 +29,7 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { messageFor } from "../../lib/messages.js";
 import { useDraftGuard } from "../../lib/draft-navigation.js";
+function creationStorage() { try { return window.sessionStorage; } catch { return null; } }
 function plain(node) {
   if (!node) return "";
   if (typeof node.plainText === "string") return node.plainText;
@@ -53,6 +55,15 @@ export default function Home({ api, user }) {
     [createError, setCreateError] = useState(""),
     [nameError, setNameError] = useState("");
   const [identity, setIdentity] = useState({ ...defaultWorkspaceIdentity }), [summaryError, setSummaryError] = useState(''), [createdWorkspace, setCreatedWorkspace] = useState(null);
+  const pendingCreation = useRef(readCreationDraft(creationStorage(), user.id));
+  const [retryReady, setRetryReady] = useState(false);
+  const creationText = (vi, en) => locale === 'en' ? en : vi;
+  useEffect(() => {
+    if (pendingCreation.current) {
+      const value = pendingCreation.current; setName(value.name); setIdentity({ summary: value.summary ?? '', icon: value.icon, color: value.color, coverId: value.coverId });
+      setUncertain(true); setCreateError(creationText('Có yêu cầu tạo chưa xác định kết quả. Mở form để kiểm tra.', 'A creation request needs verification. Open the form to check its result.'));
+    }
+  }, []);
   const identityDirty = JSON.stringify(identity) !== JSON.stringify(defaultWorkspaceIdentity);
   const generation = useRef(0),
     mutation = useRef(false);
@@ -81,7 +92,7 @@ export default function Home({ api, user }) {
           (cursor ? "&cursor=" + encodeURIComponent(cursor) : ""),
       );
       if (token === generation.current) {
-        if (!cursor) setUncertain(false);
+
         setData((old) => ({
           ...result,
           items: cursor ? [...old.items, ...result.items] : result.items,
@@ -127,25 +138,46 @@ export default function Home({ api, user }) {
       (!(name || identityDirty) ||
         (await confirmDialog(
           uncertain
-            ? t("Đóng form và tải lại để kiểm tra Workspace đã tạo chưa?")
+            ? creationText('Đóng tạm form? Yêu cầu chưa rõ kết quả sẽ được giữ trong trang này.', 'Close this form temporarily? The pending request stays on this page.')
             : t("Bỏ thông tin Workspace chưa lưu?"),
         )))
     ) {
       setCreating(false);
+      if (uncertain) return; // Keep the request and draft available when reopening this form.
+      pendingCreation.current = null;
       setName("");
       setIdentity({ ...defaultWorkspaceIdentity }); setSummaryError('');
       setNameError("");
-      if (uncertain) {
-        setQ("");
-        setFrom("");
-        setTo("");
-        setRole("all");
-        setState("all");
-        setRefresh((v) => v + 1);
-      }
+
     }
   };
   useDialogFocus(panel, () => closeDialog.current(), creating);
+  function completeCreation(result) {
+    setCreatedWorkspace(result.workspace); setCreating(false); setUncertain(false); setRetryReady(false);
+    clearCreationDraft(creationStorage(), user.id); pendingCreation.current = null; setCreateError(''); setName(''); setIdentity({ ...defaultWorkspaceIdentity }); setSummaryError('');
+    setQ(''); setFrom(''); setTo(''); setRole('all'); setState('all');
+    notify(t('Đã tạo Workspace.')); setRefresh(v => v + 1);
+  }
+  async function checkCreation() {
+    if (mutation.current || !pendingCreation.current) return;
+    mutation.current = true; setSaving(true); setRetryReady(false);
+    try {
+      const result = await api.request('/workspaces/creation-requests/' + pendingCreation.current.requestId);
+      if (result.status === 'completed') completeCreation(result);
+      else if (result.status === 'not_found') {
+        setRetryReady(true);
+        setCreateError(creationText('Chưa tìm thấy kết quả. Có thể gửi lại đúng yêu cầu này; hệ thống sẽ không tạo trùng.', 'No result found. You can resend this same request without creating a duplicate.'));
+      }
+    } catch (error) { setCreateError(messageFor(error)); }
+    finally { mutation.current = false; setSaving(false); }
+  }
+  async function retryCreation() {
+    if (mutation.current || !retryReady || !pendingCreation.current) return;
+    mutation.current = true; setSaving(true); setRetryReady(false);
+    try { completeCreation(await api.request('/workspaces', { method: 'POST', body: pendingCreation.current })); }
+    catch (error) { setCreateError(messageFor(error)); }
+    finally { mutation.current = false; setSaving(false); }
+  }
   async function create(e) {
     e.preventDefault();
     if (mutation.current || uncertain) return;
@@ -161,20 +193,18 @@ export default function Home({ api, user }) {
     setSaving(true);
     setCreateError("");
     try {
-      const result = await api.request("/workspaces", { method: "POST", body: { name, ...workspaceIdentityBody(identity) } });
-      setCreatedWorkspace(result.workspace);
-      setCreating(false);
-      setName("");
-      setIdentity({ ...defaultWorkspaceIdentity }); setSummaryError('');
-      setQ(""); setFrom(""); setTo(""); setRole("all"); setState("all");
-      notify(t("Đã tạo Workspace."));
-      setRefresh((v) => v + 1);
+      const request = { requestId: crypto.randomUUID(), name, ...workspaceIdentityBody(identity) };
+      try { saveCreationDraft(creationStorage(), user.id, request); }
+      catch { setCreateError(creationText('Trình duyệt không lưu được mã yêu cầu. Cho phép bộ nhớ phiên rồi thử lại; chưa gửi yêu cầu tạo.', 'Session storage is unavailable. Enable it and retry; no creation request was sent.')); return; }
+      pendingCreation.current = request;
+      completeCreation(await api.request('/workspaces', { method: 'POST', body: pendingCreation.current }));
     } catch (e) {
       setUncertain(isUncertainMutation(e));
+      if (!isUncertainMutation(e)) { clearCreationDraft(creationStorage(), user.id); pendingCreation.current = null; }
       setCreateError(
         !isUncertainMutation(e)
           ? messageFor(e)
-          : "Chưa rõ yêu cầu tạo đã hoàn tất chưa. Đóng form và tải lại danh sách trước khi tạo lại.",
+          : creationText('Chưa rõ yêu cầu tạo đã hoàn tất chưa. Kiểm tra kết quả trước khi gửi lại.', 'The creation outcome is unknown. Check its result before retrying.'),
       );
     } finally {
       setSaving(false);
@@ -194,18 +224,19 @@ export default function Home({ api, user }) {
           </p>
         <button
           className="primary"
-          disabled={busy || uncertain}
+          disabled={busy}
           onClick={() => {
             setNameError("");
-            setCreateError("");
+            if (!uncertain) setCreateError("");
             setCreating(true);
           }}
         >
-          <Icon name="plus" /> {t("Tạo Workspace")}
+          <Icon name={uncertain ? "refresh" : "plus"} /> {uncertain ? creationText("Kiểm tra yêu cầu", "Check request") : t("Tạo Workspace")}
         </button>
         </div>
       </section>
       <HomeHighlights data={highlights} compact />
+      {uncertain && !creating && <InlineMessage tone="info">{creationText('Yêu cầu tạo Workspace đang chờ kiểm tra kết quả.', 'Check the pending Workspace creation result.')}</InlineMessage>}
       {createdWorkspace && <InlineMessage tone="info">{t("Workspace {name} đã sẵn sàng. Bạn có thể bổ sung mô tả chi tiết, mời thành viên và tạo dự án đầu tiên.", { name: createdWorkspace.name })} <a href={`#workspace/${createdWorkspace.id}`}>{t("Tiếp tục thiết lập")}</a><button onClick={() => setCreatedWorkspace(null)} aria-label={t("Đóng hướng dẫn thiết lập")}>{t("Đóng")}</button></InlineMessage>}
       <div className="home-collection-header"><div><p className="home-eyebrow">{t("CÙNG NHAU LÀM VIỆC")}</p><h2>{t("Workspace của bạn")} <span className="home-count">{data.total ?? '—'}</span></h2></div><CollectionView kind="layout" view={view} onChange={setView} locale={locale} labels={[t("Xem Workspace dạng thẻ"),t("Xem Workspace dạng danh sách")]}/></div>
       <div className="home-filters">
@@ -344,13 +375,17 @@ export default function Home({ api, user }) {
                 <WorkspaceIdentityFields name={name} value={identity} locale={locale} disabled={saving || uncertain} error={summaryError ? t(summaryError) : undefined} onChange={next => { setIdentity(next); setSummaryError(''); }} />
                 <p className="muted">{t('Chỉ tên bắt buộc. Mô tả chi tiết và mời thành viên có thể thiết lập sau.')}</p>
                 {createError && <InlineMessage>{t(createError)}</InlineMessage>}
+                {uncertain && <div className="buttons">
+                  <button type="button" disabled={saving} onClick={checkCreation}>{creationText('Kiểm tra kết quả', 'Check result')}</button>
+                  {retryReady && <button type="button" disabled={saving} onClick={retryCreation}>{creationText('Gửi lại yêu cầu này', 'Resend this request')}</button>}
+                </div>}
                 <div className="buttons">
                   <button
                     type="button"
                     disabled={saving}
                     onClick={() => closeDialog.current()}
                   >
-                    {t("Hủy")}
+                    {uncertain ? creationText("Đóng tạm", "Close for now") : t("Hủy")}
                   </button>
                   <button className="primary" disabled={saving || uncertain}>
                     {t(saving ? "Đang tạo…" : "Tạo Workspace")}

@@ -1,11 +1,12 @@
-import { workspaceFields, versionInput, transferInput, invitationInput, invitationToken, overridesInput, objectId, workspaceStateInput, membershipRoleInput } from './input.js';
+import { workspaceFields, versionInput, transferInput, invitationInput, invitationToken, overridesInput, objectId, workspaceStateInput, membershipRoleInput, creationRequestId } from './input.js';
 import { inputObject } from '../auth/account-input.js';
 import { workspaceQuery, teamQuery } from './list-query.js';
 
 export function createWorkspaceService({ store }) {
   return {
     list: (auth, query) => store.list(auth.claims, workspaceQuery(query)),
-    create: (auth, input) => store.create(auth.claims, workspaceFields(input).fields),
+    create: (auth, input) => { const value = workspaceFields(input); return store.create(auth.claims, value.fields, value.requestId); },
+    creation: (auth, requestId, query) => { inputObject(query, []); return store.creation(auth.claims, creationRequestId(requestId)); },
     get: (auth, workspaceId) => store.get(auth.claims, objectId(workspaceId)),
     state: (auth, workspaceId, input) => store.state(auth.claims, objectId(workspaceId), workspaceStateInput(input)),
     update: (auth, workspaceId, input) => store.update(auth.claims, objectId(workspaceId), workspaceFields(input, true)),

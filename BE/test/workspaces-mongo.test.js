@@ -1,10 +1,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { randomBytes } from 'node:crypto';
+import { randomBytes, randomUUID } from 'node:crypto';
 import { once } from 'node:events';
 import mongoose from 'mongoose';
 import { connectDatabase } from '../src/database.js';
-import { models, User, Session, Workspace, WorkspaceMembership, WorkspaceInvitation, Project, Task, TaskComment, EmailOutbox, Notification, WorkspaceRoleAudit } from '../src/models/index.js';
+import { models, User, Session, Workspace, WorkspaceMembership, WorkspaceInvitation, Project, Task, TaskComment, EmailOutbox, Notification, WorkspaceRoleAudit, WorkspaceCreation } from '../src/models/index.js';
 import { createWorkService } from '../src/work/service.js';
 import { createMongoWorkStore } from '../src/work/mongo-store.js';
 import { createModerationService } from '../src/moderation/service.js';
@@ -48,6 +48,30 @@ test('Workspace membership/invitation lifecycle on real MongoDB and HTTP', { ski
     server = createApp({ authService: auth, authConfig: config, workspaceService: service }).listen(0, '127.0.0.1'); await once(server, 'listening');
     const base = `http://127.0.0.1:${server.address().port}`;
     const http = (index, path, method = 'GET', body, extra = {}) => fetch(base + path, { method, headers: { Origin: config.webOrigin, 'Content-Type': 'application/json', ...(index !== null ? { Authorization: `Bearer ${logins[index].accessToken}` } : {}), ...extra }, ...(body !== undefined ? { body: JSON.stringify(body) } : {}) });
+    await t.test('Creation receipts serialize retries, reject changed input and enforce current access', async () => {
+      const requestId = randomUUID(), input = { name: `${prefix} Retry`, requestId };
+      assert.deepEqual(await service.creation(identities[0], requestId, {}), { status: 'not_found' });
+      const race = await Promise.all([service.create(identities[0], input), service.create(identities[0], input)]);
+      const workspace = race[0].workspace; workspaceIds.push(new mongoose.Types.ObjectId(workspace.id));
+      assert.equal(race[1].workspace.id, workspace.id);
+      assert.equal(await Workspace.collection.countDocuments({ name: input.name }), 1);
+      assert.equal(await WorkspaceMembership.collection.countDocuments({ workspaceId: new mongoose.Types.ObjectId(workspace.id) }), 1);
+      assert.equal((await service.create(identities[0], { ...input, summary: null, icon: 'folder', color: 'lavender', coverId: 'moodboard' })).workspace.id, workspace.id);
+      await assert.rejects(service.create(identities[0], { ...input, name: 'Changed input' }), /WORKSPACE_CREATION_INPUT_MISMATCH/u);
+      assert.deepEqual(await service.creation(identities[1], requestId, {}), { status: 'not_found' });
+      const separate = await service.create(identities[1], input); workspaceIds.push(new mongoose.Types.ObjectId(separate.workspace.id));
+      assert.notEqual(separate.workspace.id, workspace.id);
+      assert.equal((await http(0, `/workspaces/creation-requests/${requestId}`)).status, 200);
+      assert.equal((await http(0, `/workspaces/creation-requests/${requestId}?q=bad`)).status, 400);
+      await assert.rejects(async () => service.create(identities[0], { ...input, requestId: 'invalid' }), /INVALID_INPUT/u);
+      await service.state(identities[0], workspace.id, { expectedVersion: 0, state: 'archived', confirmName: workspace.name, reason: 'Fixture archive' });
+      assert.equal((await service.creation(identities[0], requestId, {})).workspace.state, 'archived');
+      // Simulate membership loss without deleting receipt or Workspace; old key cannot recreate it.
+      await WorkspaceMembership.collection.updateOne({ workspaceId: new mongoose.Types.ObjectId(workspace.id), userId: users[0]._id }, { $set: { state: 'inactive' } });
+      await assert.rejects(service.creation(identities[0], requestId, {}), /WORKSPACE_UNAVAILABLE/u);
+      await assert.rejects(service.create(identities[0], input), /WORKSPACE_UNAVAILABLE/u);
+      assert.equal(await Workspace.collection.countDocuments({ name: input.name }), 2);
+    });
     await t.test('Multiple standalone Managers are Owner-appointed, scoped, protected and lose privileges on demotion/exit', async () => {
       const workspace = await create(`${prefix} Roles`), workspaceId = new mongoose.Types.ObjectId(workspace.id);
       const invitation = await link(workspace), token = raw(invitation);
@@ -378,7 +402,7 @@ test('Workspace membership/invitation lifecycle on real MongoDB and HTTP', { ski
     });
   } finally {
     if (server) await new Promise((resolve) => server.close(resolve));
-    for (const model of [Notification, EmailOutbox, Task, Project, WorkspaceInvitation, WorkspaceMembership, WorkspaceRoleAudit]) await model.collection.deleteMany({ workspaceId: { $in: workspaceIds } });
+    for (const model of [Notification, EmailOutbox, Task, Project, WorkspaceInvitation, WorkspaceMembership, WorkspaceRoleAudit, WorkspaceCreation]) await model.collection.deleteMany({ workspaceId: { $in: workspaceIds } });
     await Workspace.collection.deleteMany({ _id: { $in: workspaceIds } });
     await Session.collection.deleteMany({ userId: { $in: users.map((value) => value._id) } });
     await User.collection.deleteMany({ _id: { $in: users.map((value) => value._id) } });

@@ -2,6 +2,12 @@ import { coreSchema, ref, integer, nullableDate, nullableString, digest, choice,
 import { canonicalEmail } from './accounts.js';
 import { WORKSPACE_ICONS, WORKSPACE_COLORS, WORKSPACE_COVERS, WORKSPACE_IDENTITY_DEFAULTS, validWorkspaceSummary } from '../workspaces/identity.js';
 
+// Minimal durable receipt: never TTL-delete, otherwise an old retry could create a duplicate.
+export const workspaceCreationSchema = coreSchema({
+  _id: { type: String, required: true, match: /^[a-f0-9]{64}$/u },
+  userId: ref('User'), workspaceId: ref('Workspace'), fingerprint: digest(),
+}, { editable: false, updated: false, privateFields: ['fingerprint'] });
+
 export const workspaceSchema = coreSchema({
   ownerId: ref('User', true), organizationId: { ...ref('Organization', true), immutable: true },
   managerId: ref('User', true), name: singleLine(200), description: richText(), mutationRevision: integer(),

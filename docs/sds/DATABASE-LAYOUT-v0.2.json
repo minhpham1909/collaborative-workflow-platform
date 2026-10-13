@@ -1350,6 +1350,29 @@
           }
         }
       ]
+    },
+    {
+      "name": "workspace_creations",
+      "fields": {
+        "_id": "SHA256 account-scoped request UUID",
+        "userId": "ObjectId",
+        "workspaceId": "ObjectId",
+        "fingerprint": "SHA256 normalized creation input",
+        "createdAt": "Date"
+      },
+      "privateFields": [
+        "fingerprint"
+      ],
+      "references": {
+        "userId": "users",
+        "workspaceId": "workspaces"
+      },
+      "indexes": [],
+      "constraints": [
+        "Immutable creation receipt; primary _id prevents duplicates",
+        "No TTL or automatic purge; retained minimal identity prevents replay duplication",
+        "No Workspace metadata stored; readback checks current access"
+      ]
     }
   ],
   "sharedTypes": {

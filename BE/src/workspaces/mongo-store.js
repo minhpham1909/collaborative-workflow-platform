@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 import { queryWorkspaceList } from './query-store.js';
-import { randomBytes, randomUUID } from 'node:crypto';
-import { User, Session, Workspace, WorkspaceMembership, WorkspaceInvitation, Project, Task, EmailOutbox, ProjectGuest, Organization, OrganizationMembership, WorkspaceLifecycleAudit, WorkspaceRoleAudit } from '../models/index.js';
+import { randomBytes, randomUUID, createHash } from 'node:crypto';
+import { User, Session, Workspace, WorkspaceMembership, WorkspaceInvitation, Project, Task, EmailOutbox, ProjectGuest, Organization, OrganizationMembership, WorkspaceLifecycleAudit, WorkspaceRoleAudit, WorkspaceCreation } from '../models/index.js';
 import { AuthError } from '../auth/errors.js';
 import { tokenHash } from '../auth/tokens.js';
 import { createDeliveryCrypto } from '../auth/delivery-crypto.js';
@@ -11,6 +11,12 @@ import { assertNotBanned, bannedProjectIds } from '../moderation/guard.js';
 import { reconcileReopenRequests, cancelReopenRequests } from '../work/reopen-lifecycle.js';
 import { assertWorkspaceWritable } from './lifecycle.js';
 
+import { emptyRichText } from '../content/rich-text.js';
+import { WORKSPACE_IDENTITY_DEFAULTS } from './identity.js';
+
+const hash = value => createHash('sha256').update(value).digest('hex');
+const receiptId = (userId, requestId) => hash(`workspace-create:v1:${userId}:${requestId}`);
+const creationFingerprint = fields => hash(JSON.stringify({ name: fields.name, description: fields.description ?? emptyRichText(), summary: fields.summary ?? null, icon: fields.icon ?? WORKSPACE_IDENTITY_DEFAULTS.icon, color: fields.color ?? WORKSPACE_IDENTITY_DEFAULTS.color, coverId: fields.coverId ?? WORKSPACE_IDENTITY_DEFAULTS.coverId }));
 const id = (value) => new mongoose.Types.ObjectId(value);
 const inherited = () => ({ assignment: 'inherit', comment: 'inherit', content: 'inherit', status: 'inherit' });
 const unavailable = () => { throw new AuthError('WORKSPACE_UNAVAILABLE', 404); };
@@ -36,6 +42,10 @@ export function createMongoWorkspaceStore({ config, now = () => new Date() }) {
     const access = await workspaceAccess(workspace, user._id, tx);
     if (owner && !access.canManage) throw new AuthError('OWNER_REQUIRED', 403);
     return { workspace, membership: access.membership, access };
+  }
+  async function creationResult(user, receipt, tx) {
+    const { workspace, membership } = await scope(user, String(receipt.workspaceId), tx);
+    return { status: 'completed', workspace: workspaceResponse(workspace, membership) };
   }
   const run = (claims, operation) => mongoose.connection.transaction(async (tx) => operation(await actor(claims, tx), tx));
   async function invitation(workspaceId, invitationId, tx) {
@@ -74,10 +84,24 @@ export function createMongoWorkspaceStore({ config, now = () => new Date() }) {
   }
   return {
     list: (claims, page) => run(claims, (user, tx) => queryWorkspaceList(user, tx, page)),
-    create: (claims, fields) => run(claims, async (user, tx) => {
+    creation: (claims, requestId) => run(claims, async (user, tx) => {
+      const receipt = await WorkspaceCreation.collection.findOne({ _id: receiptId(user._id, requestId) }, { session: tx });
+      return receipt ? creationResult(user, receipt, tx) : { status: 'not_found' };
+    }),
+    create: (claims, fields, requestId = null) => run(claims, async (user, tx) => {
+      const key = requestId ? receiptId(user._id, requestId) : null;
+      const fingerprint = key ? creationFingerprint(fields) : null;
+      if (key) {
+        const receipt = await WorkspaceCreation.collection.findOne({ _id: key }, { session: tx });
+        if (receipt) {
+          if (receipt.fingerprint !== fingerprint) throw new AuthError('WORKSPACE_CREATION_INPUT_MISMATCH', 409);
+          return creationResult(user, receipt, tx);
+        }
+      }
       const workspace = new Workspace({ ...fields, ownerId: user._id }); await workspace.save({ session: tx });
       const membership = new WorkspaceMembership({ workspaceId: workspace._id, userId: user._id, joinedAt: now() }); await membership.save({ session: tx });
-      return { workspace: workspaceResponse(workspace.toObject(), membership.toObject()) };
+      if (key) await new WorkspaceCreation({ _id: key, userId: user._id, workspaceId: workspace._id, fingerprint }).save({ session: tx });
+      return { status: 'completed', workspace: workspaceResponse(workspace.toObject(), membership.toObject()) };
     }),
     get: (claims, workspaceId) => run(claims, async (user, tx) => {
       const { workspace, membership } = await scope(user, workspaceId, tx); return { workspace: workspaceResponse(workspace, membership) };
