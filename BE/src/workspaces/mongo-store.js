@@ -1,3 +1,4 @@
+import { queryManagementHistory } from './audit-store.js';
 import mongoose from 'mongoose';
 import { queryWorkspaceList } from './query-store.js';
 import { randomBytes, randomUUID, createHash } from 'node:crypto';
@@ -176,16 +177,7 @@ export function createMongoWorkspaceStore({ config, now = () => new Date() }) {
     audit: (claims, workspaceId, page) => run(claims, async (user, tx) => {
       const { workspace } = await scope(user, workspaceId, tx, true);
       if (workspace.organizationId) throw new AuthError('WORKSPACE_AUDIT_MODE_UNAVAILABLE', 409);
-      const base = [{ $match: { workspaceId: workspace._id, ...(page.action !== 'all' ? { action: page.action } : {}), $and: page.filters.length ? page.filters : [{}] } },
-        { $lookup: { from: 'users', localField: 'actorId', foreignField: '_id', pipeline: [{ $project: { displayName: 1 } }], as: 'actor' } },
-        { $lookup: { from: 'users', localField: 'targetUserId', foreignField: '_id', pipeline: [{ $project: { displayName: 1 } }], as: 'target' } },
-        ...(page.patterns.length ? [{ $match: { $and: page.patterns.map(pattern => ({ $or: [{ 'actor.displayName': { $regex: pattern, $options: 'i' } }, { 'target.displayName': { $regex: pattern, $options: 'i' } }, { reason: { $regex: pattern, $options: 'i' } }] })) } }] : []),
-      ];
-      const counts = await WorkspaceManagementAudit.collection.aggregate([...base, { $count: 'total' }], { session: tx }).toArray();
-      const rows = await WorkspaceManagementAudit.collection.aggregate([...base, { $match: mongoAfter(page.after) }, { $sort: { createdAt: -1, _id: -1 } }, { $limit: page.limit + 1 }], { session: tx }).toArray();
-      return { ...paged(rows, page.limit, row => ({ id: String(row._id), createdAt: row.createdAt, action: row.action, invitationType: row.invitationType, changedFields: row.changedFields, reason: row.reason, previousRole: row.previousRole, role: row.role, versionScope: row.versionScope, resourceVersion: row.resourceVersion,
-        actor: { id: String(row.actorId), displayName: row.actor[0]?.displayName ?? null },
-        target: row.targetUserId ? { id: String(row.targetUserId), displayName: row.target[0]?.displayName ?? null } : null })), total: counts[0]?.total ?? 0, coverage: 'standalone_forward_events_v1' };
+      return queryManagementHistory(workspace, page, tx);
     }),
     roleAudit: (claims, workspaceId, page) => run(claims, async (user, tx) => {
       const { workspace } = await scope(user, workspaceId, tx, true);

@@ -1,5 +1,5 @@
 import { coreSchema, ref, integer, nullableDate, nullableString, digest, choice, singleLine, emailOverrides, richText, contentHook } from './shared.js';
-import { WORKSPACE_AUDIT_ACTIONS } from '../workspaces/audit-policy.js';
+import { WORKSPACE_MANAGEMENT_ACTIONS } from '../workspaces/audit-policy.js';
 import { canonicalEmail } from './accounts.js';
 import { WORKSPACE_ICONS, WORKSPACE_COLORS, WORKSPACE_COVERS, WORKSPACE_IDENTITY_DEFAULTS, validWorkspaceSummary } from '../workspaces/identity.js';
 
@@ -44,7 +44,7 @@ membershipSchema.pre('validate', function() {
 export const workspaceManagementAuditSchema = coreSchema({
   workspaceId: { ...ref('Workspace'), immutable: true }, actorId: ref('User'),
   targetUserId: ref('User', true), invitationId: ref('WorkspaceInvitation', true),
-  action: choice(WORKSPACE_AUDIT_ACTIONS),
+  action: choice(WORKSPACE_MANAGEMENT_ACTIONS),
   invitationType: { type: String, enum: ['EMAIL', 'LINK', null], default: null },
   changedFields: { type: [String], default: [], validate: value => value.length <= 6 && new Set(value).size === value.length && value.every(field => ['name', 'description', 'summary', 'icon', 'color', 'coverId'].includes(field)) },
   previousRole: { type: String, enum: ['owner', 'manager', 'member', null], default: null },

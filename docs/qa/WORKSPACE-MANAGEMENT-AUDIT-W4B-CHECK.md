@@ -1,5 +1,6 @@
 # W4b — Workspace management history UI
 
+Current merged read contract/coverage: [W4c](WORKSPACE-MERGED-AUDIT-W4C-CHECK.md). This file retains the earlier patch evidence.
 Date: 13/10/2026
 
 ## Implemented

@@ -47,5 +47,5 @@ test('Management history accepts only known actions and scoped bounded read filt
   assert.equal(auditQuery({}).action, 'all');
   const page = auditQuery({ action: 'member_joined', limit: '2', q: '[QA]', from: '2026-10-13', to: '2026-10-13' });
   assert.equal(page.action, 'member_joined'); assert.equal(page.limit, 2); assert.equal(page.filters[0].createdAt.$gte.toISOString(), '2026-10-12T17:00:00.000Z');
-  for (const query of [{ action: 'ban' }, { action: { $ne: 'created' } }, { workspaceId: 'injected' }, { from: '2026-10-14', to: '2026-10-13' }, { cursor: 'malformed' }, { limit: '101' }]) assert.throws(() => auditQuery(query), /INVALID_INPUT/u);
+  for (const query of [{ action: 'comment_deleted' }, { action: { $ne: 'created' } }, { workspaceId: 'injected' }, { from: '2026-10-14', to: '2026-10-13' }, { cursor: 'malformed' }, { limit: '101' }]) assert.throws(() => auditQuery(query), /INVALID_INPUT/u);
 });

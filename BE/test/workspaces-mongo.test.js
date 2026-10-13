@@ -4,7 +4,7 @@ import { randomBytes, randomUUID } from 'node:crypto';
 import { once } from 'node:events';
 import mongoose from 'mongoose';
 import { connectDatabase } from '../src/database.js';
-import { models, User, Session, Workspace, WorkspaceMembership, WorkspaceInvitation, Project, Task, TaskComment, EmailOutbox, Notification, WorkspaceRoleAudit, WorkspaceCreation, WorkspaceManagementAudit, AccessBan, Organization, OrganizationMembership } from '../src/models/index.js';
+import { models, User, Session, Workspace, WorkspaceMembership, WorkspaceInvitation, Project, Task, TaskComment, EmailOutbox, Notification, WorkspaceRoleAudit, WorkspaceCreation, WorkspaceManagementAudit, AccessBan, Organization, OrganizationMembership, WorkspaceLifecycleAudit, ModerationAction } from '../src/models/index.js';
 import { createWorkService } from '../src/work/service.js';
 import { createMongoWorkStore } from '../src/work/mongo-store.js';
 import { createModerationService } from '../src/moderation/service.js';
@@ -72,6 +72,39 @@ test('Workspace membership/invitation lifecycle on real MongoDB and HTTP', { ski
       await assert.rejects(service.creation(identities[0], requestId, {}), /WORKSPACE_UNAVAILABLE/u);
       await assert.rejects(service.create(identities[0], input), /WORKSPACE_UNAVAILABLE/u);
       assert.equal(await Workspace.collection.countDocuments({ name: input.name }), 2);
+    });
+    await t.test('Merged history includes available legacy/security records with collision-safe cursors and scoped privacy', async () => {
+      const legacy = new Workspace({ ownerId: users[0]._id, name: 'Historical audit fixture' }); await legacy.save(); workspaceIds.push(legacy._id);
+      await new WorkspaceMembership({ workspaceId: legacy._id, userId: users[0]._id, joinedAt: new Date() }).save();
+      const shared = new mongoose.Types.ObjectId(), at = new Date('2026-10-01T03:00:00.000Z'), common = { _id: shared, workspaceId: legacy._id, actorId: users[0]._id, createdAt: at };
+      await new WorkspaceManagementAudit({ ...common, action: 'metadata_updated', changedFields: ['name'], versionScope: 'workspace', resourceVersion: 2 }).save();
+      await new WorkspaceRoleAudit({ ...common, targetUserId: users[1]._id, previousRole: 'member', role: 'manager', reason: 'Historical role', membershipVersion: 1 }).save();
+      await new WorkspaceLifecycleAudit({ ...common, previousState: 'active', state: 'archived', reason: 'Historical close', resourceVersion: 4 }).save();
+      await new ModerationAction({ ...common, scopeType: 'workspace', scopeId: legacy._id, targetUserId: users[1]._id, action: 'ban', reason: 'Historical ban', cutoff: at, cleanup: '7', state: 'pending', matchedCount: 3 }).save();
+      await new WorkspaceRoleAudit({ workspaceId: legacy._id, actorId: users[0]._id, targetUserId: users[1]._id, previousRole: 'manager', role: 'member', reason: 'ownership_transferred', membershipVersion: 2, createdAt: at }).save();
+      const project = new Project({ workspaceId: legacy._id, createdBy: users[0]._id, name: 'Legacy Audit Project' }); await project.save();
+      await new ModerationAction({ workspaceId: legacy._id, scopeType: 'project', scopeId: project._id, projectId: project._id, actorId: users[0]._id, targetUserId: users[1]._id, action: 'unban', reason: 'Historical return', cutoff: at, createdAt: at }).save();
+      const orgId = new mongoose.Types.ObjectId();
+      const orgAction = new ModerationAction({ scopeType: 'organization', scopeId: orgId, organizationId: orgId, workspaceIds: [legacy._id], actorId: users[0]._id, targetUserId: users[1]._id, action: 'ban', reason: 'Must not expose org record', cutoff: at }); await orgAction.save();
+      try {
+        const read = query => service.audit(identities[0], String(legacy._id), query);
+        const full = await read({ limit: '100' }); assert.equal(full.total, 6); assert.equal(full.items.length, 6); assert.equal(full.coverage, 'standalone_available_records_v2');
+        assert.equal(full.items.filter(row => row.id.endsWith(String(shared))).length, 4);
+        assert.deepEqual(new Set(full.items.map(row => row.source)), new Set(['management', 'role', 'lifecycle', 'security']));
+        const ids = []; let cursor;
+        do { const page = await read({ limit: '1', ...(cursor ? { cursor } : {}) }); assert.equal(page.total, 6); ids.push(...page.items.map(row => row.id)); cursor = page.nextCursor; } while (cursor);
+        assert.deepEqual(ids, full.items.map(row => row.id)); assert.equal(new Set(ids).size, 6);
+        assert.equal(full.items.find(row => row.reason === 'ownership_transferred').action, 'role_changed');
+        const banned = await read({ action: 'ban' }); assert.equal(banned.total, 1); assert.deepEqual(banned.items[0].cleanup, { mode: '7', state: 'pending', matchedCount: 3, deletedCount: 0 });
+        await ModerationAction.collection.updateOne({ _id: shared }, { $set: { state: 'completed', deletedCount: 3 } });
+        assert.equal((await read({ action: 'ban' })).items[0].cleanup.state, 'completed');
+        assert.equal((await read({ action: 'unban' })).items[0].project.name, project.name);
+        assert.equal((await read({ q: 'Historical', from: '2026-10-01', to: '2026-10-01' })).total, 4);
+        assert.ok(!JSON.stringify(full).includes('Must not expose')); assert.ok(!JSON.stringify(full).includes('leaseToken')); assert.ok(!JSON.stringify(full).includes('@example.com'));
+        const unknownSource = Buffer.from(JSON.stringify({ at: at.toISOString(), id: String(shared), source: 'organizations' })).toString('base64url');
+        await assert.rejects(async () => read({ cursor: unknownSource }), /INVALID_INPUT/u);
+        await assert.rejects(service.audit(identities[1], String(legacy._id), {}), /WORKSPACE_UNAVAILABLE/u);
+      } finally { await ModerationAction.collection.deleteOne({ _id: orgAction._id }); }
     });
     await t.test('Management audit tracks atomic standalone events, filters/paging and fresh management rights', async () => {
       const workspace = await create(`${prefix} Audit`), wsId = new mongoose.Types.ObjectId(workspace.id);
@@ -468,7 +501,7 @@ test('Workspace membership/invitation lifecycle on real MongoDB and HTTP', { ski
     });
   } finally {
     if (server) await new Promise((resolve) => server.close(resolve));
-    for (const model of [Notification, EmailOutbox, Task, Project, WorkspaceInvitation, WorkspaceMembership, WorkspaceRoleAudit, WorkspaceCreation, WorkspaceManagementAudit]) await model.collection.deleteMany({ workspaceId: { $in: workspaceIds } });
+    for (const model of [Notification, EmailOutbox, Task, Project, WorkspaceInvitation, WorkspaceMembership, WorkspaceRoleAudit, WorkspaceCreation, WorkspaceManagementAudit, WorkspaceLifecycleAudit, ModerationAction]) await model.collection.deleteMany({ workspaceId: { $in: workspaceIds } });
     await Workspace.collection.deleteMany({ _id: { $in: workspaceIds } });
     await Session.collection.deleteMany({ userId: { $in: users.map((value) => value._id) } });
     await User.collection.deleteMany({ _id: { $in: users.map((value) => value._id) } });

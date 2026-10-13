@@ -1,12 +1,21 @@
 import { inputObject } from "../auth/account-input.js";
-import { pageInput, fail } from "./input.js";
+import { pageInput, fail, objectId } from "./input.js";
 import { searchPatterns, vietnamDay } from "../work/input.js";
-import { WORKSPACE_AUDIT_ACTIONS } from './audit-policy.js';
+import { WORKSPACE_AUDIT_ACTIONS, WORKSPACE_AUDIT_SOURCES } from './audit-policy.js';
 export function auditQuery(query) {
   inputObject(query, ['limit', 'cursor', 'q', 'from', 'to', 'action']);
-  const { action = 'all', ...rest } = query;
+  const { action = 'all', cursor, ...rest } = query;
   if (action !== 'all' && !WORKSPACE_AUDIT_ACTIONS.includes(action)) fail();
-  return { ...teamQuery(rest, false, 'createdAt'), action };
+  let position = null;
+  if (cursor !== undefined) {
+    try {
+      if (typeof cursor !== 'string' || cursor.length > 256 || !/^[A-Za-z0-9_-]+$/u.test(cursor)) fail();
+      position = JSON.parse(Buffer.from(cursor, 'base64url').toString('utf8'));
+      inputObject(position, ['at', 'id', 'source']); objectId(position.id);
+      if (!WORKSPACE_AUDIT_SOURCES.includes(position.source) || typeof position.at !== 'string' || new Date(position.at).toISOString() !== position.at) fail();
+    } catch { fail(); }
+  }
+  return { ...teamQuery(rest, false, 'createdAt'), action, position };
 }
 export function workspaceQuery(query) {
   inputObject(query, ["limit", "cursor", "q", "from", "to", "state", "role"]);
