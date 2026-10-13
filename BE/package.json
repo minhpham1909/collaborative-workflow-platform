@@ -18,6 +18,7 @@
     "auth:test-page": "node --env-file-if-exists=.env scripts/auth-test-server.js",
     "db:dev": "node --env-file-if-exists=.env scripts/dev-database.js",
     "db:indexes": "node --env-file-if-exists=.env scripts/create-indexes.js",
+    "db:workspace-only-inventory": "node --env-file-if-exists=.env scripts/workspace-only-inventory.js",
     "db:audit-scope": "node --env-file-if-exists=.env scripts/audit-organization-scope.js",
     "db:task-codes": "node --env-file-if-exists=.env scripts/task-codes.js",
     "moderation:once": "node --env-file-if-exists=.env scripts/moderation-once.js",
