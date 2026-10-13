@@ -2,6 +2,8 @@
 
 Date: 13/10/2026
 
+Superseded by the user-authorized [fresh dev start](../project/WORKSPACE-ONLY-FRESH-START-v0.1.md): business data was reset; the inventory below is historical and its inheritance/migration gates no longer apply to this discarded dev dataset.
+
 ## Tool and safety
 
 `BE/scripts/workspace-only-inventory.js`, or `db:workspace-only-inventory` from BE, accepts no arguments and exposes no apply mode. Requires development mode, loopback MongoDB URI, explicit database name and **port27018**. Refuses system27017, remote/srv and production targets. Generic errors never print the connection string or credentials.
