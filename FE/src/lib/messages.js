@@ -1,4 +1,5 @@
 const messages = {
+  ORGANIZATIONS_RETIRED: "Tổ chức đã ngừng hỗ trợ. Tiếp tục từ Workspace.",
   ACCESS_BANNED: "Tài khoản của bạn đang bị chặn trong phạm vi này. Liên hệ người quản trị nếu cần xem xét lại.",
   MODERATION_REASON_REQUIRED: "Cần nhập lý do khi quản trị viên xóa bình luận.",
   MODERATION_PREVIEW_INVALID: "Thông tin xem trước đã thay đổi hoặc hết hạn. Xem trước lại trước khi xác nhận.",
@@ -104,6 +105,7 @@ const englishByCode = {
   "REOPEN_APPROVAL_REQUIRED": "A completed task requires management approval to reopen.",
   "REOPEN_REASON_REQUIRED": "Enter a reason before reopening this task.",
   "REOPEN_SELF_REVIEW_FORBIDDEN": "You cannot review your own reopening request. Ask another manager.",
+  "ORGANIZATIONS_RETIRED": "Organizations have been retired. Continue from your workspace.",
   "PROJECT_LEAD_RETIRED": "Project Lead has been retired. Management access is assigned within the workspace.",
   "REOPEN_REQUEST_PENDING": "This task already has a pending reopening request. Reload to view it.",
   "REOPEN_REQUEST_COOLDOWN": "Your request was rejected. Wait 24 hours from rejection before submitting again.",

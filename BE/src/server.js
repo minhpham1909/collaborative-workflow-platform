@@ -18,8 +18,6 @@ import { createMongoWorkStore } from './work/mongo-store.js';
 import { cutoffCodec } from './notifications/input.js';
 import { createMongoNotificationsStore } from './notifications/mongo-store.js';
 import { createNotificationsService } from './notifications/service.js';
-import { createMongoOrganizationStore } from './organizations/mongo-store.js';
-import { createOrganizationService } from './organizations/service.js';
 import { createMongoModerationStore } from './moderation/mongo-store.js';
 import { createModerationService } from './moderation/service.js';
 
@@ -51,9 +49,8 @@ try {
   const workService = createWorkService({ store: createMongoWorkStore({ config: authConfig }) });
   const cutoff = cutoffCodec(authConfig.accessKeyHex);
   const notificationsService = createNotificationsService({ store: createMongoNotificationsStore({ cutoff }), cutoff });
-  const organizationService = createOrganizationService({ store: createMongoOrganizationStore({ config: authConfig }) });
   const moderationService = createModerationService({ store: createMongoModerationStore({ config: authConfig }) });
-  const app = createApp({ isReady: () => !stopping && mongoose.connection.readyState === 1, authService, authConfig, accountsService, usersService, workspaceService, workService, notificationsService, organizationService, moderationService });
+  const app = createApp({ isReady: () => !stopping && mongoose.connection.readyState === 1, authService, authConfig, accountsService, usersService, workspaceService, workService, notificationsService, moderationService });
   if (!stopping) {
     server = app.listen(config.port, config.host, () => {
       console.info(`API listening at http://${config.host}:${config.port}`);

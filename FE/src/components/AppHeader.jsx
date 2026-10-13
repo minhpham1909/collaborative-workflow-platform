@@ -48,7 +48,7 @@ export default function AppHeader({ route, user, api, busy, logout, openMobile, 
         {t('Đi đến nội dung chính')}
       </button>
       <button type="button" className="mobile-nav-toggle" aria-label={t('Mở menu điều hướng')} aria-expanded={mobileOpen} onClick={openMobile}><Icon name="menu" /></button>
-      <div className="header-location"><span>Workflow</span><Icon name="chevron-right" /><strong>{t(({ home: 'Trang chủ', organizations: 'Tổ chức & Studio', organization: 'Tổ chức', mine: 'Công việc của tôi', calendar: locale==='en'?'Work calendar':'Lịch công việc', shared: 'Dự án được chia sẻ', notifications: 'Thông báo', notification: 'Thông báo', settings: 'Tài khoản', workspace: 'Workspace', project: 'Dự án', task: 'Công việc' })[route.kind] ?? 'Không gian làm việc')}</strong></div>
+      <div className="header-location"><span>Workflow</span><Icon name="chevron-right" /><strong>{t(({ home: 'Trang chủ', mine: 'Công việc của tôi', calendar: locale==='en'?'Work calendar':'Lịch công việc', shared: 'Dự án được chia sẻ', notifications: 'Thông báo', notification: 'Thông báo', settings: 'Tài khoản', workspace: 'Workspace', project: 'Dự án', task: 'Công việc' })[route.kind] ?? 'Không gian làm việc')}</strong></div>
       <a className="header-bell" href="#notifications" aria-label={t('Mở thông báo')} title={t('Mở thông báo')}><Icon name="bell" /></a>
       <details ref={menu} className="account-menu">
         <summary aria-label={t('Menu tài khoản của {name}', { name: user.displayName })}>

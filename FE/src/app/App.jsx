@@ -12,10 +12,7 @@ import { createApi } from "../lib/api.js";
 import { messageFor } from "../lib/messages.js";
 import Login from "../features/auth/Login.jsx";
 const Home = lazy(() => import("../features/workspaces/Home.jsx"));
-const Organizations = lazy(() => import("../features/organizations/Organizations.jsx"));
-const Organization = lazy(() => import("../features/organizations/Organization.jsx"));
 const Workspace = lazy(() => import("../features/projects/Workspace.jsx"));
-const OrganizationTeam = lazy(() => import("../features/organizations/OrganizationTeam.jsx"));
 const Project = lazy(() => import("../features/projects/Project.jsx"));
 const Calendar = lazy(() => import("../features/tasks/Calendar.jsx"));
 const MyTasks = lazy(() => import("../features/tasks/MyTasks.jsx"));
@@ -95,7 +92,7 @@ export default function App() {
     const kind = inviteIntent?.kind ?? route.kind;
     const destination = invitationDestination(kind, result);
     setInviteIntent(null);
-    notify(kind === "project-invite" ? "Đã tham gia Project với quyền Guest." : kind === "organization-invite" ? "Đã tham gia tổ chức." : "Đã tham gia Workspace.");
+    notify(kind === "project-invite" ? "Đã tham gia Project với quyền Guest." : "Đã tham gia Workspace.");
     location.hash = destination;
   }
   useDraftGuard({ dirty: false, busy, busyMessage:t('Đang xử lý yêu cầu. Vui lòng chờ kết quả trước khi rời trang.') });
@@ -233,10 +230,6 @@ export default function App() {
             <AuthLanguageSwitch/>
             <EmailVerificationActions api={api} />
           </main>,locale)
-        ) : route.kind === "organizations" ? (
-          <Organizations key={user.id} api={api}  userId={user.id} />
-        ) : route.kind === "organization" ? (
-          route.section === 'team' ? <OrganizationTeam key={user.id + route.id} api={api} id={route.id} user={user} /> : <Organization key={user.id + route.id} api={api} id={route.id}  userId={user.id} />
         ) : route.kind === "shared" ? (
           <SharedProjects key={user.id} api={api}  userId={user.id} />
         ) : route.kind === "task" ? (

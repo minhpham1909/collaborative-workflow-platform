@@ -18,7 +18,7 @@ import { dispatchInvitationMail } from '../src/mail/invitation-mail.js';
 import { createDeliveryCrypto } from '../src/auth/delivery-crypto.js';
 import { tokenHash } from '../src/auth/tokens.js';
 import { mailContent } from '../src/mail/provider.js';
-import { createApp } from '../src/app.js';
+import { createApp } from '../test-support/legacy-organizations.js';
 import { testConfig } from '../test-support/auth-store.js';
 
 test('Organization invitation/admission/exit lifecycle on isolated MongoDB', { skip: !process.env.TEST_MONGODB_URI, timeout: 90_000 }, async t => {

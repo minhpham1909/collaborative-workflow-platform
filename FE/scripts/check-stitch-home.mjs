@@ -63,8 +63,9 @@ try {
   const apiOrigin = `http://127.0.0.1:${server.address().port}`;
   browser = await chromium.launch({ executablePath: process.env.WORKFLOW_BROWSER_EXECUTABLE, headless: true });
   const context = await browser.newContext({ colorScheme: process.env.WORKFLOW_REGRESSION_THEME === 'dark' ? 'dark' : 'light', viewport: { width: 1440, height: 1000 } });
-  let fail = false, delay = false, failOverview = false, dropCreate = null, creationWrites = 0;
+  let retiredRequests = 0, fail = false, delay = false, failOverview = false, dropCreate = null, creationWrites = 0;
   await context.route('http://localhost:4000/**', async route => {
+    if (/\/(organizations|organization-invitations)(\/|$)/u.test(new URL(route.request().url()).pathname)) retiredRequests++;
     if (failOverview && route.request().url().endsWith('/home/overview')) return route.abort();
     if (fail && route.request().url().includes('/workspaces?')) return route.abort();
     if (delay && route.request().url().includes('/workspaces?')) await new Promise(resolve => setTimeout(resolve, 400));
@@ -79,6 +80,11 @@ try {
   await page.goto('http://localhost:5173/'); await page.getByLabel('Email', { exact: true }).fill(users[0].email); await page.getByLabel('Mật khẩu', { exact: true }).fill(password); await page.getByRole('button', { name: 'Đăng nhập', exact: true }).click();
   const cards = page.locator('.home-workspace-card'); await page.getByRole('heading', { name: 'Sáng Tạo Studio', exact: true }).waitFor();
   await page.waitForFunction(() => document.querySelectorAll('.home-workspace-card').length === 5);
+  assert.equal(await page.locator('.app-navigation a[href="#organizations"]').count(),0); assert.equal(await page.locator('.sidebar-context').count(),0);
+  await page.goto('http://localhost:5173/#organization/'+ 'a'.repeat(24) +'/team'); await page.locator('.studio-home').waitFor();
+  await page.goto('http://localhost:5173/organization-invite#token='+ 'a'.repeat(64)); await page.waitForURL('**/#home'); await page.locator('.studio-home').waitFor();
+  assert.equal(retiredRequests,0); assert.ok(!page.url().includes('token='));
+
   const homeOverview = await work.homeOverview(auths[0], {}); const priority = await work.homePriority(auths[0], { limit: '3' });
   await page.waitForFunction(count => document.querySelector('.home-overview-card strong')?.textContent === String(count), homeOverview.dueTodayOpenCount);
   assert.ok((await page.locator('.home-overview-card').first().getAttribute('href')).includes('from='+homeOverview.day));
@@ -155,7 +161,8 @@ try {
     let source = await readFile('C:/Users/Acer/.agents/skills/ui-ux/scripts/probe.mjs', 'utf8');
     source = source.replace('chromium.launch();', 'chromium.launch({ executablePath: process.env.WORKFLOW_BROWSER_EXECUTABLE });');
     const setup = `async function fixtureSetup(context) {
-      await context.route('http://localhost:4000/**', async route => { const response = await route.fetch({ url: route.request().url().replace('http://localhost:4000', process.env.WORKFLOW_FIXTURE_API) }); await route.fulfill({ response }); });
+      await context.route('http://localhost:4000/**', async route => {
+    if (/\/(organizations|organization-invitations)(\/|$)/u.test(new URL(route.request().url()).pathname)) retiredRequests++; const response = await route.fetch({ url: route.request().url().replace('http://localhost:4000', process.env.WORKFLOW_FIXTURE_API) }); await route.fulfill({ response }); });
       const response = await fetch(process.env.WORKFLOW_FIXTURE_API + '/auth/login', { method: 'POST', headers: { Origin: 'http://localhost:5173', 'Content-Type': 'application/json' }, body: JSON.stringify({ email: process.env.WORKFLOW_FIXTURE_EMAIL, password: process.env.WORKFLOW_FIXTURE_PASSWORD }) });
       if (!response.ok) throw new Error('FIXTURE_LOGIN_FAILED');
       const cookie = response.headers.get('set-cookie').split(';')[0], pivot = cookie.indexOf('=');

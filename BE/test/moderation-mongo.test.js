@@ -14,7 +14,7 @@ import { createMongoWorkStore } from '../src/work/mongo-store.js';
 import { createModerationService } from '../src/moderation/service.js';
 import { createMongoModerationStore } from '../src/moderation/mongo-store.js';
 import { runCommentCleanup } from '../src/moderation/cleanup.js';
-import { createApp } from '../src/app.js';
+import { createApp } from '../test-support/legacy-organizations.js';
 import { testConfig } from '../test-support/auth-store.js';
 
 test('C3 scoped Ban, hard Comment moderation and cleanup jobs on MongoDB', { skip: !process.env.TEST_MONGODB_URI, timeout: 90_000 }, async t => {

@@ -16,7 +16,7 @@ import { createOrganizationService } from '../src/organizations/service.js';
 import { createMongoOrganizationStore } from '../src/organizations/mongo-store.js';
 import { createModerationService } from '../src/moderation/service.js';
 import { createMongoModerationStore } from '../src/moderation/mongo-store.js';
-import { createApp } from '../src/app.js';
+import { createApp } from '../test-support/legacy-organizations.js';
 import { testConfig } from '../test-support/auth-store.js';
 import { runTaskRetention } from '../src/work/retention.js';
 import { auditTaskCodes, backfillTaskCodes } from '../src/work/task-codes.js';

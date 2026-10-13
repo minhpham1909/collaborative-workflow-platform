@@ -7,7 +7,7 @@ import { connectDatabase } from '../src/database.js';
 import { models, User, Session, Organization, OrganizationMembership, OrganizationAudit, Workspace, WorkspaceMembership, Project, Task, TaskComment, Notification, EmailOutbox } from '../src/models/index.js';
 import { createOrganizationService } from '../src/organizations/service.js';
 import { createMongoOrganizationStore } from '../src/organizations/mongo-store.js';
-import { createApp } from '../src/app.js';
+import { createApp } from '../test-support/legacy-organizations.js';
 import { createWorkService } from '../src/work/service.js';
 import { createMongoWorkStore } from '../src/work/mongo-store.js';
 import { createWorkspaceService } from '../src/workspaces/service.js';
