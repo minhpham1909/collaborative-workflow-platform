@@ -32,6 +32,14 @@ test('Workspace-only Project/Guest policy closes retired parents across direct, 
   await assert.rejects(work.getProject(auths[3],b.id),/RESOURCE_UNAVAILABLE/u);
   await assert.rejects(work.createTask(auths[3],a.id,{title:'Forbidden Guest Task'}),/TASK_CREATE_FORBIDDEN/u);
   await work.createComment(auths[3],task.id,{content:{format:'prosemirror-json',schemaVersion:1,document:{type:'doc',content:[{type:'paragraph',content:[{type:'text',text:'Guest feedback'}]}]}}});
+  const ownerProfile=(await work.profile(auths[3],a.id,String(people[0]._id))).profile;
+  assert.equal(ownerProfile.status,'active');assert.equal(ownerProfile.role,'owner');assert.equal(Object.hasOwn(ownerProfile,'blocked'),false);
+  assert.equal((await work.profile(auths[0],a.id,String(people[1]._id))).profile.role,'manager');
+  await assert.rejects(work.profile(auths[3],a.id,String(people[1]._id)),/RESOURCE_UNAVAILABLE/u);
+  await work.createComment(auths[2],task.id,{content:{format:'prosemirror-json',schemaVersion:1,document:{type:'doc',content:[{type:'paragraph',content:[{type:'text',text:'Historical Member feedback'}]}]}}});
+  await ws.leave(auths[2],workspace.id,{expectedVersion:0});
+  const departed=(await work.profile(auths[3],a.id,String(people[2]._id))).profile;
+  assert.equal(departed.status,'left_workspace');assert.equal(departed.role,null);assert.ok(departed.departedAt);
   // Active old Guest grant must not bypass retired parent rejection.
   const org=new Organization({ownerId:people[0]._id,name:'Unsupported organization'});await org.save();orgIds.push(org._id);
   const retired=new Workspace({organizationId:org._id,managerId:people[0]._id,name:'Retired private Workspace'});await retired.save();wsIds.push(retired._id);
@@ -57,6 +65,7 @@ test('Workspace-only Project/Guest policy closes retired parents across direct, 
   await ws.state(auths[0],workspace.id,{expectedVersion:0,state:'archived',confirmName:workspace.name,reason:'Read-only test'});
   assert.equal((await work.getProject(auths[3],a.id)).project.readOnly,true);
   const ban=new AccessBan({scopeType:'project',scopeId:a.id,workspaceId:workspace.id,projectId:a.id,userId:people[3]._id,reason:'Guest ban test',imposedBy:people[0]._id,imposedAt:new Date()});await ban.save();
+  const blockedProfile=(await work.profile(auths[0],a.id,String(people[3]._id))).profile;assert.equal(blockedProfile.blocked,true);assert.equal(blockedProfile.role,null);
   await assert.rejects(work.getProject(auths[3],a.id),/ACCESS_BANNED/u);assert.equal((await work.shared(auths[3],{})).items.length,0);
  }finally{for(const [name,model] of Object.entries(models)){if(!['User','Session','Organization'].includes(name)&&model.schema.path('workspaceId'))await model.collection.deleteMany({workspaceId:{$in:wsIds}});}
   await Workspace.collection.deleteMany({_id:{$in:wsIds}});await OrganizationInvitation.collection.deleteMany({organizationId:{$in:orgIds}});await Notification.collection.deleteMany({organizationId:{$in:orgIds}});await Organization.collection.deleteMany({_id:{$in:orgIds}});await Session.collection.deleteMany({userId:{$in:people.map(p=>p._id)}});await User.collection.deleteMany({_id:{$in:people.map(p=>p._id)}});await mongoose.disconnect();}

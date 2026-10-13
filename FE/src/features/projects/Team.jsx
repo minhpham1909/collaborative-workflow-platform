@@ -10,7 +10,6 @@ import FilterPanel from "../../components/FilterPanel.jsx";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import WorkspaceModeration, { BanDialog } from './WorkspaceModeration.jsx';
-import AddWorkspaceMember from './AddWorkspaceMember.jsx';
 import WorkspaceRoleDialog from './WorkspaceRoleDialog.jsx';
 import WorkspaceRoleAudit from './WorkspaceRoleAudit.jsx';
 import { workspaceRoleLabel } from '../../lib/ui-copy.js';
@@ -65,7 +64,7 @@ export default function Team({ api, id, invitations, onContext, onUnavailable })
       if (token !== generation.current) return;
       setWorkspace(context);
       onContext(context);
-      if (invitations && (!context.permissions?.manage || context.organizationId)) {
+      if (invitations && (!context.permissions?.manage)) {
         setData({ items: [] });
         setAction(null);
         return;
@@ -119,12 +118,11 @@ export default function Team({ api, id, invitations, onContext, onUnavailable })
               {t("+ Tạo lời mời")}
             </button>
           )}
-          {!invitations && owner && workspace?.organizationId && workspace.state !== 'archived' && <button className="primary" disabled={busy} onClick={() => setAction({ kind: 'add' })}>{t("Thêm thành viên nội bộ")}</button>}
         </div>
       </div>
-      {invitations && workspace && (!workspace.permissions?.manage || workspace.organizationId) ? (
+      {invitations && workspace && (!workspace.permissions?.manage) ? (
         <InlineMessage tone="info">
-          {t("Owner và Manager của Workspace độc lập đang hoạt động được mời Member. Workspace thuộc tổ chức dùng luồng phân bổ thành viên của tổ chức.")}
+          {t("Owner và Manager của Workspace đang hoạt động được mời Member.")}
         </InlineMessage>
       ) : (
         <>
@@ -231,7 +229,7 @@ export default function Team({ api, id, invitations, onContext, onUnavailable })
           <h3>{t("Tư cách thành viên của bạn")}</h3>
           {!workspace.permissions?.leave ? (
             <p>
-              {t(workspace.organizationId ? "Owner cần chuyển quyền sở hữu, Manager cần được thay thế trước khi rời. Quản trị tổ chức chưa tham gia Workspace không có membership để rời." : "Owner cần chuyển quyền sở hữu trước khi rời Workspace.")}
+              {t("Owner cần chuyển quyền sở hữu trước khi rời Workspace.")}
             </p>
           ) : (
             <>
@@ -249,11 +247,10 @@ export default function Team({ api, id, invitations, onContext, onUnavailable })
         </section>
       )}
       {!invitations && owner && workspace && <WorkspaceModeration api={api} workspace={workspace} />}
-      {!invitations && owner && workspace && !workspace.organizationId && <WorkspaceRoleAudit management api={api} workspace={workspace} revision={revision} onContext={fresh => { setWorkspace(fresh); onContext(fresh); setData({ items: [] }); setRevision(value => value + 1); }} onUnavailable={onUnavailable} />}
-      {!invitations && owner && workspace && !workspace.organizationId && <WorkspaceRoleAudit api={api} workspace={workspace} revision={revision} onContext={fresh => { setWorkspace(fresh); onContext(fresh); setData({ items: [] }); setRevision(value => value + 1); }} onUnavailable={onUnavailable} />}
+      {!invitations && owner && workspace && <WorkspaceRoleAudit management api={api} workspace={workspace} revision={revision} onContext={fresh => { setWorkspace(fresh); onContext(fresh); setData({ items: [] }); setRevision(value => value + 1); }} onUnavailable={onUnavailable} />}
+      {!invitations && owner && workspace && <WorkspaceRoleAudit api={api} workspace={workspace} revision={revision} onContext={fresh => { setWorkspace(fresh); onContext(fresh); setData({ items: [] }); setRevision(value => value + 1); }} onUnavailable={onUnavailable} />}
       {action?.kind === 'role' && workspace && <WorkspaceRoleDialog api={api} workspace={workspace} member={action.item} onContext={fresh => { setWorkspace(fresh); onContext(fresh); }} onUnavailable={onUnavailable} onDone={() => { setAction(null); setRevision(value => value + 1); }} />}
       {action?.kind === 'ban' && workspace && <BanDialog api={api} workspace={workspace} member={action.item} onClose={() => { setAction(null); setRevision(v => v + 1); }} />}
-      {action?.kind === 'add' && workspace && <AddWorkspaceMember api={api} workspace={workspace} onClose={() => { setAction(null); setRevision(v => v + 1); }} />}
       {action && !['ban', 'add', 'role'].includes(action.kind) && workspace && (
         <TeamAction
           api={api}

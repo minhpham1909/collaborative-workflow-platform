@@ -117,7 +117,7 @@ export default function Workspace({ api, id, userId }) {
   return (
     <main lang={locale} className="studio-workspace">
       <p className="breadcrumbs">
-        <a href="#home">{t("Trang chủ")}</a>{workspace?.organizationId && <> / <a href={`#organization/${workspace.organizationId}`}>{t("Tổ chức")}</a></>} / Workspace
+        <a href="#home">{t("Trang chủ")}</a> / Workspace
       </p>
       {error && (
         <InlineMessage>
@@ -193,7 +193,7 @@ export default function Workspace({ api, id, userId }) {
             >
               {t("Thành viên")}
             </button>
-            {canManage && !workspace.organizationId && (
+            {canManage && (
               <button
                 aria-pressed={tab === "invitations"}
                 disabled={saving}

@@ -1,4 +1,4 @@
-import { Organization, ProjectGuest } from '../src/models/index.js';
+import { Organization, OrganizationMembership, ProjectGuest } from '../src/models/index.js';
 import { AuthError } from '../src/auth/errors.js';
 import { workspaceAccess } from './legacy-workspace-access.js';
 import { assertNotBanned, banFilterStages } from '../src/moderation/guard.js';
@@ -26,4 +26,10 @@ export async function validateGuestParent(workspace,tx,lock){
  if(!workspace.organizationId)return;
  const org=lock?await Organization.collection.findOneAndUpdate({_id:workspace.organizationId},{$inc:{mutationRevision:1}},{session:tx,returnDocument:'after'}):await Organization.collection.findOne({_id:workspace.organizationId},{session:tx});
  if(!org)throw new AuthError('INVITATION_UNAVAILABLE',404);
+}
+
+export async function profileState(workspace,project,target,member,guest,tx){
+ const orgMember=workspace.organizationId?await OrganizationMembership.collection.findOne({organizationId:workspace.organizationId,userId:target},{session:tx}):null;
+ try{const current=await projectAccess(workspace,project,target,tx);return {status:current.guest?'guest':current.access.isMember?'active':'organization_management',role:current.guest?'guest':current.access.role,departedAt:null,blocked:false};}
+ catch(error){if(!(error instanceof AuthError))throw error;const status=orgMember?.state==='inactive'?'left_organization':member?.state==='inactive'?'left_workspace':guest?.state==='inactive'?'left_project':'unavailable';return {status,role:null,departedAt:status==='left_organization'?orgMember.leftAt:status==='left_workspace'?member.leftAt:status==='left_project'?guest.revokedAt:null,blocked:error.code==='ACCESS_BANNED'};}
 }

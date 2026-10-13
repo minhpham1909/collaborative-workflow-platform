@@ -1,3 +1,4 @@
+import {workspaceResponse} from '../src/workspaces/response.js';
 import {createWorkspaceService} from '../src/workspaces/service.js';
 import {createMongoWorkspaceStore} from '../src/workspaces/mongo-store.js';
 import {testConfig} from '../test-support/auth-store.js';
@@ -34,6 +35,13 @@ test('Workspace-only policy derives authority from active membership, hides old 
   await WorkspaceMembership.collection.updateOne({workspaceId:workspace._id,userId:people[2]._id},{$set:{state:'inactive'}});await assert.rejects(read(2),/WORKSPACE_UNAVAILABLE/u);
   await WorkspaceMembership.collection.updateOne({workspaceId:workspace._id,userId:people[0]._id},{$set:{state:'inactive'}});await assert.rejects(read(0),/WORKSPACE_UNAVAILABLE/u);
   assert.ok(!JSON.stringify(workspaceAccessStages(people[0]._id)).includes('organization_memberships'));
+  // DTO authority ignores injected effectiveRole and obsolete single-Manager pointers.
+  const memberDto=workspaceResponse(forged,{userId:people[2]._id,role:'member',effectiveRole:'organization_admin',version:0});
+  assert.equal(memberDto.role,'member');assert.equal(memberDto.permissions.manage,false);
+  assert.equal(Object.hasOwn(memberDto,'organizationId'),false);assert.equal(Object.hasOwn(memberDto,'managerId'),false);
+  const managerDto=workspaceResponse({...forged,managerId:people[1]._id},{userId:people[1]._id,role:'manager',version:0});
+  assert.equal(managerDto.permissions.leave,true);assert.equal(managerDto.permissions.manageRoles,false);
+  assert.equal(workspaceResponse(forged,{userId:people[0]._id,role:'member',version:0}).permissions.leave,false);
   // Current store mutations run without the historical fixture registration.
   const identities=[];
   for(let i=0;i<people.length;i++){const session=new Session({userId:people[i]._id,refreshTokenHash:String(i).repeat(64),authVersionAtIssue:people[i].authVersion,expiresAt:new Date(Date.now()+300000),lastSeenAt:new Date()});await session.save();identities.push({claims:{sub:String(people[i]._id),sid:String(session._id),av:people[i].authVersion}});}

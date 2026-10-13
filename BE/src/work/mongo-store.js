@@ -1,3 +1,4 @@
+import {profileState} from './profile-state.js';
 import mongoose from 'mongoose';
 import { randomUUID } from 'node:crypto';
 import { User, Session, Workspace, WorkspaceMembership, Project, Task, TaskComment, Notification, EmailOutbox, ProjectAccessAudit, ProjectGuest, ModerationAction, OrganizationMembership, ProjectLabel, TaskActivity, TaskReopenRequest, AccessBan } from '../models/index.js';
@@ -319,19 +320,8 @@ export function createMongoWorkStore({ now = () => new Date(), config } = {}) {
       const member = await WorkspaceMembership.collection.findOne({ workspaceId: context.workspace._id, userId: target }, { session: context.tx });
       const guest = await ProjectGuest.collection.findOne({ projectId: context.project._id, workspaceId: context.workspace._id, userId: target }, { session: context.tx });
       if (!associated && (context.guest || (!member && !guest))) deny();
-      const orgMember = context.workspace.organizationId ? await OrganizationMembership.collection.findOne({ organizationId: context.workspace.organizationId, userId: target }, { session: context.tx }) : null;
-      let status = 'unavailable', role = null, blocked = false;
-      try {
-        const access = await projectAccess(context.workspace, context.project, target, context.tx);
-        status = access.guest ? 'guest' : access.access.isMember ? 'active' : 'organization_management'; role = access.guest ? 'guest' : access.access.role;
-      } catch (error) {
-        if (!(error instanceof AuthError)) throw error;
-        blocked = error.code === 'ACCESS_BANNED';
-        status = orgMember?.state === 'inactive' ? 'left_organization' : member?.state === 'inactive' ? 'left_workspace' : guest?.state === 'inactive' ? 'left_project' : 'unavailable';
-      }
-      return { profile: { ...await identity(target, context), status, role,
-        departedAt: status === 'left_organization' ? orgMember.leftAt : status === 'left_workspace' ? member.leftAt : status === 'left_project' ? guest.revokedAt : null,
-        ...(owner(context) ? { blocked } : {}) } };
+      const {blocked,...state}=await profileState(context.workspace,context.project,target,member,guest,context.tx);
+      return {profile:{...await identity(target,context),...state,...(owner(context)?{blocked}:{})}};
     }),
     shared: (claims, page) => run(claims, async context => {
       const records = await Project.collection.aggregate([

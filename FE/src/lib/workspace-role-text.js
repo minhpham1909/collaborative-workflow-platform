@@ -1,5 +1,6 @@
 import { workspaceText } from './workspace-text.js';
 const english = {
+  "Owner và Manager của Workspace đang hoạt động được mời Member.": "Owners and Managers of an active workspace can invite Members.",
   "Bổ nhiệm Manager": "Appoint Manager",
   "Hạ xuống Member": "Demote to Member",
   "Bỏ lý do thay đổi vai trò chưa gửi?": "Discard the unsent role-change reason?",
