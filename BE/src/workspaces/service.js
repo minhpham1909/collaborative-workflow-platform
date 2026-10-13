@@ -1,6 +1,6 @@
 import { workspaceFields, versionInput, transferInput, invitationInput, invitationToken, overridesInput, objectId, workspaceStateInput, membershipRoleInput, creationRequestId } from './input.js';
 import { inputObject } from '../auth/account-input.js';
-import { workspaceQuery, teamQuery } from './list-query.js';
+import { workspaceQuery, teamQuery, auditQuery } from './list-query.js';
 
 export function createWorkspaceService({ store }) {
   return {
@@ -12,6 +12,7 @@ export function createWorkspaceService({ store }) {
     update: (auth, workspaceId, input) => store.update(auth.claims, objectId(workspaceId), workspaceFields(input, true)),
     members: (auth, workspaceId, query) => store.members(auth.claims, objectId(workspaceId), teamQuery(query)),
     role: (auth, workspaceId, memberId, input) => store.role(auth.claims, objectId(workspaceId), objectId(memberId), membershipRoleInput(input)),
+    audit: (auth, workspaceId, query) => store.audit(auth.claims, objectId(workspaceId), auditQuery(query)),
     roleAudit: (auth, workspaceId, query) => store.roleAudit(auth.claims, objectId(workspaceId), teamQuery(query, false, 'createdAt')),
     leave: (auth, workspaceId, input) => store.leave(auth.claims, objectId(workspaceId), versionInput(input)),
     remove: (auth, workspaceId, memberId, input) => store.remove(auth.claims, objectId(workspaceId), objectId(memberId), versionInput(input)),

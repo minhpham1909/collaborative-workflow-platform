@@ -1,7 +1,7 @@
 import indexPlans from './index-plan.json' with { type: 'json' };
 import { register } from './shared.js';
 import { userSchema, identitySchema, sessionSchema, authTokenSchema, authChallengeSchema } from './accounts.js';
-import { workspaceSchema, membershipSchema, invitationSchema, workspaceRoleAuditSchema, workspaceCreationSchema } from './workspaces.js';
+import { workspaceSchema, membershipSchema, invitationSchema, workspaceRoleAuditSchema, workspaceCreationSchema, workspaceManagementAuditSchema } from './workspaces.js';
 import { projectSchema, taskSchema, commentSchema, projectLabelSchema, taskActivitySchema } from './tasks.js';
 import { notificationSchema, outboxSchema } from './events.js';
 import { organizationSchema, organizationMembershipSchema, organizationAuditSchema, organizationInvitationSchema } from './organizations.js';
@@ -12,6 +12,7 @@ import { workspaceLifecycleAuditSchema, taskPurgeAuditSchema } from './retention
 
 // Self-contained runtime plan; tests check drift against the reviewed DB layout.
 const definitions = [
+  ['WorkspaceManagementAudit', workspaceManagementAuditSchema, 'workspace_management_audit'],
   ['WorkspaceCreation', workspaceCreationSchema, 'workspace_creations'],
   ['WorkspaceRoleAudit', workspaceRoleAuditSchema, 'workspace_role_audit'],
   ['WorkspaceLifecycleAudit', workspaceLifecycleAuditSchema, 'workspace_lifecycle_audit'], ['TaskPurgeAudit', taskPurgeAuditSchema, 'task_purge_audit'],
@@ -41,4 +42,4 @@ export const { AccessBan, ModerationAction } = models;
 export const { ProjectLabel, TaskActivity } = models;
 export const { TaskReopenRequest } = models;
 export const { WorkspaceLifecycleAudit, TaskPurgeAudit } = models;
-export const { WorkspaceCreation, WorkspaceRoleAudit } = models;
+export const { WorkspaceManagementAudit, WorkspaceCreation, WorkspaceRoleAudit } = models;

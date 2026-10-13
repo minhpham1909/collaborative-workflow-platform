@@ -16,8 +16,9 @@ const content = (value) => ({ ...emptyRichText(), document: { type: 'doc', conte
 const user = () => ({ displayName: 'Nguyễn An 👋', email: 'An@Example.com', termsAcceptance: { version: 'v1', acceptedAt: now } });
 const task = () => ({ workspaceId, projectId, createdBy: ownerId, title: 'Task mới', description: content('Tiếng Việt') });
 
-test('all 29 core models validate representative typed fixtures without DB', async () => {
+test('all 30 core models validate representative typed fixtures without DB', async () => {
   const fixtures = {
+    WorkspaceManagementAudit: { workspaceId, actorId: ownerId, action: 'created', versionScope: 'workspace', resourceVersion: 0 },
     WorkspaceCreation: { _id: hash, userId: ownerId, workspaceId, fingerprint: hash },
     WorkspaceRoleAudit: { workspaceId, actorId: ownerId, targetUserId: ownerId, previousRole: 'member', role: 'manager', reason: 'Appointment', membershipVersion: 1 },
     WorkspaceLifecycleAudit: { workspaceId, actorId: ownerId, previousState: "active", state: "archived", reason: "Đóng nhóm", resourceVersion: 1 },
@@ -44,7 +45,7 @@ test('all 29 core models validate representative typed fixtures without DB', asy
     Notification: { workspaceId, taskId, recipientId: ownerId, eventId: 'event-1', category: 'work', changes: ['assignment'] },
     EmailOutbox: { userId: ownerId, workspaceId, taskId, eventId: 'event-1', recipientKey: 'user:1', category: 'work', templateKey: 'task_changed', eventTypes: ['assignment'], nextAttemptAt: now },
   };
-  assert.equal(Object.keys(models).length, 29);
+  assert.equal(Object.keys(models).length, 30);
   for (const [name, fixture] of Object.entries(fixtures)) await new models[name](fixture).validate();
 });
 test('Google-only account allowed; defaults match approved email preferences; no email auto-link', async () => {
@@ -136,4 +137,12 @@ test('index names/keys, field references and version settings match reviewed des
     assert.equal(model.schema.options.versionKey, Object.hasOwn(plan.fields, 'version') ? 'version' : false);
     assert.equal(model.schema.options.autoIndex, false);
   }
+});
+
+test('Management audit rejects corrupt transitions and accidental sensitive payloads', async () => {
+  const base = { workspaceId, actorId: ownerId, action: 'role_changed', versionScope: 'membership', resourceVersion: 1, targetUserId: ownerId, previousRole: 'member', role: 'manager', reason: 'Appointment' };
+  await new models.WorkspaceManagementAudit(base).validate();
+  for (const patch of [{ targetUserId: null }, { previousRole: null }, { reason: null }, { versionScope: 'workspace' }, { changedFields: ['summary'] }]) await assert.rejects(new models.WorkspaceManagementAudit({ ...base, ...patch }).validate());
+  assert.throws(() => new models.WorkspaceManagementAudit({ ...base, token: 'secret' }), /not in schema/u);
+  await assert.rejects(new models.WorkspaceManagementAudit({ workspaceId, actorId: ownerId, action: 'metadata_updated', versionScope: 'workspace', resourceVersion: 2, changedFields: ['email'] }).validate());
 });

@@ -1373,6 +1373,46 @@
         "No TTL or automatic purge; retained minimal identity prevents replay duplication",
         "No Workspace metadata stored; readback checks current access"
       ]
+    },
+    {
+      "name": "workspace_management_audit",
+      "fields": {
+        "workspaceId": "ObjectId",
+        "actorId": "ObjectId",
+        "targetUserId": "ObjectId|null",
+        "invitationId": "ObjectId|null",
+        "action": "WorkspaceAuditAction",
+        "changedFields": "Workspace metadata field keys[] (no values)",
+        "previousRole": "owner|manager|member|null",
+        "role": "owner|manager|member|null",
+        "reason": "String|null <=2000",
+        "versionScope": "workspace|membership|invitation",
+        "resourceVersion": "Integer",
+        "createdAt": "Date",
+        "invitationType": "EMAIL|LINK|null (without recipient email/token)"
+      },
+      "references": {
+        "workspaceId": "workspaces",
+        "actorId": "users",
+        "targetUserId": "users",
+        "invitationId": "workspace_invitations"
+      },
+      "privateFields": [],
+      "indexes": [
+        {
+          "name": "workspace_management_history",
+          "keys": {
+            "workspaceId": 1,
+            "createdAt": -1,
+            "_id": -1
+          }
+        }
+      ],
+      "constraints": [
+        "Append-only records written atomically with standalone Workspace mutations",
+        "No raw invitation tokens/emails or metadata snapshots",
+        "Forward-only coverage: no synthetic backfill of legacy activity"
+      ]
     }
   ],
   "sharedTypes": {

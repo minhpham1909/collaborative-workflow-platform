@@ -527,5 +527,15 @@
       }
     }
   ],
-  "workspace_creations": []
+  "workspace_creations": [],
+  "workspace_management_audit": [
+    {
+      "name": "workspace_management_history",
+      "keys": {
+        "workspaceId": 1,
+        "createdAt": -1,
+        "_id": -1
+      }
+    }
+  ]
 }

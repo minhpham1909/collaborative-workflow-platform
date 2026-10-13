@@ -1,6 +1,13 @@
 import { inputObject } from "../auth/account-input.js";
 import { pageInput, fail } from "./input.js";
 import { searchPatterns, vietnamDay } from "../work/input.js";
+import { WORKSPACE_AUDIT_ACTIONS } from './audit-policy.js';
+export function auditQuery(query) {
+  inputObject(query, ['limit', 'cursor', 'q', 'from', 'to', 'action']);
+  const { action = 'all', ...rest } = query;
+  if (action !== 'all' && !WORKSPACE_AUDIT_ACTIONS.includes(action)) fail();
+  return { ...teamQuery(rest, false, 'createdAt'), action };
+}
 export function workspaceQuery(query) {
   inputObject(query, ["limit", "cursor", "q", "from", "to", "state", "role"]);
   const state = query.state ?? 'all', role = query.role ?? 'all';

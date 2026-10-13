@@ -1,4 +1,5 @@
 import { coreSchema, ref, integer, nullableDate, nullableString, digest, choice, singleLine, emailOverrides, richText, contentHook } from './shared.js';
+import { WORKSPACE_AUDIT_ACTIONS } from '../workspaces/audit-policy.js';
 import { canonicalEmail } from './accounts.js';
 import { WORKSPACE_ICONS, WORKSPACE_COLORS, WORKSPACE_COVERS, WORKSPACE_IDENTITY_DEFAULTS, validWorkspaceSummary } from '../workspaces/identity.js';
 
@@ -38,6 +39,29 @@ membershipSchema.pre('validate', function() {
   if (this.state === 'active' && (this.leftAt !== null || this.exitReason !== null)) this.invalidate('state', 'Active membership has no exit details');
   if (this.state === 'inactive' && (!this.leftAt || !this.exitReason)) this.invalidate('state', 'Inactive membership requires exit details');
   if (this.state === 'inactive' && this.emailOverrides && Object.values(this.emailOverrides.toObject()).some((value) => value !== 'inherit')) this.invalidate('emailOverrides', 'Leaving clears email overrides');
+});
+
+export const workspaceManagementAuditSchema = coreSchema({
+  workspaceId: { ...ref('Workspace'), immutable: true }, actorId: ref('User'),
+  targetUserId: ref('User', true), invitationId: ref('WorkspaceInvitation', true),
+  action: choice(WORKSPACE_AUDIT_ACTIONS),
+  invitationType: { type: String, enum: ['EMAIL', 'LINK', null], default: null },
+  changedFields: { type: [String], default: [], validate: value => value.length <= 6 && new Set(value).size === value.length && value.every(field => ['name', 'description', 'summary', 'icon', 'color', 'coverId'].includes(field)) },
+  previousRole: { type: String, enum: ['owner', 'manager', 'member', null], default: null },
+  role: { type: String, enum: ['owner', 'manager', 'member', null], default: null },
+  reason: { ...nullableString(2000), validate: value => value === null || Boolean(value.trim()) && !/[\u0000-\u001f\u007f\u2028\u2029]/u.test(value) },
+  versionScope: choice(['workspace', 'membership', 'invitation']), resourceVersion: integer(),
+}, { editable: false, updated: false });
+
+workspaceManagementAuditSchema.pre('validate', function() {
+  const invitation = ['invitation_created', 'invitation_revoked'].includes(this.action);
+  const membership = ['member_joined', 'member_left', 'member_removed', 'role_changed'].includes(this.action);
+  if (this.versionScope !== (invitation ? 'invitation' : membership ? 'membership' : 'workspace')) this.invalidate('versionScope', 'Event version scope mismatch');
+  if ((invitation || this.action === 'member_joined') && (!this.invitationId || !this.invitationType)) this.invalidate('invitationId', 'Invitation reference required');
+  if ((membership || this.action === 'ownership_transferred') && !this.targetUserId) this.invalidate('targetUserId', 'Member target required');
+  if (['role_changed', 'ownership_transferred'].includes(this.action) && (!this.previousRole || !this.role)) this.invalidate('role', 'Role transition required');
+  if (['role_changed', 'archived', 'unarchived'].includes(this.action) && !this.reason) this.invalidate('reason', 'Reason required');
+  if ((this.action === 'metadata_updated') !== (this.changedFields.length > 0)) this.invalidate('changedFields', 'Only metadata events have changed field keys');
 });
 
 export const workspaceRoleAuditSchema = coreSchema({

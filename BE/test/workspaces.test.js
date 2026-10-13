@@ -1,3 +1,4 @@
+import { auditQuery } from '../src/workspaces/list-query.js';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { workspaceFields, invitationInput, overridesInput, pageInput, transferInput, membershipRoleInput } from '../src/workspaces/input.js';
@@ -40,4 +41,11 @@ test('Invitation and membership DTOs enforce exact intent, bounded pagination an
   assert.equal(overridesInput({ expectedVersion: 0, emailOverrides: { assignment: 'off' } }).overrides.assignment, 'off');
   for (const query of [{ limit: '101' }, { limit: '1e2' }, { limit: ['20'] }, { cursor: 'bad-json' }, { cursor: '$where' }, { role: 'owner' }]) assert.throws(() => pageInput(query), /INVALID_INPUT/u);
   assert.throws(() => transferInput({ expectedVersion: 0, memberId: { $ne: null } }), /INVALID_INPUT/u);
+});
+
+test('Management history accepts only known actions and scoped bounded read filters', () => {
+  assert.equal(auditQuery({}).action, 'all');
+  const page = auditQuery({ action: 'member_joined', limit: '2', q: '[QA]', from: '2026-10-13', to: '2026-10-13' });
+  assert.equal(page.action, 'member_joined'); assert.equal(page.limit, 2); assert.equal(page.filters[0].createdAt.$gte.toISOString(), '2026-10-12T17:00:00.000Z');
+  for (const query of [{ action: 'ban' }, { action: { $ne: 'created' } }, { workspaceId: 'injected' }, { from: '2026-10-14', to: '2026-10-13' }, { cursor: 'malformed' }, { limit: '101' }]) assert.throws(() => auditQuery(query), /INVALID_INPUT/u);
 });

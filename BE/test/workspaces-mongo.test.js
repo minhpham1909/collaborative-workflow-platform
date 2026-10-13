@@ -4,7 +4,7 @@ import { randomBytes, randomUUID } from 'node:crypto';
 import { once } from 'node:events';
 import mongoose from 'mongoose';
 import { connectDatabase } from '../src/database.js';
-import { models, User, Session, Workspace, WorkspaceMembership, WorkspaceInvitation, Project, Task, TaskComment, EmailOutbox, Notification, WorkspaceRoleAudit, WorkspaceCreation } from '../src/models/index.js';
+import { models, User, Session, Workspace, WorkspaceMembership, WorkspaceInvitation, Project, Task, TaskComment, EmailOutbox, Notification, WorkspaceRoleAudit, WorkspaceCreation, WorkspaceManagementAudit, AccessBan, Organization, OrganizationMembership } from '../src/models/index.js';
 import { createWorkService } from '../src/work/service.js';
 import { createMongoWorkStore } from '../src/work/mongo-store.js';
 import { createModerationService } from '../src/moderation/service.js';
@@ -55,6 +55,7 @@ test('Workspace membership/invitation lifecycle on real MongoDB and HTTP', { ski
       const workspace = race[0].workspace; workspaceIds.push(new mongoose.Types.ObjectId(workspace.id));
       assert.equal(race[1].workspace.id, workspace.id);
       assert.equal(await Workspace.collection.countDocuments({ name: input.name }), 1);
+      assert.equal(await WorkspaceManagementAudit.collection.countDocuments({ workspaceId: new mongoose.Types.ObjectId(workspace.id), action: 'created' }), 1);
       assert.equal(await WorkspaceMembership.collection.countDocuments({ workspaceId: new mongoose.Types.ObjectId(workspace.id) }), 1);
       assert.equal((await service.create(identities[0], { ...input, summary: null, icon: 'folder', color: 'lavender', coverId: 'moodboard' })).workspace.id, workspace.id);
       await assert.rejects(service.create(identities[0], { ...input, name: 'Changed input' }), /WORKSPACE_CREATION_INPUT_MISMATCH/u);
@@ -71,6 +72,71 @@ test('Workspace membership/invitation lifecycle on real MongoDB and HTTP', { ski
       await assert.rejects(service.creation(identities[0], requestId, {}), /WORKSPACE_UNAVAILABLE/u);
       await assert.rejects(service.create(identities[0], input), /WORKSPACE_UNAVAILABLE/u);
       assert.equal(await Workspace.collection.countDocuments({ name: input.name }), 2);
+    });
+    await t.test('Management audit tracks atomic standalone events, filters/paging and fresh management rights', async () => {
+      const workspace = await create(`${prefix} Audit`), wsId = new mongoose.Types.ObjectId(workspace.id);
+      const changed = await service.update(identities[0], workspace.id, { expectedVersion: 0, summary: 'Private snapshot content', icon: 'palette' });
+      await service.update(identities[0], workspace.id, { expectedVersion: 1, summary: 'Private snapshot content', icon: 'palette' });
+      const invitation = await link(workspace); const token = raw(invitation);
+      await join(1, token); await join(2, token); await join(1, token);
+      await service.role(identities[0], workspace.id, String(users[2]._id), { expectedVersion: 0, role: 'manager', reason: 'Review steward' });
+      const managerFeed = await service.audit(identities[2], workspace.id, { limit: '2' });
+      assert.equal(managerFeed.total, 6); assert.equal(managerFeed.items.length, 2); assert.ok(managerFeed.nextCursor);
+      const ban = new AccessBan({ scopeType: 'workspace', scopeId: wsId, workspaceId: wsId, userId: users[2]._id, reason: 'Fixture ban', imposedBy: users[0]._id, imposedAt: new Date() }); await ban.save();
+      try { await assert.rejects(service.audit(identities[2], workspace.id, {}), /ACCESS_BANNED/u); }
+      finally { await AccessBan.collection.deleteOne({ _id: ban._id }); }
+      const next = await service.audit(identities[2], workspace.id, { limit: '2', cursor: managerFeed.nextCursor });
+      assert.equal(next.total, 6); assert.ok(next.items.every(row => !managerFeed.items.some(first => first.id === row.id)));
+      const meta = await service.audit(identities[0], workspace.id, { action: 'metadata_updated' });
+      assert.equal(meta.total, 1); assert.deepEqual(meta.items[0].changedFields, ['icon', 'summary']);
+      assert.equal(meta.items[0].resourceVersion, changed.workspace.version);
+      assert.ok(!JSON.stringify(await service.audit(identities[0], workspace.id, {})).includes('Private snapshot content'));
+      assert.ok(!JSON.stringify(managerFeed).includes('@example.com')); assert.ok(!JSON.stringify(managerFeed).includes(token));
+      assert.equal((await service.audit(identities[0], workspace.id, { q: 'Review steward', action: 'role_changed' })).total, 1);
+      const day = new Date(new Date(meta.items[0].createdAt).getTime() + 7 * 3600000).toISOString().slice(0, 10);
+      assert.equal((await service.audit(identities[0], workspace.id, { from: day, to: day })).total, 6);
+      await assert.rejects(service.audit(identities[1], workspace.id, {}), /OWNER_REQUIRED/u);
+      await assert.rejects(service.audit(identities[3], workspace.id, {}), /WORKSPACE_UNAVAILABLE/u);
+      assert.equal((await http(0, `/workspaces/${workspace.id}/audit?limit=1`)).status, 200);
+      assert.equal((await http(1, `/workspaces/${workspace.id}/audit`)).status, 403);
+      assert.equal((await http(3, `/workspaces/${workspace.id}/audit`)).status, 404);
+      assert.equal((await http(0, `/workspaces/${workspace.id}/audit?action=forged`)).status, 400);
+      assert.equal((await http(0, `/workspaces/${workspace.id}/audit?ownerId=forged`)).status, 400);
+      // A journal write failure must roll back the business mutation, not leave a gap.
+      const originalSave = WorkspaceManagementAudit.prototype.save;
+      try {
+        WorkspaceManagementAudit.prototype.save = async function() { throw Error('AUDIT_TEST_FAILURE'); };
+        await assert.rejects(service.update(identities[0], workspace.id, { expectedVersion: 1, name: 'Must roll back' }), /AUDIT_TEST_FAILURE/u);
+      } finally { WorkspaceManagementAudit.prototype.save = originalSave; }
+      assert.equal((await service.get(identities[0], workspace.id)).workspace.name, workspace.name);
+      assert.equal((await service.get(identities[0], workspace.id)).workspace.version, 1);
+      await service.leave(identities[1], workspace.id, { expectedVersion: 0 }); await service.leave(identities[1], workspace.id, { expectedVersion: 1 });
+      await join(1, token); await service.remove(identities[2], workspace.id, String(users[1]._id), { expectedVersion: 2 });
+      await service.transfer(identities[0], workspace.id, { expectedVersion: 1, memberId: String(users[2]._id) });
+      await assert.rejects(service.audit(identities[0], workspace.id, {}), /OWNER_REQUIRED/u);
+      await service.state(identities[2], workspace.id, { expectedVersion: 2, state: 'archived', confirmName: workspace.name, reason: 'Close fixture' });
+      assert.equal((await service.audit(identities[2], workspace.id, { action: 'archived' })).total, 1);
+      await service.state(identities[2], workspace.id, { expectedVersion: 3, state: 'active', confirmName: workspace.name, reason: 'Open fixture' });
+      await service.revoke(identities[2], workspace.id, invitation.invitation.id, { expectedVersion: 0 });
+      await service.revoke(identities[2], workspace.id, invitation.invitation.id, { expectedVersion: 1 });
+      const feed = await service.audit(identities[2], workspace.id, { limit: '100' });
+      assert.equal(feed.total, 13); assert.equal(feed.items.length, 13);
+      assert.equal(feed.items.find(row => row.action === 'member_joined').invitationType, 'LINK');
+      assert.equal(feed.items.find(row => row.action === 'invitation_revoked').invitationType, 'LINK');
+      assert.deepEqual(new Set(feed.items.map(row => row.action)), new Set(['created', 'metadata_updated', 'invitation_created', 'invitation_revoked', 'member_joined', 'member_left', 'member_removed', 'role_changed', 'ownership_transferred', 'archived', 'unarchived']));
+      // Pure reads and rejected changes do not manufacture activity.
+      assert.equal(await WorkspaceManagementAudit.collection.countDocuments({ workspaceId: wsId }), 13);
+      const org = new Organization({ ownerId: users[0]._id, name: 'Audit transition fixture' }); await org.save();
+      try {
+        await new OrganizationMembership({ organizationId: org._id, userId: users[0]._id, joinedAt: new Date() }).save();
+        const attached = new Workspace({ organizationId: org._id, managerId: users[0]._id, name: 'Attached audit fixture' }); await attached.save(); workspaceIds.push(attached._id);
+        await assert.rejects(service.audit(identities[0], String(attached._id), {}), /WORKSPACE_AUDIT_MODE_UNAVAILABLE/u);
+        await service.update(identities[0], String(attached._id), { expectedVersion: 0, summary: 'Attached change' });
+        assert.equal(await WorkspaceManagementAudit.collection.countDocuments({ workspaceId: attached._id }), 0);
+      } finally {
+        await OrganizationMembership.collection.deleteMany({ organizationId: org._id }); await Organization.collection.deleteOne({ _id: org._id });
+      }
+      await WorkspaceMembership.collection.deleteMany({ workspaceId: wsId }); // Isolate fixture from later all-Workspace assertions.
     });
     await t.test('Multiple standalone Managers are Owner-appointed, scoped, protected and lose privileges on demotion/exit', async () => {
       const workspace = await create(`${prefix} Roles`), workspaceId = new mongoose.Types.ObjectId(workspace.id);
@@ -402,7 +468,7 @@ test('Workspace membership/invitation lifecycle on real MongoDB and HTTP', { ski
     });
   } finally {
     if (server) await new Promise((resolve) => server.close(resolve));
-    for (const model of [Notification, EmailOutbox, Task, Project, WorkspaceInvitation, WorkspaceMembership, WorkspaceRoleAudit, WorkspaceCreation]) await model.collection.deleteMany({ workspaceId: { $in: workspaceIds } });
+    for (const model of [Notification, EmailOutbox, Task, Project, WorkspaceInvitation, WorkspaceMembership, WorkspaceRoleAudit, WorkspaceCreation, WorkspaceManagementAudit]) await model.collection.deleteMany({ workspaceId: { $in: workspaceIds } });
     await Workspace.collection.deleteMany({ _id: { $in: workspaceIds } });
     await Session.collection.deleteMany({ userId: { $in: users.map((value) => value._id) } });
     await User.collection.deleteMany({ _id: { $in: users.map((value) => value._id) } });
