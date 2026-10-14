@@ -5,7 +5,7 @@ registerHistoricalWorkspaceFixture(historicalWorkspace);
 import express from 'express';
 import mongoose from 'mongoose';
 import {createApp as createRuntimeApp} from '../src/app.js';
-import {createOrganizationRouter,createOrganizationInvitationRouter} from '../src/organizations/http.js';
+import {createOrganizationRouter,createOrganizationInvitationRouter} from './organizations/http.js';
 import {createModerationRouter} from '../src/moderation/http.js';
 export function createApp(options){
  if(!/^workflow_.*_test$/u.test(mongoose.connection.name??'')||!['127.0.0.1','localhost','::1'].includes(mongoose.connection.host))throw Error('LEGACY_FIXTURE_TEST_DATABASE_REQUIRED');

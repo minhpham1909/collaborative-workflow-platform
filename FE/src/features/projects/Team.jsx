@@ -13,7 +13,7 @@ import WorkspaceModeration, { BanDialog } from './WorkspaceModeration.jsx';
 import WorkspaceRoleDialog from './WorkspaceRoleDialog.jsx';
 import WorkspaceRoleAudit from './WorkspaceRoleAudit.jsx';
 import { workspaceRoleLabel } from '../../lib/ui-copy.js';
-import '../../features/organizations/team.css';
+import './shared-team.css';
 import './team.css';
 import Avatar from "../../components/Avatar.jsx";
 import { messageFor } from "../../lib/messages.js";

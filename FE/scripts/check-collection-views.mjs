@@ -110,5 +110,5 @@ try {
   // Account defaults remain separate despite Owner preferences in another context.
   await guest.goto(feOrigin+'/#home');await guest.locator('.collection-view button').first().waitFor();assert.equal(await guest.locator('.collection-view button').first().getAttribute('aria-pressed'),'true');
   assert.deepEqual(errors,[]);console.log('PASS M3b '+theme+'/'+language+': Workspace-only collection modes, same items/query, account-local reload, second account defaults, list layouts/5 widths, Guest Shared; fixtures only.');
-}catch(error){if(browser)for(const context of browser.contexts())for(const page of context.pages()){await page.screenshot({path:out+'/failure.png',fullPage:true});console.log((await page.locator('main').innerText()).slice(-1000));}throw error;}
+}catch(error){if(browser)for(const context of browser.contexts())for(const page of context.pages()){await page.screenshot({path:out+'/failure.png',fullPage:true});const main=page.locator('main');if(await main.count())console.log((await main.innerText({timeout:1000})).slice(-1000));}throw error;}
 finally{await browser?.close();if(server)await new Promise(resolve=>server.close(resolve));await mongoose.disconnect();await repl?.stop();}

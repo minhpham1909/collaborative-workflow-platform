@@ -18,8 +18,6 @@ const {createWorkspaceService}=await import('../../BE/src/workspaces/service.js'
 const {createMongoWorkspaceStore}=await import('../../BE/src/workspaces/mongo-store.js');
 const {createWorkService}=await import('../../BE/src/work/service.js');
 const {createMongoWorkStore}=await import('../../BE/src/work/mongo-store.js');
-const {createOrganizationService}=await import('../../BE/src/organizations/service.js');
-const {createMongoOrganizationStore}=await import('../../BE/src/organizations/mongo-store.js');
 const {createNotificationsService}=await import('../../BE/src/notifications/service.js');
 const {createMongoNotificationsStore}=await import('../../BE/src/notifications/mongo-store.js');
 const {cutoffCodec}=await import('../../BE/src/notifications/input.js');
@@ -30,7 +28,7 @@ try {
   repl=await MongoMemoryReplSet.create({binary:{version:'8.0.17',downloadDir:fileURLToPath(new URL('../../.local/mongodb-binaries/',import.meta.url))},instanceOpts:[{launchTimeout:30000}],replSet:{count:1,storageEngine:'wiredTiger',ip:'127.0.0.1'}});
   await mongoose.connect(repl.getUri('workflow_fe_stitch_my_tasks_test'));for(const model of Object.values(models))await model.createIndexes();
   const config={...testConfig(),webOrigin:'http://localhost:5173',secureCookies:false},password='My Tasks browser fixture password',hash=await hashPassword(password);
-  const auth=await createAuthService({store:createMongoAuthStore(),config}),usersService=createUsersService({store:createMongoUsersStore()}),workspaces=createWorkspaceService({store:createMongoWorkspaceStore({config})}),work=createWorkService({store:createMongoWorkStore({config})}),organizations=createOrganizationService({store:createMongoOrganizationStore({config})});
+  const auth=await createAuthService({store:createMongoAuthStore(),config}),usersService=createUsersService({store:createMongoUsersStore()}),workspaces=createWorkspaceService({store:createMongoWorkspaceStore({config})}),work=createWorkService({store:createMongoWorkStore({config})});
   const cutoff=cutoffCodec(config.accessKeyHex),notificationsService=createNotificationsService({store:createMongoNotificationsStore({cutoff}),cutoff});
   const users=[],auths=[];for(let i=0;i<3;i++){const user=new User({email:`mine-ui-${i}@example.com`,displayName:['Minh','Lan','Hải'][i],passwordHash:hash,emailVerifiedAt:new Date(),termsAcceptance:{version:'test',acceptedAt:new Date()}});await user.save();users.push(user);auths.push(await auth.authenticate((await auth.login({email:user.email,password})).accessToken));}
   const ws=(await workspaces.create(auths[0],{name:'Sáng Tạo Studio'})).workspace,other=(await workspaces.create(auths[0],{name:'Sản phẩm & Kỹ thuật'})).workspace;
@@ -45,7 +43,7 @@ try {
   let done=(await work.createTask(auths[0],project.id,{title:'Bộ nhận diện hoàn thành',assigneeId:users[1].id,dueAt:past})).task;done=(await work.status(auths[0],done.id,{expectedVersion:done.version,status:'done'})).task;
   await work.createTask(auths[0],project.id,{title:'Hidden unassigned'});await work.createTask(auths[0],project.id,{title:'Hidden other assignee',assigneeId:users[0].id});
   const archivedProject=(await work.createProject(auths[0],ws.id,{name:'Tài liệu cũ'})).project;await work.createTask(auths[0],archivedProject.id,{title:'Công việc trong dự án lưu trữ',assigneeId:users[1].id});await work.state(auths[0],archivedProject.id,{state:'archived',expectedVersion:archivedProject.version});
-  function app(){return createApp({authService:auth,authConfig:config,usersService,workspaceService:workspaces,workService:work,organizationService:organizations,notificationsService});}
+  function app(){return createApp({authService:auth,authConfig:config,usersService,workspaceService:workspaces,workService:work,notificationsService});}
   async function rotate(){if(server)await new Promise(resolve=>server.close(resolve));server=app().listen(0,'127.0.0.1');await once(server,'listening');origin=`http://127.0.0.1:${server.address().port}`;}
   await rotate();browser=await chromium.launch({executablePath:process.env.WORKFLOW_BROWSER_EXECUTABLE,headless:true});
   const context=await browser.newContext({viewport:{width:1440,height:1000}});let fail=false,delay=false;const reads=[];

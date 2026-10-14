@@ -1,4 +1,4 @@
-import { AuthError } from '../auth/errors.js';
+import { AuthError } from '../../src/auth/errors.js';
 
 const same = (a, b) => a != null && b != null && String(a) === String(b);
 export function organizationAccess(organization, membership, userId, { manage = false } = {}) {

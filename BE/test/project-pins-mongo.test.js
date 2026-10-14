@@ -14,8 +14,8 @@ import {createWorkspaceService} from '../src/workspaces/service.js';
 import {createMongoWorkspaceStore} from '../src/workspaces/mongo-store.js';
 import {createWorkService} from '../src/work/service.js';
 import {createMongoWorkStore} from '../src/work/mongo-store.js';
-import {createOrganizationService} from '../src/organizations/service.js';
-import {createMongoOrganizationStore} from '../src/organizations/mongo-store.js';
+import {createOrganizationService} from '../test-support/organizations/service.js';
+import {createMongoOrganizationStore} from '../test-support/organizations/mongo-store.js';
 import {testConfig} from '../test-support/auth-store.js';
 test('personal Project pins: HTTP isolation, current permissions, archive, ban, removal and concurrent cap', {skip:!process.env.TEST_MONGODB_URI,timeout:120000}, async t=>{
  assert.equal(new URL(process.env.TEST_MONGODB_URI).pathname,'/workflow_auth_test');

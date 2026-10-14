@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 import { readConfig } from '../src/config.js';
 import { connectDatabase } from '../src/database.js';
-import { auditOrganizationScope } from '../src/organizations/scope-audit.js';
+import { auditOrganizationScope } from '../test-support/organizations/scope-audit.js';
 
 try {
   const config = readConfig();

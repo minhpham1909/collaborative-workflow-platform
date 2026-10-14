@@ -21,8 +21,6 @@ const {createWorkspaceService}=await import('../../BE/src/workspaces/service.js'
 const {createMongoWorkspaceStore}=await import('../../BE/src/workspaces/mongo-store.js');
 const {createWorkService}=await import('../../BE/src/work/service.js');
 const {createMongoWorkStore}=await import('../../BE/src/work/mongo-store.js');
-const {createOrganizationService}=await import('../../BE/src/organizations/service.js');
-const {createMongoOrganizationStore}=await import('../../BE/src/organizations/mongo-store.js');
 const {createNotificationsService}=await import('../../BE/src/notifications/service.js');
 const {createMongoNotificationsStore}=await import('../../BE/src/notifications/mongo-store.js');
 const {cutoffCodec}=await import('../../BE/src/notifications/input.js');
@@ -33,12 +31,12 @@ try {
   repl=await MongoMemoryReplSet.create({binary:{version:'8.0.17',downloadDir:fileURLToPath(new URL('../../.local/mongodb-binaries/',import.meta.url))},instanceOpts:[{launchTimeout:30000}],replSet:{count:1,storageEngine:'wiredTiger',ip:'127.0.0.1'}});
   await mongoose.connect(repl.getUri('workflow_fe_stitch_settings_test'));for(const model of Object.values(models))await model.createIndexes();
   const config={...testConfig(),webOrigin:'http://localhost:5173',secureCookies:false},password='My Tasks browser fixture password',hash=await hashPassword(password);
-  const auth=await createAuthService({store:createMongoAuthStore(),config}),usersService=createUsersService({store:createMongoUsersStore()}),workspaces=createWorkspaceService({store:createMongoWorkspaceStore({config})}),work=createWorkService({store:createMongoWorkStore({config})}),organizations=createOrganizationService({store:createMongoOrganizationStore({config})});
+  const auth=await createAuthService({store:createMongoAuthStore(),config}),usersService=createUsersService({store:createMongoUsersStore()}),workspaces=createWorkspaceService({store:createMongoWorkspaceStore({config})}),work=createWorkService({store:createMongoWorkStore({config})});
   const cutoff=cutoffCodec(config.accessKeyHex),notificationsService=createNotificationsService({store:createMongoNotificationsStore({cutoff}),cutoff});
   const users=[],auths=[],sessions=[];for(let i=0;i<4;i++){const user=new User({email:'settings-ui-'+i+'@example.com',displayName:['Minh','Lan','Hải Google','Bình chưa xác minh'][i],passwordHash:hash,emailVerifiedAt:i===3?null:new Date(),termsAcceptance:{version:'test',acceptedAt:new Date()}});await user.save();users.push(user);const login=await auth.login({email:user.email,password});sessions.push(login);auths.push(await auth.authenticate(login.accessToken));}
   await User.collection.updateOne({_id:users[2]._id},{$set:{passwordHash:null}});await AuthIdentity.create({userId:users[2].id,provider:'google',providerSubject:'fixture-google-only',lastLoginAt:new Date()});
   const accountsService=createAccountsService({store:createMongoAccountStore(),config,verifyGoogle:async credential=>({subject:'fixture-linked-'+credential,email:credential==='wrong-email'?users[0].email:users[1].email,displayName:'Lan Google',authoritativeEmail:true,picture:null})});
-  function app(){return createApp({authService:auth,authConfig:config,accountsService,usersService,workspaceService:workspaces,workService:work,organizationService:organizations,notificationsService});}
+  function app(){return createApp({authService:auth,authConfig:config,accountsService,usersService,workspaceService:workspaces,workService:work,notificationsService});}
   async function rotate(){if(server)await new Promise(resolve=>server.close(resolve));server=app().listen(0,'127.0.0.1');await once(server,'listening');origin='http://127.0.0.1:'+server.address().port;}
   await rotate();browser=await chromium.launch({executablePath:process.env.WORKFLOW_BROWSER_EXECUTABLE,headless:true});
   let failMe=false,lostProfile=false,lostLink=false,profileWrites=0,linkWrites=0,passwordWrites=0;

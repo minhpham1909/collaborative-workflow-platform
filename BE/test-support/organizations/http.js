@@ -1,7 +1,7 @@
 import express from 'express';
-import { AuthError } from '../auth/errors.js';
-import { requireAuthentication, createRateLimiter } from '../auth/http.js';
-import { originPolicy, requestError } from '../http/policy.js';
+import { AuthError } from '../../src/auth/errors.js';
+import { requireAuthentication, createRateLimiter } from '../../src/auth/http.js';
+import { originPolicy, requestError } from '../../src/http/policy.js';
 
 export function createOrganizationRouter({ service, authService, config }) {
   const router = express.Router({ caseSensitive: true, strict: true });

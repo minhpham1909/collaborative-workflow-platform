@@ -177,8 +177,8 @@ test('C4 reopen approval and Project statistics', { skip: !process.env.TEST_MONG
       let task = (await work.createTask(claims[1], p.id, { title: 'Remove request' })).task;
       task = (await work.status(claims[1], task.id, { expectedVersion: task.version, status: 'done' })).task;
       const pending = (await request(task)).request;
-      const { createOrganizationService } = await import('../src/organizations/service.js');
-      const { createMongoOrganizationStore } = await import('../src/organizations/mongo-store.js');
+      const { createOrganizationService } = await import('../test-support/organizations/service.js');
+      const { createMongoOrganizationStore } = await import('../test-support/organizations/mongo-store.js');
       const organizations = createOrganizationService({ store: createMongoOrganizationStore({ config, now: () => clock }) });
       const membership = await OrganizationMembership.collection.findOne({ organizationId: org._id, userId: users[1]._id });
       await organizations.leave(claims[1], String(org._id), { expectedVersion: membership.version });

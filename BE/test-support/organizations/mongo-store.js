@@ -1,20 +1,20 @@
-import {historicalWorkspaceFixture} from '../workspaces/access.js';
+import {historicalWorkspaceFixture} from '../../src/workspaces/access.js';
 import mongoose from 'mongoose';
-import { queryWorkspaceList } from '../workspaces/query-store.js';
-import { cancelReopenRequests, reconcileReopenRequests } from '../work/reopen-lifecycle.js';
-import { assertWorkspaceWritable } from '../workspaces/lifecycle.js';
+import { queryWorkspaceList } from '../../src/workspaces/query-store.js';
+import { cancelReopenRequests, reconcileReopenRequests } from '../../src/work/reopen-lifecycle.js';
+import { assertWorkspaceWritable } from '../../src/workspaces/lifecycle.js';
 import { randomUUID, randomBytes } from 'node:crypto';
-import { User, Session, Organization, OrganizationMembership, OrganizationAudit, OrganizationInvitation, Workspace, WorkspaceMembership, Notification, EmailOutbox, Task, ProjectGuest } from '../models/index.js';
-import { AuthError } from '../auth/errors.js';
+import { User, Session, Organization, OrganizationMembership, OrganizationAudit, OrganizationInvitation, Workspace, WorkspaceMembership, Notification, EmailOutbox, Task, ProjectGuest } from '../../src/models/index.js';
+import { AuthError } from '../../src/auth/errors.js';
 import { organizationAccess } from './access.js';
 import { assertOrganizationIndexes, assertOrganizationInvitationIndexes } from './index-check.js';
-import { paged } from '../workspaces/response.js';
-import { workspaceResponse } from '../workspaces/response.js';
+import { paged } from '../../src/workspaces/response.js';
+import { workspaceResponse } from '../../src/workspaces/response.js';
 import { workspaceAccess, workspaceAccessStages } from './workspace-access.js';
-import { tokenHash } from '../auth/tokens.js';
-import { createDeliveryCrypto } from '../auth/delivery-crypto.js';
-import { assertNotBanned, banFilterStages } from '../moderation/guard.js';
-import { invitationState } from '../workspaces/response.js';
+import { tokenHash } from '../../src/auth/tokens.js';
+import { createDeliveryCrypto } from '../../src/auth/delivery-crypto.js';
+import { assertNotBanned, banFilterStages } from '../../src/moderation/guard.js';
+import { invitationState } from '../../src/workspaces/response.js';
 
 const id = value => new mongoose.Types.ObjectId(value);
 const response = (organization, role) => ({ id: String(organization._id), name: organization.name,
@@ -22,6 +22,7 @@ const response = (organization, role) => ({ id: String(organization._id), name: 
   permissions: { createWorkspace: ['owner', 'admin'].includes(role), edit: ['owner', 'admin'].includes(role) },
   createdAt: organization.createdAt, updatedAt: organization.updatedAt });
 export function createMongoOrganizationStore({ now = () => new Date(), config } = {}) {
+  if(!historicalWorkspaceFixture())throw new AuthError('ORGANIZATIONS_RETIRED',410);
   async function actor(claims, tx) {
     const user = await User.collection.findOneAndUpdate({ _id: id(claims.sub) }, { $inc: { authMutationRevision: 1 } }, { session: tx, returnDocument: 'after' });
     if (!user || user.authVersion !== claims.av || !await Session.collection.findOne({

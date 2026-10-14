@@ -5,8 +5,8 @@ import { once } from 'node:events';
 import mongoose from 'mongoose';
 import { connectDatabase } from '../src/database.js';
 import { models, User, Session, Organization, OrganizationMembership, OrganizationAudit, Workspace, WorkspaceMembership, Project, Task, TaskComment, Notification, EmailOutbox } from '../src/models/index.js';
-import { createOrganizationService } from '../src/organizations/service.js';
-import { createMongoOrganizationStore } from '../src/organizations/mongo-store.js';
+import { createOrganizationService } from '../test-support/organizations/service.js';
+import { createMongoOrganizationStore } from '../test-support/organizations/mongo-store.js';
 import { createApp } from '../test-support/legacy-organizations.js';
 import { createWorkService } from '../src/work/service.js';
 import { createMongoWorkStore } from '../src/work/mongo-store.js';
@@ -17,7 +17,7 @@ import { cutoffCodec } from '../src/notifications/input.js';
 import { createNotificationsService } from '../src/notifications/service.js';
 import { createMongoNotificationsStore } from '../src/notifications/mongo-store.js';
 import { dispatchWorkMail } from '../src/mail/work-mail.js';
-import { auditOrganizationScope } from '../src/organizations/scope-audit.js';
+import { auditOrganizationScope } from '../test-support/organizations/scope-audit.js';
 
 test('Organization transactional scope and HTTP on isolated MongoDB', { skip: !process.env.TEST_MONGODB_URI, timeout: 90_000 }, async t => {
   assert.equal(new URL(process.env.TEST_MONGODB_URI).pathname.slice(1), 'workflow_auth_test');

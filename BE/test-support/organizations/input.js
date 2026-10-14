@@ -1,6 +1,6 @@
-import { inputObject, emailInput } from '../auth/account-input.js';
-import { pageInput } from '../workspaces/input.js';
-import { searchPatterns, vietnamDay } from '../work/input.js';
+import { inputObject, emailInput } from '../../src/auth/account-input.js';
+import { pageInput } from '../../src/workspaces/input.js';
+import { searchPatterns, vietnamDay } from '../../src/work/input.js';
 
 export function organizationQuery(query) {
   inputObject(query, ['limit', 'cursor', 'q', 'from', 'to', 'role']);
@@ -12,7 +12,7 @@ export function organizationQuery(query) {
   if (from || to) filters.push({ createdAt: { ...(from ? { $gte: from } : {}), ...(to ? { $lt: new Date(to.getTime() + 86400_000) } : {}) } });
   return { ...pageInput({ limit: query.limit, cursor: query.cursor }), filters, role };
 }
-import { objectId, expectedVersion, fail } from '../workspaces/input.js';
+import { objectId, expectedVersion, fail } from '../../src/workspaces/input.js';
 
 export function roleInput(input) {
   inputObject(input, ['role', 'expectedVersion']);

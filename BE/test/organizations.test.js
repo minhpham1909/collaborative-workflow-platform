@@ -1,15 +1,15 @@
 import { test } from 'node:test';
-import { organizationQuery } from '../src/organizations/input.js';
+import { organizationQuery } from '../test-support/organizations/input.js';
 import assert from 'node:assert/strict';
 import { OrganizationMembership, Workspace } from '../src/models/index.js';
-import { organizationAccess } from '../src/organizations/access.js';
-import { createOrganizationService } from '../src/organizations/service.js';
+import { organizationAccess } from '../test-support/organizations/access.js';
+import { createOrganizationService } from '../test-support/organizations/service.js';
 test('Organization directory query is scoped/typed and rejects fake roles or tenant injection', () => {
   assert.equal(organizationQuery({}).role, 'all');
   assert.equal(organizationQuery({ q: 'Studio', role: 'admin', from: '2026-10-07' }).role, 'admin');
   for (const query of [{ role: 'guest' }, { role: ['admin'] }, { organizationId: 'a'.repeat(24) }, { state: 'archived' }, { from: '2026-02-30' }]) assert.throws(() => organizationQuery(query), /INVALID_INPUT/u);
 });
-import { roleInput, managerInput, memberInput, organizationInvitationInput } from '../src/organizations/input.js';
+import { roleInput, managerInput, memberInput, organizationInvitationInput } from '../test-support/organizations/input.js';
 
 const org = { _id: '111111111111111111111111', ownerId: '222222222222222222222222' };
 const member = { organizationId: org._id, userId: org.ownerId, role: 'member', state: 'active' };

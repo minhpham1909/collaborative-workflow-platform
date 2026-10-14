@@ -1,8 +1,8 @@
-import { workspaceFields, objectId, pageInput, transferInput, versionInput, invitationToken } from '../workspaces/input.js';
-import { inputObject } from '../auth/account-input.js';
-import { teamQuery } from '../workspaces/list-query.js';
+import { workspaceFields, objectId, pageInput, transferInput, versionInput, invitationToken } from '../../src/workspaces/input.js';
+import { inputObject } from '../../src/auth/account-input.js';
+import { teamQuery } from '../../src/workspaces/list-query.js';
 import { roleInput, managerInput, memberInput, organizationInvitationInput, organizationQuery } from './input.js';
-import { workspaceQuery } from '../workspaces/list-query.js';
+import { workspaceQuery } from '../../src/workspaces/list-query.js';
 
 export function createOrganizationService({ store }) {
   // Only name in C1; rich description belongs to a separately reviewed contract.

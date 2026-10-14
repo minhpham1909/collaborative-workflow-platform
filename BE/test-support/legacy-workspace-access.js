@@ -1,6 +1,6 @@
 import { Organization, OrganizationMembership, WorkspaceMembership } from '../src/models/index.js';
 import { AuthError } from '../src/auth/errors.js';
-import { organizationAccess } from '../src/organizations/access.js';
+import { organizationAccess } from './organizations/access.js';
 import { assertNotBanned, banFilterStages } from '../src/moderation/guard.js';
 
 const same = (a, b) => a != null && b != null && String(a) === String(b);

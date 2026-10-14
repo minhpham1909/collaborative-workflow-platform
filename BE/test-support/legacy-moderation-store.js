@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 import { cancelReopenRequests } from '../src/work/reopen-lifecycle.js';
 import { User, Session, Organization, OrganizationMembership, OrganizationInvitation, Workspace, WorkspaceMembership, WorkspaceInvitation, Project, ProjectGuest, ProjectGuestInvitation, Task, TaskComment, EmailOutbox, AccessBan, ModerationAction } from '../src/models/index.js';
 import { AuthError } from '../src/auth/errors.js';
-import { organizationAccess } from '../src/organizations/access.js';
+import { organizationAccess } from './organizations/access.js';
 import { workspaceAccess } from '../src/workspaces/access.js';
 import { projectAccess } from '../src/work/project-access.js';
 import { assertNotBanned } from '../src/moderation/guard.js';
