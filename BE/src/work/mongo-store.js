@@ -1,11 +1,12 @@
+import {commentPermissions} from './comment-permissions.js';
 import {profileState} from './profile-state.js';
 import mongoose from 'mongoose';
 import { randomUUID } from 'node:crypto';
-import { User, Session, Workspace, WorkspaceMembership, Project, Task, TaskComment, Notification, EmailOutbox, ProjectAccessAudit, ProjectGuest, ModerationAction, OrganizationMembership, ProjectLabel, TaskActivity, TaskReopenRequest, AccessBan } from '../models/index.js';
+import { User, Session, Workspace, WorkspaceMembership, Project, Task, TaskComment, Notification, EmailOutbox, ProjectAccessAudit, ProjectGuest, OrganizationMembership, ProjectLabel, TaskActivity, TaskReopenRequest, AccessBan } from '../models/index.js';
 import { AuthError } from '../auth/errors.js';
 import { sameId, paged } from '../workspaces/response.js';
 import { statuses } from './input.js';
-import { workspaceAccess, workspaceAccessStages } from '../workspaces/access.js';
+import { workspaceAccess, workspaceAccessStages, historicalWorkspaceFixture } from '../workspaces/access.js';
 import { projectAccess, projectGuestParentStages } from './project-access.js';
 import { createMongoProjectGuestStore } from './guest-store.js';
 import { bannedProjectIds, banFilterStages, assertNotBanned } from '../moderation/guard.js';
@@ -21,7 +22,6 @@ import { createHomeStore } from './home-store.js';
 const id = (value) => new mongoose.Types.ObjectId(value);
 const deny = (code = 'RESOURCE_UNAVAILABLE', status = 404) => { throw new AuthError(code, status); };
 const owner = (context) => context.access?.canManage ?? sameId(context.workspace.ownerId, context.user._id);
-const commentModerator = context => owner(context) && !(!context.workspace.organizationId && context.access.role === 'manager');
 const editor = (context) => !context.guest && (owner(context) || sameId(context.task.createdBy, context.user._id));
 const checkVersion = (value, version) => { if (value.version !== version) deny('VERSION_CONFLICT', 409); };
 const after = (page) => page.after.$or ? { $or: page.after.$or.map((part) => part._id ? { ...part, _id: { $lt: id(part._id.$lt) } } : part) } : {};
@@ -118,7 +118,7 @@ export function createMongoWorkStore({ now = () => new Date(), config } = {}) {
     const person = await User.collection.findOne({ _id: userId }, { session: context.tx, projection: { displayName: 1, avatar: 1 } });
     const result={ id: key, displayName: person?.displayName ?? 'Người dùng không còn khả dụng', avatar: person?.avatar ?? { source: 'initials', googlePictureUrl: null } };context.identities.set(key,result);return result;
   }
-  const commentResponse = async (value, context) => ({ id: String(value._id), taskId: String(value.taskId), authorId: String(value.authorId), author: await identity(value.authorId, context), content: value.content, version: value.version, createdAt: value.createdAt, updatedAt: value.updatedAt, permissions: { edit: !projectReadOnly(context.workspace, context.project) && sameId(value.authorId, context.user._id), delete: commentModerator(context) || (!projectReadOnly(context.workspace, context.project) && sameId(value.authorId, context.user._id)), moderate: commentModerator(context) && (projectReadOnly(context.workspace, context.project) || !sameId(value.authorId, context.user._id)) } });
+  const commentResponse = async (value, context) => ({ id: String(value._id), taskId: String(value.taskId), authorId: String(value.authorId), author: await identity(value.authorId, context), content: value.content, version: value.version, createdAt: value.createdAt, updatedAt: value.updatedAt, permissions: commentPermissions(value,context) });
   async function taskResponse(value, context) {
     await reconcileReopenRequests({ taskId: value._id }, now(), context.tx);
     const pending = context.guest ? null : await TaskReopenRequest.collection.findOne({ taskId: value._id, state: 'pending' }, { session: context.tx, projection: { _id: 1, requesterId: 1 } });
@@ -519,21 +519,18 @@ export function createMongoWorkStore({ now = () => new Date(), config } = {}) {
       return { comment: await commentResponse(comment.toObject(), context) };
     }),
     changeComment: (claims, taskId, commentId, input, deleting = false) => run(claims, async (context) => {
-      context = await taskScope(context, taskId, !deleting);
+      const historical=historicalWorkspaceFixture();
+      context = await taskScope(context, taskId, historical ? !deleting : true);
       const comment = await TaskComment.collection.findOne({ _id: id(commentId), taskId: context.task._id, workspaceId: context.workspace._id, deletedAt: null }, { session: context.tx });
       if (!comment) deny();
       const own = sameId(comment.authorId, context.user._id);
-      if (!deleting && !own) deny('COMMENT_AUTHOR_REQUIRED', 403);
+      if ((!historical || !deleting) && !own) deny('COMMENT_AUTHOR_REQUIRED', 403);
       checkVersion(comment, input.expectedVersion);
       if (deleting) {
-        const authorDelete = own && !projectReadOnly(context.workspace, context.project);
-        if (!authorDelete && !commentModerator(context)) deny(projectReadOnly(context.workspace, context.project) ? context.workspace.state === 'archived' ? 'WORKSPACE_ARCHIVED' : 'PROJECT_ARCHIVED' : 'COMMENT_AUTHOR_REQUIRED', projectReadOnly(context.workspace, context.project) ? 409 : 403);
-        if (!authorDelete && !input.reason) deny('MODERATION_REASON_REQUIRED', 400);
+        if(historical)historical.authorizeCommentDelete(comment,context,input);
         const result = await TaskComment.collection.deleteOne({ _id: comment._id, taskId: context.task._id, workspaceId: context.workspace._id, version: input.expectedVersion }, { session: context.tx });
         if (result.deletedCount !== 1) deny('VERSION_CONFLICT', 409);
-        await new ModerationAction({ scopeType: 'project', scopeId: context.project._id, organizationId: context.workspace.organizationId ?? null,
-          workspaceId: context.workspace._id, projectId: context.project._id, workspaceIds: [context.workspace._id], actorId: context.user._id, targetUserId: comment.authorId,
-          action: 'comment_deleted', commentId: comment._id, reason: input.reason ?? 'author_deleted', cutoff: now(), matchedCount: 1, deletedCount: 1 }).save({ session: context.tx });
+        if(historical)await historical.recordCommentDelete(comment,context,input,now());
         return { code: 'COMMENT_DELETED' };
       }
       const value = await update(TaskComment, comment, input.fields, context.tx);

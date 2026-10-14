@@ -8,7 +8,6 @@ import {
 import { useDraftGuard } from "../../lib/draft-navigation.js";
 import {
   confirmDialog,
-  inputDialog,
   notify,
 } from "../../components/NotificationProvider.jsx";
 import PersonProfile from "../../components/PersonProfile.jsx";
@@ -155,12 +154,6 @@ export default function Comments({ api, taskId, projectId, readOnly, disabled = 
   }, [taskId, revision]);
   async function remove(c) {
     if (pending.current) return;
-    let reason;
-    if (c.permissions.moderate) {
-      reason = await inputDialog(tr("Lý do xóa bình luận vi phạm (không sửa lời tác giả)"));
-      if (reason === null) return;
-      if (!reason.trim() || reason.length > 2000) { setError(tr("Nhập lý do xóa từ 1 đến 2000 ký tự.")); return; }
-    }
     if (
       pending.current ||
       !(await confirmDialog(
@@ -178,7 +171,7 @@ export default function Comments({ api, taskId, projectId, readOnly, disabled = 
     try {
       await api.request(`/tasks/${taskId}/comments/${c.id}/delete`, {
         method: "POST",
-        body: { expectedVersion: c.version, ...(reason ? { reason } : {}) },
+        body: { expectedVersion: c.version },
       });
       setRevision((v) => v + 1);
     } catch (e) {
@@ -258,7 +251,7 @@ export default function Comments({ api, taskId, projectId, readOnly, disabled = 
               {!readOnly && c.permissions.edit && (
                 <button disabled={busy || disabled} onClick={() => setEditing(c.id)}>{tr("Sửa bình luận")}</button>
               )}
-              {c.permissions.delete && (
+              {!readOnly && c.permissions.delete && (
                 <button disabled={busy || disabled} onClick={() => remove(c)}>{tr("Xóa bình luận")}</button>
               )}
             </div>

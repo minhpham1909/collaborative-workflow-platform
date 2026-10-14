@@ -50,3 +50,5 @@ export function workspaceAccessStages(userId, { requireMember = false } = {}) {
 export {queryWorkspaceList} from './legacy-workspace-query.js';
 export {projectAccess,projectGuestParentStages,validateGuestParent,profileState} from './legacy-project-access.js';
 export {workspaceResponse} from './legacy-workspace-response.js';
+
+export {commentPermissions,authorizeCommentDelete,recordCommentDelete} from './legacy-comment-policy.js';

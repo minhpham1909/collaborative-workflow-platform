@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import mongoose from 'mongoose';
 import {randomBytes} from 'node:crypto';
 import {connectDatabase} from '../src/database.js';
-import {models,User,Session,WorkspaceMembership,Workspace,Organization,Project,Task,ProjectGuest,ProjectGuestInvitation,AccessBan,Notification,OrganizationInvitation} from '../src/models/index.js';
+import {models,User,Session,WorkspaceMembership,Workspace,Organization,Project,Task,ProjectGuest,ProjectGuestInvitation,AccessBan,Notification,OrganizationInvitation,TaskComment,ModerationAction} from '../src/models/index.js';
 import {createWorkService} from '../src/work/service.js';
 import {createMongoWorkStore} from '../src/work/mongo-store.js';
 import {createWorkspaceService} from '../src/workspaces/service.js';
@@ -32,6 +32,34 @@ test('Workspace-only Project/Guest policy closes retired parents across direct, 
   await assert.rejects(work.getProject(auths[3],b.id),/RESOURCE_UNAVAILABLE/u);
   await assert.rejects(work.createTask(auths[3],a.id,{title:'Forbidden Guest Task'}),/TASK_CREATE_FORBIDDEN/u);
   await work.createComment(auths[3],task.id,{content:{format:'prosemirror-json',schemaVersion:1,document:{type:'doc',content:[{type:'paragraph',content:[{type:'text',text:'Guest feedback'}]}]}}});
+  // Default policy, without legacy registration: all four roles own their words.
+  const rich=text=>({format:'prosemirror-json',schemaVersion:1,document:{type:'doc',content:[{type:'paragraph',content:[{type:'text',text}]}]}});
+  const disposable=[];
+  for(let author=0;author<4;author++){
+   const comment=(await work.createComment(auths[author],task.id,{content:rich('Author '+author)})).comment;disposable.push(comment);
+   for(let viewer=0;viewer<4;viewer++){
+    const visible=(await work.comments(auths[viewer],task.id,{})).items.find(item=>item.id===comment.id);
+    assert.deepEqual(visible.permissions,{edit:viewer===author,delete:viewer===author});
+    if(viewer!==author){
+     await assert.rejects(work.deleteComment(auths[viewer],task.id,comment.id,{expectedVersion:99}),/COMMENT_AUTHOR_REQUIRED/u);
+     await assert.rejects(work.updateComment(auths[viewer],task.id,comment.id,{expectedVersion:0,content:rich('Override')}),/COMMENT_AUTHOR_REQUIRED/u);
+    }
+   }
+  }
+  const archived=(await work.state(auths[0],a.id,{expectedVersion:0,state:'archived'})).project;
+  for(let i=0;i<4;i++){
+   const visible=(await work.comments(auths[i],task.id,{})).items.find(item=>item.id===disposable[i].id);
+   assert.deepEqual(visible.permissions,{edit:false,delete:false});
+   await assert.rejects(work.deleteComment(auths[i],task.id,disposable[i].id,{expectedVersion:0}),/PROJECT_ARCHIVED/u);
+  }
+  await work.state(auths[0],a.id,{expectedVersion:archived.version,state:'active'});
+  for(let i=0;i<4;i++){
+   const edited=(await work.updateComment(auths[i],task.id,disposable[i].id,{expectedVersion:0,content:rich('Author updated '+i)})).comment;
+   await assert.rejects(work.deleteComment(auths[i],task.id,edited.id,{expectedVersion:0}),/VERSION_CONFLICT/u);
+   await work.deleteComment(auths[i],task.id,edited.id,{expectedVersion:edited.version});
+   assert.equal(await TaskComment.collection.countDocuments({_id:new mongoose.Types.ObjectId(edited.id)}),0);
+   assert.equal(await ModerationAction.collection.countDocuments({commentId:new mongoose.Types.ObjectId(edited.id)}),0);
+  }
   const ownerProfile=(await work.profile(auths[3],a.id,String(people[0]._id))).profile;
   assert.equal(ownerProfile.status,'active');assert.equal(ownerProfile.role,'owner');assert.equal(Object.hasOwn(ownerProfile,'blocked'),false);
   assert.equal((await work.profile(auths[0],a.id,String(people[1]._id))).profile.role,'manager');
@@ -64,6 +92,7 @@ test('Workspace-only Project/Guest policy closes retired parents across direct, 
   const pins=await work.pins(auths[3],{});assert.deepEqual(pins.items[0],{projectId:String(oldProject._id),available:false});assert.equal(pins.items[1].available,true);
   await ws.state(auths[0],workspace.id,{expectedVersion:0,state:'archived',confirmName:workspace.name,reason:'Read-only test'});
   assert.equal((await work.getProject(auths[3],a.id)).project.readOnly,true);
+  for(const i of [0,1,3]){const remaining=(await work.comments(auths[i],task.id,{})).items;assert.ok(remaining.every(c=>!c.permissions.edit&&!c.permissions.delete));await assert.rejects(work.deleteComment(auths[i],task.id,remaining[0].id,{expectedVersion:remaining[0].version}),/WORKSPACE_ARCHIVED/u);}
   const ban=new AccessBan({scopeType:'project',scopeId:a.id,workspaceId:workspace.id,projectId:a.id,userId:people[3]._id,reason:'Guest ban test',imposedBy:people[0]._id,imposedAt:new Date()});await ban.save();
   const blockedProfile=(await work.profile(auths[0],a.id,String(people[3]._id))).profile;assert.equal(blockedProfile.blocked,true);assert.equal(blockedProfile.role,null);
   await assert.rejects(work.getProject(auths[3],a.id),/ACCESS_BANNED/u);assert.equal((await work.shared(auths[3],{})).items.length,0);

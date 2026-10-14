@@ -166,7 +166,7 @@ test('Project, Task, Comment and scoped queries on real MongoDB/HTTP', { skip: !
       comment = (await service.createComment(claims[3], task.id, { content: content('Bình luận') })).comment;
       assert.equal(comment.author.displayName,users[3].displayName);assert.ok(!JSON.stringify(comment.author).includes(users[3].email));
       for (const index of [0, 1, 2]) await assert.rejects(service.updateComment(claims[index], task.id, comment.id, { expectedVersion: 0, content: content('No') }), /COMMENT_AUTHOR_REQUIRED/u);
-      await assert.rejects(service.deleteComment(claims[0], task.id, comment.id, { expectedVersion: 0 }), /MODERATION_REASON_REQUIRED/u);
+      await assert.rejects(service.deleteComment(claims[0], task.id, comment.id, { expectedVersion: 0 }), /COMMENT_AUTHOR_REQUIRED/u);
       comment = (await service.updateComment(claims[3], task.id, comment.id, { expectedVersion: 0, content: content('Updated') })).comment;
       await assert.rejects(service.updateComment(claims[3], task.id, comment.id, { expectedVersion: 0, content: content('Stale') }), /VERSION_CONFLICT/u);
       const other = await createTask(); await assert.rejects(service.updateComment(claims[3], other.id, comment.id, { expectedVersion: 1, content: content('Wrong task') }), /RESOURCE_UNAVAILABLE/u);

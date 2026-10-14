@@ -61,8 +61,8 @@ test('C5 Workspace archive and Task trash/retention', { skip: !process.env.TEST_
       assert.equal((await work.comments(claims[1], task.id, {})).items[0].permissions.edit, false);
       assert.equal((await work.mine(claims[2], {})).total, 0); assert.equal((await work.mine(claims[2], { state: 'archived' })).total, 1);
       for (const operation of [() => create(), () => work.createProject(claims[0], workspace.id, { name: 'No' }), () => work.updateTask(claims[1], task.id, { expectedVersion: task.version, title: 'No' }), () => work.status(claims[1], task.id, { expectedVersion: task.version, status: 'done' }), () => work.createComment(claims[1], task.id, { content: rich('No') }), () => work.updateComment(claims[1], task.id, comment.id, { expectedVersion: comment.version, content: rich('No') }), () => work.createLabel(claims[0], project.id, { name: 'No' }), () => ws.invite(claims[0], workspace.id, { type: 'LINK' }), () => ws.update(claims[0], workspace.id, { expectedVersion: workspace.version, name: 'No' }), () => work.state(claims[0], project.id, { expectedVersion: project.version, state: 'archived' }), () => ws.accept(claims[3], { token }), () => work.acceptGuestInvitation(claims[3], { token: guestToken })]) await assert.rejects(operation(), { code: 'WORKSPACE_ARCHIVED' });
-      await work.deleteComment(claims[0], task.id, comment.id, { expectedVersion: comment.version, reason: 'Archived moderation' });
-      assert.equal(await TaskComment.collection.countDocuments({ _id: O(comment.id) }), 0);
+      await assert.rejects(work.deleteComment(claims[0], task.id, comment.id, { expectedVersion: comment.version }), {code:'WORKSPACE_ARCHIVED'});
+      assert.equal(await TaskComment.collection.countDocuments({ _id: O(comment.id) }), 1);
       assert.equal((await work.statistics(claims[1], project.id, {})).total, 1);
       workspace = (await archive('active')).workspace;
       await work.acceptGuestInvitation(claims[3], { token: guestToken });

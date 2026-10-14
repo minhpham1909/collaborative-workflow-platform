@@ -51,6 +51,7 @@ try {
   const projects=[];for(let i=0;i<3;i++)projects.push((await work.createProject(auths[0],ws.id,{name:'Collection Project '+i})).project);
   const profileTask=(await work.createTask(auths[0],projects[0].id,{title:'Assigned view fixture',assigneeId:users[0].id})).task;
   const guestInvite=await work.inviteGuest(auths[0],projects[0].id,{type:'LINK'});await work.acceptGuestInvitation(auths[2],{token:new URLSearchParams(new URL(guestInvite.url).hash.slice(1)).get('token')});
+  await work.createComment(auths[2],profileTask.id,{content:{format:'prosemirror-json',schemaVersion:1,document:{type:'doc',content:[{type:'paragraph',content:[{type:'text',text:'Guest author-only feedback'}]}]}}});
   const owner=await pageFor(0),guest=await pageFor(2);
   // Current Workspace-only Team and associated-person profile, without Organization controls.
   await owner.goto(feOrigin+'/#workspace/'+ws.id);
@@ -64,6 +65,23 @@ try {
   const profile=owner.locator('.person-profile-card:popover-open');await profile.waitFor();
   await profile.getByText('Workspace Owner',{exact:true}).waitFor();
   assert.ok(!/organization|tổ chức/i.test(await profile.innerText()));
+  await owner.getByRole('button',{name:ui('Đóng hồ sơ','Close profile'),exact:true}).click();
+  await owner.locator('.comment').first().waitFor();
+  assert.equal(await owner.locator('.comments').getByRole('button',{name:ui('Xóa bình luận','Delete comment'),exact:true}).count(),0);
+  assert.equal(await owner.locator('.comments').getByRole('button',{name:ui('Sửa bình luận','Edit comment'),exact:true}).count(),0);
+  await guest.goto(feOrigin+'/#task/'+profileTask.id);await guest.locator('.comment').first().waitFor();
+  await guest.locator('.comments').getByRole('button',{name:ui('Xóa bình luận','Delete comment'),exact:true}).click();
+  const confirmation=guest.locator('.system-dialog');await confirmation.waitFor();assert.equal(await confirmation.locator('input').count(),0);
+  await confirmation.getByRole('button',{name:ui('Hủy','Cancel'),exact:true}).click();assert.equal(await guest.locator('.comment').count(),1);
+  const archived=(await work.state(auths[0],projects[0].id,{expectedVersion:0,state:'archived'})).project;
+  await guest.reload();await guest.locator('.comment').first().waitFor();
+  assert.equal(await guest.locator('.comments').getByRole('button',{name:ui('Xóa bình luận','Delete comment'),exact:true}).count(),0);
+  await work.state(auths[0],projects[0].id,{expectedVersion:archived.version,state:'active'});
+  await guest.reload();await guest.locator('.comment').first().waitFor();
+  await guest.locator('.comments').getByRole('button',{name:ui('Xóa bình luận','Delete comment'),exact:true}).click();
+  await confirmation.getByRole('button',{name:ui('Xóa bình luận','Delete comment'),exact:true}).click();
+  await guest.locator('.comment').waitFor({state:'detached'});
+
   let reads=0;owner.on('request',r=>{if(r.url().startsWith('http://localhost:4000/'))reads++;});
   for(const [key,route,selector]of [['home','#home','.home-workspace-card'],['workspace','#workspace/'+ws.id,'.project-card'],['mine','#mine','.my-task-row']]){
    await rotate();await owner.goto(feOrigin+'/'+route);await owner.locator(selector).first().waitFor();await owner.waitForTimeout(400);

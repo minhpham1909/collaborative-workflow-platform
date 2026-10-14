@@ -1,3 +1,4 @@
+import {historicalWorkspaceFixture} from '../workspaces/access.js';
 import { inputObject } from '../auth/account-input.js';
 import { objectId, expectedVersion, pageInput, fail } from '../workspaces/input.js';
 import { normalizeRichText, CONTENT_LIMITS } from '../content/rich-text.js';
@@ -108,8 +109,9 @@ export function commentInput(input, edit = false) {
   return { fields: { content: rich(input.content, 'comment', true) }, ...(edit ? { expectedVersion: expectedVersion(input) } : {}) };
 }
 export function commentDeleteInput(input) {
-  inputObject(input, ['expectedVersion', 'reason']);
-  return { expectedVersion: expectedVersion(input), ...(input.reason === undefined ? {} : { reason: reasonInput(input.reason) }) };
+  const historical=historicalWorkspaceFixture();
+  inputObject(input, historical ? ['expectedVersion', 'reason'] : ['expectedVersion']);
+  return { expectedVersion: expectedVersion(input), ...(historical && input.reason !== undefined ? { reason: reasonInput(input.reason) } : {}) };
 }
 export function lifecyclePage(query, defaultState = 'active') {
   inputObject(query, ['limit', 'cursor', 'state']);
