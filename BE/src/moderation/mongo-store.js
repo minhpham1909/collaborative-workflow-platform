@@ -1,11 +1,9 @@
 import mongoose from 'mongoose';
 import { cancelReopenRequests } from '../work/reopen-lifecycle.js';
-import { User, Session, Organization, OrganizationMembership, OrganizationInvitation, Workspace, WorkspaceMembership, WorkspaceInvitation, Project, ProjectGuest, ProjectGuestInvitation, Task, TaskComment, EmailOutbox, AccessBan, ModerationAction } from '../models/index.js';
+import { User, Session, Workspace, WorkspaceMembership, WorkspaceInvitation, Project, ProjectGuest, ProjectGuestInvitation, Task, TaskComment, EmailOutbox, AccessBan, ModerationAction } from '../models/index.js';
 import { AuthError } from '../auth/errors.js';
-import { organizationAccess } from '../organizations/access.js';
-import { workspaceAccess } from '../workspaces/access.js';
+import { historicalWorkspaceFixture, workspaceAccess } from '../workspaces/access.js';
 import { projectAccess } from '../work/project-access.js';
-import { assertNotBanned } from './guard.js';
 import { previewCodec } from './preview.js';
 import { commentCriteria } from './criteria.js';
 import { paged } from '../workspaces/response.js';
@@ -18,6 +16,7 @@ const after = page => page.after.$or ? { $or: page.after.$or.map(part => part._i
 const actionDto = row => ({ id: String(row._id), action: row.action, actorId: String(row.actorId), targetUserId: String(row.targetUserId), reason: row.reason,
   cleanup: row.cleanup, cutoff: row.cutoff, from: row.from, state: row.state, matchedCount: row.matchedCount, deletedCount: row.deletedCount, version: row.version, createdAt: row.createdAt, lastErrorCode: row.lastErrorCode });
 export function createMongoModerationStore({ config, now = () => new Date() } = {}) {
+  const historical=historicalWorkspaceFixture();if(historical)return historical.createMongoModerationStore({config,now});
   const run = (claims, operation) => mongoose.connection.transaction(async tx => {
     const user = await User.collection.findOneAndUpdate({ _id: id(claims.sub) }, { $inc: { authMutationRevision: 1 } }, { session: tx, returnDocument: 'after' });
     if (!user || user.authVersion !== claims.av || !await Session.collection.findOne({ _id: id(claims.sid), userId: user._id, authVersionAtIssue: claims.av, revokedAt: null, expiresAt: { $gt: now() } }, { session: tx })) denied('UNAUTHENTICATED', 401);
@@ -25,68 +24,39 @@ export function createMongoModerationStore({ config, now = () => new Date() } = 
     return operation(user, tx);
   });
   async function scope(user, type, scopeId, tx) {
-    let organization = null, workspace = null, project = null, role;
-    if (type === 'organization') {
-      organization = await Organization.collection.findOneAndUpdate({ _id: id(scopeId) }, { $inc: { mutationRevision: 1 } }, { session: tx, returnDocument: 'after' });
-      if (!organization) denied('ORGANIZATION_UNAVAILABLE', 404);
-      await assertNotBanned(user._id, { organizationId: organization._id }, tx);
-      const membership = await OrganizationMembership.collection.findOne({ organizationId: organization._id, userId: user._id }, { session: tx });
-      role = organizationAccess(organization, membership, user._id, { manage: true });
-    } else {
-      if (type === 'project') project = await Project.collection.findOne({ _id: id(scopeId) }, { session: tx });
-      if (type === 'project' && !project) denied('RESOURCE_UNAVAILABLE', 404);
-      workspace = await Workspace.collection.findOneAndUpdate({ _id: type === 'project' ? project.workspaceId : id(scopeId) }, { $inc: { mutationRevision: 1 } }, { session: tx, returnDocument: 'after' });
-      if (!workspace) denied('WORKSPACE_UNAVAILABLE', 404);
-      const access = type === 'project' ? (await projectAccess(workspace, project, user._id, tx)).access : await workspaceAccess(workspace, user._id, tx);
-      if (!access.canManage) denied('OWNER_REQUIRED'); role = access.role;
-      if (workspace.organizationId) organization = await Organization.collection.findOne({ _id: workspace.organizationId }, { session: tx });
-      if (project) project = await Project.collection.findOne({ _id: project._id, workspaceId: workspace._id }, { session: tx });
-    }
-    const workspaces = type === 'organization' ? await Workspace.collection.find({ organizationId: organization._id }, { session: tx }).sort({ _id: 1 }).toArray() : [workspace];
-    return { type, scopeId: id(scopeId), organization, workspace, project, role, workspaces, resource: project ?? workspace ?? organization };
+    if(type==='organization')denied('ORGANIZATIONS_RETIRED',410);
+    if(!['workspace','project'].includes(type))denied('INVALID_INPUT',400);
+    let project=type==='project'?await Project.collection.findOne({_id:id(scopeId)},{session:tx}):null;
+    if(type==='project'&&!project)denied('RESOURCE_UNAVAILABLE',404);
+    const workspace=await Workspace.collection.findOneAndUpdate({_id:project?project.workspaceId:id(scopeId)},{$inc:{mutationRevision:1}},{session:tx,returnDocument:'after'});
+    if(!workspace)denied('WORKSPACE_UNAVAILABLE',404);
+    const access=project?(await projectAccess(workspace,project,user._id,tx)).access:await workspaceAccess(workspace,user._id,tx);
+    if(!access.canManage)denied('OWNER_REQUIRED');
+    if(project){project=await Project.collection.findOne({_id:project._id,workspaceId:workspace._id},{session:tx});if(!project)denied('RESOURCE_UNAVAILABLE',404);}
+    return {type,scopeId:id(scopeId),workspace,project,role:access.role,workspaces:[workspace],resource:project??workspace};
   }
   async function protect(user, context, targetUserId, tx) {
     if (same(user._id, targetUserId)) denied('CANNOT_MODERATE_SELF', 409);
     if (!await User.collection.findOne({ _id: id(targetUserId) }, { session: tx, projection: { _id: 1 } })) denied('RESOURCE_UNAVAILABLE', 404);
-    if (same(context.organization?.ownerId, targetUserId) || same(context.workspace?.ownerId, targetUserId)) denied('CANNOT_REMOVE_OWNER', 409);
-    if (context.organization) {
-      const target = await OrganizationMembership.collection.findOne({ organizationId: context.organization._id, userId: id(targetUserId), state: 'active' }, { session: tx });
-      if (target?.role === 'admin' && !['owner', 'organization_owner'].includes(context.role)) denied('ORGANIZATION_OWNER_REQUIRED');
-    }
-    if (same(context.workspace?.managerId, targetUserId) && !['organization_owner', 'organization_admin'].includes(context.role)) denied('ORGANIZATION_ADMIN_REQUIRED');
-    if (context.workspace && !context.workspace.organizationId) {
-      const target = await WorkspaceMembership.collection.findOne({ workspaceId: context.workspace._id, userId: id(targetUserId), state: 'active' }, { session: tx });
-      if (target?.role === 'manager' && context.role !== 'owner') denied('OWNER_REQUIRED');
-    }
+    if(same(context.workspace.ownerId,targetUserId))denied('CANNOT_REMOVE_OWNER',409);
+    const target=await WorkspaceMembership.collection.findOne({workspaceId:context.workspace._id,userId:id(targetUserId),state:'active'},{session:tx});
+    if(target?.role==='manager'&&context.role!=='owner')denied('OWNER_REQUIRED');
   }
-  const references = context => ({ scopeType: context.type, scopeId: context.scopeId, organizationId: context.organization?._id ?? null,
-    workspaceId: context.workspace?._id ?? null, projectId: context.project?._id ?? null });
+  const references=context=>({scopeType:context.type,scopeId:context.scopeId,workspaceId:context.workspace._id,projectId:context.project?._id??null});
   async function selection(context, targetUserId, cleanup, cutoff, tx) {
     const row = { ...references(context), targetUserId: id(targetUserId), workspaceIds: context.workspaces.map(workspace => workspace._id), cleanup, cutoff,
       from: cleanup === 'none' || cleanup === 'all' ? null : new Date(cutoff.getTime() - Number(cleanup) * 86400_000) };
     const matchedCount = cleanup === 'none' ? 0 : await TaskComment.collection.countDocuments(await commentCriteria(row, tx), { session: tx });
     return { ...row, matchedCount };
   }
-  async function takeOver(user, workspace, tx) {
-    let membership = await WorkspaceMembership.collection.findOne({ workspaceId: workspace._id, userId: user._id }, { session: tx });
-    if (membership?.state !== 'active') {
-      if (membership) await WorkspaceMembership.collection.updateOne({ _id: membership._id, version: membership.version },
-        { $set: { state: 'active', leftAt: null, exitReason: null, joinedAt: now(), emailOverrides: { assignment: 'inherit', comment: 'inherit', content: 'inherit', status: 'inherit' }, updatedAt: now() }, $inc: { version: 1, membershipGeneration: 1 } }, { session: tx });
-      else await new WorkspaceMembership({ workspaceId: workspace._id, userId: user._id, joinedAt: now() }).save({ session: tx });
-    }
-    await Workspace.collection.updateOne({ _id: workspace._id, version: workspace.version }, { $set: { managerId: user._id, updatedAt: now() }, $inc: { version: 1 } }, { session: tx });
-  }
   async function endAccess(user, context, targetUserId, tx) {
-    const target = id(targetUserId), workspaceIds = context.workspaces.map(workspace => workspace._id), takeoverWorkspaceIds = [];
+    const target = id(targetUserId), workspaceIds = context.workspaces.map(workspace => workspace._id);
     if (context.type !== 'project') {
       for (const workspace of context.workspaces) {
         await Workspace.collection.updateOne({ _id: workspace._id }, { $inc: { mutationRevision: 1 } }, { session: tx });
-        if (same(workspace.managerId, target)) { await takeOver(user, workspace, tx); takeoverWorkspaceIds.push(workspace._id); }
       }
       await WorkspaceMembership.collection.updateMany({ workspaceId: { $in: workspaceIds }, userId: target, state: 'active' },
         { $set: { state: 'inactive', role: 'member', leftAt: now(), exitReason: 'removed', emailOverrides: { assignment: 'inherit', comment: 'inherit', content: 'inherit', status: 'inherit' }, updatedAt: now() }, $inc: { version: 1 } }, { session: tx });
-      if (context.type === 'organization') await OrganizationMembership.collection.updateMany({ organizationId: context.organization._id, userId: target, state: 'active' },
-        { $set: { state: 'inactive', leftAt: now(), exitReason: 'removed', role: 'member', updatedAt: now() }, $inc: { version: 1 } }, { session: tx });
     }
     const projects = { workspaceId: { $in: workspaceIds }, ...(context.project ? { _id: context.project._id } : {}) };
     const projectIds = (await Project.collection.find(projects, { session: tx, projection: { _id: 1 } }).toArray()).map(row => row._id);
@@ -99,7 +69,6 @@ export function createMongoModerationStore({ config, now = () => new Date() } = 
     for (const [model, field, parent] of [
       [ProjectGuestInvitation, 'projectInvitationId', { projectId: { $in: projectIds } }],
       ...(context.type === 'project' ? [] : [[WorkspaceInvitation, 'invitationId', { workspaceId: { $in: workspaceIds } }]]),
-      ...(context.type === 'organization' ? [[OrganizationInvitation, 'organizationInvitationId', { organizationId: context.organization._id }]] : []),
     ]) {
       const query = { ...parent, revokedAt: null, acceptedAt: null, $or: [{ createdBy: target }, { emailCanonical: recipient.emailCanonical }] };
       const invites = await model.collection.find(query, { session: tx, projection: { _id: 1 } }).toArray();
@@ -109,10 +78,10 @@ export function createMongoModerationStore({ config, now = () => new Date() } = 
     }
     await EmailOutbox.collection.updateMany({ state: { $in: ['pending', 'processing', 'failed'] }, $or: [{ category: 'work', userId: target, taskId: { $in: taskIds } }, ...revoked] },
       { $set: { state: 'cancelled', encryptedDeliveryData: null, leaseToken: null, leaseUntil: null, updatedAt: now() } }, { session: tx });
-    return takeoverWorkspaceIds;
+    return [];
   }
   async function bump(context, tx) {
-    const model = context.type === 'organization' ? Organization : context.type === 'workspace' ? Workspace : Project;
+    const model = context.type === 'workspace' ? Workspace : Project;
     await model.collection.updateOne({ _id: context.scopeId }, { $inc: { version: 1 }, $set: { updatedAt: now() } }, { session: tx });
   }
   return {

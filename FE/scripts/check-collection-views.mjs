@@ -59,6 +59,18 @@ try {
   await owner.getByText('QA Member',{exact:true}).first().waitFor();
   assert.equal(await owner.getByRole('button',{name:/Thêm thành viên nội bộ|Add internal member/}).count(),0);
   for(const w of [375,768,1024,1280,1440]){await owner.setViewportSize({width:w,height:1000});assert.ok(await owner.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));await owner.screenshot({path:out+'/workspace-team-'+theme+'-'+language+'-'+w+'.png',fullPage:true});}
+  // Ban/unban through the current Workspace UI; unban does not re-add a Member.
+  await owner.setViewportSize({width:1440,height:1000});
+  await owner.getByRole('button',{name:ui('Chặn truy cập','Ban access'),exact:true}).first().click();
+  let banDialog=owner.locator('.moderation-dialog');await banDialog.waitFor();await banDialog.getByLabel(ui('Lý do','Reason'),{exact:true}).fill('Workspace-only browser Ban');
+  await banDialog.getByRole('button',{name:ui('Xem trước tác động','Preview impact'),exact:true}).click();
+  await banDialog.getByRole('button',{name:ui('Chặn truy cập','Ban access'),exact:true}).click();await banDialog.waitFor({state:'hidden'});
+  const moderationPanel=owner.locator('.workspace-moderation');
+  await moderationPanel.getByRole('button',{name:ui('Bỏ chặn','Remove ban'),exact:true}).waitFor();
+  await moderationPanel.getByRole('button',{name:ui('Bỏ chặn','Remove ban'),exact:true}).click();
+  banDialog=owner.locator('.moderation-dialog');await banDialog.getByLabel(ui('Lý do','Reason'),{exact:true}).fill('Permit future invitation');
+  await banDialog.getByRole('button',{name:ui('Bỏ chặn','Remove ban'),exact:true}).click();await banDialog.waitFor({state:'hidden'});
+  assert.equal((await workspaces.members(auths[0],ws.id,{})).items.some(person=>person.userId===String(users[1]._id)),false);
   await owner.setViewportSize({width,height:1000});
   await owner.goto(feOrigin+'/#project/'+projects[0].id);
   await owner.locator('.board-project-header').waitFor();

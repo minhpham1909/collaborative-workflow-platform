@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { previewCodec } from '../src/moderation/preview.js';
-import { banInput, previewInput, unbanInput } from '../src/moderation/input.js';
+import { banInput, previewInput, unbanInput, scopeType } from '../src/moderation/input.js';
 import { AccessBan, ModerationAction } from '../src/models/index.js';
 
 const oid = 'a'.repeat(24), at = new Date('2026-10-05T00:00:00Z');
@@ -30,4 +30,8 @@ test('typed bans/jobs reject inconsistent scope, revoke metadata, leases and con
   const job = { scopeType: 'project', scopeId: oid, workspaceId: oid, projectId: oid, actorId: oid, targetUserId: oid, action: 'ban', reason: 'Policy', cutoff: at };
   assert.throws(() => new ModerationAction({ ...job, originalComment: 'Do not copy' }));
   await assert.rejects(new ModerationAction({ ...job, state: 'processing' }).validate());
+});
+
+test('Current moderation service retires Organization scopes before store access',()=>{
+ assert.equal(scopeType('workspace'),'workspace');assert.equal(scopeType('project'),'project');assert.throws(()=>scopeType('organization'),{code:'ORGANIZATIONS_RETIRED',status:410});
 });

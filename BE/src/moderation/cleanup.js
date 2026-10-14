@@ -1,3 +1,4 @@
+import {historicalWorkspaceFixture} from '../workspaces/access.js';
 import mongoose from 'mongoose';
 import { randomUUID } from 'node:crypto';
 import { ModerationAction, TaskComment } from '../models/index.js';
@@ -6,7 +7,7 @@ import { commentCriteria } from './criteria.js';
 export async function runCommentCleanup({ now = () => new Date(), batchSize = 128 } = {}) {
   if (!Number.isSafeInteger(batchSize) || batchSize < 1 || batchSize > 500) throw new Error('Invalid cleanup batch size');
   const leaseToken = randomUUID();
-  const action = await ModerationAction.collection.findOneAndUpdate({ action: 'ban', cleanup: { $ne: 'none' }, $or: [{ state: 'pending' }, { state: 'processing', leaseUntil: { $lte: now() } }] },
+  const action = await ModerationAction.collection.findOneAndUpdate({ ...(historicalWorkspaceFixture()?{}:{scopeType:{$in:['workspace','project']},organizationId:null}), action: 'ban', cleanup: { $ne: 'none' }, $or: [{ state: 'pending' }, { state: 'processing', leaseUntil: { $lte: now() } }] },
     { $set: { state: 'processing', leaseToken, leaseUntil: new Date(now().getTime() + 60_000), updatedAt: now() }, $inc: { version: 1, attempts: 1 } }, { sort: { createdAt: 1, _id: 1 }, returnDocument: 'after' });
   if (!action) return { state: 'idle' };
   try {

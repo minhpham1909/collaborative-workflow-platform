@@ -52,3 +52,6 @@ export {projectAccess,projectGuestParentStages,validateGuestParent,profileState}
 export {workspaceResponse} from './legacy-workspace-response.js';
 
 export {commentPermissions,authorizeCommentDelete,recordCommentDelete} from './legacy-comment-policy.js';
+
+export {createMongoModerationStore} from './legacy-moderation-store.js';
+export {historicalCommentCriteria} from './legacy-moderation-criteria.js';

@@ -1,8 +1,10 @@
+import {AuthError} from '../auth/errors.js';
+import {historicalWorkspaceFixture} from '../workspaces/access.js';
 import { inputObject } from '../auth/account-input.js';
 import { objectId, expectedVersion, fail } from '../workspaces/input.js';
 
 export const cleanupChoices = ['none', '1', '3', '7', '30', 'all'];
-export function scopeType(value) { if (!['organization', 'workspace', 'project'].includes(value)) fail(); return value; }
+export function scopeType(value) { if(value==='organization'&&!historicalWorkspaceFixture())throw new AuthError('ORGANIZATIONS_RETIRED',410); if (!['organization', 'workspace', 'project'].includes(value)) fail(); return value; }
 export function reasonInput(value) {
   if (typeof value !== 'string' || !value.trim() || value.length > 2000 || /[\u0000-\u001f\u007f\u2028\u2029]/u.test(value)) fail();
   return value.trim();

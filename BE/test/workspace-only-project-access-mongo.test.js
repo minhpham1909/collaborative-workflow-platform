@@ -1,3 +1,6 @@
+import {createModerationService} from '../src/moderation/service.js';
+import {createMongoModerationStore} from '../src/moderation/mongo-store.js';
+import {runCommentCleanup} from '../src/moderation/cleanup.js';
 import {createNotificationsService} from '../src/notifications/service.js';
 import {createMongoNotificationsStore} from '../src/notifications/mongo-store.js';
 import {cutoffCodec} from '../src/notifications/input.js';
@@ -6,7 +9,7 @@ import assert from 'node:assert/strict';
 import mongoose from 'mongoose';
 import {randomBytes} from 'node:crypto';
 import {connectDatabase} from '../src/database.js';
-import {models,User,Session,WorkspaceMembership,Workspace,Organization,Project,Task,ProjectGuest,ProjectGuestInvitation,AccessBan,Notification,OrganizationInvitation,TaskComment,ModerationAction} from '../src/models/index.js';
+import {models,User,Session,WorkspaceMembership,Workspace,Organization,Project,Task,ProjectGuest,ProjectGuestInvitation,AccessBan,Notification,OrganizationInvitation,TaskComment,ModerationAction,TaskReopenRequest} from '../src/models/index.js';
 import {createWorkService} from '../src/work/service.js';
 import {createMongoWorkStore} from '../src/work/mongo-store.js';
 import {createWorkspaceService} from '../src/workspaces/service.js';
@@ -65,11 +68,47 @@ test('Workspace-only Project/Guest policy closes retired parents across direct, 
   assert.equal((await work.profile(auths[0],a.id,String(people[1]._id))).profile.role,'manager');
   await assert.rejects(work.profile(auths[3],a.id,String(people[1]._id)),/RESOURCE_UNAVAILABLE/u);
   await work.createComment(auths[2],task.id,{content:{format:'prosemirror-json',schemaVersion:1,document:{type:'doc',content:[{type:'paragraph',content:[{type:'text',text:'Historical Member feedback'}]}]}}});
-  await ws.leave(auths[2],workspace.id,{expectedVersion:0});
+  // Current scoped Ban and cleanup, without Organization fixture registration.
+  const moderation=createModerationService({store:createMongoModerationStore({config})});
+  for(const actor of [2,3])await assert.rejects(moderation.preview(auths[actor],'project',a.id,{userId:String(people[2]._id),cleanup:'none'}),/OWNER_REQUIRED/u);
+  await assert.rejects(moderation.preview(auths[1],'workspace',workspace.id,{userId:String(people[0]._id),cleanup:'none'}),/CANNOT_REMOVE_OWNER/u);
+  await assert.rejects(moderation.preview(auths[1],'workspace',workspace.id,{userId:String(people[1]._id),cleanup:'none'}),/CANNOT_MODERATE_SELF/u);
+  assert.throws(()=>moderation.bans(auths[0],'organization',String(new mongoose.Types.ObjectId()),{}),/ORGANIZATIONS_RETIRED/u);
+  await ws.role(auths[0],workspace.id,String(people[2]._id),{expectedVersion:0,role:'manager',reason:'Second Manager protection test'});
+  await assert.rejects(moderation.preview(auths[1],'workspace',workspace.id,{userId:String(people[2]._id),cleanup:'none'}),/OWNER_REQUIRED/u);
+  await ws.role(auths[0],workspace.id,String(people[2]._id),{expectedVersion:1,role:'member',reason:'Restore Member role'});
+  const otherTask=(await work.createTask(auths[2],b.id,{title:'Other Project assignment',assigneeId:String(people[2]._id)})).task;
+  const recent=(await work.createComment(auths[2],task.id,{content:rich('Recent scoped spam')})).comment;
+  const old=(await work.createComment(auths[2],task.id,{content:rich('Old retained feedback')})).comment;
+  const otherComment=(await work.createComment(auths[2],otherTask.id,{content:rich('Other Project feedback')})).comment;
+  await TaskComment.collection.updateOne({_id:new mongoose.Types.ObjectId(old.id)},{$set:{createdAt:new Date(Date.now()-3*86400000)}});
+  let done=(await work.createTask(auths[2],a.id,{title:'Done history retained by Ban',assigneeId:String(people[2]._id)})).task;
+  done=(await work.status(auths[2],done.id,{expectedVersion:done.version,status:'done'})).task;
+  const pending=(await work.requestReopen(auths[2],done.id,{expectedVersion:done.version,reason:'Review before Ban',targetStatus:'todo'})).request;
+  const selected=await moderation.preview(auths[1],'project',a.id,{userId:String(people[2]._id),cleanup:'1'});
+  await assert.rejects(moderation.ban(auths[1],'project',a.id,{userId:String(people[3]._id),cleanup:'1',reason:'Wrong preview target',expectedVersion:selected.expectedVersion,preview:selected.preview}),/MODERATION_PREVIEW_INVALID/u);
+  const banned=await moderation.ban(auths[1],'project',a.id,{userId:String(people[2]._id),cleanup:'1',reason:'Project spam test',expectedVersion:selected.expectedVersion,preview:selected.preview});
+  await assert.rejects(work.getTask(auths[2],task.id),/ACCESS_BANNED/u);
+  assert.equal((await TaskReopenRequest.collection.findOne({_id:new mongoose.Types.ObjectId(pending.id)})).state,'cancelled');
+  assert.equal(String((await Task.collection.findOne({_id:new mongoose.Types.ObjectId(done.id)})).assigneeId),String(people[2]._id));
+  assert.ok((await work.getTask(auths[2],otherTask.id)).task);
+  assert.equal((await Task.collection.findOne({_id:new mongoose.Types.ObjectId(task.id)})).assigneeId,null);
+  await runCommentCleanup();
+  assert.equal(await TaskComment.collection.countDocuments({_id:new mongoose.Types.ObjectId(recent.id)}),0);
+  assert.equal(await TaskComment.collection.countDocuments({_id:new mongoose.Types.ObjectId(old.id)}),1);
+  assert.equal(await TaskComment.collection.countDocuments({_id:new mongoose.Types.ObjectId(otherComment.id)}),1);
+  await moderation.unban(auths[1],'project',a.id,String(people[2]._id),{expectedVersion:banned.version,reason:'Recheck access'});
+  assert.ok((await work.getTask(auths[2],task.id)).task);assert.equal((await work.getTask(auths[2],task.id)).task.assigneeId,null);
+  const managerBan=await moderation.ban(auths[0],'workspace',workspace.id,{userId:String(people[1]._id),cleanup:'none',reason:'Owner removes Manager',expectedVersion:0});
+  await moderation.unban(auths[0],'workspace',workspace.id,String(people[1]._id),{expectedVersion:managerBan.version,reason:'Allow future invitation'});
+  await assert.rejects(ws.get(auths[1],workspace.id),/WORKSPACE_UNAVAILABLE/u);
+  await ws.leave(auths[2],workspace.id,{expectedVersion:2});
   const departed=(await work.profile(auths[3],a.id,String(people[2]._id))).profile;
   assert.equal(departed.status,'left_workspace');assert.equal(departed.role,null);assert.ok(departed.departedAt);
   // Active old Guest grant must not bypass retired parent rejection.
   const org=new Organization({ownerId:people[0]._id,name:'Unsupported organization'});await org.save();orgIds.push(org._id);
+  const retiredJob=await ModerationAction.create({scopeType:'organization',scopeId:org._id,organizationId:org._id,workspaceIds:[],actorId:people[0]._id,targetUserId:people[2]._id,action:'ban',reason:'Retired cleanup must not execute',cleanup:'all',cutoff:new Date(),state:'pending',matchedCount:1});
+  assert.equal((await runCommentCleanup()).state,'idle');assert.equal((await ModerationAction.collection.findOne({_id:retiredJob._id})).state,'pending');
   const retired=new Workspace({organizationId:org._id,managerId:people[0]._id,name:'Retired private Workspace'});await retired.save();wsIds.push(retired._id);
   const oldProject=new Project({workspaceId:retired._id,createdBy:people[0]._id,name:'Retired private Project'});await oldProject.save();
   const oldTask=new Task({workspaceId:retired._id,projectId:oldProject._id,createdBy:people[0]._id,title:'Retired private Task'});await oldTask.save();
@@ -90,12 +129,12 @@ test('Workspace-only Project/Guest policy closes retired parents across direct, 
   assert.equal((await work.shared(auths[3],{q:'Retired private'})).items.length,0);
   await User.collection.updateOne({_id:people[3]._id},{$set:{projectPins:[oldProject._id,new mongoose.Types.ObjectId(a.id)]}});
   const pins=await work.pins(auths[3],{});assert.deepEqual(pins.items[0],{projectId:String(oldProject._id),available:false});assert.equal(pins.items[1].available,true);
-  await ws.state(auths[0],workspace.id,{expectedVersion:0,state:'archived',confirmName:workspace.name,reason:'Read-only test'});
+  await ws.state(auths[0],workspace.id,{expectedVersion:2,state:'archived',confirmName:workspace.name,reason:'Read-only test'});
   assert.equal((await work.getProject(auths[3],a.id)).project.readOnly,true);
-  for(const i of [0,1,3]){const remaining=(await work.comments(auths[i],task.id,{})).items;assert.ok(remaining.every(c=>!c.permissions.edit&&!c.permissions.delete));await assert.rejects(work.deleteComment(auths[i],task.id,remaining[0].id,{expectedVersion:remaining[0].version}),/WORKSPACE_ARCHIVED/u);}
+  for(const i of [0,3]){const remaining=(await work.comments(auths[i],task.id,{})).items;assert.ok(remaining.every(c=>!c.permissions.edit&&!c.permissions.delete));await assert.rejects(work.deleteComment(auths[i],task.id,remaining[0].id,{expectedVersion:remaining[0].version}),/WORKSPACE_ARCHIVED/u);}
   const ban=new AccessBan({scopeType:'project',scopeId:a.id,workspaceId:workspace.id,projectId:a.id,userId:people[3]._id,reason:'Guest ban test',imposedBy:people[0]._id,imposedAt:new Date()});await ban.save();
   const blockedProfile=(await work.profile(auths[0],a.id,String(people[3]._id))).profile;assert.equal(blockedProfile.blocked,true);assert.equal(blockedProfile.role,null);
   await assert.rejects(work.getProject(auths[3],a.id),/ACCESS_BANNED/u);assert.equal((await work.shared(auths[3],{})).items.length,0);
  }finally{for(const [name,model] of Object.entries(models)){if(!['User','Session','Organization'].includes(name)&&model.schema.path('workspaceId'))await model.collection.deleteMany({workspaceId:{$in:wsIds}});}
-  await Workspace.collection.deleteMany({_id:{$in:wsIds}});await OrganizationInvitation.collection.deleteMany({organizationId:{$in:orgIds}});await Notification.collection.deleteMany({organizationId:{$in:orgIds}});await Organization.collection.deleteMany({_id:{$in:orgIds}});await Session.collection.deleteMany({userId:{$in:people.map(p=>p._id)}});await User.collection.deleteMany({_id:{$in:people.map(p=>p._id)}});await mongoose.disconnect();}
+  await Workspace.collection.deleteMany({_id:{$in:wsIds}});await OrganizationInvitation.collection.deleteMany({organizationId:{$in:orgIds}});await Notification.collection.deleteMany({organizationId:{$in:orgIds}});await ModerationAction.collection.deleteMany({organizationId:{$in:orgIds}});await Organization.collection.deleteMany({_id:{$in:orgIds}});await Session.collection.deleteMany({userId:{$in:people.map(p=>p._id)}});await User.collection.deleteMany({_id:{$in:people.map(p=>p._id)}});await mongoose.disconnect();}
 });
