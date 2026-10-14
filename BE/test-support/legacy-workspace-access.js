@@ -62,3 +62,5 @@ export {deliverProjectInvitation} from './legacy-project-mail.js';
 export {organizationNotification,notificationParentExists} from './legacy-notification-parent.js';
 
 export {assigneeEligibility} from './legacy-assignee-eligibility.js';
+
+export {createMongoWorkspaceStore} from './legacy-workspace-store.js';

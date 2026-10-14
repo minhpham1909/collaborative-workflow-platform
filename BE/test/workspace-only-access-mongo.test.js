@@ -1,3 +1,5 @@
+import {randomBytes} from 'node:crypto';
+import {tokenHash} from '../src/auth/tokens.js';
 import {workspaceResponse} from '../src/workspaces/response.js';
 import {createWorkspaceService} from '../src/workspaces/service.js';
 import {createMongoWorkspaceStore} from '../src/workspaces/mongo-store.js';
@@ -54,6 +56,32 @@ test('Workspace-only policy derives authority from active membership, hides old 
   await assert.rejects(service.role(identities[1],created.id,String(people[1]._id),{expectedVersion:1,role:'member',reason:'Must not self appoint'}),/OWNER_REQUIRED/u);
   await service.role(identities[0],created.id,String(people[1]._id),{expectedVersion:1,role:'member',reason:'Demote manager'});
   await assert.rejects(service.invite(identities[1],created.id,{type:'LINK'}),/OWNER_REQUIRED/u);
+  // Retired parent cannot preview/accept a LINK or EMAIL admission, including by ID.
+  const oldToken=randomBytes(32).toString('hex');
+  const oldInvite=await WorkspaceInvitation.create({workspaceId:attached._id,createdBy:people[3]._id,type:'LINK',tokenHash:tokenHash(oldToken),expiresAt:new Date(Date.now()+300000)});
+  await assert.rejects(service.preview({token:oldToken}),/INVITATION_UNAVAILABLE/u);
+  await assert.rejects(service.accept(identities[1],{token:oldToken}),/INVITATION_UNAVAILABLE/u);
+  const oldEmail=await WorkspaceInvitation.create({workspaceId:attached._id,createdBy:people[3]._id,type:'EMAIL',email:people[1].email,tokenHash:tokenHash(randomBytes(32).toString('hex')),expiresAt:new Date(Date.now()+300000)});
+  await assert.rejects(service.acceptById(identities[1],String(oldEmail._id),{}),/INVITATION_UNAVAILABLE/u);
+  assert.equal(await WorkspaceMembership.collection.countDocuments({workspaceId:attached._id,userId:people[1]._id}),0);
+  assert.equal((await WorkspaceInvitation.collection.findOne({_id:oldInvite._id})).acceptedAt,null);
+  // Multiple Managers are membership roles; a stale single-manager pointer is inert.
+  await service.role(identities[0],created.id,String(people[1]._id),{expectedVersion:2,role:'manager',reason:'Reappoint Manager'});
+  await WorkspaceMembership.create({workspaceId:created.id,userId:people[3]._id,role:'manager',joinedAt:new Date()});
+  const ownerRoster=(await service.members(identities[0],created.id,{})).items;
+  assert.equal(ownerRoster.filter(row=>row.role==='owner').length,1);assert.equal(ownerRoster.filter(row=>row.role==='manager').length,2);
+  const managerRoster=(await service.members(identities[1],created.id,{})).items;
+  const peer=managerRoster.find(row=>row.userId===String(people[3]._id));assert.equal(peer.permissions.remove,false);assert.equal(peer.permissions.ban,false);assert.equal(peer.permissions.changeRole,false);
+  await assert.rejects(service.remove(identities[1],created.id,String(people[3]._id),{expectedVersion:0}),/OWNER_REQUIRED/u);
+  await assert.rejects(service.state(identities[1],created.id,{expectedVersion:1,state:'archived',confirmName:created.name,reason:'Manager cannot archive'}),/OWNER_REQUIRED/u);
+  await Workspace.collection.updateOne({_id:new mongoose.Types.ObjectId(created.id)},{$set:{managerId:people[1]._id}});
+  assert.equal((await service.leave(identities[1],created.id,{expectedVersion:3})).code,'WORKSPACE_LEFT');
+  assert.equal((await service.leave(identities[1],created.id,{expectedVersion:3})).code,'ALREADY_LEFT');
+  assert.equal((await service.remove(identities[0],created.id,String(people[3]._id),{expectedVersion:0})).code,'MEMBER_REMOVED');
+  await assert.rejects(service.leave(identities[0],created.id,{expectedVersion:0}),/TRANSFER_REQUIRED/u);
+  await assert.rejects(service.get(identities[1],created.id),/WORKSPACE_UNAVAILABLE/u);
+  assert.equal((await service.members(identities[0],created.id,{})).items.length,1);
+
 
  }finally{registerHistoricalWorkspaceFixture(null);for(const model of [WorkspaceMembership,AccessBan,WorkspaceRoleAudit,WorkspaceManagementAudit,WorkspaceInvitation])await model.collection.deleteMany({workspaceId:{$in:wsIds}});await Workspace.collection.deleteMany({_id:{$in:wsIds}});await OrganizationMembership.collection.deleteMany({organizationId:{$in:orgIds}});await Organization.collection.deleteMany({_id:{$in:orgIds}});await Session.collection.deleteMany({userId:{$in:people.map(p=>p._id)}});await User.collection.deleteMany({_id:{$in:people.map(p=>p._id)}});await mongoose.disconnect();}
 });

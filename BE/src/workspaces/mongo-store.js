@@ -2,12 +2,12 @@ import { queryManagementHistory } from './audit-store.js';
 import mongoose from 'mongoose';
 import { queryWorkspaceList } from './query-store.js';
 import { randomBytes, randomUUID, createHash } from 'node:crypto';
-import { User, Session, Workspace, WorkspaceMembership, WorkspaceInvitation, Task, EmailOutbox, ProjectGuest, Organization, OrganizationMembership, WorkspaceLifecycleAudit, WorkspaceRoleAudit, WorkspaceCreation, WorkspaceManagementAudit } from '../models/index.js';
+import { User, Session, Workspace, WorkspaceMembership, WorkspaceInvitation, Task, EmailOutbox, ProjectGuest, WorkspaceLifecycleAudit, WorkspaceRoleAudit, WorkspaceCreation, WorkspaceManagementAudit } from '../models/index.js';
 import { AuthError } from '../auth/errors.js';
 import { tokenHash } from '../auth/tokens.js';
 import { createDeliveryCrypto } from '../auth/delivery-crypto.js';
 import { sameId, workspaceResponse, invitationResponse, invitationState, paged } from './response.js';
-import { workspaceAccess, workspaceAccessStages } from '../workspaces/access.js';
+import { historicalWorkspaceFixture, supportedWorkspace, workspaceAccess, workspaceAccessStages } from '../workspaces/access.js';
 import { assertNotBanned, bannedProjectIds } from '../moderation/guard.js';
 import { reconcileReopenRequests, cancelReopenRequests } from '../work/reopen-lifecycle.js';
 import { assertWorkspaceWritable } from './lifecycle.js';
@@ -27,6 +27,7 @@ function mongoAfter(after) {
   return { $or: after.$or.map((part) => part._id ? { ...part, _id: { $lt: id(part._id.$lt) } } : part) };
 }
 export function createMongoWorkspaceStore({ config, now = () => new Date() }) {
+  const historical=historicalWorkspaceFixture();if(historical)return historical.createMongoWorkspaceStore({config,now});
   const crypto = createDeliveryCrypto(config.mailKeyHex);
   async function actor(claims, tx) {
     const user = await User.collection.findOneAndUpdate({ _id: id(claims.sub) }, { $inc: { authMutationRevision: 1 } }, { session: tx, returnDocument: 'after' });
@@ -36,7 +37,7 @@ export function createMongoWorkspaceStore({ config, now = () => new Date() }) {
   }
   async function guard(workspaceId, tx) {
     const workspace = await Workspace.collection.findOneAndUpdate({ _id: id(workspaceId) }, { $inc: { mutationRevision: 1 } }, { session: tx, returnDocument: 'after' });
-    if (!workspace) unavailable(); return workspace;
+    if (!supportedWorkspace(workspace)) unavailable(); return workspace;
   }
   async function scope(user, workspaceId, tx, owner = false) {
     const workspace = await guard(workspaceId, tx);
@@ -45,7 +46,6 @@ export function createMongoWorkspaceStore({ config, now = () => new Date() }) {
     return { workspace, membership: access.membership, access };
   }
   async function audit(workspace, user, action, details, tx) {
-    if (workspace.organizationId) return; // Organization paths remain transitional and explicitly outside this feed.
     await new WorkspaceManagementAudit({ workspaceId: workspace._id, actorId: user._id, action, versionScope: 'workspace', resourceVersion: workspace.version ?? 0, ...details, createdAt: now() }).save({ session: tx });
   }
   async function creationResult(user, receipt, tx) {
@@ -68,10 +68,11 @@ export function createMongoWorkspaceStore({ config, now = () => new Date() }) {
   async function acceptInvitation(user, tx, lookup) {
       let value = await WorkspaceInvitation.collection.findOne({ ...lookup }, { session: tx });
       if (!value) throw new AuthError('INVITATION_UNAVAILABLE', 404);
+      const candidate=await Workspace.collection.findOne({_id:value.workspaceId},{session:tx});
+      if(!supportedWorkspace(candidate))throw new AuthError('INVITATION_UNAVAILABLE',404);
       const workspace = await guard(String(value.workspaceId), tx);
       assertWorkspaceWritable(workspace);
-      await assertNotBanned(user._id, { organizationId: workspace.organizationId, workspaceId: workspace._id }, tx);
-      if (workspace.organizationId) throw new AuthError('ORGANIZATION_INVITATION_REQUIRED', 409);
+      await assertNotBanned(user._id, { workspaceId: workspace._id }, tx);
       // Re-read after the guard so accept/revoke/transfer serialize on the Workspace.
       value = await WorkspaceInvitation.collection.findOne({ _id: value._id }, { session: tx });
       if (value.revokedAt || value.expiresAt <= now()) throw new AuthError('INVITATION_UNAVAILABLE', 404);
@@ -114,14 +115,10 @@ export function createMongoWorkspaceStore({ config, now = () => new Date() }) {
     }),
     state: (claims, workspaceId, input) => run(claims, async (user, tx) => {
       const { workspace, membership } = await scope(user, workspaceId, tx, true);
-      if (!workspace.organizationId && !sameId(workspace.ownerId, user._id)) throw new AuthError('OWNER_REQUIRED', 403);
+      if (!sameId(workspace.ownerId, user._id)) throw new AuthError('OWNER_REQUIRED', 403);
       if (workspace.version !== input.expectedVersion) conflict();
       if (input.confirmName !== workspace.name) throw new AuthError('WORKSPACE_CONFIRMATION_MISMATCH', 400);
       if ((workspace.state ?? 'active') === input.state) return { workspace: workspaceResponse(workspace, membership) };
-      if (input.state === 'active' && workspace.organizationId) {
-        try { await workspaceAccess(workspace, workspace.managerId, tx, { requireMember: true }); }
-        catch (error) { if (error instanceof AuthError) throw new AuthError('WORKSPACE_MANAGER_UNAVAILABLE', 409); throw error; }
-      }
       const time = now();
       const value = await Workspace.collection.findOneAndUpdate({ _id: workspace._id, version: input.expectedVersion },
         { $set: { state: input.state, archivedAt: input.state === 'archived' ? time : null, archivedBy: input.state === 'archived' ? user._id : null, updatedAt: time }, $inc: { version: 1 } }, { session: tx, returnDocument: 'after' });
@@ -151,31 +148,23 @@ export function createMongoWorkspaceStore({ config, now = () => new Date() }) {
       const { workspace, access } = await scope(user, workspaceId, tx);
       const records = await WorkspaceMembership.collection.aggregate([
         { $match: { workspaceId: workspace._id, state: 'active', $and: [mongoAfter(page.after), ...page.filters] } },
-        ...(workspace.organizationId ? [
-          { $lookup: { from: 'organization_memberships', let: { user: '$userId' }, pipeline: [
-            { $match: { organizationId: workspace.organizationId, state: 'active', $expr: { $eq: ['$userId', '$$user'] } } },
-          ], as: 'organizationMembership' } }, { $match: { 'organizationMembership.0': { $exists: true } } },
-        ] : []),
         { $lookup: { from: 'users', localField: 'userId', foreignField: '_id', pipeline: [{ $project: { displayName: 1 } }], as: 'identity' } },
         ...(page.patterns.length ? [{ $match: { $and: page.patterns.map(pattern => ({ 'identity.displayName': { $regex: pattern, $options: 'i' } })) } }] : []),
         { $sort: { joinedAt: -1, _id: -1 } }, { $limit: page.limit + 1 },
       ], { session: tx }).toArray();
       const users = await User.collection.find({ _id: { $in: records.map((value) => value.userId) } }, { session: tx, projection: { displayName: 1, avatar: 1, emailVerifiedAt: 1 } }).toArray();
-      const organization = workspace.organizationId ? await Organization.collection.findOne({ _id: workspace.organizationId }, { session: tx }) : null;
       return paged(records, page.limit, (membership) => {
         const member = users.find((value) => sameId(value._id, membership.userId));
-        const protectedOwner = sameId(workspace.ownerId, membership.userId) || (organization && sameId(organization.ownerId, membership.userId));
-        const protectedAdmin = membership.organizationMembership?.[0]?.role === 'admin' && access.role !== 'organization_owner';
-        const manager = workspace.organizationId ? sameId(workspace.managerId, membership.userId) : membership.role === 'manager', self = sameId(user._id, membership.userId);
-        const eligible = access.canManage && !self && !protectedOwner && !protectedAdmin;
-        const owner = access.role === 'owner' && !workspace.organizationId;
+        const protectedOwner = sameId(workspace.ownerId, membership.userId);
+        const manager = membership.role === 'manager', self = sameId(user._id, membership.userId);
+        const eligible = access.canManage && !self && !protectedOwner;
+        const owner = access.role === 'owner';
         return { userId: String(membership.userId), displayName: member?.displayName ?? 'Unavailable User', avatar: { source: member?.avatar?.source ?? 'initials', googlePictureUrl: member?.avatar?.googlePictureUrl ?? null }, role: protectedOwner ? 'owner' : manager ? 'manager' : 'member', version: membership.version, joinedAt: membership.joinedAt,
-          permissions: { remove: Boolean(eligible && (!manager || owner)), ban: Boolean(eligible && (!manager || owner || ['organization_owner', 'organization_admin'].includes(access.role))), transfer: Boolean(owner && !self), changeRole: Boolean(owner && !protectedOwner && !self && member?.emailVerifiedAt) } };
+          permissions: { remove: Boolean(eligible && (!manager || owner)), ban: Boolean(eligible && (!manager || owner)), transfer: Boolean(owner && !self), changeRole: Boolean(owner && !protectedOwner && !self && member?.emailVerifiedAt) } };
       }, 'joinedAt');
     }),
     audit: (claims, workspaceId, page) => run(claims, async (user, tx) => {
       const { workspace } = await scope(user, workspaceId, tx, true);
-      if (workspace.organizationId) throw new AuthError('WORKSPACE_AUDIT_MODE_UNAVAILABLE', 409);
       return queryManagementHistory(workspace, page, tx);
     }),
     roleAudit: (claims, workspaceId, page) => run(claims, async (user, tx) => {
@@ -194,7 +183,6 @@ export function createMongoWorkspaceStore({ config, now = () => new Date() }) {
     }),
     role: (claims, workspaceId, memberId, input) => run(claims, async (user, tx) => {
       const { workspace } = await scope(user, workspaceId, tx);
-      if (workspace.organizationId) throw new AuthError('WORKSPACE_ROLE_MODE_UNAVAILABLE', 409);
       if (!sameId(workspace.ownerId, user._id)) throw new AuthError('OWNER_REQUIRED', 403);
       if (sameId(workspace.ownerId, memberId)) throw new AuthError('CANNOT_CHANGE_OWNER_ROLE', 409);
       const target = await WorkspaceMembership.collection.findOne({ workspaceId: workspace._id, userId: id(memberId), state: 'active' }, { session: tx });
@@ -213,29 +201,21 @@ export function createMongoWorkspaceStore({ config, now = () => new Date() }) {
     }),
     leave: (claims, workspaceId, expectedVersion) => run(claims, async (user, tx) => {
       const workspace = await guard(workspaceId, tx);
-      if (workspace.organizationId) await workspaceAccess(workspace, user._id, tx, { requireMember: true });
+      await assertNotBanned(user._id,{workspaceId:workspace._id},tx);
       const membership = await WorkspaceMembership.collection.findOne({ workspaceId: workspace._id, userId: user._id }, { session: tx });
       if (!membership) unavailable();
       if (sameId(workspace.ownerId, user._id)) throw new AuthError('TRANSFER_REQUIRED', 409);
-      if (sameId(workspace.managerId, user._id)) throw new AuthError('MANAGER_REPLACEMENT_REQUIRED', 409);
       if (membership.state === 'inactive') return { code: 'ALREADY_LEFT' };
       if (membership.version !== expectedVersion) conflict();
       await endMembership(workspace, membership, 'left', tx);
       await audit(workspace, user, 'member_left', { targetUserId: user._id, versionScope: 'membership', resourceVersion: membership.version + 1 }, tx); return { code: 'WORKSPACE_LEFT' };
     }),
     remove: (claims, workspaceId, memberId, expectedVersion) => run(claims, async (user, tx) => {
-      const { workspace, access } = await scope(user, workspaceId, tx, true);
-      if (workspace.organizationId) {
-        const org = await Organization.collection.findOne({ _id: workspace.organizationId }, { session: tx });
-        if (sameId(org.ownerId, memberId)) throw new AuthError('CANNOT_REMOVE_OWNER', 409);
-        const targetRole = await OrganizationMembership.collection.findOne({ organizationId: org._id, userId: id(memberId), state: 'active' }, { session: tx });
-        if (targetRole?.role === 'admin' && access.role !== 'organization_owner') throw new AuthError('ORGANIZATION_OWNER_REQUIRED', 403);
-      }
+      const { workspace } = await scope(user, workspaceId, tx, true);
       if (sameId(workspace.ownerId, memberId)) throw new AuthError('CANNOT_REMOVE_OWNER', 409);
-      if (sameId(workspace.managerId, memberId)) throw new AuthError('MANAGER_REPLACEMENT_REQUIRED', 409);
       const membership = await WorkspaceMembership.collection.findOne({ workspaceId: workspace._id, userId: id(memberId) }, { session: tx });
       if (!membership) unavailable();
-      if (!workspace.organizationId && membership.role === 'manager' && !sameId(workspace.ownerId, user._id)) throw new AuthError('OWNER_REQUIRED', 403);
+      if (membership.role === 'manager' && !sameId(workspace.ownerId, user._id)) throw new AuthError('OWNER_REQUIRED', 403);
       if (membership.state === 'inactive') return { code: 'MEMBER_ALREADY_INACTIVE' };
       if (membership.version !== expectedVersion) conflict();
       await endMembership(workspace, membership, 'removed', tx);
@@ -243,7 +223,6 @@ export function createMongoWorkspaceStore({ config, now = () => new Date() }) {
     }),
     transfer: (claims, workspaceId, input) => run(claims, async (user, tx) => {
       const { workspace, membership } = await scope(user, workspaceId, tx, true);
-      if (workspace.organizationId) throw new AuthError('ORGANIZATION_OWNERSHIP_REQUIRED', 409);
       if (!sameId(workspace.ownerId, user._id)) throw new AuthError('OWNER_REQUIRED', 403);
       if (workspace.version !== input.expectedVersion) conflict();
       const recipientMembership = await WorkspaceMembership.collection.findOne({ workspaceId: workspace._id, userId: id(input.memberId), state: 'active' }, { session: tx });
@@ -281,10 +260,9 @@ export function createMongoWorkspaceStore({ config, now = () => new Date() }) {
     invite: (claims, workspaceId, input) => run(claims, async (user, tx) => {
       const { workspace } = await scope(user, workspaceId, tx, true);
       assertWorkspaceWritable(workspace);
-      if (workspace.organizationId) throw new AuthError('ORGANIZATION_INVITATION_REQUIRED', 409);
       if (input.type === 'EMAIL') {
         const recipient = await User.collection.findOne({ emailCanonical: input.email }, { session: tx });
-        if (recipient) await assertNotBanned(recipient._id, { organizationId: workspace.organizationId, workspaceId: workspace._id }, tx);
+        if (recipient) await assertNotBanned(recipient._id, { workspaceId: workspace._id }, tx);
         if (recipient && await WorkspaceMembership.collection.findOne({ workspaceId: workspace._id, userId: recipient._id, state: 'active' }, { session: tx })) return { code: 'ALREADY_MEMBER' };
       }
       const token = randomBytes(32).toString('hex');
@@ -325,8 +303,7 @@ export function createMongoWorkspaceStore({ config, now = () => new Date() }) {
       const value = await WorkspaceInvitation.collection.findOne({ tokenHash: tokenHash(token), revokedAt: null, acceptedAt: null, expiresAt: { $gt: now() } }, { session: tx });
       if (!value) throw new AuthError('INVITATION_UNAVAILABLE', 404);
       const workspace = await Workspace.collection.findOne({ _id: value.workspaceId }, { session: tx });
-      if (!workspace) throw new AuthError('INVITATION_UNAVAILABLE', 404);
-      if (workspace.organizationId) throw new AuthError('ORGANIZATION_INVITATION_REQUIRED', 409);
+      if (!supportedWorkspace(workspace)) throw new AuthError('INVITATION_UNAVAILABLE', 404);
       const inviter = await User.collection.findOne({ _id: value.createdBy }, { session: tx, projection: { displayName: 1 } });
       return { preview: { workspaceName: workspace.name, inviterDisplayName: inviter?.displayName ?? 'Unavailable User', type: value.type, expiresAt: value.expiresAt } };
     }),
