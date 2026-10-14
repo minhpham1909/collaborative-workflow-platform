@@ -115,13 +115,11 @@ test('C3 scoped Ban, hard Comment moderation and cleanup jobs on MongoDB', { ski
       await work.acceptGuestInvitation(auths[4], { token: token(links[0]) });
       assert.equal(await TaskComment.collection.countDocuments({ _id: O(spam[0].id) }), 0);
     });
-    await t.test('Project Member Ban overrides Creator/Assignee/Lead without blocking other Projects', async () => {
-      await Project.collection.updateOne({ _id: O(a.id) }, { $set: { leadId: users[3]._id } });
+    await t.test('Project Member Ban overrides Creator/Assignee without blocking other Projects', async () => {
       await ban(2, 'project', a.id, 3);
       await assert.rejects(work.getTask(auths[3], taskA.id), { code: 'ACCESS_BANNED' });
       await assert.rejects(work.updateTask(auths[3], taskA.id, { title: 'Creator bypass', expectedVersion: 0 }), { code: 'ACCESS_BANNED' });
       assert.ok((await work.getTask(auths[3], taskB.id)).task);
-      assert.equal((await Project.collection.findOne({ _id: O(a.id) })).leadId, null);
       assert.equal((await Task.collection.findOne({ _id: O(taskA.id) })).assigneeId, null);
       assert.equal((await Task.collection.findOne({ _id: O(done.id) })).assigneeId.toString(), uid(3));
       assert.ok(!(await work.projects(auths[3], first.id, { state: 'all' })).items.some(p => p.id === a.id));

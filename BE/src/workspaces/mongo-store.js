@@ -2,7 +2,7 @@ import { queryManagementHistory } from './audit-store.js';
 import mongoose from 'mongoose';
 import { queryWorkspaceList } from './query-store.js';
 import { randomBytes, randomUUID, createHash } from 'node:crypto';
-import { User, Session, Workspace, WorkspaceMembership, WorkspaceInvitation, Project, Task, EmailOutbox, ProjectGuest, Organization, OrganizationMembership, WorkspaceLifecycleAudit, WorkspaceRoleAudit, WorkspaceCreation, WorkspaceManagementAudit } from '../models/index.js';
+import { User, Session, Workspace, WorkspaceMembership, WorkspaceInvitation, Task, EmailOutbox, ProjectGuest, Organization, OrganizationMembership, WorkspaceLifecycleAudit, WorkspaceRoleAudit, WorkspaceCreation, WorkspaceManagementAudit } from '../models/index.js';
 import { AuthError } from '../auth/errors.js';
 import { tokenHash } from '../auth/tokens.js';
 import { createDeliveryCrypto } from '../auth/delivery-crypto.js';
@@ -62,7 +62,6 @@ export function createMongoWorkspaceStore({ config, now = () => new Date() }) {
     const time = now();
     await WorkspaceMembership.collection.updateOne({ _id: membership._id, version: membership.version }, { $set: { state: 'inactive', role: 'member', leftAt: time, exitReason: reason, emailOverrides: inherited(), updatedAt: time }, $inc: { version: 1 } }, { session: tx });
     await Task.collection.updateMany({ workspaceId: workspace._id, assigneeId: membership.userId, deletedAt: null, status: { $ne: 'done' } }, { $set: { assigneeId: null, updatedAt: time }, $inc: { version: 1 } }, { session: tx });
-    await Project.collection.updateMany({ workspaceId: workspace._id, leadId: membership.userId }, { $set: { leadId: null, updatedAt: time }, $inc: { version: 1 } }, { session: tx });
     await ProjectGuest.collection.updateMany({ workspaceId: workspace._id, userId: membership.userId, state: 'active' }, { $set: { state: 'inactive', revokedAt: time, updatedAt: time }, $inc: { version: 1 } }, { session: tx });
     await reconcileReopenRequests({ workspaceId: workspace._id, requesterId: membership.userId }, time, tx);
   }

@@ -91,7 +91,6 @@ export function createMongoModerationStore({ config, now = () => new Date() } = 
     const projects = { workspaceId: { $in: workspaceIds }, ...(context.project ? { _id: context.project._id } : {}) };
     const projectIds = (await Project.collection.find(projects, { session: tx, projection: { _id: 1 } }).toArray()).map(row => row._id);
     await cancelReopenRequests({ projectId: { $in: projectIds }, requesterId: target }, 'requester_access_lost', now(), tx, user._id);
-    await Project.collection.updateMany({ ...projects, leadId: target }, { $set: { leadId: null, updatedAt: now() }, $inc: { version: 1 } }, { session: tx });
     await ProjectGuest.collection.updateMany({ projectId: { $in: projectIds }, userId: target, state: 'active' }, { $set: { state: 'inactive', revokedAt: now(), updatedAt: now() }, $inc: { version: 1 } }, { session: tx });
     const taskIds = (await Task.collection.find({ projectId: { $in: projectIds } }, { session: tx, projection: { _id: 1 } }).toArray()).map(row => row._id);
     await Task.collection.updateMany({ projectId: { $in: projectIds }, assigneeId: target, status: { $ne: 'done' }, deletedAt: null }, { $set: { assigneeId: null, updatedAt: now() }, $inc: { version: 1 } }, { session: tx });

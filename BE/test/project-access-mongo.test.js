@@ -166,7 +166,7 @@ test('Project Guest and retired Lead access on isolated MongoDB', { skip: !proce
       await work.state(auths[0], project.id, { state: 'archived', expectedVersion: 0 });
       const member = await OrganizationMembership.collection.findOne({ organizationId: orgIds[0], userId: users[2]._id });
       await orgs.leave(auths[2], org.id, { expectedVersion: member.version });
-      const stored = await Project.collection.findOne({ _id: new mongoose.Types.ObjectId(project.id) }); assert.equal(stored.leadId, null);
+      const stored = await Project.collection.findOne({ _id: new mongoose.Types.ObjectId(project.id) }); assert.equal(String(stored.leadId),String(users[2]._id)); assert.equal(stored.version,1); // Injected retired field is inert; no inheritance cleanup or Project version churn.
       assert.equal((await ProjectGuest.collection.findOne({ projectId: stored._id, userId: users[2]._id })).state, 'inactive');
       await assert.rejects(work.getProject(auths[2], project.id), { code: 'RESOURCE_UNAVAILABLE' });
       assert.equal((await work.getProject(auths[3], project.id)).project.accessRole, 'guest');

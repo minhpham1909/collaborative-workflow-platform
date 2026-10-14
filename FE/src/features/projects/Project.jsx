@@ -115,7 +115,6 @@ export default function Project({ api, id, user, section }) {
         {project?.accessRole === "guest" && <> / <a href="#shared">{t("Dự án được chia sẻ")}</a> / <span>{project.context?.workspaceName ?? t("Project được chia sẻ")}</span></>}
         {workspace && (
           <>
-            {workspace.organizationId && <> / <a href={`#organization/${workspace.organizationId}`}>{t("Tổ chức")}</a></>}
             {" "}
             / <a href={`#workspace/${workspace.id}`}>{workspace.name}</a>
           </>

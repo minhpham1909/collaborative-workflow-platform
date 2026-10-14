@@ -3,8 +3,6 @@ import { coreSchema, ref, nullableDate, choice, singleLine, richText, contentHoo
 export const projectSchema = coreSchema({
   workspaceId: { ...ref('Workspace'), immutable: true }, createdBy: { ...ref('User'), immutable: true },
   name: singleLine(200), icon: choice(['folder', 'palette', 'code', 'megaphone', 'layers', 'document'], 'folder'), description: richText(), state: choice(['active', 'archived'], 'active'),
-  // Historical field only; current access never derives authority from it.
-  leadId: ref('User', true),
   taskSequence: integer(),
   taskPrefix: { type: String, default: null, match: /^[A-F0-9]{6}$/u },
   archivedAt: nullableDate(), archivedBy: ref('User', true),

@@ -33,7 +33,7 @@ test('all 30 core models validate representative typed fixtures without DB', asy
     OrganizationInvitation: { organizationId: workspaceId, createdBy: ownerId, email: 'member@example.com', emailCanonical: 'member@example.com', tokenHash: hash, expiresAt: now },
     ProjectGuest: { workspaceId, projectId, userId: ownerId, grantedBy: ownerId, joinedAt: now },
     ProjectGuestInvitation: { workspaceId, projectId, createdBy: ownerId, type: 'LINK', tokenHash: hash, expiresAt: now },
-    ProjectAccessAudit: { workspaceId, projectId, actorId: ownerId, action: 'lead_changed', targetUserId: ownerId },
+    ProjectAccessAudit: { workspaceId, projectId, actorId: ownerId, action: 'guest_joined', targetUserId: ownerId },
     User: user(), AuthIdentity: { userId: ownerId, provider: 'google', providerSubject: 'google-sub', lastLoginAt: now },
     Session: { userId: ownerId, refreshTokenHash: hash, expiresAt: now, lastSeenAt: now },
     AuthToken: { userId: ownerId, purpose: 'verify_email', tokenHash: hash, expiresAt: now },
@@ -145,4 +145,10 @@ test('Management audit rejects corrupt transitions and accidental sensitive payl
   for (const patch of [{ targetUserId: null }, { previousRole: null }, { reason: null }, { versionScope: 'workspace' }, { changedFields: ['summary'] }]) await assert.rejects(new models.WorkspaceManagementAudit({ ...base, ...patch }).validate());
   assert.throws(() => new models.WorkspaceManagementAudit({ ...base, token: 'secret' }), /not in schema/u);
   await assert.rejects(new models.WorkspaceManagementAudit({ workspaceId, actorId: ownerId, action: 'metadata_updated', versionScope: 'workspace', resourceVersion: 2, changedFields: ['email'] }).validate());
+});
+
+test('Retired Project Lead cannot be stored or recreated as an access audit',async()=>{
+ assert.equal(models.Project.schema.path('leadId'),undefined);
+ assert.throws(()=>new models.Project({workspaceId,createdBy:ownerId,name:'No Lead',leadId:ownerId}),/leadId/u);
+ await assert.rejects(new models.ProjectAccessAudit({workspaceId,projectId,actorId:ownerId,action:'lead_changed'}).validate());
 });

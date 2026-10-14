@@ -3,7 +3,7 @@ import { queryWorkspaceList } from '../workspaces/query-store.js';
 import { cancelReopenRequests, reconcileReopenRequests } from '../work/reopen-lifecycle.js';
 import { assertWorkspaceWritable } from '../workspaces/lifecycle.js';
 import { randomUUID, randomBytes } from 'node:crypto';
-import { User, Session, Organization, OrganizationMembership, OrganizationAudit, OrganizationInvitation, Workspace, WorkspaceMembership, Notification, EmailOutbox, Task, Project, ProjectGuest } from '../models/index.js';
+import { User, Session, Organization, OrganizationMembership, OrganizationAudit, OrganizationInvitation, Workspace, WorkspaceMembership, Notification, EmailOutbox, Task, ProjectGuest } from '../models/index.js';
 import { AuthError } from '../auth/errors.js';
 import { organizationAccess } from './access.js';
 import { assertOrganizationIndexes, assertOrganizationInvitationIndexes } from './index-check.js';
@@ -136,8 +136,6 @@ export function createMongoOrganizationStore({ now = () => new Date(), config } 
         { $set: { state: 'inactive', leftAt: now(), exitReason: reason, emailOverrides: { assignment: 'inherit', comment: 'inherit', content: 'inherit', status: 'inherit' }, updatedAt: now() }, $inc: { version: 1 } }, { session: tx });
     }
     const workspaceIds = workspaces.map(workspace => workspace._id);
-    await Project.collection.updateMany({ workspaceId: { $in: workspaceIds }, leadId: membership.userId },
-      { $set: { leadId: null, updatedAt: now() }, $inc: { version: 1 } }, { session: tx });
     await ProjectGuest.collection.updateMany({ workspaceId: { $in: workspaceIds }, userId: membership.userId, state: 'active' },
       { $set: { state: 'inactive', revokedAt: now(), updatedAt: now() }, $inc: { version: 1 } }, { session: tx });
     await Task.collection.updateMany({ workspaceId: { $in: workspaceIds }, assigneeId: membership.userId, status: { $ne: 'done' }, deletedAt: null },

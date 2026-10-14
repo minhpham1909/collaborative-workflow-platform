@@ -60,6 +60,9 @@ try {
   assert.equal(await owner.getByRole('button',{name:/Thêm thành viên nội bộ|Add internal member/}).count(),0);
   for(const w of [375,768,1024,1280,1440]){await owner.setViewportSize({width:w,height:1000});assert.ok(await owner.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));await owner.screenshot({path:out+'/workspace-team-'+theme+'-'+language+'-'+w+'.png',fullPage:true});}
   await owner.setViewportSize({width,height:1000});
+  await owner.goto(feOrigin+'/#project/'+projects[0].id);
+  await owner.locator('.board-project-header').waitFor();
+  assert.equal(await owner.locator('.breadcrumbs a[href^="#organization/"]').count(),0);
   await owner.goto(feOrigin+'/#task/'+profileTask.id);
   await owner.locator('.person-profile-trigger').first().click();
   const profile=owner.locator('.person-profile-card:popover-open');await profile.waitFor();

@@ -365,7 +365,6 @@
         "archivedBy": "ObjectId|null",
         "version": "Integer",
         "updatedAt": "Date",
-        "leadId": "ObjectId|null",
         "taskPrefix": "String|null",
         "taskSequence": "Integer"
       },
@@ -373,8 +372,7 @@
       "references": {
         "workspaceId": "workspaces",
         "createdBy": "users",
-        "archivedBy": "users",
-        "leadId": "users"
+        "archivedBy": "users"
       },
       "indexes": [
         {
@@ -405,7 +403,7 @@
         "Description proposed maximum 10000 visible characters"
       ],
       "rules": [
-        "leadId is historical only; current access/DTOs do not derive Lead permissions; mutation route retired with 410"
+        "Project Lead is retired: no leadId field or authority; old mutation route returns 410; no inheritance or data backfill."
       ]
     },
     {
@@ -987,15 +985,13 @@
         "projectId": "ObjectId",
         "actorId": "ObjectId",
         "targetUserId": "ObjectId|null",
-        "previousUserId": "ObjectId|null",
-        "action": "String"
+        "action": "guest_invitation_created|guest_invitation_revoked|guest_joined|guest_revoked"
       },
       "references": {
         "workspaceId": "workspaces",
         "projectId": "projects",
         "actorId": "users",
-        "targetUserId": "users",
-        "previousUserId": "users"
+        "targetUserId": "users"
       },
       "indexes": [
         {

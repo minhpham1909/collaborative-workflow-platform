@@ -20,6 +20,6 @@ projectGuestInvitationSchema.pre('validate', function () {
   } else if ([this.email, this.emailCanonical, this.acceptedAt, this.acceptedBy].some(value => value !== null)) this.invalidate('type', 'Reusable Guest link has no recipient/acceptance metadata');
 });
 export const projectAccessAuditSchema = coreSchema({
-  workspaceId: ref('Workspace'), projectId: ref('Project'), actorId: ref('User'), targetUserId: ref('User', true), previousUserId: ref('User', true),
-  action: choice(['lead_changed', 'guest_invitation_created', 'guest_invitation_revoked', 'guest_joined', 'guest_revoked']),
+  workspaceId: ref('Workspace'), projectId: ref('Project'), actorId: ref('User'), targetUserId: ref('User', true),
+  action: choice(['guest_invitation_created', 'guest_invitation_revoked', 'guest_joined', 'guest_revoked']),
 }, { editable: false, updated: false });
