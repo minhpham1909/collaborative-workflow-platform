@@ -38,7 +38,7 @@ test('Current mail rejects retired parents, skips Org/auth queues and preserves 
   assert.equal((await dispatchInvitationMail({config,send})).state,'sent');assert.equal(sent[1].purpose,'project_guest_invitation');
   for(const job of [orgJob,authJob]){const unchanged=await EmailOutbox.collection.findOne({_id:job._id});assert.equal(unchanged.state,'pending');assert.equal(unchanged.attempts,0);}
   const org=await Organization.create({ownerId:users[0]._id,name:'Retired parent'});orgIds.push(org._id);
-  const retired=await Workspace.create({organizationId:org._id,managerId:users[0]._id,name:'Old attached parent'});wsIds.push(retired._id);
+  const retired={_id:new mongoose.Types.ObjectId(),organizationId:org._id,managerId:users[0]._id,name:'Old attached parent',version:0,state:'active',createdAt:new Date()};await Workspace.collection.insertOne(retired);wsIds.push(retired._id);
   const oldProject=await Project.create({workspaceId:retired._id,createdBy:users[0]._id,name:'Old Project'});
   const oldTask=await Task.create({workspaceId:retired._id,projectId:oldProject._id,createdBy:users[0]._id,title:'Old task'});
   await WorkspaceMembership.create({workspaceId:retired._id,userId:users[1]._id,joinedAt:new Date()});

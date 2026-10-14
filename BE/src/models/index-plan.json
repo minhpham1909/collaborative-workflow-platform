@@ -66,16 +66,7 @@
       }
     }
   ],
-  "workspaces": [
-    {
-      "name": "workspace_organization_list",
-      "keys": {
-        "organizationId": 1,
-        "createdAt": -1,
-        "_id": -1
-      }
-    }
-  ],
+  "workspaces": [],
   "workspace_memberships": [
     {
       "name": "membership_pair_unique",

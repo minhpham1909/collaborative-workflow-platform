@@ -1,3 +1,4 @@
+import {historicalWorkspaceFixture} from '../workspaces/access.js';
 import mongoose from 'mongoose';
 import { queryWorkspaceList } from '../workspaces/query-store.js';
 import { cancelReopenRequests, reconcileReopenRequests } from '../work/reopen-lifecycle.js';
@@ -302,7 +303,8 @@ export function createMongoOrganizationStore({ now = () => new Date(), config } 
     }),
     createWorkspace: (claims, organizationId, fields) => run(claims, async (user, tx) => {
       const { organization } = await scope(user, organizationId, tx, true);
-      const workspace = new Workspace({ ...fields, organizationId: organization._id, managerId: user._id, ownerId: null });
+      const historical=historicalWorkspaceFixture();if(!historical)throw new AuthError('ORGANIZATIONS_RETIRED',410);
+      const workspace = historical.createWorkspaceDocument({ ...fields, organizationId: organization._id, managerId: user._id, ownerId: null });
       await workspace.save({ session: tx });
       const membership = new WorkspaceMembership({ workspaceId: workspace._id, userId: user._id, joinedAt: now() });
       await membership.save({ session: tx });

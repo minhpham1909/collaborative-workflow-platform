@@ -207,14 +207,12 @@
     {
       "name": "workspaces",
       "fields": {
-        "ownerId": "ObjectId|null",
+        "ownerId": "ObjectId",
         "name": "String",
         "description": "RichText",
         "version": "Integer",
         "mutationRevision": "Integer",
         "updatedAt": "Date",
-        "organizationId": "ObjectId|null",
-        "managerId": "ObjectId|null",
         "state": "active|archived",
         "archivedAt": "Date|null",
         "archivedBy": "ObjectId|null",
@@ -228,26 +226,14 @@
       ],
       "references": {
         "ownerId": "users",
-        "organizationId": "organizations",
-        "managerId": "users",
         "archivedBy": "users"
       },
-      "indexes": [
-        {
-          "name": "workspace_organization_list",
-          "keys": {
-            "organizationId": 1,
-            "createdAt": -1,
-            "_id": -1
-          }
-        }
-      ],
+      "indexes": [],
       "constraints": [
-        "Exactly one ownerId and active membership for owner",
-        "Role derived; not duplicated on membership",
-        "Description proposed maximum 20000 visible characters",
-        "Standalone has ownerId and no managerId; organization Workspace has organizationId/managerId and no personal ownerId",
-        "Legacy missing organizationId remains standalone"
+        "One required ownerId; runtime authority also requires active Workspace membership",
+        "Owner role derived from ownerId; multiple Managers stored on memberships",
+        "Description maximum 20000 visible characters",
+        "Strict schema rejects retired organizationId and managerId fields; no data inheritance"
       ]
     },
     {

@@ -64,3 +64,5 @@ export {organizationNotification,notificationParentExists} from './legacy-notifi
 export {assigneeEligibility} from './legacy-assignee-eligibility.js';
 
 export {createMongoWorkspaceStore} from './legacy-workspace-store.js';
+
+export {createWorkspaceDocument} from './legacy-workspace-model.js';

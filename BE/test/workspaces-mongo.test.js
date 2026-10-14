@@ -1,3 +1,4 @@
+import {HistoricalWorkspace as Workspace} from '../test-support/legacy-workspace-model.js';
 import '../test-support/legacy-organizations.js';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -5,7 +6,7 @@ import { randomBytes, randomUUID } from 'node:crypto';
 import { once } from 'node:events';
 import mongoose from 'mongoose';
 import { connectDatabase } from '../src/database.js';
-import { models, User, Session, Workspace, WorkspaceMembership, WorkspaceInvitation, Project, Task, TaskComment, EmailOutbox, Notification, WorkspaceRoleAudit, WorkspaceCreation, WorkspaceManagementAudit, AccessBan, Organization, OrganizationMembership, WorkspaceLifecycleAudit, ModerationAction } from '../src/models/index.js';
+import { models, User, Session, WorkspaceMembership, WorkspaceInvitation, Project, Task, TaskComment, EmailOutbox, Notification, WorkspaceRoleAudit, WorkspaceCreation, WorkspaceManagementAudit, AccessBan, Organization, OrganizationMembership, WorkspaceLifecycleAudit, ModerationAction } from '../src/models/index.js';
 import { createWorkService } from '../src/work/service.js';
 import { createMongoWorkStore } from '../src/work/mongo-store.js';
 import { createModerationService } from '../src/moderation/service.js';

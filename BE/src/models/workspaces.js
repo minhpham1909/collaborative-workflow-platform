@@ -10,8 +10,7 @@ export const workspaceCreationSchema = coreSchema({
 }, { editable: false, updated: false, privateFields: ['fingerprint'] });
 
 export const workspaceSchema = coreSchema({
-  ownerId: ref('User', true), organizationId: { ...ref('Organization', true), immutable: true },
-  managerId: ref('User', true), name: singleLine(200), description: richText(), mutationRevision: integer(),
+  ownerId: ref('User'), name: singleLine(200), description: richText(), mutationRevision: integer(),
   summary: { ...nullableString(500), validate: validWorkspaceSummary },
   icon: choice(WORKSPACE_ICONS, WORKSPACE_IDENTITY_DEFAULTS.icon),
   color: choice(WORKSPACE_COLORS, WORKSPACE_IDENTITY_DEFAULTS.color),
@@ -22,9 +21,6 @@ contentHook(workspaceSchema, 'description', 'workspace');
 workspaceSchema.pre('validate', function () {
   if (this.state === 'active' && (this.archivedAt || this.archivedBy)) this.invalidate('state', 'Active Workspace has no archive metadata');
   if (this.state === 'archived' && (!this.archivedAt || !this.archivedBy)) this.invalidate('state', 'Archived Workspace requires metadata');
-  if (this.organizationId ? (this.ownerId !== null || !this.managerId) : (!this.ownerId || this.managerId !== null)) {
-    this.invalidate('ownerId', 'Standalone requires an owner; attached requires a manager and organization ownership');
-  }
 });
 
 export const membershipSchema = coreSchema({

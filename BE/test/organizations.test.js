@@ -35,14 +35,12 @@ test('membership has no ownership role and inconsistent departure state is rejec
   await assert.rejects(new OrganizationMembership({ ...base, state: 'inactive' }).validate());
   await assert.rejects(new OrganizationMembership({ ...base, leftAt: new Date() }).validate());
 });
-test('Workspace ownership cannot mix organization and standalone modes', async () => {
-  const base = { name: 'W' };
-  await new Workspace({ ...base, ownerId: org.ownerId }).validate();
-  await new Workspace({ ...base, organizationId: org._id, managerId: org.ownerId }).validate();
-  for (const value of [base, { ...base, organizationId: org._id }, { ...base, organizationId: org._id, managerId: org.ownerId, ownerId: org.ownerId }, { ...base, ownerId: org.ownerId, managerId: org.ownerId }]) {
-    await assert.rejects(new Workspace(value).validate());
-  }
+test('Current Workspace requires one Owner and rejects retired Organization/manager fields',async()=>{
+ const base={name:'W'};await new Workspace({...base,ownerId:org.ownerId}).validate();
+ for(const value of [base,{...base,ownerId:null},{...base,ownerId:[org.ownerId,org.ownerId]}])await assert.rejects(new Workspace(value).validate());
+ for(const field of ['organizationId','managerId']){assert.equal(Workspace.schema.path(field),undefined);assert.throws(()=>new Workspace({...base,ownerId:org.ownerId,[field]:org.ownerId}));}
 });
+
 test('management DTOs reject privilege/parent injection and require explicit version', () => {
   for (const value of [{ role: 'owner', expectedVersion: 0 }, { role: 'admin' }, { role: 'admin', expectedVersion: 0, organizationId: org._id }]) assert.throws(() => roleInput(value));
   for (const value of [{ managerId: 'bad', expectedVersion: 0 }, { managerId: org.ownerId, expectedVersion: 0, role: 'admin' }]) assert.throws(() => managerInput(value));

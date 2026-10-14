@@ -112,7 +112,7 @@ test('Workspace-only Project/Guest policy closes retired parents across direct, 
   const org=new Organization({ownerId:people[0]._id,name:'Unsupported organization'});await org.save();orgIds.push(org._id);
   const retiredJob=await ModerationAction.create({scopeType:'organization',scopeId:org._id,organizationId:org._id,workspaceIds:[],actorId:people[0]._id,targetUserId:people[2]._id,action:'ban',reason:'Retired cleanup must not execute',cleanup:'all',cutoff:new Date(),state:'pending',matchedCount:1});
   assert.equal((await runCommentCleanup()).state,'idle');assert.equal((await ModerationAction.collection.findOne({_id:retiredJob._id})).state,'pending');
-  const retired=new Workspace({organizationId:org._id,managerId:people[0]._id,name:'Retired private Workspace'});await retired.save();wsIds.push(retired._id);
+  const retired={_id:new mongoose.Types.ObjectId(),organizationId:org._id,managerId:people[0]._id,name:'Retired private Workspace',version:0,state:'active',createdAt:new Date()};await Workspace.collection.insertOne(retired);wsIds.push(retired._id);
   const oldProject=new Project({workspaceId:retired._id,createdBy:people[0]._id,name:'Retired private Project'});await oldProject.save();
   const oldTask=new Task({workspaceId:retired._id,projectId:oldProject._id,createdBy:people[0]._id,title:'Retired private Task'});await oldTask.save();
   await new ProjectGuest({workspaceId:retired._id,projectId:oldProject._id,userId:people[3]._id,grantedBy:people[0]._id,joinedAt:new Date()}).save();

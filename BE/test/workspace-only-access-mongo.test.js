@@ -22,12 +22,12 @@ test('Workspace-only policy derives authority from active membership, hides old 
   for(const [i,role] of [[0,'member'],[1,'manager'],[2,'member']])await new WorkspaceMembership({workspaceId:workspace._id,userId:people[i]._id,role,joinedAt:new Date()}).save();
   const org=new Organization({ownerId:people[3]._id,name:'Retired fixture'});await org.save();orgIds.push(org._id);
   for(const i of [2,3])await new OrganizationMembership({organizationId:org._id,userId:people[i]._id,role:'admin',joinedAt:new Date()}).save();
-  const attached=new Workspace({organizationId:org._id,managerId:people[2]._id,name:'Unsupported parent'});await attached.save();wsIds.push(attached._id);
+  const attached={_id:new mongoose.Types.ObjectId(),organizationId:org._id,managerId:people[2]._id,name:'Unsupported parent',version:0,state:'active',createdAt:new Date()};await Workspace.collection.insertOne(attached);wsIds.push(attached._id);
   await new WorkspaceMembership({workspaceId:attached._id,userId:people[2]._id,role:'manager',joinedAt:new Date()}).save();
   const read=i=>mongoose.connection.transaction(tx=>workspaceAccess(workspace.toObject(),people[i]._id,tx));
   assert.equal((await read(0)).role,'owner');assert.equal((await read(1)).canManage,true);assert.equal((await read(2)).canManage,false);
   await assert.rejects(read(3),/WORKSPACE_UNAVAILABLE/u);
-  for(const i of [2,3])await assert.rejects(mongoose.connection.transaction(tx=>workspaceAccess(attached.toObject(),people[i]._id,tx)),/WORKSPACE_UNAVAILABLE/u);
+  for(const i of [2,3])await assert.rejects(mongoose.connection.transaction(tx=>workspaceAccess(attached,people[i]._id,tx)),/WORKSPACE_UNAVAILABLE/u);
   // managerId no longer grants management even if an old/corrupt field is present.
   const forged={...workspace.toObject(),managerId:people[2]._id};assert.equal((await mongoose.connection.transaction(tx=>workspaceAccess(forged,people[2]._id,tx))).role,'member');
   const list=(i,role)=>mongoose.connection.transaction(tx=>queryWorkspaceList(people[i].toObject(),tx,workspaceQuery({role})));
