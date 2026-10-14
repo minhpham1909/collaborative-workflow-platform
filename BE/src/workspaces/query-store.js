@@ -8,8 +8,8 @@ function mongoAfter(after) { return after.$or ? { $or: after.$or.map(part => par
 // Caller authenticates/locks actor; runtime lists use only Workspace membership authority.
 export async function queryWorkspaceList(user, tx, page) {
       const historical=historicalWorkspaceFixture(); if(historical)return historical.queryWorkspaceList(user,tx,page);
-      const standaloneManager = { organizationId: null, 'membership.role': 'manager' };
-      const managed = { $or: [{ ownerId: user._id }, standaloneManager] };
+      const manager = { 'membership.role': 'manager' };
+      const managed = { $or: [{ ownerId: user._id }, manager] };
       const roleStages = page.role === 'managed' ? [{ $match: managed }] : page.role === 'member' ? [{ $match: { $nor: managed.$or } }] : [];
       const stateStages = page.state === 'active' ? [{ $match: { state: { $ne: 'archived' } } }] : page.state === 'archived' ? [{ $match: { state: 'archived' } }] : [];
       const base = [{ $match: { $and: [ ...(page.filters?.length ? page.filters : [{}]) ] } }, ...workspaceAccessStages(user._id)];

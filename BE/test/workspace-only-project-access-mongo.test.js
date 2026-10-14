@@ -91,6 +91,8 @@ test('Workspace-only Project/Guest policy closes retired parents across direct, 
   await assert.rejects(work.getTask(auths[2],task.id),/ACCESS_BANNED/u);
   assert.equal((await TaskReopenRequest.collection.findOne({_id:new mongoose.Types.ObjectId(pending.id)})).state,'cancelled');
   assert.equal(String((await Task.collection.findOne({_id:new mongoose.Types.ObjectId(done.id)})).assigneeId),String(people[2]._id));
+  assert.equal((await work.board(auths[0],a.id,{})).columns.done.items.find(item=>item.id===done.id).assigneeLeft,true);
+  assert.equal((await work.tasks(auths[0],b.id,{})).items.find(item=>item.id===otherTask.id).assigneeLeft,false);
   assert.ok((await work.getTask(auths[2],otherTask.id)).task);
   assert.equal((await Task.collection.findOne({_id:new mongoose.Types.ObjectId(task.id)})).assigneeId,null);
   await runCommentCleanup();
@@ -99,6 +101,7 @@ test('Workspace-only Project/Guest policy closes retired parents across direct, 
   assert.equal(await TaskComment.collection.countDocuments({_id:new mongoose.Types.ObjectId(otherComment.id)}),1);
   await moderation.unban(auths[1],'project',a.id,String(people[2]._id),{expectedVersion:banned.version,reason:'Recheck access'});
   assert.ok((await work.getTask(auths[2],task.id)).task);assert.equal((await work.getTask(auths[2],task.id)).task.assigneeId,null);
+  assert.equal((await work.board(auths[0],a.id,{})).columns.done.items.find(item=>item.id===done.id).assigneeLeft,false);
   const managerBan=await moderation.ban(auths[0],'workspace',workspace.id,{userId:String(people[1]._id),cleanup:'none',reason:'Owner removes Manager',expectedVersion:0});
   await moderation.unban(auths[0],'workspace',workspace.id,String(people[1]._id),{expectedVersion:managerBan.version,reason:'Allow future invitation'});
   await assert.rejects(ws.get(auths[1],workspace.id),/WORKSPACE_UNAVAILABLE/u);

@@ -1,3 +1,4 @@
+import {scopeConditions,banFilterStages} from '../src/moderation/guard.js';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { previewCodec } from '../src/moderation/preview.js';
@@ -34,4 +35,10 @@ test('typed bans/jobs reject inconsistent scope, revoke metadata, leases and con
 
 test('Current moderation service retires Organization scopes before store access',()=>{
  assert.equal(scopeType('workspace'),'workspace');assert.equal(scopeType('project'),'project');assert.throws(()=>scopeType('organization'),{code:'ORGANIZATIONS_RETIRED',status:410});
+});
+
+test('Current Ban guard ignores retired Organization scopes in scalar and aggregate paths',()=>{
+ assert.deepEqual(scopeConditions({organizationId:oid,workspaceId:oid,projectId:oid}),[{scopeType:'workspace',scopeId:oid},{scopeType:'project',scopeId:oid}]);
+ assert.deepEqual(banFilterStages(oid,{organization:'$organizationId'}),[]);
+ assert.ok(!JSON.stringify(banFilterStages(oid,{organization:'$organizationId',workspace:'$_id'})).includes('organization'));
 });

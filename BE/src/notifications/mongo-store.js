@@ -8,7 +8,7 @@ import {
   WorkspaceInvitation,
   Task,
   Project,
-  Organization, OrganizationInvitation, ProjectGuestInvitation,
+  ProjectGuestInvitation,
 } from "../models/index.js";
 import { AuthError } from "../auth/errors.js";
 import { paged } from "../workspaces/response.js";
@@ -63,18 +63,7 @@ export function createMongoNotificationsStore({
     };
     if (value.category === 'organization_invitation') {
       if(!historicalWorkspaceFixture())return {...base,code:'ORGANIZATIONS_RETIRED'};
-      try { await assertNotBanned(user._id, { organizationId: value.organizationId }, tx); }
-      catch (error) { if (error instanceof AuthError) return base; throw error; }
-      const invitation = await OrganizationInvitation.collection.findOne({ _id: value.organizationInvitationId, organizationId: value.organizationId,
-        emailCanonical: user.emailCanonical, revokedAt: null, acceptedAt: null, expiresAt: { $gt: now() } }, { session: tx });
-      if (!invitation) return base;
-      const organization = await Organization.collection.findOne({ _id: value.organizationId }, { session: tx });
-      const workspace = invitation.workspaceId && await Workspace.collection.findOne({ _id: invitation.workspaceId, organizationId: value.organizationId }, { session: tx });
-      if (!organization || (invitation.workspaceId && !workspace)) return base;
-      const inviter = await User.collection.findOne({ _id: invitation.createdBy }, { session: tx, projection: { displayName: 1 } });
-      return { ...base, available: true, code: 'ORGANIZATION_INVITATION',
-        payload: { organizationName: organization.name, workspaceName: workspace?.name ?? null, inviterDisplayName: inviter?.displayName ?? 'Unavailable User', role: 'member', expiresAt: invitation.expiresAt },
-        target: { type: 'organization_invitation', invitationId: String(invitation._id) } };
+      return historicalWorkspaceFixture().organizationNotification(value,user,tx,base,now);
     }
     const workspace = await Workspace.collection.findOne(
       { _id: value.workspaceId },
@@ -87,7 +76,7 @@ export function createMongoNotificationsStore({
       const invitation = await ProjectGuestInvitation.collection.findOne({ _id: value.projectInvitationId, projectId: value.projectId, workspaceId: workspace._id,
         type: 'EMAIL', emailCanonical: user.emailCanonical, revokedAt: null, acceptedAt: null, expiresAt: { $gt: now() } }, { session: tx });
       const project = invitation && await Project.collection.findOne({ _id: value.projectId, workspaceId: workspace._id }, { session: tx });
-      if (!project || (workspace.organizationId && !await Organization.collection.findOne({ _id: workspace.organizationId }, { session: tx }))) return base;
+      if (!project || (historicalWorkspaceFixture() && !await historicalWorkspaceFixture().notificationParentExists(workspace,tx))) return base;
       const inviter = await User.collection.findOne({ _id: invitation.createdBy }, { session: tx, projection: { displayName: 1 } });
       return { ...base, available: true, code: 'PROJECT_GUEST_INVITATION',
         payload: { projectName: project.name, workspaceName: workspace.name, inviterDisplayName: inviter?.displayName ?? 'Unavailable User', role: 'guest', expiresAt: invitation.expiresAt },

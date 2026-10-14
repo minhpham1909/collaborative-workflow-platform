@@ -1,9 +1,9 @@
 import mongoose from 'mongoose';
-import { Organization, OrganizationInvitation, Workspace, EmailOutbox, User } from '../models/index.js';
-import { assertNotBanned } from '../moderation/guard.js';
-import { AuthError } from '../auth/errors.js';
-import { createDeliveryCrypto } from '../auth/delivery-crypto.js';
-import { tokenHash } from '../auth/tokens.js';
+import { Organization, OrganizationInvitation, Workspace, EmailOutbox, User } from '../src/models/index.js';
+import { assertNotBanned } from '../src/moderation/guard.js';
+import { AuthError } from '../src/auth/errors.js';
+import { createDeliveryCrypto } from '../src/auth/delivery-crypto.js';
+import { tokenHash } from '../src/auth/tokens.js';
 
 // The shared invitation dispatcher owns the lease and retry policy.
 export async function deliverOrganizationInvitation({ job, config, send, now, finish }) {

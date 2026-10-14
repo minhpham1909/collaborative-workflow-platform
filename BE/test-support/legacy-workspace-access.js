@@ -55,3 +55,10 @@ export {commentPermissions,authorizeCommentDelete,recordCommentDelete} from './l
 
 export {createMongoModerationStore} from './legacy-moderation-store.js';
 export {historicalCommentCriteria} from './legacy-moderation-criteria.js';
+
+export {deliverOrganizationInvitation} from './legacy-organization-mail.js';
+export {deliverProjectInvitation} from './legacy-project-mail.js';
+
+export {organizationNotification,notificationParentExists} from './legacy-notification-parent.js';
+
+export {assigneeEligibility} from './legacy-assignee-eligibility.js';
