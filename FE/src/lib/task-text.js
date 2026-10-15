@@ -80,7 +80,7 @@ const english = {
   "Đang tải nhãn…": "Loading labels…",
   "Tải lại nhãn": "Reload labels",
   "Tải thêm nhãn": "Load more labels",
-  "Project chưa có nhãn. Người quản lý hoặc Lead có thể tạo nhãn trong phần quản lý Project.": "This project has no labels. A manager or Lead can create them in project management.",
+  "Project chưa có nhãn. Owner hoặc Manager của Workspace có thể tạo nhãn trong phần quản lý Project.": "This project has no labels. A workspace Owner or Manager can create them in project management.",
   "Đang tham gia": "Active member",
   "Quản trị theo quyền tổ chức": "Organization management access",
   "Guest · Xem và bình luận": "Guest · View and comment",

@@ -5,7 +5,7 @@ Mốc bắt đầu: 15/10/2026. Core cleanup F2d2c đã qua scoped gates; chuy�
 | Bước | Phạm vi | Điều kiện hoàn thành | Trạng thái |
 | --- | --- | --- | --- |
 | P0 | Dữ liệu mới và smoke | Giữ tài khoản thật; seed đúng dev27018; đủ trạng thái, vai trò; smoke web | Đạt scoped gate |
-| P1 | Nghiệm thu thao tác nhiều tài khoản | Tạo/xem/sửa/huỷ; Manager/Member/Guest; mất quyền, CAS, pending reopen, archive/trash/restore; lỗi mạng và giữ draft | P1a/P1b1 đạt; P1b2 còn lại |
+| P1 | Nghiệm thu thao tác nhiều tài khoản | Tạo/xem/sửa/huỷ; Manager/Member/Guest; mất quyền, CAS, pending reopen, archive/trash/restore; lỗi mạng và giữ draft | P1a/P1b1/P1b2 đạt phạm vi Task; còn biến thể P3/P4 |
 | P2 | Home và điều hướng | Gom filter + dạng xem; ưu tiên hành động, pin; giảm reload thủ công; bố cục gọn và dữ liệu thật | P2a toolbar đạt; còn nghiệm thu tổng thể |
 | P3 | Workspace/Team/cài đặt | Setup metadata, role, invitation, audit, quyền sở hữu; trạng thái rỗng/chỉ đọc/lỗi rõ ràng | Chưa bắt đầu đợt nghiệm thu |
 | P4 | Board/Task/detail | Đọc/sửa thuận tiện, checklist/nhãn/hạn/comment/reopen/trash; tránh cuộn thừa | Chưa bắt đầu đợt nghiệm thu |
@@ -43,3 +43,5 @@ P0 không chứng minh mọi thao tác đa tài khoản, phân trang dài, respo
 15/10/2026 — My Tasks/Inbox đổi từ density-only sang Dạng thẻ / Danh sách có cấu trúc khác biệt, giữ dữ liệu và thao tác. [QA/phạm vi](../qa/CARD-LIST-LAYOUT-CHECK.md). P1b và tổng nghiệm thu P2–P6 còn lại; chưa deploy.
 
 15/10/2026 — [P1b1 write failures/reopen](../qa/PRODUCT-P1B1-WRITE-FAILURES-CHECK.md) đạt: CAS409 giữ draft, PATCH commit mất phản hồi khoá gửi lại/đọc kết quả, Manager demotion mid-form403; Member request/không self-review sau promotion, Owner approve/direct reopen. P1b2 còn POST-create response loss, các form khác, mất membership và reopen reject/cooldown/archive race. Không đổi code sản phẩm hoặc dữ liệu dev.
+
+15/10/2026 — [P1b2](../qa/PRODUCT-P1B2-CREATE-ACCESS-CHECK.md) đạt: POST commit mất phản hồi không tạo trùng/đọc lại; membership removal mid-form404; UI reject/cooldown; store-clock quota và expiry7ngày; parent archived chặn stale approval. Sửa copy Lead trong label picker. Tiếp P3 Workspace/Team/settings, kèm failure cases của form Workspace/Project; P4 bổ sung Guest/requester-loss. Không tuyên bố toàn bộ race đã được kiểm thử.

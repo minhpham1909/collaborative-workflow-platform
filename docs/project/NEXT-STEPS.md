@@ -1,3 +1,5 @@
+15/10/2026 — P1b2 Task create/access/reopen đạt phạm vi [QA](../qa/PRODUCT-P1B2-CREATE-ACCESS-CHECK.md). Tiếp P3 Workspace/Team/settings, bổ sung mất quyền/CAS/mất phản hồi cho form tương ứng; P4 bổ sung Guest panel/requester-loss. Không deploy.
+
 15/10/2026 — P1b1 acceptance đạt. Tiếp P1b2 theo [phạm vi còn lại](../qa/PRODUCT-P1B1-WRITE-FAILURES-CHECK.md), rồi P3 Workspace/Team. Không deploy.
 
 15/10/2026 — **P1a native browser write journey đạt**: retiredOrgfixturethaynativeWSLINKadmission+4roles; UIcreateProject/Task, Memberstatus/comment, OwnerInbox/read, Guestscope/comment, read503retry, themedraftcancel, trashrestore/history/no replay, Managercreate+demotionfreshUI, archived/empty. LightVI1440/DarkEN375PASS; isolatedDB/providers0/devbusinessdata0. [QA/phạmvi](../qa/PRODUCT-P1A-WRITE-JOURNEY-CHECK.md). P1b midformpermissionloss/CAS/ambiguouswrite/reopenUI còn lại; P1chưađóng. Tiếp P2Homefilter/viewtoolbar theo userrequest song song acceptance còn lại, khôngdeploy.
