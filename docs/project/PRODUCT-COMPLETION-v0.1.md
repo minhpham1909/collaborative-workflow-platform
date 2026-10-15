@@ -10,7 +10,7 @@ Mốc bắt đầu: 15/10/2026. Core cleanup F2d2c đã qua scoped gates; chuy�
 | P3 | Workspace/Team/cài đặt | Setup metadata, role, invitation, audit, quyền sở hữu; trạng thái rỗng/chỉ đọc/lỗi rõ ràng | P3a–P3d đạt luồng chính; hậu kiểm P6 còn lại |
 | P4 | Board/Task/detail | Đọc/sửa thuận tiện, checklist/nhãn/hạn/comment/reopen/trash; tránh cuộn thừa | P4a–P4c đạt luồng chính; hậu kiểm P6 còn lại |
 | P5 | My Tasks/lịch/Inbox | Hai dạng xem khác biệt thực chất; filter, tải thêm, back/return; notification target đã mất quyền | P5a–P5c đạt luồng chính; hậu kiểm P6 còn lại |
-| P6 | Tổng nghiệm thu | Sáng/tối, desktop/mobile, focus/bàn phím, loading/empty/error; đối chiếu Stitch và người dùng nghiệm thu | Chưa bắt đầu đợt nghiệm thu |
+| P6 | Tổng nghiệm thu | Sáng/tối, desktop/mobile, focus/bàn phím, loading/empty/error; đối chiếu Stitch và người dùng nghiệm thu | P6a hồi quy đạt; còn visual/keyboard/vận hành và người dùng nghiệm thu |
 
 Không gom thành một đợt redesign lớn. Vẫn dùng nền visual đã chọn; không thêm dữ liệu giả vào số liệu sản phẩm. Dữ liệu seed có nhãn [QA] và mô tả rõ là nghiệm thu. Khi test phát hiện lỗi chặn luồng, sửa ngay trong cụm và ghi bằng chứng.
 
@@ -65,3 +65,5 @@ P0 không chứng minh mọi thao tác đa tài khoản, phân trang dài, respo
 15/10/2026 — [P5b Calendar/Inbox](../qa/PRODUCT-P5B-CALENDAR-INBOX-CHECK.md): Inbox auto3page/manual/error/dedup/fallback LightDark; Calendar selected month/day fullTask return và deleted/accesslost notification redaction/readack LightVI1440/DarkEN375 PASS. Không code sản phẩm. Tiếp P5c MyTasks/Calendar automatic paging và Calendar multipage return/filter race.
 
 15/10/2026 — [P5c personal paging](../qa/PRODUCT-P5C-PERSONAL-PAGINATION-CHECK.md): Calendar fullpage return đọc lại5pages/anchor theo account/query, không cachedata; MyTasks/Calendar auto3cap/manual/dedup, MyTasks stalecursor/filterrace PASS LightVI1440/DarkEN375; FE35/buildPASS. Tiếp P6 tổng visual/keyboard/native regression và hậu kiểm còn ghi; chưadeploy.
+
+15/10/2026 — [P6a tổng hồi quy](../qa/PRODUCT-P6-REGRESSION-CHECK.md): browser34/34, compiled journey2/2, FE35/35, BE integration137/137 và build/budget PASS. Chưa full nghiệm thu: drag/drop, bàn phím toàn luồng, Calendar history/race bổ sung, delivery/cleanup vận hành và user acceptance còn lại. Không thay code sản phẩm hoặc data dev, chưa deploy.

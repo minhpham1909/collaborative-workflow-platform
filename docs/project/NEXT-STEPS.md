@@ -1,3 +1,5 @@
+15/10/2026 — P6a hồi quy34/34 + compiled journey2/2, FE35/35, BE integration137/137 và build/budget PASS. [Bằng chứng/phần chưa chạy](../qa/PRODUCT-P6-REGRESSION-CHECK.md). Tiếp P6b visual/keyboard/Board drag-drop, Calendar history/race bổ sung rồi user acceptance; vận hành delivery/retention kiểm riêng trước release. Chưa deploy.
+
 15/10/2026 — P5c sửa Calendar multipage return; personal lazy3cap/dedup/filterrace gates đạt [QA](../qa/PRODUCT-P5C-PERSONAL-PAGINATION-CHECK.md). Tiếp P6 tổng nghiệm thu native flows/visual/keyboard và các hậu kiểm đã ghi; chưa deploy.
 
 15/10/2026 — P5b Inbox lazy/unavailable + Calendar day/month return đạt [QA](../qa/PRODUCT-P5B-CALENDAR-INBOX-CHECK.md). Tiếp P5c MyTasks/Calendar multipage automatic loading, Calendar anchor return và filter race; chưa fullP5/deploy.
