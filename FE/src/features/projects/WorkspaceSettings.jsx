@@ -215,7 +215,7 @@ export default function WorkspaceSettings({
 
       </div>
       {busy && <LoadingState>{t("Đang tải cài đặt…")}</LoadingState>}
-      {error && <InlineMessage>{t(error)}</InlineMessage>}
+      {error && <InlineMessage>{t(error)}{(uncertain || (!snapshot && !busy && !blockedDraft)) && <button type="button" disabled={busy || saving} onClick={reload}>{t("Tải lại cài đặt")}</button>}</InlineMessage>}
       {note && <InlineMessage tone="info">{t(note)}</InlineMessage>}
       {blockedDraft && <div className="workspace-blocked-draft"><FormField label={t('Nội dung chưa lưu')} hint={t('Bạn không còn quyền sửa. Sao chép nội dung trước khi rời trang.')}>{props => <textarea {...props} readOnly value={blockedDraft} />}</FormField></div>}
       {snapshot &&
