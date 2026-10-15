@@ -1,3 +1,5 @@
+15/10/2026 — P5b Inbox lazy/unavailable + Calendar day/month return đạt [QA](../qa/PRODUCT-P5B-CALENDAR-INBOX-CHECK.md). Tiếp P5c MyTasks/Calendar multipage automatic loading, Calendar anchor return và filter race; chưa fullP5/deploy.
+
 15/10/2026 — P5a sửa My Tasks full-page return đọc lại số trang và anchor. [QA](../qa/PRODUCT-P5A-MY-TASKS-RETURN-CHECK.md). Tiếp P5b automatic lazy/cap/filter race, Inbox target unavailable và Calendar return. Chưa full P5/deploy.
 
 15/10/2026 — P4c Project/labels đạt scoped gates; gọn empty action/mobile tabs. [QA](../qa/PRODUCT-P4C-PROJECT-MANAGEMENT-CHECK.md). Tiếp P5 My Tasks/lịch/Inbox: lazy/back/target mất quyền. P6 giữ tổng visual/keyboard/drag-drop/longdata; chưa deploy.
