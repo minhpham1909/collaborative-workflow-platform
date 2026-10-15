@@ -1,3 +1,4 @@
+import useLiveRefresh from '../../lib/useLiveRefresh.js';
 import { InlineMessage, LoadingState } from "../../components/Feedback.jsx";
 import PasswordField from "../../components/PasswordField.jsx";
 import FormField from "../../components/FormField.jsx";
@@ -31,6 +32,7 @@ export default function Settings({ api, onUser }) {
     [revision, setRevision] = useState(0),
     [dirty, setDirty] = useState(false),
     [saving, setSaving] = useState(false);
+  useLiveRefresh(() => setRevision(value => value + 1));
   useEffect(() => {
     let live = true;
     setBusy(true);
@@ -76,7 +78,7 @@ export default function Settings({ api, onUser }) {
           <h1>Tài khoản & Cài đặt cá nhân</h1>
           <p>Thông tin hồ sơ, email công việc và bảo mật đăng nhập.</p>
         </div>
-        <button
+        {error && <button
           disabled={busy || saving}
           onClick={async () => {
             if (await leave()) {
@@ -85,8 +87,8 @@ export default function Settings({ api, onUser }) {
             }
           }}
         >
-          Tải lại tài khoản
-        </button>
+          Thử lại
+        </button>}
       </section>
       <AuthLanguageSwitch disabled={saving}/>
       <div className="tabs">

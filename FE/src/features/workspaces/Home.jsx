@@ -1,3 +1,4 @@
+import useLiveRefresh from '../../lib/useLiveRefresh.js';
 import { readCreationDraft, saveCreationDraft, clearCreationDraft } from '../../lib/workspace-creation-draft.js';
 import WorkspaceIdentityFields from '../../components/WorkspaceIdentityFields.jsx';
 import { defaultWorkspaceIdentity, validWorkspaceSummary, workspaceIdentityBody } from '../../lib/workspace-identity.js';
@@ -54,6 +55,7 @@ export default function Home({ api, user }) {
     [uncertain, setUncertain] = useState(false),
     [createError, setCreateError] = useState(""),
     [nameError, setNameError] = useState("");
+  useLiveRefresh(() => setRefresh(value => value + 1));
   const [identity, setIdentity] = useState({ ...defaultWorkspaceIdentity }), [summaryError, setSummaryError] = useState(''), [createdWorkspace, setCreatedWorkspace] = useState(null);
   const pendingCreation = useRef(readCreationDraft(creationStorage(), user.id));
   const [retryReady, setRetryReady] = useState(false);
@@ -283,9 +285,7 @@ export default function Home({ api, user }) {
         >
           {t("Xóa bộ lọc")}
         </button>
-        <button disabled={busy} onClick={() => setRefresh((v) => v + 1)}>
-          {t("Làm mới")}
-        </button>
+
       </FilterPanel>
       <div className="home-role-filters" role="group" aria-label={t("Lọc quyền Workspace")}>
         {[['all', 'Tất cả'], ['managed', 'Tôi quản lý'], ['member', 'Thành viên']].map(([key, label]) => <button key={key} aria-pressed={role === key} onClick={() => setRole(key)}>{t(label)}<span>{data.roleCounts?.[key] ?? '—'}</span></button>)}

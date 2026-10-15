@@ -1,3 +1,4 @@
+import useLiveRefresh from '../../lib/useLiveRefresh.js';
 import CollectionView,{useCollectionView} from '../../components/CollectionView.jsx';
 import {ProjectPinButton} from '../../components/ProjectPins.jsx';
 import { useAuthLocale } from '../auth/AuthLocale.jsx';
@@ -41,6 +42,7 @@ export default function Workspace({ api, id, userId }) {
     [revision, setRevision] = useState(0),
     [dirty, setDirty] = useState(false),
     [saving, setSaving] = useState(false);
+  useLiveRefresh(() => setRevision(value => value + 1));
   const canManage = workspace?.permissions?.manage === true;
   const canCreate = workspace?.permissions?.createProject === true;
   async function changeTab(value) {
@@ -164,7 +166,7 @@ export default function Workspace({ api, id, userId }) {
               </div>
             </div>
             <div className="workspace-actions">
-            {tab === "projects" && <button disabled={busy || saving || dirty} onClick={() => setRevision(v => v + 1)}><Icon name="refresh" />{t("Làm mới")}</button>}
+
             {canCreate && tab === "projects" && (
               <button
                 className="primary"

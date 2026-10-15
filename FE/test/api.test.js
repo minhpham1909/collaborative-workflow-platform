@@ -6,6 +6,18 @@ const response = (data, status = 200) => ({
   status,
   json: async () => data,
 });
+
+test('read revalidation is signalled only after successful business mutations',async()=>{
+ const previous=globalThis.window,events=[];
+ globalThis.window={dispatchEvent:event=>events.push(event.type)};
+ try{
+  const api=createApi({origin:'http://test',fetcher:async url=>response({},url.endsWith('/failed')?409:200)});
+  await api.raw('/tasks/1');await api.raw('/auth/login',{method:'POST'});
+  await assert.rejects(api.raw('/failed',{method:'PATCH'}));assert.deepEqual(events,[]);
+  await api.raw('/tasks/1',{method:'PATCH',body:{title:'Saved'}});
+  assert.deepEqual(events,['workflow:data-changed']);
+ }finally{if(previous===undefined)delete globalThis.window;else globalThis.window=previous;}
+});
 test("parallel reads share one refresh and use HttpOnly cookie transport", async () => {
   let rotations = 0;
   const calls = [];

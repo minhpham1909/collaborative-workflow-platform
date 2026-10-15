@@ -71,3 +71,9 @@ body { padding-bottom: var(--wf-toast-space, 0px); }
 
 /* Custom display rules must not expose hidden controls or failed images. */
 [hidden] { display:none !important; }
+
+/* Navigation is a left-edge drawer, independent of centered dialog layout. */
+.overlay.sidebar-overlay { display:flex; align-items:stretch; justify-content:flex-start; padding:0; }
+.overlay.sidebar-overlay .mobile-sidebar { margin:0; flex:none; border-radius:0; animation:sidebar-enter .18s ease-out; }
+@keyframes sidebar-enter { from { transform:translateX(-100%); } to { transform:translateX(0); } }
+@media(prefers-reduced-motion:reduce) { .overlay.sidebar-overlay .mobile-sidebar { animation:none; } }

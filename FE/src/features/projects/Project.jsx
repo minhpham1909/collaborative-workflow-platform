@@ -1,3 +1,4 @@
+import useLiveRefresh from '../../lib/useLiveRefresh.js';
 import {ProjectPinButton} from '../../components/ProjectPins.jsx';
 import { useAuthLocale } from '../auth/AuthLocale.jsx';
 import { projectText } from '../../lib/project-text.js';
@@ -31,6 +32,7 @@ export default function Project({ api, id, user, section }) {
     [editing, setEditing] = useState(false),
     [revision, setRevision] = useState(0),
     [notice, setNotice] = useState("");
+  useLiveRefresh(() => setRevision(value => value + 1));
   const [editingDescription, setEditingDescription] = useState(false);
   const [taskComposing, setTaskComposing] = useState(false);
   const [managing, setManaging] = useState(section === 'manage');
@@ -121,16 +123,7 @@ export default function Project({ api, id, user, section }) {
         )}{" "}
         / {t("Dự án")}
       </p>
-      {!project && (
-        <button
-          disabled={busy || editingDescription || taskComposing}
-          onClick={() => {
-            setEditing(false);
-            setNotice("");
-            setRevision((v) => v + 1);
-          }}
-        >{t("Làm mới Dự án")}</button>
-      )}
+
 
       {error && (
         <InlineMessage>
@@ -172,14 +165,7 @@ export default function Project({ api, id, user, section }) {
             </div>
             <div className="buttons">
               <ProjectPinButton projectId={id}/>
-              <button
-                disabled={busy || editingDescription || taskComposing}
-                onClick={() => {
-                  setEditing(false);
-                  setNotice("");
-                  setRevision((v) => v + 1);
-                }}
-              >{t("Làm mới Dự án")}</button>
+
               {project.accessRole !== 'guest' && <a className="project-trash-link" href={`#project/${id}${showTrash ? '' : '/trash'}`} aria-current={showTrash ? 'page' : undefined}>{showTrash ? t("Về Board") : t("Thùng rác Task")}</a>}
               {(project.permissions?.manageAccess || project.permissions?.manageLabels) && <button disabled={busy || uncertain || editingDescription || taskComposing} onClick={() => { location.hash = `project/${id}${showManagement ? '' : '/manage'}`; }}>{showManagement ? t("Về Board") : t("Quản lý Project")}</button>}
               {project.permissions?.manageProject && (

@@ -1,3 +1,4 @@
+import useLiveRefresh from '../../lib/useLiveRefresh.js';
 import { useAuthLocale } from '../auth/AuthLocale.jsx';
 import { workflowText } from '../../lib/workflow-text.js';
 import { useEffect, useRef, useState } from 'react';
@@ -48,6 +49,7 @@ export default function ProjectTrash({ api, project, onContext, onUnavailable, o
   const [items, setItems] = useState([]), [total, setTotal] = useState(null), [cursor, setCursor] = useState(null);
   const [loading, setLoading] = useState(false), [writing, setWriting] = useState(false), [error, setError] = useState(''), [locked, setLocked] = useState(true), [selected, setSelected] = useState(null);
   const [notice, setNotice] = useState(''), [now, setNow] = useState(Date.now());
+  useLiveRefresh(() => { if(!loading&&!writing)void load(); });
   const pending = useRef(false), epoch = useRef(0), alive = useRef(true);
   useDraftGuard({ dirty: false, busy: writing });
   useEffect(() => { onBusyChange(writing); return () => onBusyChange(false); }, [writing, onBusyChange]);
@@ -93,7 +95,7 @@ export default function ProjectTrash({ api, project, onContext, onUnavailable, o
   }
   if (project.accessRole === 'guest') return <InlineMessage>{tr("Guest không có quyền xem thùng rác Project.")}<a href={`#project/${project.id}`}>{tr("Về Board")}</a></InlineMessage>;
   return <section className="project-trash" aria-labelledby="trash-heading" aria-busy={loading || writing}>
-    <header className="trash-heading"><div><p className="eyebrow">{tr("DỌN DẸP & KHÔI PHỤC")}</p><h2 id="trash-heading">{tr("Thùng rác Task")} {total !== null && <span className="badge">{total}</span>}</h2><p>{tr("Task đã xóa có thể phục hồi trong 30 ngày. Bạn chỉ thấy Task thuộc phạm vi quyền hiện tại.")}</p></div><button disabled={loading || writing} onClick={() => load()}>{tr("Tải lại thùng rác")}</button></header>
+    <header className="trash-heading"><div><p className="eyebrow">{tr("DỌN DẸP & KHÔI PHỤC")}</p><h2 id="trash-heading">{tr("Thùng rác Task")} {total !== null && <span className="badge">{total}</span>}</h2><p>{tr("Task đã xóa có thể phục hồi trong 30 ngày. Bạn chỉ thấy Task thuộc phạm vi quyền hiện tại.")}</p></div></header>
     <p className="muted trash-caption">{tr("Xóa gần nhất trước · Giờ Việt Nam · Workspace và Project được lưu trữ riêng")}</p>
     {error && <InlineMessage>{tr(error)}</InlineMessage>}{notice && <InlineMessage tone="info">{tr(notice)} <a href={`#project/${project.id}`}>{tr("Về Board")}</a></InlineMessage>}
     {loading && <LoadingState>{tr("Đang tải thùng rác…")}</LoadingState>}

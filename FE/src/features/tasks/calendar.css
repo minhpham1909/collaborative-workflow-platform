@@ -8,3 +8,15 @@
 
 .calendar-heading { padding:20px; margin-bottom:16px; background:var(--wf-surface); border:1px solid var(--wf-border); border-radius:22px; }
 @media(min-width:1051px) { .calendar-card { position:sticky; top:86px; max-height:calc(100dvh - 102px); overflow-y:auto; } }
+
+.calendar-days button { justify-content:flex-start; min-height:112px; gap:8px; }
+.calendar-day-metrics { display:flex; flex-direction:column; gap:4px; width:100%; }
+.calendar-day-metrics >span { display:flex; align-items:center; gap:4px; padding:3px 5px; border-radius:6px; line-height:1.25; font-size:11px; }
+.calendar-day-metrics .ui-icon { width:13px; height:13px; flex:0 0 13px; }
+.calendar-day-count { background:var(--wf-lavender); color:var(--wf-primary); }
+.calendar-day-done { background:var(--wf-mint); color:var(--wf-success); }
+.calendar-day-overdue { background:var(--wf-coral); color:var(--wf-danger); }
+.studio-calendar .calendar-days button[aria-pressed=true] { background:var(--wf-surface); color:var(--wf-ink); border:2px solid var(--wf-primary); padding:9px; }
+@media(max-width:650px) { .calendar-day-metrics >span { padding:3px; gap:2px; flex-wrap:wrap; }.calendar-day-metrics >span >span:last-child { display:none; }.calendar-days button[aria-pressed=true] { padding:4px; } }
+
+.calendar-agenda h2 { display:flex; flex-wrap:wrap; align-items:center; gap:8px; }

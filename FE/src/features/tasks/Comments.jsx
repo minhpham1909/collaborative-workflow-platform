@@ -1,3 +1,4 @@
+import useLiveRefresh from '../../lib/useLiveRefresh.js';
 import { useAuthLocale } from '../auth/AuthLocale.jsx';
 import { taskText } from '../../lib/task-text.js';
 import {
@@ -114,6 +115,7 @@ export default function Comments({ api, taskId, projectId, readOnly, disabled = 
     [editing, setEditing] = useState(null),
     [writing, setWriting] = useState(false),
     [revision, setRevision] = useState(0);
+  useLiveRefresh(() => setRevision(value => value + 1));
   const generation = useRef(0),
     pending = useRef(false);
   useDraftGuard({ dirty: false, busy: busy && pending.current, message: tr("Bình luận đang xử lý.") });
@@ -186,9 +188,7 @@ export default function Comments({ api, taskId, projectId, readOnly, disabled = 
       <div className="section-title">
         <h2>{tr("Thảo luận")} {data.total !== undefined && `(${data.total})`}</h2>
         <div className="buttons">
-          {!writing && !editing && (
-            <button disabled={busy || disabled} onClick={() => setRevision((v) => v + 1)}>{tr("Tải lại bình luận")}</button>
-          )}
+
           {!readOnly && !writing && !editing && (
             <button disabled={busy || disabled} onClick={() => setWriting(true)}>{tr("+ Viết bình luận")}</button>
           )}

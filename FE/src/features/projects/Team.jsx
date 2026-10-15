@@ -1,3 +1,4 @@
+import useLiveRefresh from '../../lib/useLiveRefresh.js';
 import { useAuthLocale } from '../auth/AuthLocale.jsx';
 import { workspaceRoleText as workspaceText } from '../../lib/workspace-role-text.js';
 import {
@@ -47,6 +48,7 @@ export default function Team({ api, id, invitations, onContext, onUnavailable })
     [error, setError] = useState(""),
     [action, setAction] = useState(null),
     [revision, setRevision] = useState(0);
+  useLiveRefresh(() => setRevision(value => value + 1));
   const generation = useRef(0),
     invalid = from && to && from > to;
   const query = new URLSearchParams({
@@ -106,9 +108,7 @@ export default function Team({ api, id, invitations, onContext, onUnavailable })
       <div className="section-heading">
         <h2>{invitations ? t("Lời mời tham gia") : t("Thành viên trong nhóm")}</h2>
         <div className="buttons">
-          <button disabled={busy} onClick={() => setRevision((v) => v + 1)}>
-            {t("Làm mới danh sách")}
-          </button>
+
           {invitations && workspace?.permissions?.invite && (
             <button
               className="primary"

@@ -1,3 +1,4 @@
+import useLiveRefresh from '../../lib/useLiveRefresh.js';
 import { useAuthLocale } from '../auth/AuthLocale.jsx';
 import { workflowText } from '../../lib/workflow-text.js';
 import { InlineMessage, LoadingState } from '../../components/Feedback.jsx';
@@ -17,6 +18,7 @@ export default function Invite({ api, token, user, onAccepted, kind='invite', au
   const endpoint=invitationEndpoint(kind),org=kind==='organization-invite',guest=kind==='project-invite';
   const label=org?tr("tổ chức"):guest?tr("Project với quyền Guest"):'Workspace';
   const [preview,setPreview]=useState(null),[error,setError]=useState(''),[code,setCode]=useState(''),[busy,setBusy]=useState(true),[uncertain,setUncertain]=useState(false),[revision,setRevision]=useState(0),[accepted,setAccepted]=useState(null);
+  useLiveRefresh(() => setRevision(value => value + 1));
   const pending=useRef(false),identity=useRef(''),delivered=useRef(false);
   useDraftGuard({dirty:false,busy:busy&&pending.current,message:tr("Lời mời đang được xử lý.")});
   useEffect(()=>{if(accepted&&!busy&&!delivered.current){delivered.current=true;onAccepted(accepted);}},[accepted,busy,onAccepted]);

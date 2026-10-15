@@ -1,3 +1,4 @@
+import useLiveRefresh from '../../lib/useLiveRefresh.js';
 import { projectIcons } from '../../components/ProjectIconPicker.jsx';
 import WorkspaceIdentityFields from '../../components/WorkspaceIdentityFields.jsx';
 import { workspaceIdentity, workspaceIdentityBody, validWorkspaceSummary, workspaceColors, workspaceCovers } from '../../lib/workspace-identity.js';
@@ -41,6 +42,7 @@ export default function WorkspaceSettings({
     [revision, setRevision] = useState(0),
     [dirty, setDirty] = useState(false),
     [uncertain, setUncertain] = useState(false);
+  useLiveRefresh(() => setRevision(value => value + 1));
   const [identity, setIdentity] = useState(workspaceIdentity), [blockedDraft, setBlockedDraft] = useState('');
   const pending = useRef(false);
   const [fieldErrors, setFieldErrors] = useState({});
@@ -210,9 +212,7 @@ export default function WorkspaceSettings({
     <section lang={locale} className="project-info">
       <div className="section-heading">
         <h2>{emailOnly ? t("Email của tôi trong nhóm") : t("Cài đặt Workspace")}</h2>
-        <button disabled={busy || saving} onClick={reload}>
-          {t("Tải lại cài đặt")}
-        </button>
+
       </div>
       {busy && <LoadingState>{t("Đang tải cài đặt…")}</LoadingState>}
       {error && <InlineMessage>{t(error)}</InlineMessage>}

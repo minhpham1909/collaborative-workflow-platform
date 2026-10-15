@@ -33,6 +33,7 @@ export function createApi({
         data?.error?.code ?? "REQUEST_FAILED",
         response.status,
       );
+    if(method!=='GET'&&!path.startsWith('/auth/')&&typeof window!=='undefined')window.dispatchEvent(new CustomEvent('workflow:data-changed'));
     return data;
   }
   function session(data) {

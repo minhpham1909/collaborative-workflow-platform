@@ -14,6 +14,7 @@ export function useDraftGuard({ dirty, busy = false, message, dialogOptions, bus
   }, []);
 }
 const active = () => [...drafts].map((ref) => ref.current).filter(Boolean);
+export const hasActiveDraft = () => active().some(draft => draft.dirty || draft.busy);
 export async function mayLeaveDrafts() {
   if (active().some((draft) => draft.busy)) {
     notify(

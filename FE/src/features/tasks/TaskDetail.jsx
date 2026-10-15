@@ -1,3 +1,4 @@
+import useLiveRefresh from '../../lib/useLiveRefresh.js';
 import {calendarReturn} from './calendar-state.js';
 import {inboxReturn} from '../notifications/inbox-filters.js';
 import { useAuthLocale } from '../auth/AuthLocale.jsx';
@@ -33,6 +34,7 @@ export default function TaskDetail({ api, id, expectedProjectId, onBusyChange, o
     [error, setError] = useState(""),
     [notice, setNotice] = useState(""),
     [revision, setRevision] = useState(0);
+  useLiveRefresh(() => setRevision(value => value + 1));
   const pending = useRef(false);
   useEffect(() => { if (deleted && !busy) { if (onDeleted) onDeleted(); else location.hash = returnTo ?? `project/${task.projectId}`; } }, [deleted, busy]);
   useDraftGuard({ dirty: false, busy: busy && pending.current, message: tr("Task đang xử lý.") });
@@ -146,17 +148,9 @@ export default function TaskDetail({ api, id, expectedProjectId, onBusyChange, o
         )}{" "}
         / Task
       </p>
-      {!task && (
-        <button
-          disabled={busy || blocked}
-          onClick={async () => {
-            setNotice("");
-            setRevision((v) => v + 1);
-          }}
-        >{tr("Làm mới Task")}</button>
-      )}
+
       {busy && <LoadingState>{tr("Đang xử lý Task…")}</LoadingState>}
-      {error && <InlineMessage>{tr(error)}</InlineMessage>}
+      {error && <InlineMessage>{tr(error)}<button disabled={busy} onClick={()=>setRevision(v=>v+1)}>{tr("Thử lại")}</button></InlineMessage>}
       {notice && <InlineMessage tone="info">{tr(notice)}</InlineMessage>}
       {task && (
         <>
@@ -168,13 +162,7 @@ export default function TaskDetail({ api, id, expectedProjectId, onBusyChange, o
             </div>
             {!editing && (
               <div className="buttons">
-                <button
-                  disabled={busy || blocked}
-                  onClick={async () => {
-                    setNotice("");
-                    setRevision((v) => v + 1);
-                  }}
-                >{tr("Làm mới Task")}</button>
+
                 {task.permissions.edit && (
                   <button
                     disabled={busy || blocked || uncertain}

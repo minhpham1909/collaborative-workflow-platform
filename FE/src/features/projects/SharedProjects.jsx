@@ -1,3 +1,4 @@
+import useLiveRefresh from '../../lib/useLiveRefresh.js';
 import CollectionView,{useCollectionView} from '../../components/CollectionView.jsx';
 import {ProjectPinButton} from '../../components/ProjectPins.jsx';
 import { useAuthLocale } from '../auth/AuthLocale.jsx';
@@ -14,6 +15,7 @@ export default function SharedProjects({ api, userId }) {
   const tr = (value, values) => projectText(value, locale, values);
   const [q, setQ] = useState(""), [state, setState] = useState("active"), [from, setFrom] = useState(""), [to, setTo] = useState("");
   const [data, setData] = useState(null), [busy, setBusy] = useState(true), [error, setError] = useState(""), [revision, setRevision] = useState(0);
+  useLiveRefresh(() => setRevision(value => value + 1));
   const sequence = useRef(0), invalid = Boolean(from && to && from > to);
   const query = new URLSearchParams({ limit: "12", state, ...(q.trim() ? { q: q.trim() } : {}), ...(from ? { from } : {}), ...(to ? { to } : {}) }).toString();
   async function load(cursor = null, token = sequence.current) {
@@ -36,7 +38,7 @@ export default function SharedProjects({ api, userId }) {
     <main className="studio-project-page">
       <section className="hero">
         <div><small>{tr("CỘNG TÁC THEO PHẠM VI")}</small><h1>{tr("Dự án được chia sẻ")}</h1><p>{tr("Project bạn đã chấp nhận quyền Guest. Bạn được xem và bình luận theo quyền hiện tại.")}</p></div>
-        <button disabled={busy} onClick={() => setRevision(value => value + 1)}>{tr("Làm mới danh sách")}</button>
+
       </section>
       <CollectionView kind="layout" view={view} onChange={setView} locale={locale}/>
       <FilterPanel locale={locale} compact advancedLabel={tr("Bộ lọc")}>

@@ -1,5 +1,6 @@
 import { taskText } from './task-text.js';
 const english={
+  "Số liệu tại {date}. Dữ liệu được cập nhật tự động khi bạn quay lại trang.": "Counts as of {date}. Data refreshes automatically when you return.",
   "Hạn chót hôm nay": "Due today",
   "Sắp tới": "Upcoming",
   "Chưa có hạn chót": "No deadline",

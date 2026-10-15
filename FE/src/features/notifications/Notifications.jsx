@@ -1,3 +1,4 @@
+import useLiveRefresh from '../../lib/useLiveRefresh.js';
 import CollectionLoadMore from '../../components/CollectionLoadMore.jsx';
 import CollectionView,{useCollectionView} from '../../components/CollectionView.jsx';
 import {rememberInboxPosition,takeInboxPosition} from './inbox-position.js';
@@ -141,6 +142,7 @@ export default function Notifications({ api, id, user }) {
     [error, setError] = useState(""),
     [notice, setNotice] = useState(""),
     [revision, setRevision] = useState(0), [uncertain, setUncertain] = useState(false);
+  useLiveRefresh(() => setRevision(value => value + 1));
   const generation = useRef(0),
     pending = useRef(false),
     invalid = from && to && from > to;
@@ -335,14 +337,7 @@ export default function Notifications({ api, id, user }) {
           <p>{tr("Những thay đổi công việc và lời mời liên quan đến bạn.")}</p>
         </div>
         <div className="buttons">
-          <button
-            disabled={busy || mutating}
-            onClick={async () => {
-              setNotice("");
-              setRevision((v) => v + 1);
-              changed();
-            }}
-          >{tr("Tải lại thông báo")}</button>
+
           {!id && (
             <button
               disabled={

@@ -1,3 +1,4 @@
+import useLiveRefresh from '../../lib/useLiveRefresh.js';
 import { useAuthLocale } from '../auth/AuthLocale.jsx';
 import { taskText } from '../../lib/task-text.js';
 import {
@@ -42,6 +43,7 @@ export default function TaskList({
     [error, setError] = useState(""),
     [revision, setRevision] = useState(0),
     [creating, setCreating] = useState(false);
+  useLiveRefresh(() => setRevision(value => value + 1));
   const [priority, setPriority] = useState('all');
   const canCreate = !suspended && !mine && !project?.readOnly && project?.permissions?.createTask === true;
   useEffect(() => { if (!canCreate) setCreating(false); }, [canCreate]);
@@ -217,10 +219,7 @@ export default function TaskList({
           )}
         </div>
         <div className="buttons">
-          <button
-            disabled={busy || creating}
-            onClick={() => setRevision((v) => v + 1)}
-          >{tr("Làm mới công việc")}</button>
+
           {canCreate && (
             <button
               className="primary"
