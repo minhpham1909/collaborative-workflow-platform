@@ -245,7 +245,7 @@ export default function App() {
         ) : route.kind === "task" ? (
           <TaskDetail key={user.id + route.id} api={api} id={route.id} />
         ) : route.kind === "calendar" ? (
-          <Calendar key={user.id} api={api}/>
+          <Calendar key={user.id} api={api} userId={user.id}/>
         ) : route.kind === "mine" ? (
           <MyTasks key={user.id} api={api}  userId={user.id} />
         ) : route.kind === "workspace" ? (
