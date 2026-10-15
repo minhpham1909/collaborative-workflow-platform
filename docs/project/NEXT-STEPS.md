@@ -1,3 +1,5 @@
+15/10/2026 — P4a access/checklist đạt phạm vi [QA](../qa/PRODUCT-P4A-TASK-ACCESS-CHECKLIST-CHECK.md). Tiếp P4b nhãn/priority/deadline/comment và bố cục/error. Guest/requester-loss Task cases từ P1 đã có bằng chứng; chưa đóng toàn bộ P4.
+
 15/10/2026 — P3d dialog error gates đạt, sửa TeamAction5xx uncertain. [QA/remaining](../qa/PRODUCT-P3D-DIALOG-ERRORS-CHECK.md). Tiếp P4 Board/Task/detail, gồm Guest panel mất quyền/requester-loss. P6 giữ delivery/cleanup/pagination/race bổ sung chưa chạy. Không deploy.
 
 15/10/2026 — P3c email/security đạt phạm vi; sửa Ban preview retry khi lỗi đọc. [QA/remaining](../qa/PRODUCT-P3C-SECURITY-EMAIL-CHECK.md). Còn ownership/invitation uncertain/permission cases, email delivery và cleanup/pagination riêng; chưa full P3.
