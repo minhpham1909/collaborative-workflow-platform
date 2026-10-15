@@ -6,7 +6,7 @@ Mốc bắt đầu: 15/10/2026. Core cleanup F2d2c đã qua scoped gates; chuy�
 | --- | --- | --- | --- |
 | P0 | Dữ liệu mới và smoke | Giữ tài khoản thật; seed đúng dev27018; đủ trạng thái, vai trò; smoke web | Đạt scoped gate |
 | P1 | Nghiệm thu thao tác nhiều tài khoản | Tạo/xem/sửa/huỷ; Manager/Member/Guest; mất quyền, CAS, pending reopen, archive/trash/restore; lỗi mạng và giữ draft | P1a đạt; P1b còn lại |
-| P2 | Home và điều hướng | Gom filter + dạng xem; ưu tiên hành động, pin; giảm reload thủ công; bố cục gọn và dữ liệu thật | Chưa bắt đầu |
+| P2 | Home và điều hướng | Gom filter + dạng xem; ưu tiên hành động, pin; giảm reload thủ công; bố cục gọn và dữ liệu thật | P2a toolbar đạt; còn nghiệm thu tổng thể |
 | P3 | Workspace/Team/cài đặt | Setup metadata, role, invitation, audit, quyền sở hữu; trạng thái rỗng/chỉ đọc/lỗi rõ ràng | Chưa bắt đầu |
 | P4 | Board/Task/detail | Đọc/sửa thuận tiện, checklist/nhãn/hạn/comment/reopen/trash; tránh cuộn thừa | Chưa bắt đầu |
 | P5 | My Tasks/lịch/Inbox | Hai dạng xem khác biệt thực chất; filter, tải thêm, back/return; notification target đã mất quyền | Chưa bắt đầu |
@@ -35,3 +35,5 @@ Không gom thành một đợt redesign lớn. Vẫn dùng nền visual đã ch�
 P0 không chứng minh mọi thao tác đa tài khoản, phân trang dài, responsive/sáng tối hoặc khả năng chịu lỗi mạng. Những phần đó nằm P1–P6. Không đánh dấu sản phẩm hoàn chỉnh chỉ vì test kỹ thuật đạt.
 
 15/10/2026: P1a [native write journey](../qa/PRODUCT-P1A-WRITE-JOURNEY-CHECK.md) đạt LightVI1440/DarkEN375. P1b form đang mở bị mất quyền/CAS/mất phản hồi/reopen vẫn cần nghiệm thu. P2 toolbar sẽ triển khai theo yêu cầu UI đã chốt, không coi P1 hoàn tất.
+
+15/10/2026: P2a gom filter và dạng xem cho 5 màn hình; icon có nhãn trợ năng/vùng bấm 44px, sửa tương phản selected hover. [QA và phạm vi](../qa/PRODUCT-P2A-FILTER-VIEW-CHECK.md). P1b vẫn mở; chưa đóng P2/P5 hoặc deploy.

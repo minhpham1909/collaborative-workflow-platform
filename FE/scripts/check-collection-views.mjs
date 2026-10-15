@@ -100,9 +100,9 @@ try {
   let reads=0;owner.on('request',r=>{if(r.url().startsWith('http://localhost:4000/'))reads++;});
   for(const [key,route,selector]of [['home','#home','.home-workspace-card'],['workspace','#workspace/'+ws.id,'.project-card'],['mine','#mine','.my-task-row']]){
    await rotate();await owner.goto(feOrigin+'/'+route);await owner.locator(selector).first().waitFor();await owner.waitForTimeout(400);
-   const before=reads,count=await owner.locator(selector).count(),control=owner.locator('.collection-view');
+   const before=reads,count=await owner.locator(selector).count(),control=owner.locator('.collection-view');assert.equal(await owner.locator('.filter-panel .collection-view').count(),1,'View control shares the filter region');
    await control.getByRole('button').nth(1).click();await owner.waitForTimeout(250);assert.equal(await owner.locator(selector).count(),count);assert.equal(reads,before,'View changes network query');
-   for(const w of [375,768,1024,1280,1440]){await owner.setViewportSize({width:w,height:1000});assert.ok(await owner.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));await assertReadable(owner,'.collection-view button');await owner.screenshot({path:out+'/'+key+'-'+theme+'-'+language+'-'+w+'.png',fullPage:true});}
+   for(const w of [375,768,1024,1280,1440]){await owner.setViewportSize({width:w,height:1000});assert.ok(await owner.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));await assertReadable(owner,'.collection-view button',4.5,true);assert.ok(await owner.locator('.collection-view button').evaluateAll(buttons=>buttons.every(button=>button.getAttribute('aria-label')&&button.getBoundingClientRect().height>=44&&button.getBoundingClientRect().width>=44)));await owner.screenshot({path:out+'/'+key+'-'+theme+'-'+language+'-'+w+'.png',fullPage:true});}
    await owner.reload();await owner.locator(selector).first().waitFor();assert.equal(await owner.locator('.collection-view button').nth(1).getAttribute('aria-pressed'),'true');
   }
   await guest.goto(feOrigin+'/#shared');await guest.locator('.project-cards .card').first().waitFor();await guest.locator('.collection-view button').nth(1).click();await guest.waitForTimeout(250);

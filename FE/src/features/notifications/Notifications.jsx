@@ -361,9 +361,9 @@ export default function Notifications({ api, id, user }) {
       </section>
       {!id && (
         <>
-          <CollectionView view={view} onChange={setView} locale={locale}/>
+
           <div className="notification-quick" aria-label={tr("Lọc nhanh thông báo")}>{[['all',tr("Tất cả thông báo")],['unread',tr("Chưa đọc")],['read',tr("Đã đọc")]].map(([value,label])=><button key={value} disabled={mutating} aria-pressed={read===value} onClick={()=>filter(setRead,value,read)}>{tr(label)}</button>)}</div>
-          <fieldset className="notification-filter-fields" disabled={mutating}><FilterPanel locale={locale} compact advancedLabel={tr("Lọc nâng cao")}>
+          <fieldset className="notification-filter-fields" disabled={mutating}><FilterPanel toolbar={<CollectionView view={view} onChange={setView} locale={locale}/>} locale={locale} compact advancedLabel={tr("Lọc nâng cao")}>
             <label>{tr("Trạng thái đọc")}<select
                 aria-label={tr("Trạng thái đọc")}
                 value={read}

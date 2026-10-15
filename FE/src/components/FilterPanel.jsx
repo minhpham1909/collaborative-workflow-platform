@@ -15,6 +15,7 @@ export default function FilterPanel({
   compact = false,
   sortLabel = "Mới tạo trước",
   advancedLabel = "Bộ lọc",
+  toolbar = null,
 }) {
   const t = value => homeText(value, locale);
   const [open, setOpen] = useState(false);
@@ -62,7 +63,7 @@ export default function FilterPanel({
             <Icon name="filter" />
             {advancedLabel}{count ? ` (${count})` : ""}
           </button>
-          <span className="filter-sort">{t("Sắp xếp:")} {t(sortLabel)}</span>
+          {toolbar ? <div className="filter-toolbar-end"><span className="filter-sort">{t("Sắp xếp:")} {t(sortLabel)}</span>{toolbar}</div> : <span className="filter-sort">{t("Sắp xếp:")} {t(sortLabel)}</span>}
         </div>
         <div id={panelId} className="filters filter-advanced" hidden={!open}>
           {advanced}

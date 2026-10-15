@@ -267,3 +267,5 @@ Storage/resources vẫn Upcoming; announcements là phase riêng. Không tự m�
 [Screen spec](../ui-ux/SCREEN-SPEC-v0.2.md), [flows](../ui-ux/SCREEN-FLOWS-v0.2.md), [account/link review](../ui-ux/ACCOUNT-REGISTRATION-LINK-REVIEW.md), [Google/SMTP local setup](GOOGLE-SMTP-LOCAL-SETUP.md).
 
 07/10/2026 — Stitch S3: Workspace detail/Project cards/filter/progress và Archive/Unarchive đã triển khai, đúng effective permissions/parent readonly/CAS/typed confirmation. Xem docs/qa/UI-STITCH-S03-CHECK.md. Bước tiếp theo S4 Organization Team theo STITCH-UI-CLUSTER-PLAN-v0.1.md; giữ worker SMTP/purge và backfill dev tắt.
+
+15/10/2026 — P2a unified filter/view toolbar hoàn tất trên Home, Workspace Project, Shared, My Tasks, Inbox. [QA](../qa/PRODUCT-P2A-FILTER-VIEW-CHECK.md). Tiếp P1b kiểm thử mất quyền/CAS/phản hồi ghi và nghiệm thu mật độ hiển thị trong P2/P5. Không deploy.

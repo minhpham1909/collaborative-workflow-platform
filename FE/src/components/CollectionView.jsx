@@ -9,7 +9,7 @@ export function useCollectionView(userId,scope,allowed,defaultView){
  const choose=value=>{if(!allowed.includes(value))return;setView(value);writeView(userId,scope,allowed,value);};
  return [view,choose];
 }
-export default function CollectionView({view,onChange,locale='vi',kind='density',labels}){
+export default function CollectionView({view,onChange,locale='vi',kind='density',labels,iconOnly=false}){
  const en=locale==='en',choices=kind==='layout'?[['grid',en?'Cards':'Dạng thẻ','grid'],['list',en?'List':'Danh sách','list']]:[['detailed',en?'Detailed':'Chi tiết','grid'],['compact',en?'Compact':'Thu gọn','list']];
- return <div className="collection-view" role="group" aria-label={en?'List view':'Cách xem danh sách'}>{choices.map(([value,label,icon],index)=><button type="button" key={value} aria-label={labels?.[index]??label} aria-pressed={view===value} onClick={()=>onChange(value)}><Icon name={icon}/>{label}</button>)}</div>;
+ return <div className={"collection-view"+(iconOnly?" collection-view-icons":"")} role="group" aria-label={en?'List view':'Cách xem danh sách'}>{choices.map(([value,label,icon],index)=><button type="button" key={value} aria-label={labels?.[index]??label} title={labels?.[index]??label} aria-pressed={view===value} onClick={()=>onChange(value)}><Icon name={icon}/>{!iconOnly&&label}</button>)}</div>;
 }

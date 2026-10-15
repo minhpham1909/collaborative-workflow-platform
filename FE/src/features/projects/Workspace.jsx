@@ -248,7 +248,7 @@ export default function Workspace({ api, id, userId }) {
       {tab === "projects" && (
         <>
           <div className="workspace-collection-heading"><h2>{t("Dự án trong Workspace")}</h2><span className="muted">{data.total !== undefined ? t("{count} kết quả", { count: data.total }) : ""}</span></div>
-          <FilterPanel locale={locale} compact advancedLabel={t("Thời gian")}>
+          <FilterPanel toolbar={<CollectionView iconOnly kind="layout" view={view} onChange={setView} locale={locale}/>} locale={locale} compact advancedLabel={t("Thời gian")}>
             <label>
               {t("Tìm theo tên hoặc mô tả Dự án")}
               <input
@@ -311,7 +311,7 @@ export default function Workspace({ api, id, userId }) {
       )}
       {tab === "projects" && (
         <>
-          <CollectionView kind="layout" view={view} onChange={setView} locale={locale}/><div className={'cards project-cards collection-'+view} aria-busy={busy}>
+          <div className={'cards project-cards collection-'+view} aria-busy={busy}>
             {data.items.map((item, i) =>
               tab === "projects" ? (
                 <article

@@ -40,8 +40,8 @@ export default function SharedProjects({ api, userId }) {
         <div><small>{tr("CỘNG TÁC THEO PHẠM VI")}</small><h1>{tr("Dự án được chia sẻ")}</h1><p>{tr("Project bạn đã chấp nhận quyền Guest. Bạn được xem và bình luận theo quyền hiện tại.")}</p></div>
 
       </section>
-      <CollectionView kind="layout" view={view} onChange={setView} locale={locale}/>
-      <FilterPanel locale={locale} compact advancedLabel={tr("Bộ lọc")}>
+
+      <FilterPanel toolbar={<CollectionView iconOnly kind="layout" view={view} onChange={setView} locale={locale}/>} locale={locale} compact advancedLabel={tr("Bộ lọc")}>
         <label>{tr("Tìm Dự án được chia sẻ")}<input type="search" maxLength={200} value={q} onChange={e => setQ(e.target.value)} /></label>
         <label>{tr("Trạng thái Dự án")}<select aria-label={tr("Trạng thái Dự án")} value={state} onChange={e => setState(e.target.value)}><option value="active">{tr("Đang hoạt động")}</option><option value="archived">{tr("Đã lưu trữ")}</option><option value="all">{tr("Tất cả")}</option></select></label>
         <label>{tr("Từ ngày tạo")}<input type="date" value={from} onChange={e => setFrom(e.target.value)} /></label>

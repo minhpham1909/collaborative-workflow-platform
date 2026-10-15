@@ -240,9 +240,9 @@ export default function Home({ api, user }) {
       <HomeHighlights data={highlights} compact />
       {uncertain && !creating && <InlineMessage tone="info">{creationText('Yêu cầu tạo Workspace đang chờ kiểm tra kết quả.', 'Check the pending Workspace creation result.')}</InlineMessage>}
       {createdWorkspace && <InlineMessage tone="info">{t("Workspace {name} đã sẵn sàng. Bạn có thể bổ sung mô tả chi tiết, mời thành viên và tạo dự án đầu tiên.", { name: createdWorkspace.name })} <a href={`#workspace/${createdWorkspace.id}`}>{t("Tiếp tục thiết lập")}</a><button onClick={() => setCreatedWorkspace(null)} aria-label={t("Đóng hướng dẫn thiết lập")}>{t("Đóng")}</button></InlineMessage>}
-      <div className="home-collection-header"><div><p className="home-eyebrow">{t("CÙNG NHAU LÀM VIỆC")}</p><h2>{t("Workspace của bạn")} <span className="home-count">{data.total ?? '—'}</span></h2></div><CollectionView kind="layout" view={view} onChange={setView} locale={locale} labels={[t("Xem Workspace dạng thẻ"),t("Xem Workspace dạng danh sách")]}/></div>
+      <div className="home-collection-header"><div><p className="home-eyebrow">{t("CÙNG NHAU LÀM VIỆC")}</p><h2>{t("Workspace của bạn")} <span className="home-count">{data.total ?? '—'}</span></h2></div></div>
       <div className="home-filters">
-      <FilterPanel locale={locale} compact advancedLabel={t("Thời gian")}>
+      <FilterPanel toolbar={<CollectionView iconOnly kind="layout" view={view} onChange={setView} locale={locale} labels={[t("Xem Workspace dạng thẻ"),t("Xem Workspace dạng danh sách")]}/>} locale={locale} compact advancedLabel={t("Thời gian")}>
         <label>
           {t("Tìm theo tên hoặc mô tả Workspace")}
           <input
