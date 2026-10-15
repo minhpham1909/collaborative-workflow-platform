@@ -7,7 +7,7 @@ Mốc bắt đầu: 15/10/2026. Core cleanup F2d2c đã qua scoped gates; chuy�
 | P0 | Dữ liệu mới và smoke | Giữ tài khoản thật; seed đúng dev27018; đủ trạng thái, vai trò; smoke web | Đạt scoped gate |
 | P1 | Nghiệm thu thao tác nhiều tài khoản | Tạo/xem/sửa/huỷ; Manager/Member/Guest; mất quyền, CAS, pending reopen, archive/trash/restore; lỗi mạng và giữ draft | P1a/P1b1/P1b2 đạt phạm vi Task; còn biến thể P3/P4 |
 | P2 | Home và điều hướng | Gom filter + dạng xem; ưu tiên hành động, pin; giảm reload thủ công; bố cục gọn và dữ liệu thật | P2a toolbar đạt; còn nghiệm thu tổng thể |
-| P3 | Workspace/Team/cài đặt | Setup metadata, role, invitation, audit, quyền sở hữu; trạng thái rỗng/chỉ đọc/lỗi rõ ràng | P3a–P3c đạt phạm vi; còn error matrix mở rộng |
+| P3 | Workspace/Team/cài đặt | Setup metadata, role, invitation, audit, quyền sở hữu; trạng thái rỗng/chỉ đọc/lỗi rõ ràng | P3a–P3d đạt luồng chính; hậu kiểm P6 còn lại |
 | P4 | Board/Task/detail | Đọc/sửa thuận tiện, checklist/nhãn/hạn/comment/reopen/trash; tránh cuộn thừa | Chưa bắt đầu đợt nghiệm thu |
 | P5 | My Tasks/lịch/Inbox | Hai dạng xem khác biệt thực chất; filter, tải thêm, back/return; notification target đã mất quyền | Card/list đạt; còn nghiệm thu các luồng khác |
 | P6 | Tổng nghiệm thu | Sáng/tối, desktop/mobile, focus/bàn phím, loading/empty/error; đối chiếu Stitch và người dùng nghiệm thu | Chưa bắt đầu đợt nghiệm thu |
@@ -51,3 +51,5 @@ P0 không chứng minh mọi thao tác đa tài khoản, phân trang dài, respo
 15/10/2026 — [P3b Team/lifecycle](../qa/PRODUCT-P3B-TEAM-LIFECYCLE-CHECK.md): UI multi-Manager, Manager LINK creation, Owner transfer/oldOwner Member, remove Member, role-audit, archive/unarchive giữ Project states; service admission/revocation. LightVI1440/DarkEN375. Tiếp P3c email preferences/Ban/error cases; chưa đóng P3, không deploy.
 
 15/10/2026 — [P3c security/email](../qa/PRODUCT-P3C-SECURITY-EMAIL-CHECK.md): sửa preview lỗi bị khoá nhầm như write uncertain; browser email override/reset isolation, Ban/unban/no auto-membership/assignee retention, stale role409 và lost Ban response khoá repeat đạt LightVI1440/DarkEN375. Không cleanupworker/SMTP/devdata. Còn ownership/invitation error matrix và cleanup/pagination riêng; P3 chưa đóng toàn diện.
+
+15/10/2026 — [P3d dialog errors](../qa/PRODUCT-P3D-DIALOG-ERRORS-CHECK.md): TeamAction5xx hiển thị uncertain đúng; EMAIL invitation commit502/no duplicate/readback, Manager lostrole403, ownershipCAS409 và lostresponse/reconcile PASS LightVI1440/DarkEN375. FE35/build PASS. Tiếp P4 Board/Task; giữ delivery/cleanup/pagination/race bổ sung ở P6, không coi các ca chưa chạy là đạt.

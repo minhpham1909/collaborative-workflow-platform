@@ -1,3 +1,5 @@
+15/10/2026 — P3d dialog error gates đạt, sửa TeamAction5xx uncertain. [QA/remaining](../qa/PRODUCT-P3D-DIALOG-ERRORS-CHECK.md). Tiếp P4 Board/Task/detail, gồm Guest panel mất quyền/requester-loss. P6 giữ delivery/cleanup/pagination/race bổ sung chưa chạy. Không deploy.
+
 15/10/2026 — P3c email/security đạt phạm vi; sửa Ban preview retry khi lỗi đọc. [QA/remaining](../qa/PRODUCT-P3C-SECURITY-EMAIL-CHECK.md). Còn ownership/invitation uncertain/permission cases, email delivery và cleanup/pagination riêng; chưa full P3.
 
 15/10/2026 — P3b Team/ownership/archive đạt phạm vi [QA](../qa/PRODUCT-P3B-TEAM-LIFECYCLE-CHECK.md). Tiếp P3c email preferences/Ban và lỗi dialog role/ownership/invitation. Không đổi code sản phẩm/data dev; chưa đóng P3.

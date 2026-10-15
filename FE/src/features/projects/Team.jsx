@@ -1,3 +1,4 @@
+import { isUncertainMutation } from '../../lib/mutation-outcome.js';
 import useLiveRefresh from '../../lib/useLiveRefresh.js';
 import { useAuthLocale } from '../auth/AuthLocale.jsx';
 import { workspaceRoleText as workspaceText } from '../../lib/workspace-role-text.js';
@@ -359,9 +360,9 @@ function TeamAction({ api, workspace, action, onClose }) {
       }
     } catch (e) {
       setError(
-        e.status
-          ? messageFor(e)
-          : t("Chưa xác nhận được kết quả. Đóng và làm mới danh sách trước khi thao tác lại."),
+        isUncertainMutation(e)
+          ? t("Chưa xác nhận được kết quả. Đóng và làm mới danh sách trước khi thao tác lại.")
+          : messageFor(e),
       );
       setBlocked(true);
     } finally {
