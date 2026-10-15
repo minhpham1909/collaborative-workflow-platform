@@ -78,7 +78,7 @@ function Composer({ api, taskId, comment, onDone, onCancel, disabled = false }) 
           setContent(v);
           setDirty(true);
         }}
-        readOnly={busy}
+        readOnly={busy || uncertain}
         label={comment ? tr("Sửa bình luận") : tr("Bình luận mới")}
         limit={5000}
       />

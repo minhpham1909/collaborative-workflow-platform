@@ -98,7 +98,7 @@ export default function TaskForm({
     <section className="project-info">
       <h2>{task ? tr("Sửa Task") : tr("Tạo Task")}</h2>
       <form onSubmit={save}>
-        <fieldset disabled={busy}>
+        <fieldset disabled={busy || uncertain}>
           <FormField
             label={tr("Tiêu đề Task")}
             error={tr(titleError)}
@@ -162,16 +162,18 @@ export default function TaskForm({
               setDirty(true);
             }}
             label={tr("Mô tả Task")}
-            readOnly={busy}
+            readOnly={busy || uncertain}
           />
           {descriptionError && (
             <InlineMessage className="field-message error">
               {tr(descriptionError)}
             </InlineMessage>
           )}
+        </fieldset>
           <div className="buttons">
             <button
               type="button"
+              disabled={busy}
               onClick={async () => {
                 if (
                   !dirty ||
@@ -184,11 +186,10 @@ export default function TaskForm({
                   onCancel(uncertain);
               }}
             >{tr("Hủy")}</button>
-            <button className="primary" disabled={uncertain}>
+            <button className="primary" disabled={busy || uncertain}>
               {busy ? tr("Đang lưu…") : tr("Lưu Task")}
             </button>
           </div>
-        </fieldset>
         {error && <InlineMessage>{tr(error)}</InlineMessage>}
       </form>
     </section>

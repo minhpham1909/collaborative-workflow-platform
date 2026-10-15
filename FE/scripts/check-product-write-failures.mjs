@@ -63,7 +63,7 @@ try {
   const lost=await pageFor(0);await edit(lost);await title(lost).fill('P1b committed response lost');let writes=0;
   await lost.route('**/tasks/'+task.id,async route=>{if(route.request().method()!=='PATCH')return route.fallback();writes++;const response=await route.fetch({url:origin+'/tasks/'+task.id});assert.equal(response.status(),200);await route.abort('failed');});
   await save(lost).click();await lost.getByText(ui('Chưa xác nhận kết quả. Kiểm tra dữ liệu trước khi gửi lại.','The outcome is unconfirmed. Check the data before submitting again.'),{exact:true}).waitFor();
-  assert.equal((await Task.findById(task.id)).title,'P1b committed response lost');assert.equal(await title(lost).inputValue(),'P1b committed response lost');assert.ok(await save(lost).isDisabled());assert.equal(writes,1);
+  assert.equal((await Task.findById(task.id)).title,'P1b committed response lost');assert.equal(await title(lost).inputValue(),'P1b committed response lost');assert.ok(await save(lost).isDisabled());assert.ok(await title(lost).isDisabled());assert.equal(await lost.getByRole('textbox',{name:ui('Mô tả Task','Task description'),exact:true}).getAttribute('contenteditable'),'false');assert.equal(writes,1);
   await lost.unroute('**/tasks/'+task.id);await lost.getByRole('button',{name:ui('Hủy','Cancel'),exact:true}).click();await lost.locator('.system-dialog .primary').click();await lost.getByRole('heading',{name:'P1b committed response lost',exact:true}).waitFor();assert.equal(writes,1,'Recovery must read back, not repeat write');
   // Manager loses authority while the form remains open; API rejects and preserves draft.
   await edit(manager);await title(manager).fill('P1b forbidden draft');
