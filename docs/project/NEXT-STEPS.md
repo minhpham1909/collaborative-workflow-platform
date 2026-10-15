@@ -1,3 +1,5 @@
+15/10/2026 — P3b Team/ownership/archive đạt phạm vi [QA](../qa/PRODUCT-P3B-TEAM-LIFECYCLE-CHECK.md). Tiếp P3c email preferences/Ban và lỗi dialog role/ownership/invitation. Không đổi code sản phẩm/data dev; chưa đóng P3.
+
 15/10/2026 — P3a settings/metadata đạt, sửa recovery khi mất phản hồi hoặc tải lỗi. [QA](../qa/PRODUCT-P3A-WORKSPACE-SETTINGS-CHECK.md). Tiếp P3b Team/invitation/ownership/audit/lifecycle/email preferences; chưa đóng P3.
 
 15/10/2026 — P1b2 Task create/access/reopen đạt phạm vi [QA](../qa/PRODUCT-P1B2-CREATE-ACCESS-CHECK.md). Tiếp P3 Workspace/Team/settings, bổ sung mất quyền/CAS/mất phản hồi cho form tương ứng; P4 bổ sung Guest panel/requester-loss. Không deploy.
