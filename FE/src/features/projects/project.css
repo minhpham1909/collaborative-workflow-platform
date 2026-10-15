@@ -88,3 +88,6 @@
   .project-overview progress { flex: 1; min-width: 100px; }
   .studio-project-page .board-progress { flex-wrap: wrap; }
 }
+
+.project-management-list .buttons:empty { display:none; }
+@media(max-width:650px) { .project-management .team-tabs button:last-child:nth-child(odd) { grid-column:1 / -1; } }

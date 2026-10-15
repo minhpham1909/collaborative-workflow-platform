@@ -8,7 +8,7 @@ Mốc bắt đầu: 15/10/2026. Core cleanup F2d2c đã qua scoped gates; chuy�
 | P1 | Nghiệm thu thao tác nhiều tài khoản | Tạo/xem/sửa/huỷ; Manager/Member/Guest; mất quyền, CAS, pending reopen, archive/trash/restore; lỗi mạng và giữ draft | P1a/P1b1/P1b2 đạt phạm vi Task; còn biến thể P3/P4 |
 | P2 | Home và điều hướng | Gom filter + dạng xem; ưu tiên hành động, pin; giảm reload thủ công; bố cục gọn và dữ liệu thật | P2a toolbar đạt; còn nghiệm thu tổng thể |
 | P3 | Workspace/Team/cài đặt | Setup metadata, role, invitation, audit, quyền sở hữu; trạng thái rỗng/chỉ đọc/lỗi rõ ràng | P3a–P3d đạt luồng chính; hậu kiểm P6 còn lại |
-| P4 | Board/Task/detail | Đọc/sửa thuận tiện, checklist/nhãn/hạn/comment/reopen/trash; tránh cuộn thừa | P4a/P4b đạt phạm vi; P4c quản lý/visual còn lại |
+| P4 | Board/Task/detail | Đọc/sửa thuận tiện, checklist/nhãn/hạn/comment/reopen/trash; tránh cuộn thừa | P4a–P4c đạt luồng chính; hậu kiểm P6 còn lại |
 | P5 | My Tasks/lịch/Inbox | Hai dạng xem khác biệt thực chất; filter, tải thêm, back/return; notification target đã mất quyền | Card/list đạt; còn nghiệm thu các luồng khác |
 | P6 | Tổng nghiệm thu | Sáng/tối, desktop/mobile, focus/bàn phím, loading/empty/error; đối chiếu Stitch và người dùng nghiệm thu | Chưa bắt đầu đợt nghiệm thu |
 
@@ -57,3 +57,5 @@ P0 không chứng minh mọi thao tác đa tài khoản, phân trang dài, respo
 15/10/2026 — [P4a access/checklist](../qa/PRODUCT-P4A-TASK-ACCESS-CHECKLIST-CHECK.md): Guest revoked panel comment404/draft, freshread redacted; structure vsassigneetick; incomplete Done cancel/confirm; requester membership removed cancels request, stale approval409 giữDone. LightVI1440/DarkEN375. Tiếp P4b labels/priority/deadline/comments/error/layout. Không code sản phẩm/devdata/deploy.
 
 15/10/2026 — [P4b metadata/comments](../qa/PRODUCT-P4B-METADATA-COMMENTS-CHECK.md): khoá sửa nội dung khi uncertain, giữ huỷ/phục hồi Task ngoài fieldset; metadata/UTC/archivedlabel, comment lostresponse no-duplicate/author-only/CAS/harddelete và longcontent4widths LightVI/DarkEN PASS. P1b1 rerun + FE35/buildPASS. Tiếp P4c Project/label management và visual states; chưa fullP4.
+
+15/10/2026 — [P4c Project management](../qa/PRODUCT-P4C-PROJECT-MANAGEMENT-CHECK.md): descriptionCAS/lostresponse recovery, labelUI duplicate correction/archive/unarchive, Member/archivedreadonly và keyboard focus/Escape PASS LightVI/DarkEN. Bỏ empty action spacing/mobile oddtab fullrow. FE35/build PASS. Tiếp P5 MyTasks/calendar/Inbox; P6 giữ fullvisual/keyboard/drag-drop/longdata, không đánh dấu chưa chạy là đạt.
