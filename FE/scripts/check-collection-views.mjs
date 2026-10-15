@@ -97,13 +97,28 @@ try {
   await confirmation.getByRole('button',{name:ui('Xóa bình luận','Delete comment'),exact:true}).click();
   await guest.locator('.comment').waitFor({state:'detached'});
 
+  // Long labels cannot move account/notification actions, including narrow layouts.
+  for(const w of [375,768,1440]){
+    await owner.setViewportSize({width:w,height:1000});
+    const stable=await owner.evaluate(()=>{const label=document.querySelector('.header-location strong'),original=label.textContent;const measure=()=>['.header-bell','.account-menu'].map(selector=>{const r=document.querySelector(selector).getBoundingClientRect();return [r.x,r.y,r.width,r.height];});const before=measure();label.textContent='A very long selected screen title '.repeat(8);const after=measure();label.textContent=original;return JSON.stringify(before)===JSON.stringify(after);});
+    assert.ok(stable,'Long selected label moved header actions at '+w);
+    await owner.evaluate(()=>window.scrollTo(0,300));assert.equal(await owner.locator('.app-header').evaluate(el=>el.getBoundingClientRect().top),0,'Header moved while scrolling');await owner.evaluate(()=>window.scrollTo(0,0));
+  }
+  // The shared shell must survive route changes without document navigation or header drift.
+  await owner.setViewportSize({width:1440,height:1000});
+  await owner.evaluate(()=>{window.__shellProbe={header:document.querySelector('.app-header'),sidebar:document.querySelector('.app-sidebar')};});
+  let documentLoads=0;owner.on('request',request=>{if(request.isNavigationRequest()&&request.frame()===owner.mainFrame())documentLoads++;});
+  let headerAnchor;
   let reads=0;owner.on('request',r=>{if(r.url().startsWith('http://localhost:4000/'))reads++;});
   for(const [key,route,selector]of [['home','#home','.home-workspace-card'],['workspace','#workspace/'+ws.id,'.project-card'],['mine','#mine','.my-task-row']]){
    await rotate();await owner.goto(feOrigin+'/'+route);await owner.locator(selector).first().waitFor();await owner.waitForTimeout(400);
+   const shell=await owner.evaluate(()=>{const header=document.querySelector('.app-header'),bell=document.querySelector('.header-bell'),account=document.querySelector('.account-menu'),r=bell.getBoundingClientRect(),a=account.getBoundingClientRect();return {same:header===window.__shellProbe.header&&document.querySelector('.app-sidebar')===window.__shellProbe.sidebar,bell:r.x,account:a.x,height:header.getBoundingClientRect().height};});
+   assert.ok(shell.same,'Route remounted shared shell');assert.equal(documentLoads,0,'Hash route requested a new document');
+   if(headerAnchor)assert.deepEqual(shell,headerAnchor,'Route label/content shifted header actions');else headerAnchor=shell;
    const before=reads,count=await owner.locator(selector).count(),control=owner.locator('.collection-view');assert.equal(await owner.locator('.filter-panel .collection-view').count(),1,'View control shares the filter region');
    await control.getByRole('button').nth(1).click();await owner.waitForTimeout(250);assert.equal(await owner.locator(selector).count(),count);assert.equal(reads,before,'View changes network query');
    for(const w of [375,768,1024,1280,1440]){await owner.setViewportSize({width:w,height:1000});assert.ok(await owner.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));await assertReadable(owner,'.collection-view button',4.5,true);assert.ok(await owner.locator('.collection-view button').evaluateAll(buttons=>buttons.every(button=>button.getAttribute('aria-label')&&button.getBoundingClientRect().height>=44&&button.getBoundingClientRect().width>=44)));await owner.screenshot({path:out+'/'+key+'-'+theme+'-'+language+'-'+w+'.png',fullPage:true});}
-   await owner.reload();await owner.locator(selector).first().waitFor();assert.equal(await owner.locator('.collection-view button').nth(1).getAttribute('aria-pressed'),'true');
+   await owner.reload();await owner.locator(selector).first().waitFor();assert.equal(await owner.locator('.collection-view button').nth(1).getAttribute('aria-pressed'),'true');documentLoads=0;await owner.evaluate(()=>{window.__shellProbe={header:document.querySelector('.app-header'),sidebar:document.querySelector('.app-sidebar')};});
   }
   await guest.goto(feOrigin+'/#shared');await guest.locator('.project-cards .card').first().waitFor();await guest.locator('.collection-view button').nth(1).click();await guest.waitForTimeout(250);
   for(const w of [375,768,1024,1280,1440]){await guest.setViewportSize({width:w,height:1000});assert.ok(await guest.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));await assertReadable(guest,'.collection-view button,.project-cards .card p');await guest.screenshot({path:out+'/shared-'+theme+'-'+language+'-'+w+'.png',fullPage:true});}

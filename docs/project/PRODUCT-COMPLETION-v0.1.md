@@ -37,3 +37,5 @@ P0 không chứng minh mọi thao tác đa tài khoản, phân trang dài, respo
 15/10/2026: P1a [native write journey](../qa/PRODUCT-P1A-WRITE-JOURNEY-CHECK.md) đạt LightVI1440/DarkEN375. P1b form đang mở bị mất quyền/CAS/mất phản hồi/reopen vẫn cần nghiệm thu. P2 toolbar sẽ triển khai theo yêu cầu UI đã chốt, không coi P1 hoàn tất.
 
 15/10/2026: P2a gom filter và dạng xem cho 5 màn hình; icon có nhãn trợ năng/vùng bấm 44px, sửa tương phản selected hover. [QA và phạm vi](../qa/PRODUCT-P2A-FILTER-VIEW-CHECK.md). P1b vẫn mở; chưa đóng P2/P5 hoặc deploy.
+
+15/10/2026 — Sửa khung navigation: grid/sticky header, stable scrollbar gutter, giữ pins khi revalidate, prefetch code theo ý định điều hướng. [QA/phạm vi](../qa/SHELL-NAVIGATION-STABILITY-CHECK.md). Hash route không reload document trong browser test; dữ liệu từng trang vẫn tải/kiểm quyền. P1b còn mở; chưa deploy.

@@ -77,3 +77,12 @@ body { padding-bottom: var(--wf-toast-space, 0px); }
 .overlay.sidebar-overlay .mobile-sidebar { margin:0; flex:none; border-radius:0; animation:sidebar-enter .18s ease-out; }
 @keyframes sidebar-enter { from { transform:translateX(-100%); } to { transform:translateX(0); } }
 @media(prefers-reduced-motion:reduce) { .overlay.sidebar-overlay .mobile-sidebar { animation:none; } }
+
+/* Reserve the document gutter across short, loading and long routes. */
+html { scrollbar-gutter:stable; }
+.shell .app-header { position:sticky; top:0; z-index:10; display:grid; grid-template-columns:minmax(0,1fr) 44px max-content; width:100%; flex-shrink:0; }
+.shell .header-location { overflow:hidden; }
+.shell .header-location > span { flex-shrink:0; }
+.shell .account-menu { margin:0; }
+@media(max-width:1099px) { .shell .app-header { grid-template-columns:44px minmax(0,1fr) 44px max-content; } }
+@supports not (scrollbar-gutter:stable) { html { overflow-y:scroll; } }

@@ -21,10 +21,10 @@ export function ProjectPinsProvider({api,userId,verified,routeKey,children}){
  const generation=useRef(0),pending=useRef(false),mounted=useRef(true);
  useEffect(()=>{mounted.current=true;return()=>{mounted.current=false;generation.current++;};},[]);
  const load=useCallback(async()=>{
-  const token=++generation.current;setItems([]);setLoading(true);setError('');
+  const token=++generation.current;setLoading(true);setError('');
   if(!verified){setLoading(false);return;}
   try{const result=await api.request('/project-pins');if(token===generation.current)setItems(result.items);}
-  catch{if(token===generation.current)setError('Không tải được Dự án đã ghim.');}
+  catch{if(token===generation.current){setItems([]);setError('Không tải được Dự án đã ghim.');}}
   finally{if(token===generation.current)setLoading(false);}
  },[api,userId,verified]);
  useEffect(()=>{void load();return()=>{generation.current++;};},[load,routeKey]);
@@ -50,8 +50,8 @@ export function ProjectPinsNav({route}){
  if(!pins?.verified)return null;
  const items=expanded?pins.items:pins.items.slice(0,5);
  return <section className="project-pins-nav" aria-label={t('Dự án đã ghim')}>
-  <h2><Icon name="pin"/>{t('Dự án đã ghim')} <span>{pins.loading?'…':pins.items.length}</span></h2>
-  {pins.loading&&<p role="status">{t('Đang tải Dự án đã ghim…')}</p>}
+  <h2><Icon name="pin"/>{t('Dự án đã ghim')} <span>{pins.loading&&!pins.items.length?'…':pins.items.length}</span></h2>
+  {pins.loading&&!pins.items.length&&<p role="status">{t('Đang tải Dự án đã ghim…')}</p>}
   {pins.error&&<p role="alert">{t(pins.error)} <button disabled={pins.loading||pins.busy} onClick={()=>{setError('');void pins.load();}}>{t('Thử lại')}</button></p>}
   {error&&<p role="alert">{t(error)}</p>}
   {!pins.loading&&!pins.error&&!pins.items.length&&<p>{t('Chưa có Dự án đã ghim.')}</p>}

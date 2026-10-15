@@ -11,13 +11,23 @@ import { lazy, useCallback, useEffect, useRef, useState } from "react";
 import { createApi } from "../lib/api.js";
 import { messageFor } from "../lib/messages.js";
 import Login from "../features/auth/Login.jsx";
-const Home = lazy(() => import("../features/workspaces/Home.jsx"));
-const Workspace = lazy(() => import("../features/projects/Workspace.jsx"));
-const Project = lazy(() => import("../features/projects/Project.jsx"));
-const Calendar = lazy(() => import("../features/tasks/Calendar.jsx"));
-const MyTasks = lazy(() => import("../features/tasks/MyTasks.jsx"));
-const TaskDetail = lazy(() => import("../features/tasks/TaskDetail.jsx"));
-const SharedProjects = lazy(() => import("../features/projects/SharedProjects.jsx"));
+const screens = {
+  home: () => import('../features/workspaces/Home.jsx'),
+  workspace: () => import('../features/projects/Workspace.jsx'),
+  project: () => import('../features/projects/Project.jsx'),
+  calendar: () => import('../features/tasks/Calendar.jsx'),
+  mine: () => import('../features/tasks/MyTasks.jsx'),
+  task: () => import('../features/tasks/TaskDetail.jsx'),
+  shared: () => import('../features/projects/SharedProjects.jsx'),
+};
+const Home=lazy(screens.home), Workspace=lazy(screens.workspace), Project=lazy(screens.project), Calendar=lazy(screens.calendar), MyTasks=lazy(screens.mine), TaskDetail=lazy(screens.task), SharedProjects=lazy(screens.shared);
+// Warm screen code on navigation intent; no data requests or route changes.
+function prepareScreen(event) {
+  if(navigator.connection?.saveData)return;
+  const href=event.target.closest?.('a[href^="#"]')?.getAttribute('href');
+  const load=href&&screens[href.slice(1).split(/[/?]/)[0]];
+  if(load)void load().catch(()=>{});
+}
 import { notify } from "../components/NotificationProvider.jsx";
 import { readRoute } from "./routes.js";
 const Settings=lazy(()=>import('../features/settings/Settings.jsx'));
@@ -180,7 +190,7 @@ export default function App() {
   }
   return (
     <ProjectPinsProvider key={user.id} api={api} userId={user.id} verified={user.emailVerified} routeKey={route.kind+(route.id??'')}>
-    <div className="shell">
+    <div className="shell" onPointerOver={prepareScreen} onFocus={prepareScreen}>
       <AppSidebar route={route} user={user} api={api} mobileOpen={mobileOpen} closeMobile={closeMobile} />
       <div className="shell-content">
         <AppHeader
