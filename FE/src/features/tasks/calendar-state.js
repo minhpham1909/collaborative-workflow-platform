@@ -10,3 +10,9 @@ export function calendarFilters(hash=location.hash){
 }
 export function calendarParams(filters){return new URLSearchParams(Object.entries(filters).filter(([,value])=>value!==''));}
 export function calendarReturn(hash=location.hash){const value=new URLSearchParams(hash.split('?')[1]??'').get('returnTo');return value?.split('?')[0]==='#calendar'&&value.length<=2000?'#calendar?'+calendarParams(calendarFilters(value)):null;}
+
+// A repeated selection must not invalidate the currently displayed/requested data.
+export function calendarFilterChange(current,fields){
+ const next={...current,...fields};
+ return calendarParams(next).toString()===calendarParams(current).toString()?null:next;
+}

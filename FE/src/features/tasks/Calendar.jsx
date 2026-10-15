@@ -9,16 +9,17 @@ import MyTaskScope from './MyTaskScope.jsx';
 import TaskPanel from './TaskPanel.jsx';
 import Icon from '../../components/Icon.jsx';
 import {messageFor,messageText} from '../../lib/messages.js';
-import {calendarFilters,calendarParams,calendarCells,monthDays,moveMonth,validMonth,vietnamToday} from './calendar-state.js';
+import {calendarFilters,calendarFilterChange,calendarParams,calendarCells,monthDays,moveMonth,validMonth,vietnamToday} from './calendar-state.js';
 import './calendar.css';
 const english={'Trễ':'Late','Chưa có mã Task':'No task code yet','Bộ lọc':'Filters','Lịch công việc':'Work calendar','Chỉ công việc được giao cho bạn · Giờ Việt Nam':'Tasks assigned to you · Vietnam time','Hôm nay':'Today','Tháng trước':'Previous month','Tháng sau':'Next month','Tháng':'Month','Trạng thái':'Status','Chưa hoàn thành':'Open','Tất cả':'All','Chưa làm':'To do','Đang làm':'In progress','Hoàn thành':'Done','Phạm vi':'Scope','Đang hoạt động':'Active','Đã lưu trữ':'Archived','Tìm Task':'Search tasks','Xóa bộ lọc':'Clear filters','Làm mới':'Refresh','Không có deadline':'No deadline','Tất cả ngày, theo bộ lọc hiện tại':'Across all dates, within these filters','Đang tải lịch…':'Loading calendar…','Không tải được lịch.':'Unable to load calendar.','Thử lại':'Retry','Nhập tháng hợp lệ (1900–9999).':'Enter a valid month (1900–9999).','Chưa có công việc phù hợp.':'No matching tasks.','Mới tạo trước · Có phân trang':'Newest created first · Paginated','Tải thêm công việc':'Load more tasks','Chỉ đọc':'Read only','Xem Task':'View task','việc':'tasks','xong':'done','quá hạn':'overdue','Công việc ngày đã chọn':'Selected day tasks','Tổng trong tháng':'Total this month'};
 export default function Calendar({api}){
  const {locale}=useAuthLocale(),t=value=>locale==='en'?(english[value]??value):value;
  const [filters,setFilters]=useState(calendarFilters),[summary,setSummary]=useState(null),[data,setData]=useState(null),[busy,setBusy]=useState(true),[error,setError]=useState(''),[revision,setRevision]=useState(0),[openTask,setOpenTask]=useState(null);
   useLiveRefresh(() => setRevision(value => value + 1));
+ const scope=useRef({params:'',month:''});
  const generation=useRef(0),pending=useRef(null),valid=validMonth(filters.month)&& (filters.day==='none'||monthDays(filters.month).includes(filters.day));
  const params=calendarParams(filters).toString(),{day,...monthFilters}=filters,monthParams=calendarParams(monthFilters).toString();
- const change=fields=>{generation.current++;setSummary(null);setData(null);setError('');setFilters(old=>({...old,...fields}));};
+ const change=fields=>{const next=calendarFilterChange(filters,fields);if(!next)return;generation.current++;setData(null);setError('');setBusy(true);setFilters(next);};
  useEffect(()=>{if(valid)history.replaceState(history.state,'','#calendar?'+params);},[params,valid]);
  useEffect(()=>{const sync=()=>{if(location.hash.split('?')[0]==='#calendar')setFilters(calendarFilters());};window.addEventListener('hashchange',sync);return()=>window.removeEventListener('hashchange',sync);},[]);
  async function load(token=generation.current,cursor=null){
@@ -27,10 +28,10 @@ export default function Calendar({api}){
    const result=cursor?[null,await api.request('/my-calendar/tasks?'+params+'&limit=12&cursor='+encodeURIComponent(cursor))]:await Promise.all([api.request('/my-calendar?'+monthParams),api.request('/my-calendar/tasks?'+params+'&limit=12')]);
    if(token!==generation.current)return;
    if(result[0])setSummary(result[0]);setData(old=>({...result[1],items:cursor&&old?[...old.items,...result[1].items].filter((v,i,a)=>a.findIndex(x=>x.id===v.id)===i):result[1].items}));
-  }catch(e){if(token===generation.current){setError(messageFor(e));if(!cursor||[401,403,404].includes(e.status)){setSummary(null);setData(null);}}}
+  }catch(e){if(token===generation.current){setError(messageFor(e));if([401,403,404].includes(e.status)){setSummary(null);setData(null);}}}
   finally{if(token===generation.current)setBusy(false);if(pending.current===token)pending.current=null;}
  }
- useEffect(()=>{const token=++generation.current;setSummary(null);setData(null);if(!valid){setBusy(false);return;}setBusy(true);const timer=setTimeout(()=>load(token),250);return()=>{clearTimeout(timer);generation.current++;};},[params,revision,valid]);
+ useEffect(()=>{const token=++generation.current;if(scope.current.month!==monthParams)setSummary(null);if(scope.current.params!==params)setData(null);scope.current={params,month:monthParams};if(!valid){setBusy(false);return;}setBusy(true);const timer=setTimeout(()=>load(token),250);return()=>{clearTimeout(timer);generation.current++;};},[params,revision,valid]);
  const counts=Object.fromEntries((summary?.days??[]).map(day=>[day.day,day])),today=vietnamToday(),cells=calendarCells(filters.month),days=monthDays(filters.month);
  const dateLabel=date=>new Intl.DateTimeFormat(locale==='en'?'en-GB':'vi-VN',{timeZone:'Etc/GMT-7',dateStyle:'full'}).format(new Date(date+'T12:00:00Z'));
  function keyboard(event,date){const index=days.indexOf(date),week=(index+(new Date(filters.month+'-01T12:00:00Z').getUTCDay()+6)%7)%7;const delta={ArrowLeft:-1,ArrowRight:1,ArrowUp:-7,ArrowDown:7,Home:-week,End:6-week}[event.key];if(delta===undefined)return;event.preventDefault();const next=days[Math.min(days.length-1,Math.max(0,index+delta))];event.currentTarget.closest('.calendar-days').querySelector('[data-calendar-day="'+next+'"]').focus();}

@@ -147,7 +147,7 @@ export default function Notifications({ api, id, user }) {
     pending = useRef(false),
     invalid = from && to && from > to;
   useDraftGuard({ dirty:false, busy:mutating, message:tr("Thông báo đang được xử lý.") });
-  function filter(setter,value,current) {if(value===current)return;generation.current++;setData(null);setLoaded('');setError('');setter(value);}
+  function filter(setter,value,current) {if(value===current)return;if(setter===setQ&&value.trim()===current.trim()){setter(value);return;}generation.current++;setData(null);setLoaded('');setError('');setter(value);}
   const query = new URLSearchParams({
     limit: "12",
     read,
@@ -408,7 +408,7 @@ export default function Notifications({ api, id, user }) {
             </label>
             <button
               onClick={async () => {
-                if(read==='all'&&category==='all'&&!q&&!from&&!to)return;
+                if(read==='all'&&category==='all'&&!q.trim()&&!from&&!to){setQ('');return;}
                 generation.current++;setData(null);setLoaded('');setError('');
                 setRead("all");
                 setCategory("all");
