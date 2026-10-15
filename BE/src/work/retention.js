@@ -1,13 +1,13 @@
 import mongoose from 'mongoose';
-import { Task, Workspace, Organization, Project, TaskComment, TaskActivity, TaskReopenRequest, Notification, EmailOutbox, TaskPurgeAudit } from '../models/index.js';
+import { Task, Workspace, Project, TaskComment, TaskActivity, TaskReopenRequest, Notification, EmailOutbox, TaskPurgeAudit } from '../models/index.js';
 
 export async function purgeExpiredTask(taskId, expectedVersion, { now = () => new Date() } = {}) {
   return mongoose.connection.transaction(async tx => {
     const candidate = await Task.collection.findOne({ _id: taskId }, { session: tx });
     if (!candidate) return { state: 'skipped' };
-    const workspace = await Workspace.collection.findOneAndUpdate({ _id: candidate.workspaceId }, { $inc: { mutationRevision: 1 } }, { session: tx, returnDocument: 'after' });
+    // Fail closed before taking the parent write lock; historical fixture adapters do not widen purge scope.
+    const workspace = await Workspace.collection.findOneAndUpdate({ _id: candidate.workspaceId, organizationId: null, ownerId: { $type: 'objectId' } }, { $inc: { mutationRevision: 1 } }, { session: tx, returnDocument: 'after' });
     if (!workspace) return { state: 'orphan_skipped' };
-    if (workspace.organizationId && !await Organization.collection.findOneAndUpdate({ _id: workspace.organizationId }, { $inc: { mutationRevision: 1 } }, { session: tx, returnDocument: 'after' })) return { state: 'orphan_skipped' };
     const task = await Task.collection.findOne({ _id: taskId, workspaceId: workspace._id, version: expectedVersion, deletedAt: { $type: 'date' }, purgeAt: { $type: 'date', $lte: now() } }, { session: tx });
     if (!task) return { state: 'skipped' };
     if (task.purgeAt.getTime() !== task.deletedAt.getTime() + 30 * 86400_000) return { state: 'invalid_retention_skipped' };

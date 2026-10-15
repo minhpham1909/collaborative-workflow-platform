@@ -154,6 +154,29 @@ test('C5 Workspace archive and Task trash/retention', { skip: !process.env.TEST_
       const first = await runTaskRetention({ now: () => clock, limit: 1 }); assert.equal(first.skipped, 1); assert.ok(first.nextCursor);
       const beyond = await runTaskRetention({ now: () => clock, limit: 1, after: first.nextCursor }); assert.equal(beyond.selected, 0);
     });
+    await t.test('Unsupported legacy parents are skipped without changing the Workspace or Task graph', async () => {
+      const task = await create();
+      await work.createComment(claims[1], task.id, { content: rich('Preserve unsupported parent') });
+      await work.deleteTask(claims[1], task.id, { expectedVersion: task.version });
+      const taskId = O(task.id), workspaceId = O(workspace.id);
+      await Task.collection.updateOne({ _id: taskId }, { $set: { deletedAt: new Date(clock.getTime() - 30 * 86400_000), purgeAt: clock } });
+      const row = await Task.collection.findOne({ _id: taskId });
+      const snapshot = async () => Promise.all([Task, TaskComment, TaskActivity, TaskPurgeAudit, Notification, EmailOutbox].map(model => model.collection.find(model === Task ? { _id: taskId } : { taskId }).sort({ _id: 1 }).toArray()));
+      const before = await snapshot();
+      const parent = await Workspace.collection.findOne({ _id: workspaceId });
+      try {
+        for (const fields of [{ organizationId: new mongoose.Types.ObjectId() }, { ownerId: null }, { ownerId: 'invalid-owner' }]) {
+          await Workspace.collection.replaceOne({ _id: workspaceId }, { ...parent, ...fields });
+          const unsupported = await Workspace.collection.findOne({ _id: workspaceId });
+          assert.equal((await purgeExpiredTask(taskId, row.version, { now: () => clock })).state, 'orphan_skipped');
+          assert.deepEqual(await snapshot(), before);
+          assert.deepEqual(await Workspace.collection.findOne({ _id: workspaceId }), unsupported);
+        }
+      } finally {
+        await Workspace.collection.replaceOne({ _id: workspaceId }, parent);
+        await Task.collection.updateOne({ _id: taskId }, { $unset: { purgeAt: '' } });
+      }
+    });
     await t.test('HTTP auth/Origin/CAS and trashed child unavailable, no destructive Workspace/Project endpoints', async () => {
       const task = await create(); await work.deleteTask(claims[1], task.id, { expectedVersion: task.version });
       const trash = (await work.trash(claims[1], project.id, {})).items.find(value => value.id === task.id);
