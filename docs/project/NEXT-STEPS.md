@@ -1,3 +1,5 @@
+15/10/2026 — P3c email/security đạt phạm vi; sửa Ban preview retry khi lỗi đọc. [QA/remaining](../qa/PRODUCT-P3C-SECURITY-EMAIL-CHECK.md). Còn ownership/invitation uncertain/permission cases, email delivery và cleanup/pagination riêng; chưa full P3.
+
 15/10/2026 — P3b Team/ownership/archive đạt phạm vi [QA](../qa/PRODUCT-P3B-TEAM-LIFECYCLE-CHECK.md). Tiếp P3c email preferences/Ban và lỗi dialog role/ownership/invitation. Không đổi code sản phẩm/data dev; chưa đóng P3.
 
 15/10/2026 — P3a settings/metadata đạt, sửa recovery khi mất phản hồi hoặc tải lỗi. [QA](../qa/PRODUCT-P3A-WORKSPACE-SETTINGS-CHECK.md). Tiếp P3b Team/invitation/ownership/audit/lifecycle/email preferences; chưa đóng P3.

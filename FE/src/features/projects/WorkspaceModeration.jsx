@@ -32,7 +32,7 @@ function ModerationDialog({ api, workspace, target, kind, onClose }) {
       if (previewOnly) { setPreview(await api.request(base + '/preview', { method: 'POST', body: { userId: target.userId, cleanup } })); return; }
       await api.request(kind === 'ban' ? base + '/bans' : base + `/bans/${target.userId}/unban`, { method: 'POST', body: kind === 'ban' ? { userId: target.userId, cleanup, reason: reason.trim(), expectedVersion: preview.expectedVersion, ...(cleanup !== 'none' ? { preview: preview.preview } : {}) } : { reason: reason.trim(), expectedVersion: target.version } });
       notify(kind === 'ban' ? t("Đã chặn truy cập. Bình luận cần dọn được xếp hàng xử lý.") : t("Đã bỏ chặn. Người này chưa được cấp lại quyền tham gia.")); onClose();
-    } catch (error) { setUncertain(isUncertainMutation(error)); setError(isUncertainMutation(error) ? t("Chưa xác nhận kết quả. Đóng và tải lại trước khi thao tác tiếp.") : messageFor(error)); if (kind === 'ban') setPreview(null); }
+    } catch (error) { const unknownWrite = !previewOnly && isUncertainMutation(error); setUncertain(unknownWrite); setError(unknownWrite ? t("Chưa xác nhận kết quả. Đóng và tải lại trước khi thao tác tiếp.") : messageFor(error)); if (kind === 'ban') setPreview(null); }
     finally { pending.current = false; setBusy(false); }
   }
   const validReason = reason.trim() && !/[\u0000-\u001f\u007f\u2028\u2029]/u.test(reason);
