@@ -438,7 +438,7 @@ export default function Notifications({ api, id, user }) {
           row(data.notification)
         ) : (
           <>
-            {[[false,tr("Mới và chưa đọc")],[true,tr("Đã đọc trước đó")]].map(([isRead,label])=>{const items=data.items.filter(note=>Boolean(note.readAt)===isRead);return items.length?<section className="notification-group" key={tr(label)} aria-label={tr(label)}><div className="notification-group-heading"><h2>{tr(label)}</h2><p>{tr("{count} mục đã tải", {count:items.length})}</p></div>{items.map(row)}</section>:null;})}
+            {[[false,tr("Mới và chưa đọc")],[true,tr("Đã đọc trước đó")]].map(([isRead,label])=>{const items=data.items.filter(note=>Boolean(note.readAt)===isRead);return items.length?<section className="notification-group" key={tr(label)} aria-label={tr(label)}><div className="notification-group-heading"><h2>{tr(label)}</h2><p>{tr("{count} mục đã tải", {count:items.length})}</p></div><div className="notification-items">{items.map(row)}</div></section>:null;})}
             {!data.items.length && (
               <EmptyState>
                 <h2>{tr("Không có thông báo phù hợp")}</h2>

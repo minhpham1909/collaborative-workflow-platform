@@ -271,3 +271,5 @@ Storage/resources vẫn Upcoming; announcements là phase riêng. Không tự m�
 15/10/2026 — P2a unified filter/view toolbar hoàn tất trên Home, Workspace Project, Shared, My Tasks, Inbox. [QA](../qa/PRODUCT-P2A-FILTER-VIEW-CHECK.md). Tiếp P1b kiểm thử mất quyền/CAS/phản hồi ghi và nghiệm thu mật độ hiển thị trong P2/P5. Không deploy.
 
 15/10/2026 — Sửa khung navigation: grid/sticky header, stable scrollbar gutter, giữ pins khi revalidate, prefetch code theo ý định điều hướng. [QA/phạm vi](../qa/SHELL-NAVIGATION-STABILITY-CHECK.md). Hash route không reload document trong browser test; dữ liệu từng trang vẫn tải/kiểm quyền. P1b còn mở; chưa deploy.
+
+15/10/2026 — My Tasks/Inbox đổi từ density-only sang Dạng thẻ / Danh sách có cấu trúc khác biệt, giữ dữ liệu và thao tác. [QA/phạm vi](../qa/CARD-LIST-LAYOUT-CHECK.md). P1b và tổng nghiệm thu P2–P6 còn lại; chưa deploy.

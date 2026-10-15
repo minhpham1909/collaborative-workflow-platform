@@ -35,3 +35,17 @@
 .notification-view-compact .studio-note .buttons { margin-top:8px; gap:6px; }
 .notification-view-compact .note-icon { width:36px; height:36px; flex-basis:36px; }
 .notification-view-compact .studio-note .buttons :is(button,a) { min-height:44px; }
+
+.notification-view-detailed .notification-items { display:grid; grid-template-columns:repeat(auto-fill,minmax(min(100%,340px),1fr)); gap:14px; align-items:stretch; }
+.studio-notifications.notification-view-detailed .studio-note { flex-direction:column; margin:0; padding:20px; }
+.notification-view-detailed .note-body { display:flex; flex-direction:column; width:100%; }
+.notification-view-detailed .note-body .buttons { margin-top:auto; padding-top:16px; }
+.notification-view-compact .notification-items { border:1px solid var(--wf-border); border-radius:14px; overflow:hidden; }
+.studio-notifications.notification-view-compact .studio-note { margin:0; border:0; border-bottom:1px solid var(--wf-border); border-radius:0; }
+.studio-notifications.notification-view-compact .studio-note:last-child { border-bottom:0; }
+.studio-notifications.notification-view-compact .studio-note.unread { border-left:4px solid var(--wf-primary); }
+.notification-view-compact .note-body { display:grid; grid-template-columns:minmax(0,1fr) minmax(180px,auto); column-gap:20px; align-items:start; }
+.notification-view-compact .note-body > :not(.buttons) { grid-column:1; }
+.notification-view-compact .note-body > .buttons { grid-column:2; grid-row:1/8; max-width:280px; justify-content:flex-end; align-self:center; margin:0; }
+@media(max-width:850px) { .notification-view-compact .note-body { display:block; }.notification-view-compact .note-body > .buttons { margin:10px 0 0; max-width:none; justify-content:flex-start; } }
+@media(max-width:650px) { .notification-view-detailed .studio-note .buttons { margin-left:0; } }
