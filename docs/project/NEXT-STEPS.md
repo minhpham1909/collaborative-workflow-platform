@@ -1,3 +1,5 @@
+15/10/2026 — P5a sửa My Tasks full-page return đọc lại số trang và anchor. [QA](../qa/PRODUCT-P5A-MY-TASKS-RETURN-CHECK.md). Tiếp P5b automatic lazy/cap/filter race, Inbox target unavailable và Calendar return. Chưa full P5/deploy.
+
 15/10/2026 — P4c Project/labels đạt scoped gates; gọn empty action/mobile tabs. [QA](../qa/PRODUCT-P4C-PROJECT-MANAGEMENT-CHECK.md). Tiếp P5 My Tasks/lịch/Inbox: lazy/back/target mất quyền. P6 giữ tổng visual/keyboard/drag-drop/longdata; chưa deploy.
 
 15/10/2026 — P4b metadata/comments đạt, sửa readonly khi uncertain và giữ recovery. [QA/phạm vi](../qa/PRODUCT-P4B-METADATA-COMMENTS-CHECK.md). Tiếp P4c Project/label management/error và visual states/keyboard; chưa đóng P4.
