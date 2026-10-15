@@ -8,7 +8,7 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import mongoose from 'mongoose';
 import {connectDatabase} from '../src/database.js';
-import {models,User,Workspace,WorkspaceMembership,Organization,OrganizationMembership,AccessBan,Session,WorkspaceRoleAudit,WorkspaceManagementAudit,WorkspaceInvitation} from '../src/models/index.js';
+import {models,User,Workspace,WorkspaceMembership,Organization,OrganizationMembership,AccessBan,Session,WorkspaceRoleAudit,WorkspaceManagementAudit,WorkspaceInvitation} from '../test-support/organization-models.js';
 import {workspaceAccess,workspaceAccessStages,registerHistoricalWorkspaceFixture} from '../src/workspaces/access.js';
 import {queryWorkspaceList} from '../src/workspaces/query-store.js';
 import {workspaceQuery} from '../src/workspaces/list-query.js';

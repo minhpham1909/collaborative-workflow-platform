@@ -1,4 +1,4 @@
-import { OrganizationMembership, OrganizationInvitation } from '../../src/models/index.js';
+import { OrganizationMembership, OrganizationInvitation } from '../organization-models.js';
 import { AuthError } from '../../src/auth/errors.js';
 
 export async function assertOrganizationIndexes() {

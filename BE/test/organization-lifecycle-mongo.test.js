@@ -4,7 +4,7 @@ import { randomUUID } from 'node:crypto';
 import { once } from 'node:events';
 import mongoose from 'mongoose';
 import { connectDatabase } from '../src/database.js';
-import { models, User, Session, Organization, OrganizationMembership, OrganizationInvitation, OrganizationAudit, Workspace, WorkspaceMembership, Project, Task, TaskComment, Notification, EmailOutbox } from '../src/models/index.js';
+import { models, User, Session, Organization, OrganizationMembership, OrganizationInvitation, OrganizationAudit, Workspace, WorkspaceMembership, Project, Task, TaskComment, Notification, EmailOutbox } from '../test-support/organization-models.js';
 import { createOrganizationService } from '../test-support/organizations/service.js';
 import { createMongoOrganizationStore } from '../test-support/organizations/mongo-store.js';
 import { createWorkspaceService } from '../src/workspaces/service.js';

@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { Organization, OrganizationInvitation, Workspace, EmailOutbox, User } from '../src/models/index.js';
+import { Organization, OrganizationInvitation, Workspace, EmailOutbox, User } from './organization-models.js';
 import { assertNotBanned } from '../src/moderation/guard.js';
 import { AuthError } from '../src/auth/errors.js';
 import { createDeliveryCrypto } from '../src/auth/delivery-crypto.js';

@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import {spawnSync} from 'node:child_process';
 import mongoose from 'mongoose';
 import { models, User, Session, WorkspaceMembership, WorkspaceInvitation, Project, Task, TaskComment, Notification, EmailOutbox } from '../src/models/index.js';
 import { emptyRichText } from '../src/content/rich-text.js';
@@ -16,7 +17,7 @@ const content = (value) => ({ ...emptyRichText(), document: { type: 'doc', conte
 const user = () => ({ displayName: 'Nguyễn An 👋', email: 'An@Example.com', termsAcceptance: { version: 'v1', acceptedAt: now } });
 const task = () => ({ workspaceId, projectId, createdBy: ownerId, title: 'Task mới', description: content('Tiếng Việt') });
 
-test('all 30 core models validate representative typed fixtures without DB', async () => {
+test('all 26 core models validate representative typed fixtures without DB', async () => {
   const fixtures = {
     WorkspaceManagementAudit: { workspaceId, actorId: ownerId, action: 'created', versionScope: 'workspace', resourceVersion: 0 },
     WorkspaceCreation: { _id: hash, userId: ownerId, workspaceId, fingerprint: hash },
@@ -28,9 +29,6 @@ test('all 30 core models validate representative typed fixtures without DB', asy
     TaskActivity: { workspaceId, projectId, taskId, actorId: ownerId, action: "created", taskVersion: 0 },
     AccessBan: { scopeType: 'workspace', scopeId: workspaceId, workspaceId, userId: ownerId, reason: 'Fixture moderation', imposedBy: ownerId, imposedAt: now },
     ModerationAction: { scopeType: 'workspace', scopeId: workspaceId, workspaceId, workspaceIds: [workspaceId], actorId: ownerId, targetUserId: ownerId, action: 'ban', reason: 'Fixture moderation', cutoff: now },
-    Organization: { ownerId, name: 'Studio' }, OrganizationMembership: { organizationId: workspaceId, userId: ownerId, joinedAt: now },
-    OrganizationAudit: { organizationId: workspaceId, actorId: ownerId, targetUserId: ownerId, action: 'member_role_changed', previousRole: 'member', role: 'admin' },
-    OrganizationInvitation: { organizationId: workspaceId, createdBy: ownerId, email: 'member@example.com', emailCanonical: 'member@example.com', tokenHash: hash, expiresAt: now },
     ProjectGuest: { workspaceId, projectId, userId: ownerId, grantedBy: ownerId, joinedAt: now },
     ProjectGuestInvitation: { workspaceId, projectId, createdBy: ownerId, type: 'LINK', tokenHash: hash, expiresAt: now },
     ProjectAccessAudit: { workspaceId, projectId, actorId: ownerId, action: 'guest_joined', targetUserId: ownerId },
@@ -45,7 +43,7 @@ test('all 30 core models validate representative typed fixtures without DB', asy
     Notification: { workspaceId, taskId, recipientId: ownerId, eventId: 'event-1', category: 'work', changes: ['assignment'] },
     EmailOutbox: { userId: ownerId, workspaceId, taskId, eventId: 'event-1', recipientKey: 'user:1', category: 'work', templateKey: 'task_changed', eventTypes: ['assignment'], nextAttemptAt: now },
   };
-  assert.equal(Object.keys(models).length, 30);
+  assert.equal(Object.keys(models).length, 26);
   for (const [name, fixture] of Object.entries(fixtures)) await new models[name](fixture).validate();
 });
 test('Google-only account allowed; defaults match approved email preferences; no email auto-link', async () => {
@@ -151,4 +149,9 @@ test('Retired Project Lead cannot be stored or recreated as an access audit',asy
  assert.equal(models.Project.schema.path('leadId'),undefined);
  assert.throws(()=>new models.Project({workspaceId,createdBy:ownerId,name:'No Lead',leadId:ownerId}),/leadId/u);
  await assert.rejects(new models.ProjectAccessAudit({workspaceId,projectId,actorId:ownerId,action:'lead_changed'}).validate());
+});
+
+test('Fresh runtime process registers only Workspace models and no Organization models', () => {
+ const result=spawnSync(process.execPath,['--input-type=module','-e',`import mongoose from 'mongoose';import {models} from './src/models/index.js';import assert from 'node:assert/strict';assert.equal(Object.keys(models).length,26);assert.equal(mongoose.modelNames().some(name=>name.startsWith('Organization')),false);for(const model of Object.values(models))for(const path of Object.values(model.schema.paths))assert.equal(String(path.options.ref??'').startsWith('Organization'),false);`],{cwd:new URL('../',import.meta.url),encoding:'utf8'});
+ assert.equal(result.status,0,result.stderr);
 });

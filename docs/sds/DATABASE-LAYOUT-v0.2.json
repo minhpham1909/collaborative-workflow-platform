@@ -570,8 +570,6 @@
         "taskId": "tasks",
         "invitationId": "workspace_invitations",
         "actorId": "users",
-        "organizationId": "organizations",
-        "organizationInvitationId": "organization_invitations",
         "projectId": "projects",
         "projectInvitationId": "project_guest_invitations"
       },
@@ -604,7 +602,11 @@
         "Payload mapped to authorized response, never raw serialization",
         "Recipient-only read state",
         "No personal pin field"
-      ]
+      ],
+      "retiredReferences": {
+        "organizationId": "organizations",
+        "organizationInvitationId": "organization_invitations"
+      }
     },
     {
       "name": "email_outbox",
@@ -648,8 +650,6 @@
         "taskId": "tasks",
         "invitationId": "workspace_invitations",
         "authTokenId": "auth_tokens",
-        "organizationId": "organizations",
-        "organizationInvitationId": "organization_invitations",
         "projectId": "projects",
         "projectInvitationId": "project_guest_invitations"
       },
@@ -683,7 +683,11 @@
         "Recheck work permissions and effective preferences",
         "Use lease token when completing or rescheduling",
         "No provider exactly-once claim"
-      ]
+      ],
+      "retiredReferences": {
+        "organizationId": "organizations",
+        "organizationInvitationId": "organization_invitations"
+      }
     },
     {
       "name": "auth_challenges",
@@ -749,7 +753,8 @@
       ],
       "constraints": [
         "Ownership derives from ownerId; active owner membership required by store"
-      ]
+      ],
+      "runtimeStatus": "retired-test-fixture-only"
     },
     {
       "name": "organization_memberships",
@@ -790,7 +795,8 @@
       "constraints": [
         "Unique organization/user pair",
         "Owner is derived from Organization, never membership role"
-      ]
+      ],
+      "runtimeStatus": "retired-test-fixture-only"
     },
     {
       "name": "organization_audit",
@@ -823,7 +829,8 @@
       ],
       "constraints": [
         "No generic query writes; transactional events for management operations"
-      ]
+      ],
+      "runtimeStatus": "retired-test-fixture-only"
     },
     {
       "name": "organization_invitations",
@@ -872,7 +879,8 @@
       "constraints": [
         "Email-only single-use, exact verified email",
         "Member only; optional Workspace must belong to Organization"
-      ]
+      ],
+      "runtimeStatus": "retired-test-fixture-only"
     },
     {
       "name": "project_guests",
@@ -1012,7 +1020,6 @@
         "updatedAt": "Date"
       },
       "references": {
-        "organizationId": "organizations",
         "workspaceId": "workspaces",
         "projectId": "projects",
         "userId": "users",
@@ -1041,7 +1048,10 @@
       ],
       "constraints": [
         "Server-derived scope; CAS; no Comment content in audit"
-      ]
+      ],
+      "retiredReferences": {
+        "organizationId": "organizations"
+      }
     },
     {
       "name": "moderation_actions",
@@ -1074,7 +1084,6 @@
         "updatedAt": "Date"
       },
       "references": {
-        "organizationId": "organizations",
         "workspaceId": "workspaces",
         "projectId": "projects",
         "actorId": "users",
@@ -1103,7 +1112,10 @@
       ],
       "constraints": [
         "Server-derived scope; CAS; no Comment content in audit"
-      ]
+      ],
+      "retiredReferences": {
+        "organizationId": "organizations"
+      }
     },
     {
       "name": "project_labels",

@@ -1,8 +1,9 @@
+import mongoose from 'mongoose';
 import { coreSchema, ref, choice, singleLine, nullableDate, nullableString, integer, Schema } from './shared.js';
 
 export const accessBanSchema = coreSchema({
   scopeType: choice(['organization', 'workspace', 'project']), scopeId: { type: Schema.Types.ObjectId, required: true },
-  organizationId: ref('Organization', true), workspaceId: ref('Workspace', true), projectId: ref('Project', true), userId: ref('User'),
+  organizationId: { type: mongoose.Schema.Types.ObjectId, default: null }, workspaceId: ref('Workspace', true), projectId: ref('Project', true), userId: ref('User'),
   state: choice(['active', 'revoked'], 'active'), reason: singleLine(2000), imposedBy: ref('User'), imposedAt: { type: Date, required: true },
   revokedAt: nullableDate(), revokedBy: ref('User', true),
 });
@@ -13,7 +14,7 @@ accessBanSchema.pre('validate', function () {
 });
 export const moderationActionSchema = coreSchema({
   scopeType: choice(['organization', 'workspace', 'project']), scopeId: { type: Schema.Types.ObjectId, required: true },
-  organizationId: ref('Organization', true), workspaceId: ref('Workspace', true), projectId: ref('Project', true),
+  organizationId: { type: mongoose.Schema.Types.ObjectId, default: null }, workspaceId: ref('Workspace', true), projectId: ref('Project', true),
   actorId: ref('User'), targetUserId: ref('User'), banId: ref('AccessBan', true), commentId: ref('TaskComment', true),
   action: choice(['ban', 'unban', 'comment_deleted']), reason: singleLine(2000),
   cleanup: choice(['none', '1', '3', '7', '30', 'all'], 'none'), from: nullableDate(), cutoff: { type: Date, required: true },

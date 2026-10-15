@@ -4,7 +4,7 @@ import { randomBytes } from 'node:crypto';
 import { once } from 'node:events';
 import mongoose from 'mongoose';
 import { connectDatabase } from '../src/database.js';
-import { models, User, Task, Project, Workspace, WorkspaceMembership, Session, EmailOutbox, Notification, TaskPurgeAudit, TaskReopenRequest, OrganizationMembership } from '../src/models/index.js';
+import { models, User, Task, Project, Workspace, WorkspaceMembership, Session, EmailOutbox, Notification, TaskPurgeAudit, TaskReopenRequest, OrganizationMembership } from '../test-support/organization-models.js';
 import { createAuthService } from '../src/auth/service.js';
 import { createMongoAuthStore } from '../src/auth/mongo-store.js';
 import { hashPassword } from '../src/auth/passwords.js';

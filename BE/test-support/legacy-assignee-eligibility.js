@@ -1,4 +1,4 @@
-import {WorkspaceMembership,OrganizationMembership,AccessBan} from '../src/models/index.js';
+import {WorkspaceMembership,OrganizationMembership,AccessBan} from './organization-models.js';
 import {assigneeKey} from '../src/work/assignee-eligibility.js';
 const same=(a,b)=>String(a)===String(b);
 export async function assigneeEligibility(contexts,selected,tx){

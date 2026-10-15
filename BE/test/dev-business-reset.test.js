@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {models} from '../src/models/index.js';
 import {validateResetTarget,resetBusinessCollections,preservedAccountCollections} from '../src/workspace-only/dev-reset.js';
 test('Reset preserves account collections and classifies every core collection without dropping indexes',()=>{
- const actual=Object.values(models).map(model=>model.collection.name).sort();
+ const actual=[...Object.values(models).map(model=>model.collection.name),'organizations','organization_memberships','organization_audit','organization_invitations'].sort();
  assert.deepEqual([...resetBusinessCollections,...preservedAccountCollections,'email_outbox'].sort(),actual);
  assert.equal(resetBusinessCollections.includes('users'),false);assert.equal(resetBusinessCollections.includes('sessions'),false);
 });

@@ -5,7 +5,7 @@ import mongoose from 'mongoose';
 import {once} from 'node:events';
 import {randomUUID} from 'node:crypto';
 import {connectDatabase} from '../src/database.js';
-import {models,User,WorkspaceMembership,OrganizationMembership,Session,ProjectGuest,AccessBan,Workspace,Project,Notification,EmailOutbox} from '../src/models/index.js';
+import {models,User,WorkspaceMembership,OrganizationMembership,Session,ProjectGuest,AccessBan,Workspace,Project,Notification,EmailOutbox} from '../test-support/organization-models.js';
 import {createApp} from '../src/app.js';
 import {createAuthService} from '../src/auth/service.js';
 import {createMongoAuthStore} from '../src/auth/mongo-store.js';

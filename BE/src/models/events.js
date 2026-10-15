@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { coreSchema, ref, integer, nullableDate, nullableString, choice, singleLine, nested } from './shared.js';
 
 const eventTypes = ['assignment', 'comment', 'content', 'status'];
@@ -17,7 +18,7 @@ const cipher = nested({
 export const notificationSchema = coreSchema({
   recipientId: ref('User'), eventId: singleLine(100), category: choice(['work', 'invitation', 'membership', 'organization_invitation', 'project_invitation']),
   workspaceId: ref('Workspace', true), taskId: ref('Task', true), invitationId: ref('WorkspaceInvitation', true), actorId: ref('User', true),
-  organizationId: ref('Organization', true), organizationInvitationId: ref('OrganizationInvitation', true),
+  organizationId: { type: mongoose.Schema.Types.ObjectId, default: null }, organizationInvitationId: { type: mongoose.Schema.Types.ObjectId, default: null },
   projectId: ref('Project', true), projectInvitationId: ref('ProjectGuestInvitation', true),
   changes: events(), payloadVersion: { ...integer(1, 1), enum: [1] },
   payload: { type: payload, default: () => ({}) }, readAt: nullableDate(),
@@ -37,7 +38,7 @@ notificationSchema.pre('validate', function() {
 export const outboxSchema = coreSchema({
   eventId: singleLine(100), recipientKey: singleLine(300), userId: ref('User', true),
   workspaceId: ref('Workspace', true), taskId: ref('Task', true), invitationId: ref('WorkspaceInvitation', true), authTokenId: ref('AuthToken', true),
-  organizationId: ref('Organization', true), organizationInvitationId: ref('OrganizationInvitation', true),
+  organizationId: { type: mongoose.Schema.Types.ObjectId, default: null }, organizationInvitationId: { type: mongoose.Schema.Types.ObjectId, default: null },
   projectId: ref('Project', true), projectInvitationId: ref('ProjectGuestInvitation', true),
   category: choice(['work', 'invitation', 'auth']), templateKey: singleLine(100),
   payloadVersion: { ...integer(1, 1), enum: [1] }, eventTypes: events(), payload: { type: payload, default: () => ({}) },

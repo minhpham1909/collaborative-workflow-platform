@@ -1,4 +1,4 @@
-import {Organization,OrganizationInvitation,Workspace,User} from '../src/models/index.js';
+import {Organization,OrganizationInvitation,Workspace,User} from './organization-models.js';
 import {assertNotBanned} from '../src/moderation/guard.js';
 import {AuthError} from '../src/auth/errors.js';
 export async function organizationNotification(value,user,tx,base,now){

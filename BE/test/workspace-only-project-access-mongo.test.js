@@ -9,7 +9,7 @@ import assert from 'node:assert/strict';
 import mongoose from 'mongoose';
 import {randomBytes} from 'node:crypto';
 import {connectDatabase} from '../src/database.js';
-import {models,User,Session,WorkspaceMembership,Workspace,Organization,Project,Task,ProjectGuest,ProjectGuestInvitation,AccessBan,Notification,OrganizationInvitation,TaskComment,ModerationAction,TaskReopenRequest} from '../src/models/index.js';
+import {models,User,Session,WorkspaceMembership,Workspace,Organization,Project,Task,ProjectGuest,ProjectGuestInvitation,AccessBan,Notification,OrganizationInvitation,TaskComment,ModerationAction,TaskReopenRequest} from '../test-support/organization-models.js';
 import {createWorkService} from '../src/work/service.js';
 import {createMongoWorkStore} from '../src/work/mongo-store.js';
 import {createWorkspaceService} from '../src/workspaces/service.js';

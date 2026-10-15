@@ -3,7 +3,7 @@ import { queryManagementHistory } from '../src/workspaces/audit-store.js';
 import mongoose from 'mongoose';
 import { queryWorkspaceList } from '../src/workspaces/query-store.js';
 import { randomBytes, randomUUID, createHash } from 'node:crypto';
-import { User, Session, WorkspaceMembership, WorkspaceInvitation, Task, EmailOutbox, ProjectGuest, Organization, OrganizationMembership, WorkspaceLifecycleAudit, WorkspaceRoleAudit, WorkspaceCreation, WorkspaceManagementAudit } from '../src/models/index.js';
+import { User, Session, WorkspaceMembership, WorkspaceInvitation, Task, EmailOutbox, ProjectGuest, Organization, OrganizationMembership, WorkspaceLifecycleAudit, WorkspaceRoleAudit, WorkspaceCreation, WorkspaceManagementAudit } from './organization-models.js';
 import { AuthError } from '../src/auth/errors.js';
 import { tokenHash } from '../src/auth/tokens.js';
 import { createDeliveryCrypto } from '../src/auth/delivery-crypto.js';

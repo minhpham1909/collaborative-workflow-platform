@@ -1,5 +1,5 @@
-import { coreSchema, ref, singleLine, integer, choice, nullableDate, nullableString, digest } from './shared.js';
-import { canonicalEmail } from './accounts.js';
+import { coreSchema, ref, singleLine, integer, choice, nullableDate, nullableString, digest } from '../src/models/shared.js';
+import { canonicalEmail } from '../src/models/accounts.js';
 
 export const organizationSchema = coreSchema({
   ownerId: ref('User'), name: singleLine(200), mutationRevision: integer(),

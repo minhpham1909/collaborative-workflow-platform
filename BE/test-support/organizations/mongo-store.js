@@ -4,7 +4,7 @@ import { queryWorkspaceList } from '../../src/workspaces/query-store.js';
 import { cancelReopenRequests, reconcileReopenRequests } from '../../src/work/reopen-lifecycle.js';
 import { assertWorkspaceWritable } from '../../src/workspaces/lifecycle.js';
 import { randomUUID, randomBytes } from 'node:crypto';
-import { User, Session, Organization, OrganizationMembership, OrganizationAudit, OrganizationInvitation, Workspace, WorkspaceMembership, Notification, EmailOutbox, Task, ProjectGuest } from '../../src/models/index.js';
+import { User, Session, Organization, OrganizationMembership, OrganizationAudit, OrganizationInvitation, Workspace, WorkspaceMembership, Notification, EmailOutbox, Task, ProjectGuest } from '../organization-models.js';
 import { AuthError } from '../../src/auth/errors.js';
 import { organizationAccess } from './access.js';
 import { assertOrganizationIndexes, assertOrganizationInvitationIndexes } from './index-check.js';

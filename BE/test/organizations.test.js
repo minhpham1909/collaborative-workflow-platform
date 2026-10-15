@@ -1,7 +1,8 @@
+import mongoose from 'mongoose';
 import { test } from 'node:test';
 import { organizationQuery } from '../test-support/organizations/input.js';
 import assert from 'node:assert/strict';
-import { OrganizationMembership, Workspace } from '../src/models/index.js';
+import { OrganizationMembership, Workspace } from '../test-support/organization-models.js';
 import { organizationAccess } from '../test-support/organizations/access.js';
 import { createOrganizationService } from '../test-support/organizations/service.js';
 test('Organization directory query is scoped/typed and rejects fake roles or tenant injection', () => {
@@ -50,4 +51,10 @@ test('management DTOs reject privilege/parent injection and require explicit ver
 test('Organization admission is email-bound and cannot grant elevated roles', () => {
   assert.deepEqual(organizationInvitationInput({ email: 'Member@Example.com', workspaceId: org._id }), { email: 'member@example.com', workspaceId: org._id });
   for (const body of [{ email: 'bad' }, { email: 'member@example.com', role: 'admin' }, { email: 'member@example.com', type: 'LINK' }, { email: 'member@example.com', workspaceId: 'bad' }]) assert.throws(() => organizationInvitationInput(body));
+});
+
+test('Historical Organization saves fail outside a dedicated loopback test database', async () => {
+ const {Organization}=await import('../test-support/organization-models.js');
+ const document=new Organization({ownerId:new mongoose.Types.ObjectId(),name:'Retired fixture'});
+ await assert.rejects(document.save(),/HISTORICAL_ORGANIZATION_TEST_DATABASE_REQUIRED/u);
 });

@@ -5,7 +5,7 @@ import { randomUUID } from 'node:crypto';
 import { once } from 'node:events';
 import mongoose from 'mongoose';
 import { connectDatabase } from '../src/database.js';
-import { models, User, Session, Workspace, WorkspaceMembership, Project, Task, TaskComment, ProjectGuest, ProjectGuestInvitation, ProjectAccessAudit, Organization, OrganizationMembership, OrganizationInvitation, OrganizationAudit, EmailOutbox, Notification } from '../src/models/index.js';
+import { models, User, Session, Workspace, WorkspaceMembership, Project, Task, TaskComment, ProjectGuest, ProjectGuestInvitation, ProjectAccessAudit, Organization, OrganizationMembership, OrganizationInvitation, OrganizationAudit, EmailOutbox, Notification } from '../test-support/organization-models.js';
 import { createWorkspaceService } from '../src/workspaces/service.js';
 import { createMongoWorkspaceStore } from '../src/workspaces/mongo-store.js';
 import { createWorkService } from '../src/work/service.js';

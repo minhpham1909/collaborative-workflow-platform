@@ -2,7 +2,7 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import mongoose from 'mongoose';
 import {connectDatabase} from '../src/database.js';
-import {models,User,Session,Workspace,WorkspaceMembership,Organization,WorkspaceInvitation,ProjectGuestInvitation,Project,Task,EmailOutbox,AccessBan} from '../src/models/index.js';
+import {models,User,Session,Workspace,WorkspaceMembership,Organization,WorkspaceInvitation,ProjectGuestInvitation,Project,Task,EmailOutbox,AccessBan} from '../test-support/organization-models.js';
 import {createWorkspaceService} from '../src/workspaces/service.js';
 import {createMongoWorkspaceStore} from '../src/workspaces/mongo-store.js';
 import {createWorkService} from '../src/work/service.js';

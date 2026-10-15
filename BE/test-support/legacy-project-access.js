@@ -1,4 +1,4 @@
-import { Organization, OrganizationMembership, ProjectGuest } from '../src/models/index.js';
+import { Organization, OrganizationMembership, ProjectGuest } from './organization-models.js';
 import { AuthError } from '../src/auth/errors.js';
 import { workspaceAccess } from './legacy-workspace-access.js';
 import { assertNotBanned, banFilterStages } from '../src/moderation/guard.js';
