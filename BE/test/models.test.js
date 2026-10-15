@@ -155,3 +155,13 @@ test('Fresh runtime process registers only Workspace models and no Organization 
  const result=spawnSync(process.execPath,['--input-type=module','-e',`import mongoose from 'mongoose';import {models} from './src/models/index.js';import assert from 'node:assert/strict';assert.equal(Object.keys(models).length,26);assert.equal(mongoose.modelNames().some(name=>name.startsWith('Organization')),false);for(const model of Object.values(models))for(const path of Object.values(model.schema.paths))assert.equal(String(path.options.ref??'').startsWith('Organization'),false);`],{cwd:new URL('../',import.meta.url),encoding:'utf8'});
  assert.equal(result.status,0,result.stderr);
 });
+
+test('Current event and moderation schemas reject Organization metadata and scope',async()=>{
+ for(const name of ['Notification','EmailOutbox','AccessBan','ModerationAction']){
+  assert.equal(models[name].schema.path('organizationId'),undefined);
+  assert.throws(()=>new models[name]({organizationId:id()}),/strict/u);
+ }
+ await assert.rejects(new Notification({recipientId:ownerId,eventId:'retired-payload',category:'membership',workspaceId,payload:{organizationName:'Retired'}}).validate(),/StrictModeError/u);
+ await assert.rejects(new Notification({recipientId:ownerId,eventId:'retired',category:'organization_invitation',workspaceId}).validate());
+ await assert.rejects(new models.AccessBan({scopeType:'organization',scopeId:workspaceId,userId:ownerId,reason:'Invalid retired scope',imposedBy:ownerId,imposedAt:now}).validate());
+});

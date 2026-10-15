@@ -17,7 +17,7 @@ import { cutoffCodec } from '../src/notifications/input.js';
 import { dispatchInvitationMail } from '../src/mail/invitation-mail.js';
 import { createDeliveryCrypto } from '../src/auth/delivery-crypto.js';
 import { tokenHash } from '../src/auth/tokens.js';
-import { mailContent } from '../src/mail/provider.js';
+import { mailContent } from '../test-support/historical-mail-content.js';
 import { createApp } from '../test-support/legacy-organizations.js';
 import { testConfig } from '../test-support/auth-store.js';
 

@@ -1,4 +1,4 @@
-import {ModerationAction} from '../src/models/index.js';
+import {ModerationAction} from './organization-models.js';
 import {AuthError} from '../src/auth/errors.js';
 import {projectReadOnly} from '../src/workspaces/lifecycle.js';
 const sameId=(a,b)=>String(a)===String(b);

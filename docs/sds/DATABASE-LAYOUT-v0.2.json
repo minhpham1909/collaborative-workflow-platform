@@ -547,7 +547,7 @@
       "fields": {
         "recipientId": "ObjectId",
         "eventId": "String",
-        "category": "work|invitation|membership|organization_invitation|project_invitation",
+        "category": "work|invitation|membership|project_invitation",
         "workspaceId": "ObjectId|null",
         "taskId": "ObjectId|null",
         "invitationId": "ObjectId|null",
@@ -556,8 +556,6 @@
         "payloadVersion": "Integer",
         "payload": "NotificationPayload",
         "readAt": "Date|null",
-        "organizationId": "ObjectId|null",
-        "organizationInvitationId": "ObjectId|null",
         "projectId": "ObjectId|null",
         "projectInvitationId": "ObjectId|null"
       },
@@ -602,11 +600,7 @@
         "Payload mapped to authorized response, never raw serialization",
         "Recipient-only read state",
         "No personal pin field"
-      ],
-      "retiredReferences": {
-        "organizationId": "organizations",
-        "organizationInvitationId": "organization_invitations"
-      }
+      ]
     },
     {
       "name": "email_outbox",
@@ -633,8 +627,6 @@
         "lastErrorCode": "String|null",
         "sentAt": "Date|null",
         "updatedAt": "Date",
-        "organizationId": "ObjectId|null",
-        "organizationInvitationId": "ObjectId|null",
         "projectId": "ObjectId|null",
         "projectInvitationId": "ObjectId|null"
       },
@@ -683,11 +675,7 @@
         "Recheck work permissions and effective preferences",
         "Use lease token when completing or rescheduling",
         "No provider exactly-once claim"
-      ],
-      "retiredReferences": {
-        "organizationId": "organizations",
-        "organizationInvitationId": "organization_invitations"
-      }
+      ]
     },
     {
       "name": "auth_challenges",
@@ -1004,9 +992,8 @@
     {
       "name": "access_bans",
       "fields": {
-        "scopeType": "organization|workspace|project",
+        "scopeType": "workspace|project",
         "scopeId": "ObjectId",
-        "organizationId": "ObjectId|null",
         "workspaceId": "ObjectId|null",
         "projectId": "ObjectId|null",
         "userId": "ObjectId",
@@ -1048,17 +1035,13 @@
       ],
       "constraints": [
         "Server-derived scope; CAS; no Comment content in audit"
-      ],
-      "retiredReferences": {
-        "organizationId": "organizations"
-      }
+      ]
     },
     {
       "name": "moderation_actions",
       "fields": {
-        "scopeType": "organization|workspace|project",
+        "scopeType": "workspace|project",
         "scopeId": "ObjectId",
-        "organizationId": "ObjectId|null",
         "workspaceId": "ObjectId|null",
         "projectId": "ObjectId|null",
         "actorId": "ObjectId",
@@ -1112,10 +1095,7 @@
       ],
       "constraints": [
         "Server-derived scope; CAS; no Comment content in audit"
-      ],
-      "retiredReferences": {
-        "organizationId": "organizations"
-      }
+      ]
     },
     {
       "name": "project_labels",

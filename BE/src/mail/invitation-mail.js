@@ -38,7 +38,7 @@ export async function dispatchInvitationMail({ config, send, now = () => new Dat
       const updated = await EmailOutbox.collection.updateOne({ _id: job._id, state: 'processing', leaseToken, leaseUntil: { $gt: now() } }, { $set: { state: 'sent', sentAt: now(), providerMessageId, encryptedDeliveryData: null, leaseToken: null, leaseUntil: null, lastErrorCode: null, updatedAt: now() } }, { session: tx });
       if (updated.modifiedCount !== 1) return false;
       if (valid && recipient && !await WorkspaceMembership.collection.findOne({ workspaceId: workspace._id, userId: recipient._id, state: 'active' }, { session: tx })) {
-        const notification = new Notification({ eventId: job.eventId, recipientId: recipient._id, category: 'invitation', workspaceId: workspace._id, invitationId: invitation._id, actorId: invitation.createdBy, payload: job.payload });
+        const notification = new Notification({ eventId: job.eventId, recipientId: recipient._id, category: 'invitation', workspaceId: workspace._id, invitationId: invitation._id, actorId: invitation.createdBy, payload: {workspaceName:job.payload?.workspaceName??null,actorDisplayName:job.payload?.actorDisplayName??null} });
         await notification.validate();
         await Notification.collection.updateOne({ eventId: job.eventId, recipientId: recipient._id }, { $setOnInsert: { ...notification.toObject(), createdAt: now() } }, { session: tx, upsert: true });
       }

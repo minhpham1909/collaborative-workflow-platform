@@ -26,3 +26,12 @@ test('Capture distinguishes two recipients of the same event and dedupes each de
     for (let index = 0; index < mails.length; index++) { await send(mails[index]); await send(mails[index]); assert.equal(JSON.parse(await readFile(paths[index], 'utf8')).to, mails[index].to); }
   } finally { for (const path of paths) await unlink(path).catch((error) => { if (error.code !== 'ENOENT') throw error; }); }
 });
+
+test('Current Inbox and mail provider reject retired or unknown purposes before delivery',async()=>{
+ assert.throws(()=>inboxQuery({category:'organization_invitation'}));
+ for(const purpose of ['organization_invitation','unknown']){
+  assert.throws(()=>mailContent({purpose,url:'https://example.test'}),/UNSUPPORTED_MAIL_PURPOSE/u);
+  const send=createMailProvider({EMAIL_MODE:'capture',NODE_ENV:'development'});
+  await assert.rejects(send({purpose,eventId:randomUUID()}),/UNSUPPORTED_MAIL_PURPOSE/u);
+ }
+});

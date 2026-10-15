@@ -18,5 +18,5 @@ test('Project invitation references cannot be mixed with Workspace/Organization 
   await assert.rejects(new Notification({ ...notice, invitationId: oid }).validate());
   const job = { eventId: 'event', recipientKey: 'recipient', category: 'invitation', templateKey: 'project', nextAttemptAt: at, workspaceId: oid, projectId: oid, projectInvitationId: oid };
   await new EmailOutbox(job).validate();
-  await assert.rejects(new EmailOutbox({ ...job, organizationId: oid, organizationInvitationId: oid }).validate());
+  assert.throws(() => new EmailOutbox({ ...job, organizationId: oid, organizationInvitationId: oid }), /strict/u);
 });

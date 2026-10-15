@@ -3,11 +3,12 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
 
+const purposes=new Set(['project_guest_invitation','work','verify_email','invitation','reset_password']);
+function assertPurpose(mail){if(!purposes.has(mail.purpose))throw new Error('UNSUPPORTED_MAIL_PURPOSE');}
 export function mailContent(mail) {
+  assertPurpose(mail);
   if (mail.purpose === 'project_guest_invitation') return { subject: 'Lời mời xem dự án / Project Guest invitation',
     text: ['Lời mời xem dự án / Project Guest invitation', mail.workspaceName, mail.projectName, 'Vai trò / Role: Guest — chỉ xem và bình luận / view and comment only', mail.url].join('\n') };
-  if (mail.purpose === 'organization_invitation') return { subject: 'Lời mời tổ chức / Organization invitation',
-    text: ['Lời mời tổ chức / Organization invitation', mail.organizationName, ...(mail.workspaceName ? [`Workspace: ${mail.workspaceName}`] : []), 'Vai trò / Role: Member', mail.url].join('\n') };
   if (mail.purpose === 'work') {
     const english = mail.locale === 'en';
     const labels = english ? { assignment: 'Assignment changed', comment: 'New comment', content: 'Task details changed', status: 'Status changed' } : { assignment: 'Thay đổi phân công', comment: 'Bình luận mới', content: 'Thay đổi nội dung công việc', status: 'Thay đổi trạng thái' };
@@ -18,6 +19,7 @@ export function mailContent(mail) {
   return { subject: label, text: `${label}: ${mail.url}` };
 }
 function deliveryId(mail) {
+  assertPurpose(mail);
   if (!/^[a-f0-9-]{36}$/u.test(mail.eventId) || (mail.deliveryKey !== undefined && !/^[a-f0-9]{24}$/u.test(mail.deliveryKey))) throw new Error('Invalid mail event');
   return `${mail.eventId}${mail.deliveryKey ? `-${mail.deliveryKey}` : ''}`;
 }

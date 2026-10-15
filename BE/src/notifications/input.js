@@ -1,3 +1,6 @@
+import {historicalWorkspaceFixture} from '../workspaces/access.js';
+const currentCategories=['all','work','invitation','membership','project_invitation'];
+const validCategory=value=>currentCategories.includes(value)||(Boolean(historicalWorkspaceFixture())&&value==='organization_invitation');
 import { createHmac } from "node:crypto";
 import { inputObject } from "../auth/account-input.js";
 import { secureEqual } from "../auth/tokens.js";
@@ -18,7 +21,7 @@ export function inboxQuery(query) {
   const category = query.category ?? "all";
   if (
     !["all", "unread", "read"].includes(read) ||
-    !["all", "work", "invitation", "membership", "organization_invitation", "project_invitation"].includes(category)
+    !validCategory(category)
   )
     fail();
   const from = query.from === undefined ? null : vietnamDay(query.from),
@@ -81,7 +84,7 @@ export function cutoffCodec(keyHex) {
         inboxQuery({ ...value.filters, category: value.category });
         if (
           value.sub !== sub ||
-          !["all", "work", "invitation", "membership", "organization_invitation", "project_invitation"].includes(value.category) ||
+          !validCategory(value.category) ||
           new Date(value.at).toISOString() !== value.at
         )
           fail();

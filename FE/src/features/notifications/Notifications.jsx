@@ -18,7 +18,7 @@ import { useDraftGuard } from '../../lib/draft-navigation.js';
 import { isUncertainMutation } from '../../lib/mutation-outcome.js';
 import './notifications.css';
 import { inboxFilters, inboxReturn } from './inbox-filters.js';
-const categories = { work:'Công việc', invitation:'Lời mời Workspace', membership:'Tham gia Workspace', organization_invitation:'Lời mời tổ chức', project_invitation:'Lời mời Guest' };
+const categories = { work:'Công việc', invitation:'Lời mời Workspace', membership:'Tham gia Workspace', project_invitation:'Lời mời Guest' };
 const noteIcon = note => !note.available ? 'archive' : note.category==='work' ? note.changes.includes('comment')?'document':'tasks' : 'people';
 const changed = () => window.dispatchEvent(new Event("workflow-inbox-changed"));
 function Content({ note }) {
@@ -38,15 +38,6 @@ function Content({ note }) {
         <h3>{tr("Lời mời xem {name}", { name: p.projectName })}</h3>
         <p>{tr("{name} mời bạn xem và bình luận trong Project này.", { name: p.inviterDisplayName })}</p>
         <p>Workspace: {p.workspaceName}</p>
-        <p>{tr("Hết hạn")} {new Date(p.expiresAt).toLocaleString(locale === "en" ? "en-GB" : "vi-VN", { timeZone: "Asia/Ho_Chi_Minh" })}</p>
-      </>
-    );
-  if (note.category === "organization_invitation")
-    return (
-      <>
-        <h3>{tr("Lời mời tham gia {name}", { name: p.organizationName })}</h3>
-        <p>{tr("{name} mời bạn vào tổ chức với vai trò Member.", { name: p.inviterDisplayName })}</p>
-        {p.workspaceName && <p>{tr("Bạn cũng sẽ tham gia Workspace: {name}.", { name: p.workspaceName })}</p>}
         <p>{tr("Hết hạn")} {new Date(p.expiresAt).toLocaleString(locale === "en" ? "en-GB" : "vi-VN", { timeZone: "Asia/Ho_Chi_Minh" })}</p>
       </>
     );
@@ -250,8 +241,6 @@ export default function Notifications({ api, id, user }) {
       setNotice(
         kind === "acceptProject"
           ? tr("Đã được cấp quyền xem và bình luận Project.")
-          : kind === "acceptOrganization"
-          ? tr("Đã tham gia tổ chức. Mở Trang chủ để chọn Workspace được cấp.")
           : kind === "accept"
           ? tr("Đã tham gia Workspace. Mở Trang chủ để chọn nhóm.")
           : kind === "all"
@@ -302,13 +291,6 @@ export default function Notifications({ api, id, user }) {
           )}
           {note.available && note.target?.type === "workspace" && (
             <a href={`#workspace/${note.target.workspaceId}`}>{tr("Mở Workspace →")}</a>
-          )}
-          {id && note.available && note.target?.type === "organization_invitation" && (
-            user.emailVerified ? (
-              <button className="primary" disabled={mutating || busy || uncertain} onClick={() => mutate(
-                `/organization-invitations/${note.target.invitationId}/accept`, {}, "acceptOrganization",
-              )}>{tr("Tham gia tổ chức")}</button>
-            ) : <p className="archive-banner">{tr("Xác minh email trước khi tham gia tổ chức.")}</p>
           )}
           {id && note.available && note.target?.type === "project_invitation" && (
             user.emailVerified ? (
@@ -406,7 +388,6 @@ export default function Notifications({ api, id, user }) {
                 <option value="work">{tr("Công việc")}</option>
                 <option value="invitation">{tr("Lời mời")}</option>
                 <option value="membership">{tr("Tham gia Workspace")}</option>
-                <option value="organization_invitation">{tr("Lời mời tổ chức")}</option>
                 <option value="project_invitation">{tr("Lời mời Guest")}</option>
               </select>
             </label>
