@@ -60,7 +60,7 @@ export default function Login({ api, connectionError, retry, embedded = false })
           size: "large",
           text: "signin_with",
           locale,
-          width: 300,
+          width: Math.max(200,Math.min(360,googleTarget.current?.clientWidth||300)),
         });
       } catch (e) {
         if (live) {
@@ -116,6 +116,16 @@ export default function Login({ api, connectionError, retry, embedded = false })
             {connectionError} <button onClick={retry}>Thử kết nối lại</button>
           </InlineMessage>
         )}
+        <div className="auth-provider">        <button className="auth-google-button"
+          disabled={busy || googleEnabled}
+          onClick={() => {
+            setError("");
+            setGoogleEnabled(true);
+          }}
+        >
+          <span className="auth-provider-mark" aria-hidden="true">G</span> Tiếp tục với Google
+        </button>
+        {googleEnabled&&<button type="button" disabled={busy} onClick={()=>setGoogleEnabled(false)}>Đóng chọn Google</button>}{googleEnabled&&<div ref={googleTarget} className="google-target" />}</div><div className="divider">hoặc</div>
         <form onSubmit={submit}>
           <label>
             Email
@@ -146,20 +156,10 @@ export default function Login({ api, connectionError, retry, embedded = false })
             {busy ? "Đang đăng nhập…" : "Đăng nhập"}
           </button>
         </form>
-        <p>
-          <a href="#recover">Quên mật khẩu?</a> ·{" "}
+        <p className="auth-account-links">
+          <a href="#recover">Quên mật khẩu?</a>
           <a href="#register">Tạo tài khoản thử nghiệm</a>
         </p>
-        <div className="divider">hoặc</div>
-        <button
-          disabled={busy || googleEnabled}
-          onClick={() => {
-            setError("");
-            setGoogleEnabled(true);
-          }}
-        >
-          Tiếp tục với Google
-        </button>
-        {googleEnabled&&<button type="button" disabled={busy} onClick={()=>setGoogleEnabled(false)}>Đóng chọn Google</button>}<div ref={googleTarget} className="google-target" />
+
     </>,locale); }
 }
